@@ -4,11 +4,10 @@ import axios from 'axios';
  * API Configuration and Constants
  * 
  * This file centralizes all API configuration for communicating with the FarmEazy backend.
- * Uses VITE_API_URL (e.g., https://api.farm-eazy.com) with a sensible production default.
  */
 
-// Dynamic API URL based on environment
-const API_URL = import.meta.env.VITE_API_URL || 'https://farm-eazy-backend.onrender.com';
+// Backend API URL
+const API_URL = 'https://farm-eazy-backend.onrender.com';
 export const API_BASE_URL = `${API_URL}/api`;
 
 // Create a configured Axios instance
