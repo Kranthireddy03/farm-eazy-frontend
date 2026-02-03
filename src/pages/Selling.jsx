@@ -30,7 +30,9 @@ function Selling() {
     specifications: '',
     warrantyInfo: '',
     imageUrls: '',
-    videoUrls: ''
+    videoUrls: '',
+    contactEmail: '',
+    contactPhone: ''
   });
 
   const categories = [
@@ -144,7 +146,9 @@ function Selling() {
         specifications: '',
         warrantyInfo: '',
         imageUrls: '',
-        videoUrls: ''
+        videoUrls: '',
+        contactEmail: '',
+        contactPhone: ''
       });
       fetchMyProducts();
     } catch (error) {
@@ -489,7 +493,6 @@ function Selling() {
             {currentStep === 5 && (
               <div className="bg-white rounded-2xl shadow-lg p-8 animate-fadeIn">
                 <h2 className="text-2xl font-bold mb-6 text-gray-800">📋 Additional Details</h2>
-                
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Specifications</label>
@@ -502,7 +505,6 @@ function Selling() {
                       placeholder="Technical specifications, ingredients, etc."
                     />
                   </div>
-                  
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Warranty Information</label>
                     <input
@@ -514,8 +516,32 @@ function Selling() {
                       placeholder="e.g., 1 year manufacturer warranty"
                     />
                   </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Email *</label>
+                    <input
+                      type="email"
+                      name="contactEmail"
+                      value={formData.contactEmail}
+                      onChange={handleInputChange}
+                      required
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      placeholder="your@email.com"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Contact Phone *</label>
+                    <input
+                      type="text"
+                      name="contactPhone"
+                      value={formData.contactPhone}
+                      onChange={handleInputChange}
+                      required
+                      pattern="^[0-9]{10}$"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                      placeholder="10-digit phone number"
+                    />
+                  </div>
                 </div>
-                
                 <div className="flex gap-4 mt-6">
                   <button
                     type="button"
