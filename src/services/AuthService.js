@@ -151,17 +151,29 @@ class AuthService {
 
   /**
    * Handle API errors
+   * Creates an error object with status, errorCode, and message
+   * for proper error handling in components
    * @param {Error} error - Axios error object
-   * @returns {Error} Formatted error message
+   * @returns {Object} Formatted error with message, status, and errorCode
    */
   handleError(error) {
-    if (error.response?.data?.message) {
-      return new Error(error.response.data.message);
-    }
-    if (error.response?.data?.errors?.[0]) {
-      return new Error(error.response.data.errors[0]);
-    }
-    return new Error(error.message || 'An error occurred');
+    const errorData = error.response?.data;
+    const status = error.response?.status;
+    
+    // Create a custom error object with all relevant info
+    const customError = new Error(
+      errorData?.message || 
+      errorData?.errors?.[0] || 
+      error.message || 
+      'An error occurred'
+    );
+    
+    // Attach additional properties for error handling
+    customError.status = status;
+    customError.errorCode = errorData?.errorCode || null;
+    customError.errors = errorData?.errors || null;
+    
+    return customError;
   }
 }
 

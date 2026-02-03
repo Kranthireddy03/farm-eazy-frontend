@@ -85,7 +85,22 @@ function ForgotPassword() {
         navigate('/login')
       }, 33000)
     } catch (error) {
-      showToast(error.message || 'Failed to process request. Please try again.', 'error')
+      // Check if this is an email delivery error (503 status)
+      if (error.status === 503 || error.message?.includes('email') || error.errorCode?.includes('EMAIL')) {
+        // Navigate to email error page with details
+        navigate('/email-error', {
+          state: {
+            title: 'Email Delivery Failed',
+            message: error.message || 'We were unable to send the password reset email. Please try again later.',
+            errorCode: error.errorCode || 'EMAIL_DELIVERY_FAILED',
+            email: email,
+            returnPath: '/forgot-password'
+          }
+        })
+      } else {
+        // Show toast for other errors (like email not found)
+        showToast(error.message || 'Failed to process request. Please try again.', 'error')
+      }
     } finally {
       setLoading(false)
     }

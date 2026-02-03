@@ -17,6 +17,7 @@ import Register from './pages/Register'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import RedirectReset from './pages/RedirectReset'
+import EmailError from './pages/EmailError'
 import Home from './pages/Home'
 import DashboardEnhanced from './pages/DashboardEnhanced'
 import Farms from './pages/Farms'
@@ -89,6 +90,7 @@ function App() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/r/:shortCode" element={<RedirectReset />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/email-error" element={<EmailError />} />
 
       {/* Protected Routes with Layout */}
       <Route
