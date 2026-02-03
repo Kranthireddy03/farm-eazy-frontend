@@ -7,7 +7,7 @@ import axios from 'axios';
  */
 
 // Backend API URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'https://farm-eazy-backend.onrender.com';
+const API_URL = 'https://www.farm-eazy.com';
 export const API_BASE_URL = `${API_URL}/api`;
 
 // Create a configured Axios instance
