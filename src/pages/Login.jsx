@@ -96,6 +96,22 @@ function Login({ onLoginSuccess }) {
     }
   }
 
+  /**
+   * Password visibility farming style button
+   */
+  const FarmingEyeButton = ({ visible, onClick, label }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="ml-2 px-3 py-1 rounded-full border-2 border-green-600 bg-gradient-to-r from-green-200 to-yellow-100 hover:from-green-300 hover:to-yellow-200 transition flex items-center focus:outline-none focus:ring-2 focus:ring-green-500"
+      style={{ fontWeight: 'bold', fontSize: '1.1em' }}
+    >
+      <span style={{ marginRight: 4 }}>{visible ? '👁️' : '🌱'}</span>
+      {visible ? 'Hide' : 'Show'}
+    </button>
+  );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
@@ -141,42 +157,26 @@ function Login({ onLoginSuccess }) {
             </div>
 
             {/* Password Field */}
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="form-label mb-0">Password</label>
-                <Link to="/forgot-password" className="text-sm text-green-600 hover:text-green-700 font-semibold">
-                  Forgot Password?
-                </Link>
+            <div className="mb-4">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
+              <div className="flex items-center mt-1">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  id="password"
+                  autoComplete="current-password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className={`input ${errors.password ? 'input-error' : ''}`}
+                  required
+                />
+                <FarmingEyeButton
+                  visible={showPassword}
+                  onClick={() => setShowPassword((v) => !v)}
+                  label={showPassword ? 'Hide password' : 'Show password'}
+                />
               </div>
-              <input
-                type={showPassword ? "text" : "password"}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="form-input pr-10"
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-green-600 focus:outline-none"
-                style={{marginLeft: '-2.5rem'}}
-              >
-                {showPassword ? (
-                  // Eye Off SVG
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 0 0 2.25 12c1.885 3.61 5.514 6 9.75 6 1.563 0 3.05-.322 4.39-.904M6.73 6.73A9.956 9.956 0 0 1 12 6c4.236 0 7.865 2.39 9.75 6a10.478 10.478 0 0 1-2.042 2.88M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
-                  </svg>
-                ) : (
-                  // Eye SVG
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12c1.885-3.61 5.514-6 9.75-6s7.865 2.39 9.75 6c-1.885 3.61-5.514 6-9.75 6s-7.865-2.39-9.75-6Zm7.5 0a2.25 2.25 0 1 0 4.5 0 2.25 2.25 0 0 0-4.5 0Z" />
-                  </svg>
-                )}
-              </button>
-              {errors.password && <p className="error-message">{errors.password}</p>}
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
             </div>
 
             {/* Submit Button */}

@@ -1,160 +1,225 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useSearchParams, Link } from "react-router-dom";
-import AuthService from "../services/AuthService";
+/**
+ * Reset Password Page Component
+ * 
+ * Features:
+ * - Password and confirm password input fields
+ * - Form validation
+ * - Error handling
+ * - Loading state
+ * - Token verification from URL
+ * - Toast notifications
+ */
+
+import { useState, useEffect } from 'react'
+import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import AuthService from '../services/AuthService'
+import { useToast } from '../hooks/useToast'
+import Toast from '../components/Toast'
+
+/**
+ * Password visibility farming style button
+ */
+const FarmingEyeButton = ({ visible, onClick, label }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-label={label}
+    className="ml-2 px-3 py-1 rounded-full border-2 border-green-600 bg-gradient-to-r from-green-200 to-yellow-100 hover:from-green-300 hover:to-yellow-200 transition flex items-center focus:outline-none focus:ring-2 focus:ring-green-500"
+    style={{ fontWeight: 'bold', fontSize: '1.1em' }}
+  >
+    <span style={{ marginRight: 4 }}>{visible ? '👁️' : '🌱'}</span>
+    {visible ? 'Hide' : 'Show'}
+  </button>
+);
 
 function ResetPassword() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const { showToast } = useToast()
+  
   const [formData, setFormData] = useState({
-    password: "",
-    confirmPassword: "",
-  });
-
-  const [errors, setErrors] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState("");
-  const [invalidToken, setInvalidToken] = useState(false);
-  const [resetSuccess, setResetSuccess] = useState(false);
-  const [countdown, setCountdown] = useState(5);
-
+    password: '',
+    confirmPassword: '',
+  })
+  const [errors, setErrors] = useState({})
+  const [loading, setLoading] = useState(false)
+  const [token, setToken] = useState('')
+  const [invalidToken, setInvalidToken] = useState(false)
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
-    const resetToken = searchParams.get("token");
-    if (!resetToken) {
-      setInvalidToken(true);
+    // Get token from URL query parameter
+    const resetToken = searchParams.get('token')
+    if (!resetToken || resetToken.length < 8) {
+      setInvalidToken(true)
     } else {
-      setToken(resetToken);
+      setToken(resetToken)
     }
-  }, [searchParams]);
+  }, [searchParams])
 
-  useEffect(() => {
-    if (resetSuccess && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-    if (countdown === 0) navigate("/login");
-  }, [resetSuccess, countdown, navigate]);
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
+  /**
+   * Validate form data
+   */
   const validateForm = () => {
-    const newErrors = {};
-
+    const newErrors = {}
     if (!formData.password) {
-      newErrors.password = "Password is required";
+      newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
-      newErrors.password = "Minimum 6 characters";
+      newErrors.password = 'Password must be at least 6 characters'
     }
-
     if (!formData.confirmPassword) {
-      newErrors.confirmPassword = "Confirm your password";
+      newErrors.confirmPassword = 'Please confirm your password'
     } else if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
+      newErrors.confirmPassword = 'Passwords do not match'
     }
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  /**
+   * Handle input change
+   */
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: '',
+      }))
+    }
+  }
 
+  /**
+   * Handle form submission
+   */
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validateForm()) return;
-
+    e.preventDefault()
+    setErrors({})
+    if (!validateForm()) return
+    setLoading(true)
     try {
-      setLoading(true);
-      await AuthService.resetPassword(token, formData.password);
-      setResetSuccess(true);
+      await AuthService.resetPassword(token, formData.password)
+      showToast('Password reset successful!', 'success')
+      setTimeout(() => navigate('/login'), 1500)
     } catch (err) {
-      alert("Reset failed");
+      showToast('Failed to reset password. Please try again.', 'error')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   if (invalidToken) {
     return (
-      <div className="text-center mt-20">
-        <h1>Invalid or Expired Token</h1>
-        <Link to="/login">Back to Login</Link>
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="card text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">⚠️</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">Invalid Link</h1>
+            <p className="text-gray-600 mb-6">
+              The password reset link is invalid or has expired. Please request a new one.
+            </p>
+            <Link
+              to="/forgot-password"
+              className="btn-primary w-full inline-block"
+            >
+              Request New Link
+            </Link>
+          </div>
+        </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow w-96">
-        {resetSuccess ? (
-          <div className="text-center">
-            <h2>Password Changed Successfully</h2>
-            <p>Redirecting in {countdown} seconds...</p>
-            <button onClick={() => navigate("/login")}>Login Now</button>
-          </div>
-        ) : (
-          <>
-            <h2 className="text-2xl font-bold mb-4 text-center">
-              Create New Password
-            </h2>
-            <form onSubmit={handleSubmit}>
-              {/* NEW PASSWORD */}
-              <div className="mb-4 relative">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="card">
+          <h1 className="text-2xl font-bold text-center mb-6 text-green-800">Reset Password</h1>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">New Password</label>
+              <div className="flex items-center mt-1">
                 <input
-                  type={showNew ? "text" : "password"}
+                  type={showNew ? 'text' : 'password'}
                   name="password"
-                  placeholder="New Password"
+                  id="password"
+                  autoComplete="new-password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="border p-2 w-full"
+                  className={`input ${errors.password ? 'input-error' : ''}`}
+                  aria-invalid={errors.password ? 'true' : 'false'}
+                  required
                 />
-                <span
-                  onClick={() => setShowNew(!showNew)}
-                  className="absolute right-3 top-2 cursor-pointer"
+                <button
+                  type="button"
+                  onClick={() => setShowNew((v) => !v)}
+                  aria-label={showNew ? 'Hide password' : 'Show password'}
+                  className="ml-2 px-3 py-1 rounded-full border-2 border-green-600 bg-gradient-to-r from-green-200 to-yellow-100 hover:from-green-300 hover:to-yellow-200 transition flex items-center focus:outline-none focus:ring-2 focus:ring-green-500"
+                  style={{ fontWeight: 'bold', fontSize: '1.1em' }}
                 >
-                  {showNew ? "🙈" : "👁"}
-                </span>
-                {errors.password && (
-                  <p className="text-red-500">{errors.password}</p>
-                )}
+                  <span style={{ marginRight: 4 }}>{showNew ? '👁️' : '🌱'}</span>
+                  {showNew ? 'Hide' : 'Show'}
+                </button>
               </div>
-              {/* CONFIRM PASSWORD */}
-              <div className="mb-4 relative">
+              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
+            </div>
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">Confirm Password</label>
+              <div className="flex items-center mt-1">
                 <input
-                  type={showConfirm ? "text" : "password"}
+                  type={showConfirm ? 'text' : 'password'}
                   name="confirmPassword"
-                  placeholder="Confirm Password"
+                  id="confirmPassword"
+                  autoComplete="new-password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="border p-2 w-full"
+                  className={`input ${errors.confirmPassword ? 'input-error' : ''}`}
+                  aria-invalid={errors.confirmPassword ? 'true' : 'false'}
+                  required
                 />
-                <span
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-2 cursor-pointer"
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm((v) => !v)}
+                  aria-label={showConfirm ? 'Hide confirm password' : 'Show confirm password'}
+                  className="ml-2 px-3 py-1 rounded-full border-2 border-green-600 bg-gradient-to-r from-green-200 to-yellow-100 hover:from-green-300 hover:to-yellow-200 transition flex items-center focus:outline-none focus:ring-2 focus:ring-green-500"
+                  style={{ fontWeight: 'bold', fontSize: '1.1em' }}
                 >
-                  {showConfirm ? "🙈" : "👁"}
-                </span>
-                {errors.confirmPassword && (
-                  <p className="text-red-500">{errors.confirmPassword}</p>
-                )}
+                  <span style={{ marginRight: 4 }}>{showConfirm ? '👁️' : '🌱'}</span>
+                  {showConfirm ? 'Hide' : 'Show'}
+                </button>
               </div>
-              <button
-                disabled={loading}
-                className="bg-green-600 text-white w-full p-2 rounded"
-              >
-                {loading ? "Resetting..." : "Reset Password"}
-              </button>
-            </form>
-            <div className="text-center mt-4">
-              <Link to="/login">Back to Login</Link>
+              {errors.confirmPassword && <p className="text-red-500 text-xs mt-1">{errors.confirmPassword}</p>}
             </div>
-          </>
-        )}
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={loading || formData.password !== formData.confirmPassword}
+              className="btn-primary w-full mt-4"
+            >
+              {loading ? 'Resetting...' : 'Reset Password'}
+            </button>
+          </form>
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <p className="text-gray-600">
+              Back to{' '}
+              <Link to="/login" className="text-green-600 hover:text-green-700 font-semibold">
+                Login
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
 
 export default ResetPassword;
+
