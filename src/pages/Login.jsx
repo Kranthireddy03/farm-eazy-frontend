@@ -168,7 +168,9 @@ function Login({ onLoginSuccess }) {
                   value={formData.password}
                   onChange={handleChange}
                   className={`input ${errors.password ? 'input-error' : ''}`}
+                  aria-invalid={errors.password ? 'true' : 'false'}
                   required
+                  placeholder="Enter your password"
                 />
                 <FarmingEyeButton
                   visible={showPassword}

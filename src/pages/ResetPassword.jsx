@@ -156,6 +156,7 @@ function ResetPassword() {
                   className={`input ${errors.password ? 'input-error' : ''}`}
                   aria-invalid={errors.password ? 'true' : 'false'}
                   required
+                  placeholder="Enter new password"
                 />
                 <button
                   type="button"
@@ -183,6 +184,7 @@ function ResetPassword() {
                   className={`input ${errors.confirmPassword ? 'input-error' : ''}`}
                   aria-invalid={errors.confirmPassword ? 'true' : 'false'}
                   required
+                  placeholder="Confirm new password"
                 />
                 <button
                   type="button"

@@ -235,7 +235,9 @@ function Register({ onRegisterSuccess }) {
                   value={formData.password}
                   onChange={handleChange}
                   className={`input ${errors.password ? 'input-error' : ''}`}
+                  aria-invalid={errors.password ? 'true' : 'false'}
                   required
+                  placeholder="Create a password"
                 />
                 <FarmingEyeButton
                   visible={showPassword}
