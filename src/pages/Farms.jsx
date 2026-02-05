@@ -10,11 +10,14 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useToast } from '../hooks/useToast';
+import Toast from '../components/Toast';
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 
 function Farms() {
+  const { toast, showToast, closeToast } = useToast();
   const [farms, setFarms] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -82,9 +85,11 @@ function Farms() {
       setFormData({ farmName: '', location: '', areaSize: '' })
       setShowAddForm(false)
       setError('')
+      showToast('Farm created successfully!', 'success');
       await fetchFarms()
     } catch (err) {
       setError(err.message || 'Failed to create farm')
+      showToast(err.message || 'Failed to create farm', 'error');
     } finally {
       setSubmitting(false)
     }
@@ -101,9 +106,11 @@ function Farms() {
     try {
       await apiClient.delete(API_ENDPOINTS.DELETE_FARM(farmId))
       setError('')
+      showToast('Farm deleted successfully!', 'success');
       await fetchFarms()
     } catch (err) {
       setError('Failed to delete farm')
+      showToast('Failed to delete farm', 'error');
     }
   }
 
@@ -123,7 +130,11 @@ function Farms() {
   }
 
   return (
-    <div className="space-y-8">
+    <>
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
+      )}
+      <div className="space-y-8">
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
@@ -248,7 +259,8 @@ function Farms() {
           ))}
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }
 

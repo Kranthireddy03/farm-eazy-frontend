@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatDate } from '../utils/formatDate';
 import { useNavigate } from 'react-router-dom';
 import OtpService from '../services/OtpService';
 import ProductService from '../services/ProductService';
@@ -687,7 +688,7 @@ function Selling() {
                     Stock: <span className="font-semibold">{product.quantity} {product.unit}</span>
                   </p>
                   <div className="text-xs text-gray-500">
-                    Listed {new Date(product.createdAt).toLocaleDateString()}
+                    Listed {formatDate(product.createdAt)}
                   </div>
                 </div>
               </div>

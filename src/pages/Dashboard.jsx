@@ -55,7 +55,8 @@ RECENT ACTIVITIES (Last 10)
 ═══════════════════════════════════════════════════════════════════
 
 ${activities.length === 0 ? 'No activities recorded' : activities.map((activity, index) => {
-        const date = new Date(activity.createdAt).toLocaleString()
+        const { formatDate } = require('../utils/formatDate');
+        const date = formatDate(activity.createdAt, true);
         return `${index + 1}. [${date}] ${activity.description}`
       }).join('\n')}
 

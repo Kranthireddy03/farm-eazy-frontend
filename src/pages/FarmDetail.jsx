@@ -9,6 +9,7 @@
  */
 
 import { useParams, useNavigate } from 'react-router-dom'
+import { formatDate } from '../utils/formatDate';
 import { useState, useEffect } from 'react'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
@@ -97,7 +98,7 @@ function FarmDetail() {
           <div>
             <p className="text-gray-600 text-sm">Created On</p>
             <p className="text-lg font-semibold text-gray-800">
-              {new Date(farm.createdAt).toLocaleDateString()}
+              {formatDate(farm.createdAt)}
             </p>
           </div>
         </div>

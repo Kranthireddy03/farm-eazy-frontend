@@ -12,6 +12,7 @@
  */
 
 import { useState } from 'react'
+import PasswordInput from '../components/PasswordInput'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 
@@ -24,7 +25,6 @@ function Register({ onRegisterSuccess }) {
     phone: '',
     username: '',
   })
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -224,29 +224,16 @@ function Register({ onRegisterSuccess }) {
             </div>
 
             {/* Password Field */}
-            <div className="mb-4">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password</label>
-              <div className="flex items-center mt-1">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  id="password"
-                  autoComplete="new-password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`input ${errors.password ? 'input-error' : ''}`}
-                  aria-invalid={errors.password ? 'true' : 'false'}
-                  required
-                  placeholder="Create a password"
-                />
-                <FarmingEyeButton
-                  visible={showPassword}
-                  onClick={() => setShowPassword((v) => !v)}
-                  label={showPassword ? 'Hide password' : 'Show password'}
-                />
-              </div>
-              {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
-            </div>
+            <PasswordInput
+              label="Password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Create a password"
+              error={errors.password}
+              required
+              autoComplete="new-password"
+            />
 
             {/* Submit Button */}
             <button

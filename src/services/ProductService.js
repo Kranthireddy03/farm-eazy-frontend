@@ -2,7 +2,19 @@ import apiClient from './apiClient';
 
 const ProductService = {
   createProduct: async (productData) => {
-    const response = await apiClient.post('/products', productData);
+    // Prepare FormData for multipart/form-data
+    const formData = new FormData();
+    // Extract file URLs if present (assume comma-separated URLs in imageUrls/videoUrls)
+    // If you want to support actual file uploads, update Selling.jsx to pass File objects
+    // For now, just send product JSON
+    formData.append('product', JSON.stringify(productData));
+    // If you have files, you can append them as:
+    // productData.files?.forEach(file => formData.append('files', file));
+    const response = await apiClient.post('/products', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 
