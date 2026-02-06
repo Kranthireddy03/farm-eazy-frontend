@@ -47,11 +47,11 @@ apiClient.interceptors.response.use(
       localStorage.removeItem('farmEazy_fullName');
       localStorage.removeItem('lastLoginBonusDate');
       
-      // Show alert to user
-      alert('Your session has expired or your account has been deleted. Please login again.');
-      
-      // Redirect to login page
-      window.location.href = '/login';
+       // Show alert to user
+       if (window.location.pathname !== '/login') {
+         alert('Your session has expired or your account has been deleted. Please login again.');
+         window.location.href = '/login';
+       }
     }
     return Promise.reject(error);
   }
