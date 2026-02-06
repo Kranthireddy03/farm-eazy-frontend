@@ -10,6 +10,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import AuthService from './services/AuthService'
+import { CoinProvider } from './context/CoinContext';
 
 // Pages
 import Login from './pages/Login'
