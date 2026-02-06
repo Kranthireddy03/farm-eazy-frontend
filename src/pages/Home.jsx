@@ -16,14 +16,13 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import AuthService from '../services/AuthService'
-import apiClient from '../services/apiClient'
+import { useCoin } from '../context/CoinContext'
 
 function Home() {
   const navigate = useNavigate()
   const [userFullName, setUserFullName] = useState('')
   const [userUsername, setUserUsername] = useState('')
-  const [coins, setCoins] = useState(null)
-  const [coinsLoading, setCoinsLoading] = useState(true)
+  const { coins, loading: coinsLoading, refreshCoins } = useCoin()
   const [statsLoading, setStatsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalFarms: 0,
@@ -37,21 +36,11 @@ function Home() {
     const username = localStorage.getItem('farmEazy_username')
     setUserFullName(fullName || 'Farmer')
     setUserUsername(username || 'user')
-    
-    // Fetch user coins
-    fetchCoins()
     fetchStats()
   }, [])
   
   const fetchCoins = async () => {
-    try {
-      const response = await apiClient.get('/coins')
-      setCoins(response.data)
-    } catch (error) {
-      console.error('Error fetching coins:', error)
-    } finally {
-      setCoinsLoading(false)
-    }
+    // Removed: now handled by CoinContext
   }
 
   const fetchStats = async () => {

@@ -24,6 +24,7 @@ function Layout() {
   const [coins, setCoins] = useState(null)
   const [coinsLoading, setCoinsLoading] = useState(true)
   const [sessionCoinsEarned, setSessionCoinsEarned] = useState(0)
+  const [showSessionCoinBonus, setShowSessionCoinBonus] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const hasFetchedCoinsRef = useRef(false)
   const userEmail = AuthService.getUserEmail()
@@ -71,10 +72,16 @@ function Layout() {
         if (lastLoginBonus !== today && response.data.loginCountToday > 0) {
           const earned = 5
           setSessionCoinsEarned(earned)
+          setShowSessionCoinBonus(true)
           showToast(`🪙 +${earned} coins! Daily login bonus earned`, 'success')
           localStorage.setItem('lastLoginBonusDate', today)
+          // Hide session coin bonus after 5 seconds
+          setTimeout(() => {
+            setShowSessionCoinBonus(false)
+          }, 5000)
         } else {
           setSessionCoinsEarned(0)
+          setShowSessionCoinBonus(false)
         }
       } catch (error) {
         console.error('Error fetching coins:', error)
@@ -223,7 +230,7 @@ function Layout() {
                     <span>🪙</span>
                     <span>{coins.totalCoins}</span>
                   </div>
-                  {sessionCoinsEarned > 0 && (
+                  {sessionCoinsEarned > 0 && showSessionCoinBonus && (
                     <div className="text-xs text-green-700 mt-1">
                       +{sessionCoinsEarned} credited this session
                     </div>
@@ -358,7 +365,7 @@ function Layout() {
               <p className="text-gray-600 text-sm">
                 Contact: support@farmeazy.com
               </p>
-              <a href="https://instagram.com/farmeazy" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-gray-600 hover:text-pink-500">
+              <a href="https://instagram.com/kranthireddy0309" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-gray-600 hover:text-pink-500">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5zm4.25 3.25a5.25 5.25 0 1 1 0 10.5a5.25 5.25 0 0 1 0-10.5zm0 1.5a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5zm5.25.75a1 1 0 1 1-2 0a1 1 0 0 1 2 0z" />
                 </svg>

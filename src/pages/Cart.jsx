@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
+import ProductService from '../services/ProductService'
 
 function Cart() {
   const navigate = useNavigate()
@@ -81,22 +82,40 @@ function Cart() {
   }
 
   // Remove item from cart
-  const removeFromCart = (productId) => {
+  const removeFromCart = async (productId) => {
     const updatedItems = cartItems.filter(item => item.id !== productId)
+    // Release product quantity in backend
+    const item = cartItems.find(item => item.id === productId)
+    if (item) {
+      try {
+        await ProductService.releaseProductQuantity(productId, item.quantity)
+      } catch (error) {
+        showToast('Failed to release product: ' + (error?.response?.data?.message || error.message), 'error')
+      }
+    }
     saveCart(updatedItems)
-    showToast('Product removed from cart', 'success')
+    showToast('Product removed from cart and stock restored', 'success')
   }
 
-  // Calculate totals
+  // Calculate totals with discount
   const calculateTotals = () => {
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-    const tax = subtotal * 0.18 // 18% GST
-    const total = subtotal + tax
-    
-    return { subtotal, tax, total }
+    const subtotal = cartItems.reduce((sum, item) => {
+      const price = item.discountedPrice !== undefined ? item.discountedPrice : item.price;
+      return sum + (price * item.quantity);
+    }, 0);
+    const tax = subtotal * 0.18; // 18% GST
+    const total = subtotal + tax;
+    // Calculate savings
+    const savings = cartItems.reduce((sum, item) => {
+      if (item.discountedPrice !== undefined && item.discountedPrice < item.price) {
+        return sum + ((item.price - item.discountedPrice) * item.quantity);
+      }
+      return sum;
+    }, 0);
+    return { subtotal, tax, total, savings };
   }
 
-  const { subtotal, tax, total } = calculateTotals()
+  const { subtotal, tax, total, savings } = calculateTotals();
 
   // Handle coins checkbox
   const handleUseCoins = (checked) => {
@@ -117,7 +136,7 @@ function Cart() {
   }
 
   // Final amount after coins
-  const finalAmount = Math.max(0, total - (coinsToUse * COIN_VALUE))
+  const finalAmount = Math.max(0, total - (coinsToUse * COIN_VALUE));
 
   // Proceed to checkout
   const handleCheckout = async () => {
@@ -194,7 +213,14 @@ function Cart() {
                     <div className="flex-1">
                       <h3 className="text-xl font-bold text-gray-800">{item.productName}</h3>
                       <p className="text-gray-600 text-sm mb-2">Seller: {item.sellerFullName}</p>
-                      <p className="text-orange-600 font-bold text-lg">₹{item.price.toFixed(2)}</p>
+                      {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
+                        <>
+                          <p className="text-orange-600 font-bold text-lg">₹{item.discountedPrice.toFixed(2)} <span className="line-through text-gray-500 text-base ml-2">₹{item.price.toFixed(2)}</span></p>
+                          <p className="text-green-600 text-sm font-semibold">You save ₹{((item.price - item.discountedPrice) * item.quantity).toFixed(2)}</p>
+                        </>
+                      ) : (
+                        <p className="text-orange-600 font-bold text-lg">₹{item.price.toFixed(2)}</p>
+                      )}
                     </div>
 
                     {/* Remove Button */}
@@ -240,7 +266,7 @@ function Cart() {
                     </div>
 
                     <div className="ml-auto font-bold text-lg">
-                      ₹{(item.price * item.quantity).toFixed(2)}
+                      ₹{((item.discountedPrice !== undefined ? item.discountedPrice : item.price) * item.quantity).toFixed(2)}
                     </div>
                   </div>
                 </div>
@@ -267,6 +293,12 @@ function Cart() {
                   <span>Total:</span>
                   <span>₹{total.toFixed(2)}</span>
                 </div>
+                {savings > 0 && (
+                  <div className="flex justify-between text-green-600 font-semibold">
+                    <span>Discount Savings:</span>
+                    <span>₹{savings.toFixed(2)}</span>
+                  </div>
+                )}
               </div>
 
               {/* Coins Section */}

@@ -15,7 +15,7 @@ function ChangePassword() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
       showToast('Please fill all fields', 'warning')
@@ -25,7 +25,28 @@ function ChangePassword() {
       showToast('New password and confirm password do not match', 'error')
       return
     }
-    showToast('Password change will be available soon', 'info')
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('farmEazy_token')}`
+        },
+        body: JSON.stringify({
+          currentPassword: form.currentPassword,
+          newPassword: form.newPassword
+        })
+      })
+      if (!response.ok) {
+        const data = await response.json()
+        showToast(data.message || 'Password change failed', 'error')
+        return
+      }
+      showToast('Password changed successfully! Confirmation email sent.', 'success')
+      setForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
+    } catch (err) {
+      showToast('Password change failed. Please try again.', 'error')
+    }
   }
 
   return (

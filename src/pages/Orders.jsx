@@ -113,11 +113,37 @@ function Orders() {
               {order.items && order.items.length > 0 && (
                 <div className="mt-4 border-t pt-4 text-sm text-gray-700">
                   {order.items.map(item => (
-                    <div key={`${order.id}-${item.productId}`} className="flex justify-between py-1">
-                      <span>{item.productName} × {item.quantity}</span>
+                    <div key={`${order.id}-${item.productId}`} className="flex justify-between py-1 items-center">
+                      <div>
+                        <span className="font-semibold">{item.productName}</span> × {item.quantity}
+                        {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
+                          <>
+                            <span className="ml-2 text-orange-600 font-bold">₹{item.discountedPrice.toFixed(2)}</span>
+                            <span className="ml-2 line-through text-gray-500">₹{item.price.toFixed(2)}</span>
+                            <span className="ml-2 text-green-600 font-semibold">Saved ₹{((item.price - item.discountedPrice) * item.quantity).toFixed(2)}</span>
+                          </>
+                        ) : (
+                          <span className="ml-2 text-orange-600 font-bold">₹{item.price.toFixed(2)}</span>
+                        )}
+                      </div>
                       <span>{formatCurrency(item.totalPrice)}</span>
                     </div>
                   ))}
+                  {/* Order-level savings */}
+                  {order.items.some(item => item.discountedPrice !== undefined && item.discountedPrice < item.price) && (
+                    <div className="flex justify-end text-green-600 font-semibold mt-2">
+                      <span>
+                        Total Discount Savings: ₹{
+                          order.items.reduce((sum, item) => {
+                            if (item.discountedPrice !== undefined && item.discountedPrice < item.price) {
+                              return sum + ((item.price - item.discountedPrice) * item.quantity);
+                            }
+                            return sum;
+                          }, 0).toFixed(2)
+                        }
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

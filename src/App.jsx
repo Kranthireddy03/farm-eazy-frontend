@@ -83,7 +83,8 @@ function App() {
   }
 
   return (
-    <Routes>
+    <CoinProvider>
+      <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login onLoginSuccess={() => setIsLoggedIn(true)} />} />
       <Route path="/register" element={<Register onRegisterSuccess={() => setIsLoggedIn(true)} />} />
@@ -121,7 +122,8 @@ function App() {
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+    </CoinProvider>
   )
 }
 

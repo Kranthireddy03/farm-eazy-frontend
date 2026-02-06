@@ -116,6 +116,14 @@ function Selling() {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    // Email validation for contactEmail
+    if (name === 'contactEmail') {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (value && !emailPattern.test(value)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+      }
+    }
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -125,7 +133,11 @@ function Selling() {
       showToast('Please verify OTP first', 'error');
       return;
     }
-    
+    // Prevent listing products with zero or negative quantity
+    if (!formData.quantity || parseInt(formData.quantity, 10) <= 0) {
+      showToast('Quantity must be greater than zero', 'error');
+      return;
+    }
     setLoading(true);
     try {
       await ProductService.createProduct(formData);
@@ -525,6 +537,7 @@ function Selling() {
                       value={formData.contactEmail}
                       onChange={handleInputChange}
                       required
+                      pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
                       className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
                       placeholder="your@email.com"
                     />

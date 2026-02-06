@@ -157,16 +157,23 @@ function Login({ onLoginSuccess }) {
             </div>
 
             {/* Password Field */}
-            <PasswordInput
-              label="Password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              error={errors.password}
-              required
-              autoComplete="current-password"
-            />
+      <PasswordInput
+        label="Password"
+        name="password"
+        value={formData.password}
+        onChange={handleChange}
+        placeholder="Enter your password"
+        error={errors.password}
+        required
+        autoComplete="current-password"
+      />
+
+      {/* Forgot Password Link */}
+      <div className="mt-2 text-right">
+        <Link to="/reset-password" className="text-blue-600 hover:text-blue-800 underline text-sm font-medium">
+        Forgot Password?
+        </Link>
+      </div>
 
             {/* Submit Button */}
             <button
