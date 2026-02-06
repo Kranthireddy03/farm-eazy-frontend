@@ -24,7 +24,9 @@ export function CoinProvider({ children }) {
   };
 
   useEffect(() => {
-    fetchCoins();
+     const token = localStorage.getItem("token");
+     if (!token) return; // STOP here if not logged in
+     fetchCoins();
   }, []);
 
   return (
