@@ -24,7 +24,8 @@ const Activities = () => {
             }
         };
         fetchActivities();
-    }, [page, showToast]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page]);
 
     const getActivityIcon = (description) => {
         if (description.toLowerCase().includes('farm')) return '🌾'
