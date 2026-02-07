@@ -5,7 +5,7 @@ import Toast from '../components/Toast'
 
 function IrrigationServices() {
   const { toast, showToast, closeToast } = useToast()
-  const [activeTab, setActiveTab] = useState('listings') // 'listings' or 'bookings'
+  const [activeTab, setActiveTab] = useState('listings') // 'listings', 'browse', 'bookings', or 'provider-requests'
 
   const [postForm, setPostForm] = useState({
     type: 'TRACTOR',
@@ -35,8 +35,11 @@ function IrrigationServices() {
 
   const [listings, setListings] = useState([])
   const [bookings, setBookings] = useState([])
+  const [allListings, setAllListings] = useState([]) // All available services to browse
+  const [providerRequests, setProviderRequests] = useState([]) // Incoming booking requests for user's services
   const [showPostForm, setShowPostForm] = useState(false)
   const [showBookingForm, setShowBookingForm] = useState(false)
+  const [selectedService, setSelectedService] = useState(null) // Service being booked
   const [editingListing, setEditingListing] = useState(null)
   const [loading, setLoading] = useState(false)
 
@@ -45,6 +48,8 @@ function IrrigationServices() {
     fetchCrops();
     fetchListings();
     fetchBookings();
+    fetchAllListings();
+    fetchProviderRequests();
   }, []);
 
   const fetchListings = async () => {
@@ -70,6 +75,26 @@ function IrrigationServices() {
       setBookings([]);
     } finally {
       setLoading(false)
+    }
+  };
+
+  const fetchAllListings = async () => {
+    try {
+      const response = await apiClient.get('/services/listings');
+      setAllListings(Array.isArray(response.data.content) ? response.data.content : Array.isArray(response.data) ? response.data : []);
+    } catch (error) {
+      console.error('Error fetching all listings:', error);
+      setAllListings([]);
+    }
+  };
+
+  const fetchProviderRequests = async () => {
+    try {
+      const response = await apiClient.get('/services/bookings/my-listings');
+      setProviderRequests(Array.isArray(response.data.content) ? response.data.content : []);
+    } catch (error) {
+      console.error('Error fetching provider requests:', error);
+      setProviderRequests([]);
     }
   };
 
@@ -181,9 +206,14 @@ function IrrigationServices() {
     }
     try {
       setLoading(true)
-      const response = await apiClient.post('/services/bookings', bookingForm);
+      const bookingData = {
+        ...bookingForm,
+        serviceListingId: selectedService?.id || null
+      };
+      const response = await apiClient.post('/services/bookings', bookingData);
       setBookings((prev) => [response.data, ...prev]);
       setShowBookingForm(false);
+      setSelectedService(null);
       showToast('Booking request submitted successfully!', 'success');
       fetchBookings();
     } catch (error) {
@@ -265,9 +295,52 @@ function IrrigationServices() {
       await apiClient.delete(`/services/listings/${listingId}`)
       setListings((prev) => prev.filter((l) => l.id !== listingId))
       showToast('Service listing deleted successfully!', 'success')
+      fetchAllListings() // Refresh browse listings too
     } catch (error) {
       console.error('Error deleting listing:', error)
       const errorMsg = error.response?.data?.message || 'Failed to delete listing'
+      showToast(errorMsg, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleBookService = (service) => {
+    setSelectedService(service)
+    setShowBookingForm(true)
+    setActiveTab('bookings')
+  }
+
+  const handleApproveBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to approve this booking request?')) {
+      return
+    }
+    try {
+      setLoading(true)
+      await apiClient.put(`/services/bookings/${bookingId}/approve`)
+      showToast('Booking request approved successfully!', 'success')
+      fetchProviderRequests()
+    } catch (error) {
+      console.error('Error approving booking:', error)
+      const errorMsg = error.response?.data?.message || 'Failed to approve booking'
+      showToast(errorMsg, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeclineBooking = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to decline this booking request?')) {
+      return
+    }
+    try {
+      setLoading(true)
+      await apiClient.put(`/services/bookings/${bookingId}/decline`)
+      showToast('Booking request declined.', 'info')
+      fetchProviderRequests()
+    } catch (error) {
+      console.error('Error declining booking:', error)
+      const errorMsg = error.response?.data?.message || 'Failed to decline booking'
       showToast(errorMsg, 'error')
     } finally {
       setLoading(false)
@@ -281,6 +354,23 @@ function IrrigationServices() {
       case 'MANUAL': return '👷'
       case 'IRRIGATION': return '💧'
       default: return '🔧'
+    }
+  }
+
+  const getStatusBadge = (status) => {
+    switch(status) {
+      case 'PENDING':
+        return 'bg-yellow-100 text-yellow-700 border-yellow-300'
+      case 'APPROVED':
+        return 'bg-green-100 text-green-700 border-green-300'
+      case 'DECLINED':
+        return 'bg-red-100 text-red-700 border-red-300'
+      case 'COMPLETED':
+        return 'bg-blue-100 text-blue-700 border-blue-300'
+      case 'CANCELLED':
+        return 'bg-gray-100 text-gray-700 border-gray-300'
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-300'
     }
   }
 
@@ -299,30 +389,46 @@ function IrrigationServices() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-2 border-b border-gray-200">
+        <div className="flex space-x-2 border-b border-gray-200 overflow-x-auto">
           <button
             onClick={() => setActiveTab('listings')}
-            className={`px-6 py-3 font-semibold transition ${
+            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
               activeTab === 'listings'
                 ? 'text-green-600 border-b-2 border-green-600'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
           >
-            Service Listings
+            My Service Listings
           </button>
           <button
-            onClick={() => listings.length > 0 && setActiveTab('bookings')}
-            disabled={listings.length === 0}
-            className={`px-6 py-3 font-semibold transition ${
-              activeTab === 'bookings'
+            onClick={() => setActiveTab('browse')}
+            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
+              activeTab === 'browse'
                 ? 'text-green-600 border-b-2 border-green-600'
-                : listings.length === 0
-                ? 'text-gray-400 cursor-not-allowed'
                 : 'text-gray-600 hover:text-gray-800'
             }`}
-            title={listings.length === 0 ? 'No service listings available yet' : ''}
           >
-            My Booking Requests {listings.length === 0 && '🔒'}
+            Browse & Book Services
+          </button>
+          <button
+            onClick={() => setActiveTab('bookings')}
+            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
+              activeTab === 'bookings'
+                ? 'text-green-600 border-b-2 border-green-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            My Booking Requests
+          </button>
+          <button
+            onClick={() => setActiveTab('provider-requests')}
+            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
+              activeTab === 'provider-requests'
+                ? 'text-green-600 border-b-2 border-green-600'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+          >
+            Provider Requests
           </button>
         </div>
 
@@ -918,6 +1024,84 @@ function IrrigationServices() {
           </>
         )}
 
+        {/* BROWSE & BOOK SERVICES TAB */}
+        {activeTab === 'browse' && (
+          <>
+            {/* Browse Services Grid */}
+            {allListings.length === 0 ? (
+              <div className="card text-center py-12">
+                <div className="text-6xl mb-4">🔍</div>
+                <p className="text-gray-600 text-lg font-semibold">No services available yet</p>
+                <p className="text-gray-500 text-sm mt-2">Check back later for available services!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {allListings.map((listing) => (
+                  <div key={listing.id} className="card hover:shadow-lg transition-shadow border-2 border-gray-100">
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="text-lg font-bold text-gray-800">{listing.serviceName || listing.title || 'Untitled Service'}</h3>
+                        <p className="text-gray-600 text-sm">📍 {listing.location || 'Location not specified'}</p>
+                      </div>
+                      <span className="text-3xl">{getServiceIcon(listing.type)}</span>
+                    </div>
+
+                    <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-600">Type</p>
+                        <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">{listing.type}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-600">Hourly Rate</p>
+                        <p className="text-lg text-green-600 font-bold">₹{listing.price || listing.rate || 'N/A'}/hr</p>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-600">Availability</p>
+                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
+                          listing.availability === 'Available' ? 'bg-green-100 text-green-700' :
+                          listing.availability === 'Limited' ? 'bg-yellow-100 text-yellow-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>{listing.availability}</span>
+                      </div>
+                    </div>
+
+                    {listing.description && (
+                      <div className="mb-4">
+                        <p className="text-xs text-gray-500 mb-1">Description:</p>
+                        <p className="text-sm text-gray-700 line-clamp-3">{listing.description}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-1 mb-4">
+                      {listing.contactName && (
+                        <p className="text-sm text-gray-700">👤 {listing.contactName}</p>
+                      )}
+                      {listing.contactPhone && (
+                        <p className="text-sm text-gray-700">📞 {listing.contactPhone}</p>
+                      )}
+                      {listing.contactEmail && (
+                        <p className="text-sm text-gray-700">✉️ {listing.contactEmail}</p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={() => handleBookService(listing)}
+                      disabled={listing.availability === 'Booked'}
+                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
+                        listing.availability === 'Booked'
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white transform hover:scale-105 active:scale-95'
+                      }`}
+                    >
+                      {listing.availability === 'Booked' ? '⛔ Fully Booked' : '📝 Book This Service'}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
         {/* BOOKINGS TAB */}
         {activeTab === 'bookings' && (
           <>
@@ -933,9 +1117,22 @@ function IrrigationServices() {
 
             {/* Booking Form */}
             {showBookingForm && (
-              <div className="card">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Request a Service</h2>
-                <form onSubmit={handleBookingSubmit} className="space-y-4">
+              <div className="bg-gradient-to-br from-green-50 to-white rounded-xl shadow-2xl border-2 border-green-300 overflow-hidden">
+                {/* Form Header */}
+                <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
+                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                    <span className="text-3xl">📝</span>
+                    Request a Service
+                  </h2>
+                  {selectedService && (
+                    <div className="mt-2 bg-white bg-opacity-20 rounded-lg p-3 text-white">
+                      <p className="text-sm font-semibold">Booking: {selectedService.serviceName || selectedService.title}</p>
+                      <p className="text-xs">Rate: ₹{selectedService.price || selectedService.rate}/hr • {selectedService.type}</p>
+                    </div>
+                  )}
+                </div>
+
+                <form onSubmit={handleBookingSubmit} className="p-8 space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="form-label">Service Type <span className="text-red-500">*</span></label>
@@ -1045,17 +1242,53 @@ function IrrigationServices() {
                       onChange={handleBookingChange}
                       className="form-input"
                       rows="3"
-                      placeholder="Describe irrigation or crop requirements"
+                      placeholder="Describe your requirements for this service"
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Submitting...' : 'Request Booking'}
-                  </button>
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="animate-spin">⏳</span>
+                          Submitting...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <span>🚀</span>
+                          Request Booking
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowBookingForm(false)
+                        setSelectedService(null)
+                      }}
+                      className="px-8 py-3 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-lg transition-all duration-300 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+
+                  {selectedService && (
+                    <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <span className="text-2xl">💡</span>
+                        <div>
+                          <p className="text-sm font-semibold text-blue-900">Booking Information</p>
+                          <p className="text-sm text-blue-800 mt-1">
+                            This request will be sent to the service provider. You'll be notified once they respond to your request.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </form>
               </div>
             )}
@@ -1063,32 +1296,47 @@ function IrrigationServices() {
             {/* Booking Requests Grid */}
             {bookings.length === 0 ? (
               <div className="card text-center py-12">
-                <p className="text-gray-600 text-lg">No booking requests yet. Create your first request!</p>
+                <div className="text-6xl mb-4">📋</div>
+                <p className="text-gray-600 text-lg font-semibold">No booking requests yet</p>
+                <p className="text-gray-500 text-sm mt-2">Browse available services and make your first booking!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {bookings.map((booking) => (
                   <div key={booking.id} className="card hover:shadow-lg transition-shadow">
                     <div className="flex items-start justify-between mb-4">
-                      <div>
+                      <div className="flex-1">
                         <h3 className="text-lg font-bold text-gray-800">{booking.serviceType} Service</h3>
                         <p className="text-gray-600 text-sm">📍 {booking.location || 'Location not specified'}</p>
+                        {booking.providerName && (
+                          <p className="text-gray-600 text-xs mt-1">Provider: {booking.providerName}</p>
+                        )}
                       </div>
                       <span className="text-2xl">{getServiceIcon(booking.serviceType)}</span>
                     </div>
 
+                    <div className="mb-3">
+                      <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg border ${getStatusBadge(booking.status)}`}>
+                        {booking.status}
+                      </span>
+                    </div>
+
                     <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm text-gray-600">Farm ID</p>
-                        <p className="text-sm font-semibold text-gray-800">{booking.farmId || 'N/A'}</p>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <p className="text-sm text-gray-600">Crop ID</p>
-                        <p className="text-sm font-semibold text-gray-800">{booking.cropId || 'N/A'}</p>
-                      </div>
+                      {booking.farmName && (
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-600">Farm</p>
+                          <p className="text-sm font-semibold text-gray-800">{booking.farmName}</p>
+                        </div>
+                      )}
+                      {booking.cropName && (
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-600">Crop</p>
+                          <p className="text-sm font-semibold text-gray-800">{booking.cropName}</p>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <p className="text-sm text-gray-600">Hours</p>
-                        <p className="text-sm font-semibold text-gray-800">{booking.hours}</p>
+                        <p className="text-sm font-semibold text-gray-800">{booking.hours}hrs</p>
                       </div>
                       <div className="flex justify-between items-center">
                         <p className="text-sm text-gray-600">People</p>
@@ -1099,7 +1347,104 @@ function IrrigationServices() {
                     {booking.notes && (
                       <div className="space-y-1">
                         <p className="text-xs text-gray-500">Notes:</p>
-                        <p className="text-sm text-gray-700">{booking.notes}</p>
+                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded">{booking.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* PROVIDER REQUESTS TAB */}
+        {activeTab === 'provider-requests' && (
+          <>
+            {/* Provider Requests Grid */}
+            {providerRequests.length === 0 ? (
+              <div className="card text-center py-12">
+                <div className="text-6xl mb-4">📬</div>
+                <p className="text-gray-600 text-lg font-semibold">No booking requests yet</p>
+                <p className="text-gray-500 text-sm mt-2">When customers book your services, they will appear here!</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {providerRequests.map((request) => (
+                  <div key={request.id} className="card hover:shadow-lg transition-shadow border-2 border-blue-100">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-gray-800">{request.serviceType} Service Request</h3>
+                        <p className="text-gray-600 text-sm">📍 {request.location || 'Location not specified'}</p>
+                        {request.customerName && (
+                          <p className="text-blue-600 text-sm font-semibold mt-1">Customer: {request.customerName}</p>
+                        )}
+                      </div>
+                      <span className="text-3xl">{getServiceIcon(request.serviceType)}</span>
+                    </div>
+
+                    <div className="mb-3">
+                      <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg border ${getStatusBadge(request.status)}`}>
+                        {request.status}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
+                      {request.farmName && (
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-600">Farm</p>
+                          <p className="text-sm font-semibold text-gray-800">{request.farmName}</p>
+                        </div>
+                      )}
+                      {request.cropName && (
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm text-gray-600">Crop</p>
+                          <p className="text-sm font-semibold text-gray-800">{request.cropName}</p>
+                        </div>
+                      )}
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-600">Hours Requested</p>
+                        <p className="text-sm font-semibold text-gray-800">{request.hours}hrs</p>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <p className="text-sm text-gray-600">People Count</p>
+                        <p className="text-sm font-semibold text-gray-800">{request.peopleCount}</p>
+                      </div>
+                    </div>
+
+                    {request.notes && (
+                      <div className="mb-4">
+                        <p className="text-xs text-gray-500 mb-1">Customer Notes:</p>
+                        <p className="text-sm text-gray-700 bg-blue-50 p-3 rounded border border-blue-200">{request.notes}</p>
+                      </div>
+                    )}
+
+                    {request.status === 'PENDING' && (
+                      <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                        <button
+                          onClick={() => handleApproveBooking(request.id)}
+                          disabled={loading}
+                          className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        >
+                          ✅ Approve
+                        </button>
+                        <button
+                          onClick={() => handleDeclineBooking(request.id)}
+                          disabled={loading}
+                          className="flex-1 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-4 py-2.5 rounded-lg text-sm font-semibold transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                        >
+                          ❌ Decline
+                        </button>
+                      </div>
+                    )}
+
+                    {request.status !== 'PENDING' && (
+                      <div className="mt-4 pt-4 border-t border-gray-200 text-center">
+                        <p className="text-sm text-gray-600 font-semibold">
+                          {request.status === 'APPROVED' && '✅ You approved this request'}
+                          {request.status === 'DECLINED' && '❌ You declined this request'}
+                          {request.status === 'COMPLETED' && '✓ Request completed'}
+                          {request.status === 'CANCELLED' && '⊘ Request cancelled'}
+                        </p>
                       </div>
                     )}
                   </div>

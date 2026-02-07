@@ -214,10 +214,18 @@ function Cart() {
                       <h3 className="text-xl font-bold text-gray-800">{item.productName}</h3>
                       <p className="text-gray-600 text-sm mb-2">Seller: {item.sellerFullName}</p>
                       {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
-                        <>
-                          <p className="text-orange-600 font-bold text-lg">₹{item.discountedPrice.toFixed(2)} <span className="line-through text-gray-500 text-base ml-2">₹{item.price.toFixed(2)}</span></p>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-orange-600 font-bold text-lg">₹{item.discountedPrice.toFixed(2)}</p>
+                            <span className="line-through text-gray-500 text-base">₹{item.price.toFixed(2)}</span>
+                            {item.discountPercentage && (
+                              <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded">
+                                {item.discountPercentage}% OFF
+                              </span>
+                            )}
+                          </div>
                           <p className="text-green-600 text-sm font-semibold">You save ₹{((item.price - item.discountedPrice) * item.quantity).toFixed(2)}</p>
-                        </>
+                        </div>
                       ) : (
                         <p className="text-orange-600 font-bold text-lg">₹{item.price.toFixed(2)}</p>
                       )}

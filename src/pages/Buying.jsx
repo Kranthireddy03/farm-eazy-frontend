@@ -254,6 +254,12 @@ function Buying() {
                     <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full text-sm font-semibold">
                       {getCategoryIcon(product.category)} {product.category}
                     </div>
+                    {/* Discount Badge */}
+                    {product.discountPercentage && product.discountPercentage > 0 && (
+                      <div className="absolute top-3 left-3 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
+                        🏷️ {product.discountPercentage}% OFF
+                      </div>
+                    )}
                   </div>
 
                   {/* Product Details */}
@@ -293,10 +299,25 @@ function Buying() {
                       </div>
                       <div className="text-right">
                         <p className="text-sm text-gray-600">Price</p>
-                        <p className="text-2xl font-bold text-orange-600">
-                          ₹{product.price}
-                          <span className="text-sm text-gray-600">/{product.unit}</span>
-                        </p>
+                        {product.discountPercentage && product.discountPercentage > 0 ? (
+                          <div>
+                            <div className="flex items-center justify-end gap-2 mb-1">
+                              <span className="line-through text-gray-400 text-sm">₹{product.price}</span>
+                              <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded">
+                                {product.discountPercentage}% OFF
+                              </span>
+                            </div>
+                            <p className="text-2xl font-bold text-orange-600">
+                              ₹{product.discountedPrice || (product.price - (product.price * product.discountPercentage / 100)).toFixed(2)}
+                              <span className="text-sm text-gray-600">/{product.unit}</span>
+                            </p>
+                          </div>
+                        ) : (
+                          <p className="text-2xl font-bold text-orange-600">
+                            ₹{product.price}
+                            <span className="text-sm text-gray-600">/{product.unit}</span>
+                          </p>
+                        )}
                       </div>
                     </div>
 

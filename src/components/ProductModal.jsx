@@ -46,6 +46,8 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
         productName: product.productName,
         description: product.description,
         price: product.price,
+        discountPercentage: product.discountPercentage,
+        discountedPrice: product.discountedPrice,
         category: product.category,
         categoryIcon: getCategoryIcon(product.category),
         sellerId: product.userId,
@@ -123,7 +125,21 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
           {/* Price */}
           <div className="bg-orange-50 rounded-lg p-4 mb-6">
             <p className="text-gray-600 text-sm mb-1">Price per unit</p>
-            <p className="text-4xl font-bold text-orange-600">₹{product.price.toFixed(2)}</p>
+            {product.discountPercentage && product.discountPercentage > 0 ? (
+              <div>
+                <div className="flex items-center gap-3 mb-1">
+                  <p className="text-4xl font-bold text-orange-600">
+                    ₹{product.discountedPrice ? product.discountedPrice.toFixed(2) : (product.price - (product.price * product.discountPercentage / 100)).toFixed(2)}
+                  </p>
+                  <span className="line-through text-gray-400 text-xl">₹{product.price.toFixed(2)}</span>
+                </div>
+                <span className="bg-green-500 text-white text-sm font-bold px-3 py-1 rounded">
+                  🏷️ {product.discountPercentage}% OFF
+                </span>
+              </div>
+            ) : (
+              <p className="text-4xl font-bold text-orange-600">₹{product.price.toFixed(2)}</p>
+            )}
           </div>
 
           {/* Description */}
@@ -196,7 +212,18 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
           {/* Price Summary */}
           <div className="bg-gradient-to-r from-orange-50 to-yellow-50 rounded-lg p-4 mb-8 border-2 border-orange-200">
             <p className="text-gray-600 mb-1">Total for {quantity} item(s):</p>
-            <p className="text-3xl font-bold text-orange-600">₹{(product.price * quantity).toFixed(2)}</p>
+            {product.discountPercentage && product.discountPercentage > 0 ? (
+              <div>
+                <p className="text-3xl font-bold text-orange-600">
+                  ₹{((product.discountedPrice || (product.price - (product.price * product.discountPercentage / 100))) * quantity).toFixed(2)}
+                </p>
+                <p className="text-sm text-green-600 font-semibold mt-1">
+                  You save ₹{((product.price - (product.discountedPrice || (product.price - (product.price * product.discountPercentage / 100)))) * quantity).toFixed(2)}
+                </p>
+              </div>
+            ) : (
+              <p className="text-3xl font-bold text-orange-600">₹{(product.price * quantity).toFixed(2)}</p>
+            )}
           </div>
 
           {/* Action Buttons */}
