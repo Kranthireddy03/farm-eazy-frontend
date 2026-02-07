@@ -37,6 +37,7 @@ function IrrigationServices() {
   const [bookings, setBookings] = useState([])
   const [showPostForm, setShowPostForm] = useState(false)
   const [showBookingForm, setShowBookingForm] = useState(false)
+  const [editingListing, setEditingListing] = useState(null)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -186,6 +187,80 @@ function IrrigationServices() {
       setLoading(false)
     }
   };
+
+  const handleEditClick = (listing) => {
+    setEditingListing(listing)
+    setPostForm({
+      type: listing.type || 'TRACTOR',
+      title: listing.title || listing.serviceName || '',
+      location: listing.location || '',
+      rate: listing.rate?.toString() || listing.price?.toString() || '',
+      contactName: listing.contactName || '',
+      contactPhone: listing.contactPhone || '',
+      contactEmail: listing.contactEmail || '',
+      availability: listing.availability || 'Available'
+    })
+    setShowPostForm(false)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingListing(null)
+    setPostForm({
+      type: 'TRACTOR',
+      title: '',
+      location: '',
+      rate: '',
+      contactName: '',
+      contactPhone: '',
+      contactEmail: '',
+      availability: 'Available'
+    })
+  }
+
+  const handleUpdateListing = async (e) => {
+    e.preventDefault()
+    if (!postForm.title || !postForm.location || !postForm.rate) {
+      showToast('Please fill all required fields', 'warning')
+      return
+    }
+    try {
+      setLoading(true)
+      const serviceData = {
+        serviceName: postForm.title,
+        description: `${postForm.type} service available in ${postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
+        price: parseFloat(postForm.rate)
+      }
+      await apiClient.put(`/services/listings/${editingListing.id}`, serviceData)
+      showToast('Service listing updated successfully!', 'success')
+      setEditingListing(null)
+      handleCancelEdit()
+      fetchListings()
+    } catch (error) {
+      console.error('Error updating listing:', error)
+      const errorMsg = error.response?.data?.message || 'Failed to update listing'
+      showToast(errorMsg, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDeleteListing = async (listingId) => {
+    if (!window.confirm('Are you sure you want to delete this service listing?')) {
+      return
+    }
+    try {
+      setLoading(true)
+      await apiClient.delete(`/services/listings/${listingId}`)
+      setListings((prev) => prev.filter((l) => l.id !== listingId))
+      showToast('Service listing deleted successfully!', 'success')
+    } catch (error) {
+      console.error('Error deleting listing:', error)
+      const errorMsg = error.response?.data?.message || 'Failed to delete listing'
+      showToast(errorMsg, 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getServiceIcon = (type) => {
     switch(type) {
@@ -367,6 +442,131 @@ function IrrigationServices() {
               </div>
             )}
 
+            {/* Edit Service Form */}
+            {editingListing && (
+              <div className="card border-2 border-blue-500">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-bold text-gray-800">Edit Service Listing</h2>
+                  <button
+                    onClick={handleCancelEdit}
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    ✕ Cancel
+                  </button>
+                </div>
+                <form onSubmit={handleUpdateListing} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="form-label">Type <span className="text-red-500">*</span></label>
+                      <select
+                        name="type"
+                        value={postForm.type}
+                        onChange={handlePostChange}
+                        className="form-input"
+                        required
+                      >
+                        <option value="TRACTOR">Tractor</option>
+                        <option value="JCB">JCB</option>
+                        <option value="MANUAL">Manual Workers</option>
+                        <option value="IRRIGATION">Irrigation Tools</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="form-label">Title <span className="text-red-500">*</span></label>
+                      <input
+                        name="title"
+                        value={postForm.title}
+                        onChange={handlePostChange}
+                        className="form-input"
+                        placeholder="e.g., Mahindra Tractor 575 DI"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="form-label">Location <span className="text-red-500">*</span></label>
+                      <input
+                        name="location"
+                        value={postForm.location}
+                        onChange={handlePostChange}
+                        className="form-input"
+                        placeholder="City / Village"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Rate (₹/hour) <span className="text-red-500">*</span></label>
+                      <input
+                        name="rate"
+                        type="number"
+                        value={postForm.rate}
+                        onChange={handlePostChange}
+                        className="form-input"
+                        placeholder="500"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="form-label">Contact Name</label>
+                      <input
+                        name="contactName"
+                        value={postForm.contactName}
+                        onChange={handlePostChange}
+                        className="form-input"
+                        placeholder="Your Name"
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label">Contact Phone</label>
+                      <input
+                        name="contactPhone"
+                        value={postForm.contactPhone}
+                        onChange={handlePostChange}
+                        className="form-input"
+                        placeholder="9876543210"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="form-label">Availability</label>
+                    <select
+                      name="availability"
+                      value={postForm.availability}
+                      onChange={handlePostChange}
+                      className="form-input"
+                    >
+                      <option>Available</option>
+                      <option>Limited</option>
+                      <option>Booked</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? 'Updating...' : 'Update Listing'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="btn-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
             {/* Services Listings Grid */}
             {listings.length === 0 ? (
               <div className="card text-center py-12">
@@ -415,6 +615,22 @@ function IrrigationServices() {
                       {listing.contactEmail && (
                         <p className="text-sm text-gray-700">✉️ {listing.contactEmail}</p>
                       )}
+                    </div>
+
+                    {/* Edit and Delete Buttons */}
+                    <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200">
+                      <button
+                        onClick={() => handleEditClick(listing)}
+                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                      >
+                        ✏️ Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteListing(listing.id)}
+                        className="flex-1 bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                      >
+                        🗑️ Delete
+                      </button>
                     </div>
                   </div>
                 ))}

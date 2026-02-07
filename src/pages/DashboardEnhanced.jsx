@@ -90,7 +90,15 @@ function DashboardEnhanced() {
         newStats.totalProducts = Array.isArray(productsRes.value.data) ? productsRes.value.data.length : 0
       }
       if (servicesRes.status === 'fulfilled') {
-        newStats.totalServices = servicesRes.value.data.totalElements || (Array.isArray(servicesRes.value.data.content) ? servicesRes.value.data.content.length : 0)
+        const servicesData = servicesRes.value.data
+        // Handle paginated response (Spring Boot Page object)
+        if (servicesData.content && Array.isArray(servicesData.content)) {
+          newStats.totalServices = servicesData.totalElements || servicesData.content.length
+        } else if (Array.isArray(servicesData)) {
+          newStats.totalServices = servicesData.length
+        } else {
+          newStats.totalServices = 0
+        }
       }
       if (ordersRes.status === 'fulfilled') {
         newStats.totalOrders = Array.isArray(ordersRes.value.data) ? ordersRes.value.data.length : 0

@@ -28,12 +28,67 @@ const Activities = () => {
     }, [page]);
 
     const getActivityIcon = (description) => {
-        if (description.toLowerCase().includes('farm')) return '🌾'
-        if (description.toLowerCase().includes('crop')) return '🌱'
-        if (description.toLowerCase().includes('product')) return '📦'
-        if (description.toLowerCase().includes('order')) return '🛒'
-        if (description.toLowerCase().includes('irrigation')) return '💧'
+        const desc = description.toLowerCase()
+
+        // Coins activities
+        if (desc.includes('coin') && desc.includes('earned')) return '🪙'
+        if (desc.includes('coin') && desc.includes('spent')) return '💰'
+        if (desc.includes('coin')) return '🪙'
+
+        // Farm activities
+        if (desc.includes('farm') && (desc.includes('created') || desc.includes('added'))) return '🌾'
+        if (desc.includes('farm') && desc.includes('updated')) return '✏️'
+        if (desc.includes('farm') && desc.includes('deleted')) return '🗑️'
+        if (desc.includes('farm')) return '🌾'
+
+        // Crop activities
+        if (desc.includes('crop') && (desc.includes('created') || desc.includes('added'))) return '🌱'
+        if (desc.includes('crop') && desc.includes('updated')) return '✏️'
+        if (desc.includes('crop') && desc.includes('deleted')) return '🗑️'
+        if (desc.includes('crop')) return '🌱'
+
+        // Product activities
+        if (desc.includes('product') && desc.includes('listed')) return '📦'
+        if (desc.includes('product') && desc.includes('updated')) return '✏️'
+        if (desc.includes('product') && desc.includes('deleted')) return '🗑️'
+        if (desc.includes('product')) return '📦'
+
+        // Service activities
+        if (desc.includes('service') && (desc.includes('created') || desc.includes('listed'))) return '🚜'
+        if (desc.includes('service') && desc.includes('updated')) return '✏️'
+        if (desc.includes('service') && desc.includes('deleted')) return '🗑️'
+        if (desc.includes('service')) return '🔧'
+
+        // Order activities
+        if (desc.includes('order') && desc.includes('placed')) return '🛒'
+        if (desc.includes('order') && desc.includes('confirmed')) return '✅'
+        if (desc.includes('order') && desc.includes('cancelled')) return '❌'
+        if (desc.includes('order')) return '🛒'
+
+        // Irrigation activities
+        if (desc.includes('irrigation') && (desc.includes('created') || desc.includes('scheduled'))) return '💧'
+        if (desc.includes('irrigation') && desc.includes('updated')) return '✏️'
+        if (desc.includes('irrigation') && desc.includes('deleted')) return '🗑️'
+        if (desc.includes('irrigation')) return '💧'
+
+        // Account activities
+        if (desc.includes('password') && desc.includes('changed')) return '🔒'
+        if (desc.includes('registered') || desc.includes('signed up')) return '👤'
+        if (desc.includes('profile') && desc.includes('updated')) return '👤'
+
+        // Default
         return '📝'
+    }
+
+    const getActivityColor = (description) => {
+        const desc = description.toLowerCase()
+
+        if (desc.includes('deleted') || desc.includes('cancelled')) return 'bg-red-100 text-red-600'
+        if (desc.includes('updated') || desc.includes('changed')) return 'bg-yellow-100 text-yellow-600'
+        if (desc.includes('created') || desc.includes('added') || desc.includes('listed') || desc.includes('earned')) return 'bg-green-100 text-green-600'
+        if (desc.includes('confirmed') || desc.includes('placed')) return 'bg-blue-100 text-blue-600'
+
+        return 'bg-gray-100 text-gray-600'
     }
 
     const formatDate = (dateString) => {
@@ -90,21 +145,22 @@ const Activities = () => {
                                                         )}
                                                         <div className="relative flex items-start space-x-3">
                                                             <div className="relative">
-                                                                <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center ring-8 ring-white">
+                                                                <div className={`h-10 w-10 rounded-full flex items-center justify-center ring-8 ring-white ${getActivityColor(activity.description)}`}>
                                                                     <span className="text-xl">{getActivityIcon(activity.description)}</span>
                                                                 </div>
                                                             </div>
                                                             <div className="min-w-0 flex-1">
                                                                 <div>
                                                                     <div className="text-sm">
-                                                                        <p className="font-medium text-gray-900">{activity.description}</p>
+                                                                        <p className="font-semibold text-gray-900">{activity.description}</p>
                                                                     </div>
-                                                                    <p className="mt-0.5 text-sm text-gray-500">
+                                                                    <p className="mt-0.5 text-xs text-gray-500 flex items-center gap-1">
+                                                                        <span>🕒</span>
                                                                         {formatDate(activity.createdAt)}
                                                                     </p>
                                                                 </div>
                                                                 {activity.details && (
-                                                                    <div className="mt-2 text-sm text-gray-700">
+                                                                    <div className="mt-2 text-sm text-gray-700 bg-gray-50 p-2 rounded">
                                                                         <p>{activity.details}</p>
                                                                     </div>
                                                                 )}
