@@ -11,7 +11,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
-import { API_BASE_URL } from '../config/api'
 
 function Dashboard() {
   const [stats, setStats] = useState({
@@ -163,9 +162,9 @@ For more details, visit: https://farm-eazy.com
       try {
         setLoading(true)
         const [statsResponse, activitiesResponse, productsResponse] = await Promise.all([
-          apiClient.get(`${API_BASE_URL}/irrigation/stats`),
-          apiClient.get(`${API_BASE_URL}/irrigation/activities?limit=10`),
-          apiClient.get(`${API_BASE_URL}/products/my-products/count`)
+          apiClient.get('/irrigation/stats'),
+          apiClient.get('/activities/recent'),
+          apiClient.get('/products/my-products/count')
         ])
         
         setStats({
