@@ -15,7 +15,7 @@ const Activities = () => {
         const fetchActivities = async () => {
             setLoading(true);
             try {
-                const response = await api.get(`/api/activities?page=${page}&size=10`);
+                const response = await api.get(`/activities?page=${page}&size=10`);
                 setActivities(response.data);
                 setHasMore(response.data.length === 10);
                 setLoading(false);

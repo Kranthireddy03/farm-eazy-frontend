@@ -62,8 +62,8 @@ function IrrigationServices() {
   const fetchBookings = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get('/services/bookings');
-      setBookings(Array.isArray(response.data) ? response.data : []);
+      const response = await apiClient.get('/services/bookings/my-bookings');
+      setBookings(Array.isArray(response.data.content) ? response.data.content : []);
     } catch (error) {
       console.error('Error fetching bookings:', error);
       setBookings([]);

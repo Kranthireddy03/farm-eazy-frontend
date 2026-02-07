@@ -13,18 +13,19 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
+import { useCoin } from '../context/CoinContext'
 
 function DashboardEnhanced() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-  
+  const { coins } = useCoin()
+
   const [stats, setStats] = useState({
     totalFarms: 0,
     totalCrops: 0,
     totalIrrigations: 0,
     totalProducts: 0,
     totalOrders: 0,
-    totalCoins: 0,
     activeAlerts: 0
   })
   
@@ -59,13 +60,12 @@ function DashboardEnhanced() {
       setLoading(true)
       
       // Fetch all stats in parallel
-      const [farmsRes, cropsRes, irrigationRes, productsRes, coinsRes, ordersRes] = 
+      const [farmsRes, cropsRes, irrigationRes, productsRes, ordersRes] =
         await Promise.allSettled([
           apiClient.get('/farms'),
           apiClient.get('/crops'),
           apiClient.get('/irrigation'),
           apiClient.get('/products'),
-          apiClient.get('/coins'),
           apiClient.get('/orders').catch(() => ({ data: { totalOrders: 0 } }))
         ]);
 
@@ -73,7 +73,7 @@ function DashboardEnhanced() {
       setActivities(Array.isArray(activitiesRes.data) ? activitiesRes.data : []);
 
       const newStats = { ...stats }
-      
+
       // Process results
       if (farmsRes.status === 'fulfilled') {
         newStats.totalFarms = Array.isArray(farmsRes.value.data) ? farmsRes.value.data.length : 0
@@ -86,9 +86,6 @@ function DashboardEnhanced() {
       }
       if (productsRes.status === 'fulfilled') {
         newStats.totalProducts = Array.isArray(productsRes.value.data) ? productsRes.value.data.length : 0
-      }
-      if (coinsRes.status === 'fulfilled') {
-        newStats.totalCoins = coinsRes.value.data.totalCoins || 0
       }
       if (ordersRes.status === 'fulfilled') {
         newStats.totalOrders = Array.isArray(ordersRes.value.data) ? ordersRes.value.data.length : 0
@@ -266,8 +263,8 @@ function DashboardEnhanced() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-sm font-medium">Available Coins</p>
-                <p className="text-4xl font-bold mt-2">{stats.totalCoins} 🪙</p>
-                <p className="text-yellow-100 text-xs mt-2">≈ ₹{stats.totalCoins} in value</p>
+                <p className="text-4xl font-bold mt-2">{coins} 🪙</p>
+                <p className="text-yellow-100 text-xs mt-2">≈ ₹{coins} in value</p>
               </div>
               <div className="text-6xl opacity-50">💰</div>
             </div>
