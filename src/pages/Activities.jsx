@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../config/api';
-import Layout from '../components/Layout';
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 
@@ -49,7 +48,7 @@ const Activities = () => {
     }
 
     return (
-        <Layout>
+        <>
             {toast && (
                 <Toast message={toast.message} type={toast.type} onClose={closeToast} />
             )}
@@ -145,7 +144,7 @@ const Activities = () => {
                     </>
                 )}
             </div>
-        </Layout>
+        </>
     );
 };
 

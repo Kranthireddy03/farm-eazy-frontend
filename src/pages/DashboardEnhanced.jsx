@@ -263,8 +263,8 @@ function DashboardEnhanced() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-sm font-medium">Available Coins</p>
-                <p className="text-4xl font-bold mt-2">{coins} 🪙</p>
-                <p className="text-yellow-100 text-xs mt-2">≈ ₹{coins} in value</p>
+                <p className="text-4xl font-bold mt-2">{coins?.totalCoins || 0} 🪙</p>
+                <p className="text-yellow-100 text-xs mt-2">≈ ₹{coins?.totalCoins || 0} in value</p>
               </div>
               <div className="text-6xl opacity-50">💰</div>
             </div>

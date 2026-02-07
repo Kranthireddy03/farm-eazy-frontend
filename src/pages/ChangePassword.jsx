@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import PasswordInput from '../components/PasswordInput'
 import { useToast } from '../hooks/useToast'
+import apiClient from '../services/apiClient'
 
 function ChangePassword() {
   const { showToast } = useToast()
@@ -26,32 +27,21 @@ function ChangePassword() {
       return
     }
     try {
-      const response = await fetch('/api/auth/change-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('farmEazy_token')}`
-        },
-        body: JSON.stringify({
-          currentPassword: form.currentPassword,
-          newPassword: form.newPassword
-        })
+      const response = await apiClient.post('/auth/change-password', {
+        currentPassword: form.currentPassword,
+        newPassword: form.newPassword
       })
-      if (!response.ok) {
-        const data = await response.json()
-        showToast(data.message || 'Password change failed', 'error')
-        return
-      }
       showToast('Password changed successfully! Confirmation email sent.', 'success')
       setForm({ currentPassword: '', newPassword: '', confirmPassword: '' })
     } catch (err) {
-      showToast('Password change failed. Please try again.', 'error')
+      const errorMessage = err.response?.data?.message || 'Password change failed. Please try again.'
+      showToast(errorMessage, 'error')
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
-      <div className="max-w-xl mx-auto bg-white rounded-lg shadow-lg p-6">
+    <div className="max-w-xl mx-auto">
+      <div className="bg-white rounded-lg shadow-lg p-6">
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Change Password</h1>
         <p className="text-sm text-gray-600 mb-6">Update your account password securely.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
