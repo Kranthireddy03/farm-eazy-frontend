@@ -17,12 +17,13 @@ import useSessionTimeout from '../hooks/useSessionTimeout'
 import InactivityWarning from './InactivityWarning'
 import { useToast } from '../hooks/useToast'
 import Toast from './Toast'
+import { useCoin } from '../context/CoinContext'
 
 function Layout() {
   const navigate = useNavigate()
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [coins, setCoins] = useState(null)
-  const [coinsLoading, setCoinsLoading] = useState(true)
+  const { coins, refreshCoins } = useCoin()
+  const [coinsLoading, setCoinsLoading] = useState(false)
   const [sessionCoinsEarned, setSessionCoinsEarned] = useState(0)
   const [showSessionCoinBonus, setShowSessionCoinBonus] = useState(false)
   const [cartCount, setCartCount] = useState(0)
@@ -33,11 +34,10 @@ function Layout() {
   const { toast, showToast, closeToast } = useToast()
 
   // Refresh coins manually
-  const refreshCoins = async () => {
+  const handleRefreshCoins = async () => {
     setCoinsLoading(true)
     try {
-      const response = await apiClient.get('/coins')
-      setCoins(response.data)
+      await refreshCoins()
       showToast('Coins refreshed successfully!', 'success')
     } catch (error) {
       console.error('Error refreshing coins:', error)
@@ -78,12 +78,14 @@ function Layout() {
       try {
         // Process login bonus (gives coins if eligible)
         const response = await apiClient.post('/coins/login-bonus')
-        setCoins(response.data)
-        
+
+        // Refresh coins from context to get updated balance
+        await refreshCoins()
+
         // Show notification if coins were earned
         const lastLoginBonus = localStorage.getItem('lastLoginBonusDate')
         const today = new Date().toDateString()
-        
+
         if (lastLoginBonus !== today && response.data.loginCountToday > 0) {
           const earned = 5
           setSessionCoinsEarned(earned)
@@ -100,10 +102,9 @@ function Layout() {
         }
       } catch (error) {
         console.error('Error fetching coins:', error)
-        // Fallback: just fetch coins without bonus
+        // Fallback: just refresh coins from context
         try {
-          const response = await apiClient.get('/coins')
-          setCoins(response.data)
+          await refreshCoins()
         } catch (err) {
           console.error('Error fetching coins:', err)
         }
@@ -113,7 +114,8 @@ function Layout() {
     }
 
     fetchCoinsAndLoginBonus()
-  }, [showToast])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Listen for 2-minute warning event
   useEffect(() => {
@@ -243,7 +245,7 @@ function Layout() {
                   <div className="text-xs text-yellow-800 font-medium flex items-center justify-between">
                     <span>Your Coins</span>
                     <button
-                      onClick={refreshCoins}
+                      onClick={handleRefreshCoins}
                       className="text-yellow-700 hover:text-yellow-900 transition-transform hover:rotate-180 duration-500"
                       title="Refresh coins"
                     >

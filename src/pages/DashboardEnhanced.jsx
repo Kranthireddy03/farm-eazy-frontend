@@ -26,6 +26,7 @@ function DashboardEnhanced() {
     totalIrrigations: 0,
     totalProducts: 0,
     totalOrders: 0,
+    totalServices: 0,
     activeAlerts: 0
   })
   
@@ -58,14 +59,15 @@ function DashboardEnhanced() {
   const fetchStats = async () => {
     try {
       setLoading(true)
-      
+
       // Fetch all stats in parallel
-      const [farmsRes, cropsRes, irrigationRes, productsRes, ordersRes] =
+      const [farmsRes, cropsRes, irrigationRes, productsRes, servicesRes, ordersRes] =
         await Promise.allSettled([
           apiClient.get('/farms'),
           apiClient.get('/crops'),
           apiClient.get('/irrigation'),
           apiClient.get('/products'),
+          apiClient.get('/services/listings'),
           apiClient.get('/orders').catch(() => ({ data: { totalOrders: 0 } }))
         ]);
 
@@ -86,6 +88,9 @@ function DashboardEnhanced() {
       }
       if (productsRes.status === 'fulfilled') {
         newStats.totalProducts = Array.isArray(productsRes.value.data) ? productsRes.value.data.length : 0
+      }
+      if (servicesRes.status === 'fulfilled') {
+        newStats.totalServices = servicesRes.value.data.totalElements || (Array.isArray(servicesRes.value.data.content) ? servicesRes.value.data.content.length : 0)
       }
       if (ordersRes.status === 'fulfilled') {
         newStats.totalOrders = Array.isArray(ordersRes.value.data) ? ordersRes.value.data.length : 0
@@ -256,8 +261,8 @@ function DashboardEnhanced() {
           </div>
         </div>
 
-        {/* Coins & Irrigation Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Coins, Irrigation & Services Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Coins Card */}
           <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg shadow-lg p-6 text-white">
             <div className="flex items-center justify-between">
@@ -282,6 +287,26 @@ function DashboardEnhanced() {
               </div>
               <div className="text-6xl opacity-50">💧</div>
             </div>
+          </div>
+
+          {/* Services Card */}
+          <div className="bg-gradient-to-r from-indigo-400 to-indigo-500 rounded-lg shadow-lg p-6 text-white">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-indigo-100 text-sm font-medium">Service Listings</p>
+                <p className="text-4xl font-bold mt-2">{stats.totalServices}</p>
+                <p className="text-indigo-100 text-xs mt-2">
+                  {stats.totalServices === 0 ? '✚ List services' : '🔧 Active services'}
+                </p>
+              </div>
+              <div className="text-6xl opacity-50">🚜</div>
+            </div>
+            <Link
+              to="/irrigation-services"
+              className="mt-3 inline-block px-4 py-2 bg-white text-indigo-600 rounded-lg text-sm font-semibold hover:bg-indigo-50 transition"
+            >
+              View Services →
+            </Link>
           </div>
         </div>
 

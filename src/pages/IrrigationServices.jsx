@@ -136,7 +136,13 @@ function IrrigationServices() {
     }
     try {
       setLoading(true)
-      const response = await apiClient.post('/services/listings', postForm);
+      // Transform frontend form to match backend DTO
+      const serviceData = {
+        serviceName: postForm.title,
+        description: `${postForm.type} service available in ${postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
+        price: parseFloat(postForm.rate)
+      };
+      const response = await apiClient.post('/services/listings', serviceData);
       setListings((prev) => [response.data, ...prev]);
       setPostForm({
         type: 'TRACTOR',
@@ -153,7 +159,8 @@ function IrrigationServices() {
       fetchListings();
     } catch (error) {
       console.error('Error posting listing:', error);
-      showToast('Failed to create listing', 'error');
+      const errorMsg = error.response?.data?.message || 'Failed to create listing';
+      showToast(errorMsg, 'error');
     } finally {
       setLoading(false)
     }
@@ -216,16 +223,18 @@ function IrrigationServices() {
           >
             Service Listings
           </button>
-          <button
-            onClick={() => setActiveTab('bookings')}
-            className={`px-6 py-3 font-semibold transition ${
-              activeTab === 'bookings'
-                ? 'text-green-600 border-b-2 border-green-600'
-                : 'text-gray-600 hover:text-gray-800'
-            }`}
-          >
-            My Booking Requests
-          </button>
+          {listings.length > 0 && (
+            <button
+              onClick={() => setActiveTab('bookings')}
+              className={`px-6 py-3 font-semibold transition ${
+                activeTab === 'bookings'
+                  ? 'text-green-600 border-b-2 border-green-600'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              My Booking Requests
+            </button>
+          )}
         </div>
 
         {/* LISTINGS TAB */}
@@ -361,7 +370,9 @@ function IrrigationServices() {
             {/* Services Listings Grid */}
             {listings.length === 0 ? (
               <div className="card text-center py-12">
-                <p className="text-gray-600 text-lg">No service listings yet. Post the first one!</p>
+                <div className="text-6xl mb-4">🔧</div>
+                <p className="text-gray-600 text-lg font-semibold">No service listings yet</p>
+                <p className="text-gray-500 text-sm mt-2">Post the first service to enable booking requests!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
