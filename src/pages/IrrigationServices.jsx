@@ -37,7 +37,7 @@ function IrrigationServices() {
   const [bookings, setBookings] = useState([])
   const [allListings, setAllListings] = useState([]) // All available services to browse
   const [providerRequests, setProviderRequests] = useState([]) // Incoming booking requests for user's services
-  const [currentUserId, setCurrentUserId] = useState(null) // Current logged in user ID
+  const [myListingIds, setMyListingIds] = useState(new Set()) // IDs of user's own service listings
   const [showPostForm, setShowPostForm] = useState(false)
   const [showBookingForm, setShowBookingForm] = useState(false)
   const [selectedService, setSelectedService] = useState(null) // Service being booked
@@ -45,7 +45,6 @@ function IrrigationServices() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetchCurrentUser();
     fetchFarms();
     fetchCrops();
     fetchListings();
@@ -54,23 +53,18 @@ function IrrigationServices() {
     fetchProviderRequests();
   }, []);
 
-  const fetchCurrentUser = async () => {
-    try {
-      const response = await apiClient.get('/profile');
-      setCurrentUserId(response.data.id);
-    } catch (error) {
-      console.error('Error fetching current user:', error);
-    }
-  };
-
   const fetchListings = async () => {
     try {
       setLoading(true)
       const response = await apiClient.get('/services/listings');
-      setListings(Array.isArray(response.data) ? response.data : []);
+      const userListings = Array.isArray(response.data) ? response.data : [];
+      setListings(userListings);
+      // Store IDs of user's own listings
+      setMyListingIds(new Set(userListings.map(listing => listing.id)));
     } catch (error) {
       console.error('Error fetching listings:', error);
       setListings([]);
+      setMyListingIds(new Set());
     } finally {
       setLoading(false)
     }
@@ -1097,15 +1091,15 @@ function IrrigationServices() {
 
                     <button
                       onClick={() => handleBookService(listing)}
-                      disabled={listing.availability === 'Booked' || listing.userId === currentUserId}
+                      disabled={listing.availability === 'Booked' || myListingIds.has(listing.id)}
                       className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
-                        listing.availability === 'Booked' || listing.userId === currentUserId
+                        listing.availability === 'Booked' || myListingIds.has(listing.id)
                           ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white transform hover:scale-105 active:scale-95'
                       }`}
                     >
                       {listing.availability === 'Booked' ? '⛔ Fully Booked' :
-                       listing.userId === currentUserId ? '🔒 Your Own Service' :
+                       myListingIds.has(listing.id) ? '🔒 Your Own Service' :
                        '📝 Book This Service'}
                     </button>
                   </div>
