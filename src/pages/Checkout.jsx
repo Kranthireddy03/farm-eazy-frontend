@@ -81,7 +81,11 @@ function Checkout() {
   }
 
   const calculateTotals = () => {
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+    const subtotal = cartItems.reduce((sum, item) => {
+      // Use discounted price if available, otherwise use regular price
+      const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+      return sum + (itemPrice * item.quantity)
+    }, 0)
     const tax = subtotal * TAX_RATE
     const total = subtotal + tax
     return { subtotal, tax, total }
@@ -131,11 +135,14 @@ function Checkout() {
 
       // Create order payload
       const orderData = {
-        items: cartItems.map(item => ({
-          productId: item.id,
-          quantity: item.quantity,
-          price: item.price
-        })),
+        items: cartItems.map(item => {
+          const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+          return {
+            productId: item.id,
+            quantity: item.quantity,
+            price: itemPrice
+          }
+        }),
         subtotal: subtotal,
         taxAmount: tax,
         totalAmount: total,
@@ -224,15 +231,37 @@ function Checkout() {
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">Order Summary</h2>
               <div className="space-y-4">
-                {cartItems.map(item => (
-                  <div key={item.id} className="flex justify-between items-start pb-4 border-b">
-                    <div>
-                      <p className="font-semibold text-gray-800">{item.productName}</p>
-                      <p className="text-sm text-gray-600">Qty: {item.quantity} × ₹{item.price}</p>
+                {cartItems.map(item => {
+                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                  const hasDiscount = item.discountPercentage && item.discountPercentage > 0
+
+                  return (
+                    <div key={item.id} className="flex justify-between items-start pb-4 border-b">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{item.productName}</p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {hasDiscount ? (
+                            <>
+                              <p className="text-sm text-gray-600">Qty: {item.quantity} × ₹{itemPrice.toFixed(2)}</p>
+                              <span className="line-through text-gray-400 text-xs">₹{item.price.toFixed(2)}</span>
+                              <span className="bg-green-500 text-white text-xs font-bold px-1.5 py-0.5 rounded">
+                                {item.discountPercentage}% OFF
+                              </span>
+                            </>
+                          ) : (
+                            <p className="text-sm text-gray-600">Qty: {item.quantity} × ₹{item.price.toFixed(2)}</p>
+                          )}
+                        </div>
+                        {hasDiscount && (
+                          <p className="text-xs text-green-600 font-semibold mt-1">
+                            Saving ₹{((item.price - itemPrice) * item.quantity).toFixed(2)}
+                          </p>
+                        )}
+                      </div>
+                      <p className="font-bold text-gray-800">₹{(itemPrice * item.quantity).toFixed(2)}</p>
                     </div>
-                    <p className="font-bold text-gray-800">₹{(item.price * item.quantity).toFixed(2)}</p>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
