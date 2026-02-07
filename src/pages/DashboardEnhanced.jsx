@@ -69,7 +69,7 @@ function DashboardEnhanced() {
           apiClient.get('/orders').catch(() => ({ data: { totalOrders: 0 } }))
         ]);
 
-      const activitiesRes = await apiClient.get('/user/activities');
+      const activitiesRes = await apiClient.get('/activities');
       setActivities(Array.isArray(activitiesRes.data) ? activitiesRes.data : []);
 
       const newStats = { ...stats }

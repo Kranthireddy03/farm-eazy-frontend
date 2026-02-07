@@ -24,7 +24,7 @@ export function CoinProvider({ children }) {
   };
 
   useEffect(() => {
-     const token = localStorage.getItem("token");
+     const token = localStorage.getItem("farmEazy_token");
      if (!token) return; // STOP here if not logged in
      fetchCoins();
   }, []);

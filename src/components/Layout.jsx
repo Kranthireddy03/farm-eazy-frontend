@@ -31,7 +31,22 @@ function Layout() {
   const userUsername = localStorage.getItem('farmEazy_username')
   const userFullName = localStorage.getItem('farmEazy_fullName')
   const { toast, showToast, closeToast } = useToast()
-  
+
+  // Refresh coins manually
+  const refreshCoins = async () => {
+    setCoinsLoading(true)
+    try {
+      const response = await apiClient.get('/coins')
+      setCoins(response.data)
+      showToast('Coins refreshed successfully!', 'success')
+    } catch (error) {
+      console.error('Error refreshing coins:', error)
+      showToast('Failed to refresh coins', 'error')
+    } finally {
+      setCoinsLoading(false)
+    }
+  }
+
   // Check if user is authenticated on mount
   useEffect(() => {
     const token = localStorage.getItem('farmEazy_token')
@@ -224,8 +239,19 @@ function Layout() {
 
               {/* Coins Display */}
               {!coinsLoading && coins && (
-                <div className="px-4 py-2 bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-lg border-2 border-yellow-300 text-center">
-                  <div className="text-xs text-yellow-800 font-medium">Your Coins</div>
+                <div className="px-4 py-2 bg-gradient-to-r from-yellow-100 to-yellow-200 rounded-lg border-2 border-yellow-300 text-center relative">
+                  <div className="text-xs text-yellow-800 font-medium flex items-center justify-between">
+                    <span>Your Coins</span>
+                    <button
+                      onClick={refreshCoins}
+                      className="text-yellow-700 hover:text-yellow-900 transition-transform hover:rotate-180 duration-500"
+                      title="Refresh coins"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                    </button>
+                  </div>
                   <div className="text-xl font-bold text-yellow-900 flex items-center justify-center gap-1">
                     <span>🪙</span>
                     <span>{coins.totalCoins}</span>

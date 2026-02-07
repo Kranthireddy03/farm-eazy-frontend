@@ -23,6 +23,7 @@ function Farms() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingFarm, setEditingFarm] = useState(null)
   const [formData, setFormData] = useState({
     farmName: '',
     location: '',
@@ -114,6 +115,58 @@ function Farms() {
     }
   }
 
+  /**
+   * Handle edit button click
+   */
+  const handleEditClick = (farm) => {
+    setEditingFarm(farm)
+    setFormData({
+      farmName: farm.farmName,
+      location: farm.location,
+      areaSize: farm.areaSize.toString(),
+    })
+    setShowAddForm(false)
+  }
+
+  /**
+   * Handle farm update
+   */
+  const handleUpdateFarm = async (e) => {
+    e.preventDefault()
+
+    if (!formData.farmName || !formData.location || !formData.areaSize) {
+      setError('Please fill in all fields')
+      return
+    }
+
+    setSubmitting(true)
+    try {
+      await apiClient.put(API_ENDPOINTS.UPDATE_FARM(editingFarm.id), {
+        ...formData,
+        areaSize: parseFloat(formData.areaSize),
+      })
+
+      setFormData({ farmName: '', location: '', areaSize: '' })
+      setEditingFarm(null)
+      setError('')
+      showToast('Farm updated successfully!', 'success');
+      await fetchFarms()
+    } catch (err) {
+      setError(err.message || 'Failed to update farm')
+      showToast(err.message || 'Failed to update farm', 'error');
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  /**
+   * Handle cancel edit
+   */
+  const handleCancelEdit = () => {
+    setEditingFarm(null)
+    setFormData({ farmName: '', location: '', areaSize: '' })
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -142,7 +195,11 @@ function Farms() {
           <p className="text-gray-600 mt-1">Manage all your farms in one place</p>
         </div>
         <button
-          onClick={() => setShowAddForm(!showAddForm)}
+          onClick={() => {
+            setShowAddForm(!showAddForm)
+            setEditingFarm(null)
+            setFormData({ farmName: '', location: '', areaSize: '' })
+          }}
           className="btn-primary"
         >
           {showAddForm ? 'Cancel' : '+ Add Farm'}
@@ -217,6 +274,72 @@ function Farms() {
         </div>
       )}
 
+      {/* Edit Farm Form */}
+      {editingFarm && (
+        <div className="card">
+          <h2 className="text-xl font-bold text-gray-800 mb-4">Edit Farm</h2>
+          <form onSubmit={handleUpdateFarm} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="form-label">Farm Name <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="farmName"
+                  value={formData.farmName}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="e.g., North Field"
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Location <span className="text-red-500">*</span></label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="e.g., District, State"
+                  required
+                />
+              </div>
+              <div>
+                <label className="form-label">Area Size (hectares) <span className="text-red-500">*</span></label>
+                <input
+                  type="number"
+                  name="areaSize"
+                  value={formData.areaSize}
+                  onChange={handleChange}
+                  className="form-input"
+                  placeholder="e.g., 5.5"
+                  step="0.1"
+                  required
+                />
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                {submitting ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Updating...
+                  </span>
+                ) : (
+                  'Update Farm'
+                )}
+              </button>
+              <button type="button" onClick={handleCancelEdit} className="btn-secondary">
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Farms List */}
       {farms.length === 0 ? (
         <div className="card text-center py-12">
@@ -242,15 +365,21 @@ function Farms() {
               </div>
 
               <div className="flex space-x-2">
+                <button
+                  onClick={() => handleEditClick(farm)}
+                  className="flex-1 btn-primary text-center text-sm"
+                >
+                  Edit
+                </button>
                 <Link
                   to={`/farms/${farm.id}`}
-                  className="flex-1 btn-primary text-center text-sm"
+                  className="flex-1 btn-secondary text-center text-sm"
                 >
                   View
                 </Link>
                 <button
                   onClick={() => handleDeleteFarm(farm.id)}
-                  className="btn-secondary text-sm"
+                  className="flex-1 btn-secondary text-sm"
                 >
                   Delete
                 </button>

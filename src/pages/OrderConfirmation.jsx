@@ -28,20 +28,28 @@ function OrderConfirmation() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
-        <p className="text-gray-700 text-lg">Loading your order...</p>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
+        <div className="text-center">
+          <div className="spinner text-green-600 mb-4">
+            <svg className="animate-spin w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+          <p className="text-gray-700 text-lg">Loading your order...</p>
+        </div>
       </div>
     )
   }
 
   if (error || !order) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-green-100">
         <div className="bg-white rounded-lg shadow-lg p-8 text-center">
           <p className="text-red-600 mb-4">{error || 'Order not found'}</p>
           <button
             onClick={() => navigate('/orders')}
-            className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg transition"
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg transition"
           >
             Go to My Orders
           </button>
@@ -50,43 +58,95 @@ function OrderConfirmation() {
     )
   }
 
+  // Calculate coin discount (coins used * 1 rupee per coin)
+  const coinDiscount = order.coinsUsed || 0
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 py-8 px-4">
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <p className="text-sm text-gray-500">Order Confirmed</p>
-              <h1 className="text-3xl font-bold text-gray-800">Thank you for your purchase!</h1>
-              <p className="text-gray-600 mt-1">Order ID: #FZ{order.id}</p>
+          {/* Success Header */}
+          <div className="text-center mb-6">
+            <div className="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4">
+              <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-500">Total Paid</p>
-              <p className="text-2xl font-bold text-green-600">{formatCurrency(order.finalAmount)}</p>
-              <p className="text-xs text-gray-500 mt-1">Payment: {order.paymentStatus}</p>
-            </div>
+            <h1 className="text-3xl font-bold text-gray-800">Order Confirmed!</h1>
+            <p className="text-gray-600 mt-2">Thank you for your purchase</p>
+            <p className="text-sm text-gray-500 mt-1">Order ID: <span className="font-semibold text-green-600">#FZ{order.id}</span></p>
           </div>
 
-          <div className="border rounded-lg p-4 bg-gray-50">
-            <p className="text-sm text-gray-500 mb-2">Items</p>
+          {/* Order Items */}
+          <div className="border-t border-b border-gray-200 py-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Order Items</h2>
             {order.items && order.items.length > 0 ? (
-              order.items.map(item => (
-                <div key={item.productId} className="flex justify-between text-sm text-gray-800 py-1">
-                  <span>{item.productName} × {item.quantity}</span>
-                  <span>{formatCurrency(item.totalPrice)}</span>
-                </div>
-              ))
+              <div className="space-y-3">
+                {order.items.map(item => (
+                  <div key={item.productId} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg">
+                    <div>
+                      <p className="font-semibold text-gray-800">{item.productName}</p>
+                      <p className="text-sm text-gray-600">Quantity: {item.quantity} {item.unit}</p>
+                    </div>
+                    <p className="font-semibold text-gray-800">{formatCurrency(item.totalPrice)}</p>
+                  </div>
+                ))}
+              </div>
             ) : (
               <p className="text-sm text-gray-600">No items found.</p>
             )}
           </div>
 
-          <div className="mt-6 flex gap-3">
+          {/* Price Breakdown */}
+          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">Price Breakdown</h2>
+            <div className="space-y-3">
+              <div className="flex justify-between text-gray-700">
+                <span>Subtotal:</span>
+                <span className="font-semibold">{formatCurrency(order.subtotal)}</span>
+              </div>
+
+              {coinDiscount > 0 && (
+                <div className="flex justify-between text-green-600 font-semibold">
+                  <span>🪙 Coin Discount ({coinDiscount} coins):</span>
+                  <span>- {formatCurrency(coinDiscount)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between text-gray-700">
+                <span>Tax & Charges:</span>
+                <span className="font-semibold">{formatCurrency(order.taxAmount)}</span>
+              </div>
+
+              <div className="border-t border-gray-300 pt-3 flex justify-between text-lg font-bold text-green-600">
+                <span>Final Amount:</span>
+                <span>{formatCurrency(order.finalAmount)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery Info */}
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-6 rounded">
+            <div className="flex items-start">
+              <svg className="w-6 h-6 text-blue-400 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 className="font-semibold text-blue-800 mb-1">Delivery Information</h3>
+                <p className="text-blue-700 text-sm">Expected delivery: 3-5 business days</p>
+                <p className="text-blue-700 text-sm">Order Status: {order.orderStatus || 'Processing'}</p>
+                <p className="text-blue-700 text-sm">Payment Status: {order.paymentStatus || 'Pending'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3">
             <button
               onClick={() => navigate('/orders')}
-              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-4 rounded-lg transition"
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition"
             >
-              Go to My Orders
+              View All Orders
             </button>
             <button
               onClick={() => navigate('/buying')}

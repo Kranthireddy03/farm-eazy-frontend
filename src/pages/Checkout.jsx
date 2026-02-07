@@ -424,37 +424,43 @@ function Checkout() {
 
           {/* Order Summary Sidebar */}
           <div className="bg-white rounded-lg shadow-lg p-6 h-fit sticky top-20">
-            <h2 className="text-2xl font-bold text-gray-800 mb-6">Order Total</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Price Breakdown</h2>
 
             <div className="space-y-3 border-b pb-4 mb-4">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal:</span>
+              <div className="flex justify-between text-gray-700">
+                <span>Subtotal:</span>
                 <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax (18% GST):</span>
-                <span className="font-semibold">₹{tax.toFixed(2)}</span>
-              </div>
+
               {coinsApplied > 0 && (
-                <div className="flex justify-between text-green-700">
-                  <span>Coins Applied:</span>
-                  <span>-₹{(coinsApplied * COIN_VALUE).toFixed(2)}</span>
+                <div className="flex justify-between text-green-600 font-semibold">
+                  <span>🪙 Coin Discount ({coinsApplied} coins):</span>
+                  <span>- ₹{(coinsApplied * COIN_VALUE).toFixed(2)}</span>
                 </div>
               )}
+
+              <div className="flex justify-between text-gray-700">
+                <span>Tax & Charges (18% GST):</span>
+                <span className="font-semibold">₹{tax.toFixed(2)}</span>
+              </div>
             </div>
 
-            <div className="flex justify-between text-xl font-bold mb-6 text-orange-600">
-              <span>Total:</span>
+            <div className="flex justify-between text-xl font-bold mb-6 text-green-600">
+              <span>Final Amount:</span>
               <span>₹{finalAmount.toFixed(2)}</span>
             </div>
+
             {coinsApplied > 0 && (
-              <p className="text-sm text-green-600 mb-4">💰 You saved ₹{(coinsApplied * COIN_VALUE).toFixed(2)} with coins</p>
+              <div className="bg-green-50 border-l-4 border-green-500 p-3 mb-4 rounded">
+                <p className="text-sm text-green-800 font-semibold">💰 You're saving ₹{(coinsApplied * COIN_VALUE).toFixed(2)}</p>
+                <p className="text-xs text-green-700 mt-1">Using {coinsApplied} coins for discount</p>
+              </div>
             )}
 
             {selectedPayment === 'CASH_ON_DELIVERY' && (
-              <div className="bg-green-50 border-l-4 border-green-500 p-3 mb-4 rounded text-sm">
-                <p className="text-green-800">✓ Pay on delivery</p>
-                <p className="text-green-700 text-xs mt-1">Will be delivered in 3-5 days</p>
+              <div className="bg-blue-50 border-l-4 border-blue-500 p-3 mb-4 rounded">
+                <p className="text-sm text-blue-800 font-semibold">✓ Cash on Delivery</p>
+                <p className="text-xs text-blue-700 mt-1">Expected delivery: 3-5 business days</p>
               </div>
             )}
 

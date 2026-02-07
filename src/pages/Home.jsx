@@ -16,6 +16,7 @@
 import { useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import AuthService from '../services/AuthService'
+import apiClient from '../services/apiClient'
 import { useCoin } from '../context/CoinContext'
 
 function Home() {
