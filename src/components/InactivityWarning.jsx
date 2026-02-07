@@ -54,7 +54,7 @@ function InactivityWarning({ showWarning, timeRemaining, onStayOnline }) {
 
         <div className="bg-red-100 border-4 border-red-500 rounded-lg p-8 mb-8 text-center">
           <div className="text-6xl font-bold text-red-600 font-mono">{formattedTime}</div>
-          <p className="text-red-600 text-sm mt-2 font-semibold">seconds remaining</p>
+          <p className="text-red-600 text-sm mt-2 font-semibold">minutes remaining</p>
         </div>
 
         <p className="text-center text-gray-600 mb-8">
@@ -69,7 +69,7 @@ function InactivityWarning({ showWarning, timeRemaining, onStayOnline }) {
         </button>
 
         <p className="text-center text-gray-500 text-xs mt-6">
-          Your activity will be reset to 90 seconds inactivity warning.
+          Warning appears after 90 seconds of inactivity.
         </p>
       </div>
     </div>

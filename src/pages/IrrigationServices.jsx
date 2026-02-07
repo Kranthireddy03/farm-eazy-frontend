@@ -137,11 +137,17 @@ function IrrigationServices() {
     }
     try {
       setLoading(true)
-      // Transform frontend form to match backend DTO
+      // Send all fields to backend
       const serviceData = {
         serviceName: postForm.title,
         description: `${postForm.type} service available in ${postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
-        price: parseFloat(postForm.rate)
+        price: parseFloat(postForm.rate),
+        type: postForm.type,
+        location: postForm.location,
+        availability: postForm.availability || 'Available',
+        contactName: postForm.contactName,
+        contactPhone: postForm.contactPhone,
+        contactEmail: postForm.contactEmail
       };
       const response = await apiClient.post('/services/listings', serviceData);
       setListings((prev) => [response.data, ...prev]);
@@ -228,7 +234,13 @@ function IrrigationServices() {
       const serviceData = {
         serviceName: postForm.title,
         description: `${postForm.type} service available in ${postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
-        price: parseFloat(postForm.rate)
+        price: parseFloat(postForm.rate),
+        type: postForm.type,
+        location: postForm.location,
+        availability: postForm.availability || 'Available',
+        contactName: postForm.contactName,
+        contactPhone: postForm.contactPhone,
+        contactEmail: postForm.contactEmail
       }
       await apiClient.put(`/services/listings/${editingListing.id}`, serviceData)
       showToast('Service listing updated successfully!', 'success')
@@ -298,18 +310,20 @@ function IrrigationServices() {
           >
             Service Listings
           </button>
-          {listings.length > 0 && (
-            <button
-              onClick={() => setActiveTab('bookings')}
-              className={`px-6 py-3 font-semibold transition ${
-                activeTab === 'bookings'
-                  ? 'text-green-600 border-b-2 border-green-600'
-                  : 'text-gray-600 hover:text-gray-800'
-              }`}
-            >
-              My Booking Requests
-            </button>
-          )}
+          <button
+            onClick={() => listings.length > 0 && setActiveTab('bookings')}
+            disabled={listings.length === 0}
+            className={`px-6 py-3 font-semibold transition ${
+              activeTab === 'bookings'
+                ? 'text-green-600 border-b-2 border-green-600'
+                : listings.length === 0
+                ? 'text-gray-400 cursor-not-allowed'
+                : 'text-gray-600 hover:text-gray-800'
+            }`}
+            title={listings.length === 0 ? 'No service listings available yet' : ''}
+          >
+            My Booking Requests {listings.length === 0 && '🔒'}
+          </button>
         </div>
 
         {/* LISTINGS TAB */}
@@ -327,241 +341,506 @@ function IrrigationServices() {
 
             {/* Post Service Form */}
             {showPostForm && (
-              <div className="card">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Post Equipment / Workers</h2>
-                <form onSubmit={handlePostSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="form-label">Type <span className="text-red-500">*</span></label>
+              <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl shadow-2xl border border-purple-200 overflow-hidden">
+                {/* Form Header */}
+                <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white bg-opacity-20 rounded-lg p-3">
+                        <span className="text-3xl">🚜</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">List Your Service</h2>
+                        <p className="text-purple-100 text-sm">Share equipment or offer skilled labor</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Body */}
+                <form onSubmit={handlePostSubmit} className="p-8 space-y-6">
+                  {/* Service Type Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">📋</span>
+                      Service Details
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Service Type <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            name="type"
+                            value={postForm.type}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 appearance-none cursor-pointer hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            required
+                          >
+                            <option value="TRACTOR">🚜 Tractor</option>
+                            <option value="JCB">🏗️ JCB / Excavator</option>
+                            <option value="MANUAL">👷 Manual Workers</option>
+                            <option value="IRRIGATION">💧 Irrigation Equipment</option>
+                          </select>
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">⚙️</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Service Title <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="title"
+                            value={postForm.title}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="e.g., Mahindra Tractor 575 DI"
+                            required
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">✏️</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Be specific about model/capacity</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Location & Pricing Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">📍</span>
+                      Location & Pricing
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Service Location <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="location"
+                            value={postForm.location}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="City / Village / District"
+                            required
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">🗺️</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Hourly Rate <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="rate"
+                            type="number"
+                            value={postForm.rate}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="1200"
+                            required
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">₹</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Enter amount per hour</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">📞</span>
+                      Contact Information
+                      <span className="text-xs font-normal text-gray-500 ml-2">(Optional - uses profile info if blank)</span>
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Contact Name
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="contactName"
+                            value={postForm.contactName}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="Your name"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">👤</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Phone Number
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="contactPhone"
+                            value={postForm.contactPhone}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="10-digit mobile"
+                            maxLength="10"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">📱</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Email Address
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="contactEmail"
+                            type="email"
+                            value={postForm.contactEmail}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="your@email.com"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">✉️</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Availability Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">⏰</span>
+                      Availability Status
+                    </h3>
+                    <div className="relative">
                       <select
-                        name="type"
-                        value={postForm.type}
+                        name="availability"
+                        value={postForm.availability}
                         onChange={handlePostChange}
-                        className="form-input"
-                        required
+                        className="form-input pl-10 appearance-none cursor-pointer hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
                       >
-                        <option value="TRACTOR">Tractor</option>
-                        <option value="JCB">JCB</option>
-                        <option value="MANUAL">Manual Workers</option>
-                        <option value="IRRIGATION">Irrigation Tools</option>
+                        <option value="Available">✅ Available Now</option>
+                        <option value="Limited">⚠️ Limited Availability</option>
+                        <option value="Booked">⛔ Fully Booked</option>
                       </select>
-                    </div>
-                    <div>
-                      <label className="form-label">Title <span className="text-red-500">*</span></label>
-                      <input
-                        name="title"
-                        value={postForm.title}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="e.g., Mahindra Tractor 575 DI"
-                        required
-                      />
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <span className="text-gray-400">📅</span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="form-label">Location <span className="text-red-500">*</span></label>
-                      <input
-                        name="location"
-                        value={postForm.location}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="City / Village"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Rate <span className="text-red-500">*</span></label>
-                      <input
-                        name="rate"
-                        value={postForm.rate}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="e.g., ₹1200/hr"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="form-label">Contact Name</label>
-                      <input
-                        name="contactName"
-                        value={postForm.contactName}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="Your name"
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Contact Phone</label>
-                      <input
-                        name="contactPhone"
-                        value={postForm.contactPhone}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="10-digit phone"
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Contact Email</label>
-                      <input
-                        name="contactEmail"
-                        value={postForm.contactEmail}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="example@email.com"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label">Availability</label>
-                    <select
-                      name="availability"
-                      value={postForm.availability}
-                      onChange={handlePostChange}
-                      className="form-input"
+                  {/* Submit Button */}
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
                     >
-                      <option>Available</option>
-                      <option>Limited</option>
-                      <option>Booked</option>
-                    </select>
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="animate-spin">⏳</span>
+                          Creating Listing...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <span>🚀</span>
+                          Post Service Listing
+                        </span>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPostForm(false)}
+                      className="px-8 py-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-xl transition-all duration-300 hover:bg-gray-50"
+                    >
+                      Cancel
+                    </button>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Creating...' : 'Post Listing'}
-                  </button>
+                  {/* Info Banner */}
+                  <div className="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">💡</span>
+                      <div>
+                        <p className="text-sm font-semibold text-blue-900">Pro Tip</p>
+                        <p className="text-sm text-blue-800 mt-1">
+                          Include clear details about your equipment condition, availability hours, and any special requirements to get more booking requests!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </form>
               </div>
             )}
 
             {/* Edit Service Form */}
             {editingListing && (
-              <div className="card border-2 border-blue-500">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-bold text-gray-800">Edit Service Listing</h2>
-                  <button
-                    onClick={handleCancelEdit}
-                    className="text-gray-500 hover:text-gray-700"
-                  >
-                    ✕ Cancel
-                  </button>
-                </div>
-                <form onSubmit={handleUpdateListing} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="form-label">Type <span className="text-red-500">*</span></label>
-                      <select
-                        name="type"
-                        value={postForm.type}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        required
-                      >
-                        <option value="TRACTOR">Tractor</option>
-                        <option value="JCB">JCB</option>
-                        <option value="MANUAL">Manual Workers</option>
-                        <option value="IRRIGATION">Irrigation Tools</option>
-                      </select>
+              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl shadow-2xl border-2 border-blue-400 overflow-hidden">
+                {/* Form Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-white bg-opacity-20 rounded-lg p-3">
+                        <span className="text-3xl">✏️</span>
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-bold text-white">Edit Service Listing</h2>
+                        <p className="text-blue-100 text-sm">Update your service information</p>
+                      </div>
                     </div>
-                    <div>
-                      <label className="form-label">Title <span className="text-red-500">*</span></label>
-                      <input
-                        name="title"
-                        value={postForm.title}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="e.g., Mahindra Tractor 575 DI"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="form-label">Location <span className="text-red-500">*</span></label>
-                      <input
-                        name="location"
-                        value={postForm.location}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="City / Village"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Rate (₹/hour) <span className="text-red-500">*</span></label>
-                      <input
-                        name="rate"
-                        type="number"
-                        value={postForm.rate}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="500"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="form-label">Contact Name</label>
-                      <input
-                        name="contactName"
-                        value={postForm.contactName}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="Your Name"
-                      />
-                    </div>
-                    <div>
-                      <label className="form-label">Contact Phone</label>
-                      <input
-                        name="contactPhone"
-                        value={postForm.contactPhone}
-                        onChange={handlePostChange}
-                        className="form-input"
-                        placeholder="9876543210"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="form-label">Availability</label>
-                    <select
-                      name="availability"
-                      value={postForm.availability}
-                      onChange={handlePostChange}
-                      className="form-input"
+                    <button
+                      onClick={handleCancelEdit}
+                      className="text-white hover:text-blue-100 transition-colors p-2 hover:bg-white hover:bg-opacity-10 rounded-lg"
+                      title="Cancel editing"
                     >
-                      <option>Available</option>
-                      <option>Limited</option>
-                      <option>Booked</option>
-                    </select>
+                      <span className="text-2xl">✕</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Form Body */}
+                <form onSubmit={handleUpdateListing} className="p-8 space-y-6">
+                  {/* Service Type Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">📋</span>
+                      Service Details
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Service Type <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            name="type"
+                            value={postForm.type}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 appearance-none cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            required
+                          >
+                            <option value="TRACTOR">🚜 Tractor</option>
+                            <option value="JCB">🏗️ JCB / Excavator</option>
+                            <option value="MANUAL">👷 Manual Workers</option>
+                            <option value="IRRIGATION">💧 Irrigation Equipment</option>
+                          </select>
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">⚙️</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Service Title <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="title"
+                            value={postForm.title}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="e.g., Mahindra Tractor 575 DI"
+                            required
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">✏️</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Be specific about model/capacity</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Location & Pricing Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">📍</span>
+                      Location & Pricing
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Service Location <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="location"
+                            value={postForm.location}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="City / Village / District"
+                            required
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">🗺️</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Hourly Rate <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="rate"
+                            type="number"
+                            value={postForm.rate}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="1200"
+                            required
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">₹</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-1">Enter amount per hour</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Contact Information Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">📞</span>
+                      Contact Information
+                      <span className="text-xs font-normal text-gray-500 ml-2">(Optional)</span>
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Contact Name
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="contactName"
+                            value={postForm.contactName}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="Your name"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">👤</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Phone Number
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="contactPhone"
+                            value={postForm.contactPhone}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="10-digit mobile"
+                            maxLength="10"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">📱</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Email Address
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="contactEmail"
+                            type="email"
+                            value={postForm.contactEmail}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="your@email.com"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-gray-400">✉️</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Availability Section */}
+                  <div className="bg-white rounded-xl p-6 shadow-md border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                      <span className="text-2xl">⏰</span>
+                      Availability Status
+                    </h3>
+                    <div className="relative">
+                      <select
+                        name="availability"
+                        value={postForm.availability}
+                        onChange={handlePostChange}
+                        className="form-input pl-10 appearance-none cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                      >
+                        <option value="Available">✅ Available Now</option>
+                        <option value="Limited">⚠️ Limited Availability</option>
+                        <option value="Booked">⛔ Fully Booked</option>
+                      </select>
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                        <span className="text-gray-400">📅</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-4 pt-4">
                     <button
                       type="submit"
                       disabled={loading}
-                      className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
                     >
-                      {loading ? 'Updating...' : 'Update Listing'}
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <span className="animate-spin">⏳</span>
+                          Updating Listing...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <span>💾</span>
+                          Save Changes
+                        </span>
+                      )}
                     </button>
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="btn-secondary"
+                      className="px-8 py-4 border-2 border-gray-300 hover:border-gray-400 text-gray-700 font-semibold rounded-xl transition-all duration-300 hover:bg-gray-50"
                     >
                       Cancel
                     </button>
+                  </div>
+
+                  {/* Info Banner */}
+                  <div className="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl">ℹ️</span>
+                      <div>
+                        <p className="text-sm font-semibold text-yellow-900">Important Note</p>
+                        <p className="text-sm text-yellow-800 mt-1">
+                          Changes will be visible immediately. Make sure all information is accurate before saving.
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </form>
               </div>
