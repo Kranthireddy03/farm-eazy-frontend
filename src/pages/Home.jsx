@@ -27,7 +27,8 @@ function Home() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalFarms: 0,
-    totalProducts: 0
+    totalProducts: 0,
+    totalServices: 0
   })
   const [showSupport, setShowSupport] = useState(false)
 
@@ -47,12 +48,13 @@ function Home() {
   const fetchStats = async () => {
     try {
       setStatsLoading(true)
-      const [farmsRes, productsRes] = await Promise.allSettled([
+      const [farmsRes, productsRes, servicesRes] = await Promise.allSettled([
         apiClient.get('/farms'),
-        apiClient.get('/products')
+        apiClient.get('/products'),
+        apiClient.get('/services/listings')
       ])
 
-      const nextStats = { totalFarms: 0, totalProducts: 0 }
+      const nextStats = { totalFarms: 0, totalProducts: 0, totalServices: 0 }
 
       if (farmsRes.status === 'fulfilled') {
         const data = farmsRes.value.data
@@ -66,6 +68,18 @@ function Home() {
         nextStats.totalProducts = Array.isArray(data)
           ? data.length
           : (data?.totalProducts || data?.count || 0)
+      }
+
+      if (servicesRes.status === 'fulfilled') {
+        const data = servicesRes.value.data
+        // Handle paginated response
+        if (data.content && Array.isArray(data.content)) {
+          nextStats.totalServices = data.totalElements || data.content.length
+        } else if (Array.isArray(data)) {
+          nextStats.totalServices = data.length
+        } else {
+          nextStats.totalServices = 0
+        }
       }
 
       setStats(nextStats)
@@ -160,7 +174,7 @@ function Home() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
             <div className="text-3xl font-bold text-green-600 mb-2">
               {statsLoading ? '...' : stats.totalFarms}
@@ -181,6 +195,22 @@ function Home() {
               {statsLoading
                 ? 'Loading...'
                 : (stats.totalProducts === 0 ? 'List your first product' : 'Products available')}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div className="text-3xl font-bold text-purple-600 mb-2 flex items-center gap-2">
+              {statsLoading ? '...' : (
+                <>
+                  <span>🚜</span>
+                  <span>{stats.totalServices}</span>
+                </>
+              )}
+            </div>
+            <p className="text-gray-700 text-sm">Service Listings</p>
+            <p className="text-gray-500 text-xs mt-1">
+              {statsLoading
+                ? 'Loading...'
+                : (stats.totalServices === 0 ? 'List equipment/workers' : 'Services available')}
             </p>
           </div>
           <div className="bg-white rounded-lg shadow-md p-6 border-l-4 border-orange-500">
