@@ -149,6 +149,26 @@ function Home() {
       actionText: 'Start Shopping',
       path: '/buying',
     },
+    {
+      id: 'services',
+      title: 'Irrigation Services',
+      description: 'Connect with equipment owners and skilled workers. Rent machinery or hire labor for your farming needs.',
+      icon: '🚜',
+      color: 'from-purple-500 to-purple-600',
+      lightColor: 'bg-purple-50',
+      borderColor: 'border-purple-200',
+      textColor: 'text-purple-700',
+      hoverColor: 'hover:from-purple-600 hover:to-purple-700',
+      features: [
+        '🔧 Rent equipment',
+        '👷 Hire workers',
+        '📋 Post your services',
+        '💼 Manage bookings',
+      ],
+      actionText: 'Explore Services',
+      path: '/irrigation-services',
+      isServices: true,
+    },
   ]
 
   const handleNavigate = (path) => {
@@ -240,7 +260,7 @@ function Home() {
         </div>
 
         {/* Main Sections Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {sections.map((section) => (
             <div
               key={section.id}
@@ -304,6 +324,8 @@ function Home() {
                       ? 'focus:ring-green-500'
                       : section.color === 'from-blue-500 to-blue-600'
                       ? 'focus:ring-blue-500'
+                      : section.color === 'from-purple-500 to-purple-600'
+                      ? 'focus:ring-purple-500'
                       : 'focus:ring-orange-500'
                     }
                   `}
