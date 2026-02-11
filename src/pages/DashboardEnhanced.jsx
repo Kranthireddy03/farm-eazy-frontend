@@ -349,53 +349,6 @@ function DashboardEnhanced() {
         </div>
 
         {/* Service Listings Section */}
-                {/* Payment Section */}
-                <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
-                  <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <span className="mr-2">💳</span> Make a Payment
-                  </h2>
-                  <div className="flex flex-col md:flex-row gap-4 mb-4">
-                    <input
-                      type="number"
-                      min="1"
-                      value={paymentAmount}
-                      onChange={e => setPaymentAmount(Number(e.target.value))}
-                      placeholder="Amount (₹)"
-                      className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/4"
-                    />
-                    <input
-                      type="email"
-                      value={paymentEmail}
-                      onChange={e => setPaymentEmail(e.target.value)}
-                      placeholder="Email"
-                      className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/4"
-                    />
-                    <input
-                      type="tel"
-                      value={paymentPhone}
-                      onChange={e => setPaymentPhone(e.target.value)}
-                      placeholder="Phone"
-                      className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/4"
-                    />
-                    <button
-                      className={`bg-green-600 text-white px-4 py-2 rounded-lg font-semibold ${paymentLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                      disabled={paymentLoading || !paymentAmount || !paymentEmail || !paymentPhone}
-                      onClick={handlePayNow}
-                    >
-                      {paymentLoading ? 'Processing...' : 'Pay Now'}
-                    </button>
-                  </div>
-                  {paymentStatus === 'success' && (
-                    <div className="bg-green-100 text-green-700 p-4 rounded-lg mt-4 font-semibold">
-                      Payment successful! Confirmation sent to your email.
-                    </div>
-                  )}
-                  {paymentStatus === 'failure' && (
-                    <div className="bg-red-100 text-red-700 p-4 rounded-lg mt-4 font-semibold">
-                      Payment failed. Please try again or contact support.
-                    </div>
-                  )}
-                </div>
         <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
             <span className="mr-2">🚜</span> My Service Listings

@@ -56,10 +56,9 @@ function IrrigationServices() {
   const fetchListings = async () => {
     try {
       setLoading(true)
-      const response = await apiClient.get('/services/listings');
+      const response = await apiClient.get('/services/my-listings');
       const userListings = Array.isArray(response.data) ? response.data : [];
       setListings(userListings);
-      // Store IDs of user's own listings
       setMyListingIds(new Set(userListings.map(listing => listing.id)));
     } catch (error) {
       console.error('Error fetching listings:', error);

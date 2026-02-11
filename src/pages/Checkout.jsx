@@ -14,6 +14,18 @@ import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
 
+// Razorpay script loader
+function loadRazorpayScript() {
+  return new Promise((resolve) => {
+    if (window.Razorpay) return resolve(true);
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+}
+
 function Checkout() {
   const navigate = useNavigate()
   const { showToast } = useToast()
@@ -23,6 +35,7 @@ function Checkout() {
   const [useCoins, setUseCoins] = useState(false)
   const [coinsToUse, setCoinsToUse] = useState(0)
   const [selectedPayment, setSelectedPayment] = useState('CASH_ON_DELIVERY')
+  const [razorpayLoading, setRazorpayLoading] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [addresses, setAddresses] = useState([])
@@ -130,10 +143,88 @@ function Checkout() {
       // Require an address for all payment methods
       if (!selectedAddress) {
         showToast('Please select or add a delivery address', 'warning')
+        setCheckingOut(false)
         return
       }
 
-      // Create order payload
+      // Razorpay flow
+      if (selectedPayment === 'RAZORPAY') {
+        setRazorpayLoading(true)
+        const loaded = await loadRazorpayScript();
+        if (!loaded) {
+          showToast('Failed to load Razorpay. Please try again.', 'error');
+          setRazorpayLoading(false)
+          setCheckingOut(false)
+          return;
+        }
+        // Create Razorpay order on backend
+        const paymentData = {
+          amount: Math.round(finalAmount * 100), // in paise
+          email: addresses.find(a => a.id === selectedAddress)?.email || '',
+          phone: addresses.find(a => a.id === selectedAddress)?.phoneNumber || ''
+        };
+        const orderRes = await apiClient.post('/payment/create-order', paymentData);
+        const order = orderRes.data;
+
+        const options = {
+          key: order.key_id || process.env.REACT_APP_RAZORPAY_KEY_ID,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'FarmEazy',
+          description: 'Order Payment',
+          order_id: order.id,
+          handler: async function (response) {
+            // Verify payment on backend
+            try {
+              await apiClient.post('/payment/verify', {
+                orderId: order.id,
+                paymentId: response.razorpay_payment_id,
+                signature: response.razorpay_signature,
+                email: paymentData.email,
+                phone: paymentData.phone
+              });
+              // Place order in system
+              const orderData = {
+                items: cartItems.map(item => {
+                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                  return {
+                    productId: item.id,
+                    quantity: item.quantity,
+                    price: itemPrice
+                  }
+                }),
+                subtotal: subtotal,
+                taxAmount: tax,
+                totalAmount: total,
+                coinsUsed: coinsApplied,
+                finalAmount: finalAmount,
+                paymentMethod: 'RAZORPAY',
+                addressId: selectedAddress,
+                paymentId: response.razorpay_payment_id
+              };
+              const placedOrder = await apiClient.post('/orders', orderData);
+              localStorage.removeItem('farmeazy_cart')
+              localStorage.removeItem('farmeazy_checkout_coins')
+              showToast('✅ Payment successful & order placed!', 'success')
+              navigate(`/order-confirmation/${placedOrder.data.id}`)
+            } catch (err) {
+              showToast('Payment verification failed. Contact support.', 'error')
+            }
+          },
+          prefill: {
+            email: paymentData.email,
+            contact: paymentData.phone
+          },
+          theme: { color: '#22c55e' }
+        };
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+        setRazorpayLoading(false)
+        setCheckingOut(false)
+        return;
+      }
+
+      // Default flow for other payment methods
       const orderData = {
         items: cartItems.map(item => {
           const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
@@ -154,26 +245,21 @@ function Checkout() {
 
       // Call order creation API
       const response = await apiClient.post('/orders', orderData)
-      
-      // Clear cart
       localStorage.removeItem('farmeazy_cart')
       localStorage.removeItem('farmeazy_checkout_coins')
-      
-      // Show success message
       showToast('✅ Order placed successfully!', 'success')
 
       // Redirect based on payment method
       if (selectedPayment === 'CASH_ON_DELIVERY') {
         navigate(`/order-confirmation/${response.data.id}`)
       } else if (selectedPayment === 'UPI') {
-        // Redirect to UPI payment (would integrate with actual UPI gateway)
         openUPIPayment(response.data.id)
       } else if (selectedPayment === 'PHONEPAY') {
-        // Redirect to PhonePay
         openPhonePayPayment(response.data.id)
       }
     } catch (error) {
       showToast('Failed to place order: ' + error.message, 'error')
+      setRazorpayLoading(false)
     } finally {
       setCheckingOut(false)
     }
@@ -343,15 +429,23 @@ function Checkout() {
                   </div>
                 </label>
 
-                {/* Coming Soon */}
-                <div className="p-4 border-2 border-gray-300 rounded-lg opacity-50 cursor-not-allowed">
-                  <div className="flex items-center">
-                    <div className="ml-4 flex-1">
-                      <p className="font-semibold text-gray-600">💳 Credit/Debit Card</p>
-                      <p className="text-sm text-gray-500">Coming Soon...</p>
-                    </div>
+                {/* Razorpay */}
+                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition" 
+                       style={{ borderColor: selectedPayment === 'RAZORPAY' ? '#22c55e' : '#e5e7eb',
+                               backgroundColor: selectedPayment === 'RAZORPAY' ? '#f0fdf4' : '#fff' }}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="RAZORPAY"
+                    checked={selectedPayment === 'RAZORPAY'}
+                    onChange={(e) => setSelectedPayment(e.target.value)}
+                    className="w-4 h-4 cursor-pointer"
+                  />
+                  <div className="ml-4 flex-1">
+                    <p className="font-semibold text-gray-800">🪙 Razorpay (UPI/Card/Netbanking)</p>
+                    <p className="text-sm text-gray-600">Pay securely online with Razorpay</p>
                   </div>
-                </div>
+                </label>
               </div>
             </div>
 
