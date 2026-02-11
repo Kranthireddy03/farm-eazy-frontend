@@ -16,6 +16,20 @@ function loadRazorpayScript() {
 }
 
 function Checkout() {
+    // Loads cart, coins, and addresses for checkout page
+    const loadCheckoutData = async () => {
+      try {
+        // Load cart from localStorage
+        const cart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]');
+        setCartItems(cart);
+        // Fetch coins
+        await fetchCoins();
+        // Fetch addresses
+        await fetchAddresses();
+      } catch (error) {
+        showToast('Failed to load checkout data', 'error');
+      }
+    };
   // State for payment retry logic
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [retryTimer, setRetryTimer] = useState(0);
