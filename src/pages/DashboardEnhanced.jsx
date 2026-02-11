@@ -1,74 +1,4 @@
-        // Razorpay JS SDK must be loaded in index.html: <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-        // Replace 'RAZORPAY_KEY_ID' with your actual key in production.
-      // Payment state
-      const [paymentLoading, setPaymentLoading] = useState(false);
-      const [paymentStatus, setPaymentStatus] = useState(null); // 'success' | 'failure' | null
-      const [paymentAmount, setPaymentAmount] = useState(0);
-      const [paymentEmail, setPaymentEmail] = useState('');
-      const [paymentPhone, setPaymentPhone] = useState('');
 
-      // Secure payment handler
-      const handlePayNow = async () => {
-        setPaymentLoading(true);
-        try {
-          // Call backend to create order
-          const res = await apiClient.post('/payment/create-order', {
-            amount: paymentAmount,
-            email: paymentEmail,
-            phone: paymentPhone
-          });
-          const order = res.data;
-          // Razorpay options
-          const options = {
-            key: 'rzp_test_SErVEqprf03ItT',
-            amount: order.amount, // Already in paise from backend
-            currency: 'INR',
-            name: 'FarmEazy',
-            description: 'Farm Service Payment',
-            order_id: order.id,
-            handler: async function(response) {
-              // Securely verify payment
-              try {
-                const verifyRes = await apiClient.post('/payment/verify', {
-                  paymentId: response.razorpay_payment_id,
-                  orderId: response.razorpay_order_id,
-                  signature: response.razorpay_signature,
-                  email: paymentEmail,
-                  phone: paymentPhone
-                });
-                if (verifyRes.data.success) {
-                  setPaymentStatus('success');
-                } else {
-                  setPaymentStatus('failure');
-                }
-              } catch (err) {
-                setPaymentStatus('failure');
-              }
-            },
-            prefill: {
-              email: paymentEmail,
-              contact: paymentPhone
-            },
-            theme: {
-              color: '#3399cc'
-            }
-          };
-          // Ensure Razorpay JS SDK is loaded
-          if (window.Razorpay) {
-            const rzp = new window.Razorpay(options);
-            rzp.open();
-          } else {
-            setPaymentStatus('failure');
-          }
-        } catch (error) {
-          setPaymentStatus('failure');
-        } finally {
-          setPaymentLoading(false);
-        }
-      };
-    const [serviceFilter, setServiceFilter] = useState('');
-    const [serviceSort, setServiceSort] = useState('name');
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 /**
  * Enhanced Dashboard with Analytics & Activity Feed
  * 
@@ -79,12 +9,6 @@
  * - Statistics and insights
  * - Quick actions
  */
-
-import React, { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import apiClient from '../services/apiClient'
-import { useToast } from '../hooks/useToast'
-import { useCoin } from '../context/CoinContext'
 
 function DashboardEnhanced() {
   const navigate = useNavigate()
