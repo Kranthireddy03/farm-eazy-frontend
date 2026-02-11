@@ -206,7 +206,7 @@ function Checkout() {
           handler: async function (response) {
             // Verify payment on backend
             try {
-              await apiClient.post('/payment/verify', {
+              const verifyResult = await apiClient.post('/payment/verify', {
                 orderId: order.id,
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
@@ -214,29 +214,58 @@ function Checkout() {
                 phone: paymentData.phone
               });
               // Only after payment is verified, place the order
-              const orderData = {
-                items: cartItems.map(item => {
-                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
-                  return {
-                    productId: item.id,
-                    quantity: item.quantity,
-                    price: itemPrice
-                  }
-                }),
-                subtotal: subtotal,
-                taxAmount: tax,
-                totalAmount: total,
-                coinsUsed: coinsApplied,
-                finalAmount: finalAmount,
-                paymentMethod: 'RAZORPAY',
-                addressId: selectedAddress,
-                paymentId: response.razorpay_payment_id
-              };
-              const placedOrder = await apiClient.post('/orders', orderData);
-              localStorage.removeItem('farmeazy_cart');
-              localStorage.removeItem('farmeazy_checkout_coins');
-              showToast('✅ Payment successful & order placed!', 'success');
-              navigate(`/order-confirmation/${placedOrder.data.id}`);
+              if (verifyResult.data.status === 'success') {
+                const orderData = {
+                  items: cartItems.map(item => {
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                    return {
+                      productId: item.id,
+                      quantity: item.quantity,
+                      price: itemPrice
+                    }
+                  }),
+                  subtotal: subtotal,
+                  taxAmount: tax,
+                  totalAmount: total,
+                  coinsUsed: coinsApplied,
+                  finalAmount: finalAmount,
+                  paymentMethod: 'RAZORPAY',
+                  addressId: selectedAddress,
+                  paymentId: response.razorpay_payment_id
+                };
+                const placedOrder = await apiClient.post('/orders', orderData);
+                localStorage.removeItem('farmeazy_cart');
+                localStorage.removeItem('farmeazy_checkout_coins');
+                showToast('✅ Payment successful & order placed!', 'success');
+                navigate(`/order-confirmation/${placedOrder.data.id}`);
+              } else {
+                // Payment failed, create pending order and allow retry
+                const failedOrderData = {
+                  items: cartItems.map(item => {
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                    return {
+                      productId: item.id,
+                      quantity: item.quantity,
+                      price: itemPrice
+                    }
+                  }),
+                  subtotal: subtotal,
+                  taxAmount: tax,
+                  totalAmount: total,
+                  coinsUsed: coinsApplied,
+                  finalAmount: finalAmount,
+                  paymentMethod: 'RAZORPAY',
+                  addressId: selectedAddress,
+                  paymentStatus: 'FAILED',
+                  orderStatus: 'PENDING',
+                  paymentId: response.razorpay_payment_id
+                };
+                const pendingOrder = await apiClient.post('/orders', failedOrderData);
+                setPendingOrderId(pendingOrder.data.id);
+                setRetryActive(true);
+                setRetryTimer(600); // 10 minutes
+                showToast('Payment failed. Order is on hold for 10 minutes. You can retry payment.', 'warning');
+              }
             } catch (err) {
               showToast('Payment verification failed. Contact support.', 'error')
             }
@@ -249,7 +278,7 @@ function Checkout() {
           modal: {
             ondismiss: async function () {
               // Payment failed or closed, create pending order and start retry timer
-              const orderData = {
+              const failedOrderData = {
                 items: cartItems.map(item => {
                   const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
                   return {
@@ -269,7 +298,7 @@ function Checkout() {
                 orderStatus: 'PENDING'
               };
               try {
-                const pendingOrder = await apiClient.post('/orders', orderData);
+                const pendingOrder = await apiClient.post('/orders', failedOrderData);
                 setPendingOrderId(pendingOrder.data.id);
                 setRetryActive(true);
                 setRetryTimer(600); // 10 minutes in seconds
@@ -301,37 +330,29 @@ function Checkout() {
       }
 
       // Default flow for other payment methods
-      const orderData = {
-        items: cartItems.map(item => {
-          const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
-          return {
-            productId: item.id,
-            quantity: item.quantity,
-            price: itemPrice
-          }
-        }),
-        subtotal: subtotal,
-        taxAmount: tax,
-        totalAmount: total,
-        coinsUsed: coinsApplied,
-        finalAmount: finalAmount,
-        paymentMethod: selectedPayment,
-        addressId: selectedAddress
-      }
-
-      // Call order creation API
-      const response = await apiClient.post('/orders', orderData)
-      localStorage.removeItem('farmeazy_cart')
-      localStorage.removeItem('farmeazy_checkout_coins')
-      showToast('✅ Order placed successfully!', 'success')
-
-      // Redirect based on payment method
       if (selectedPayment === 'CASH_ON_DELIVERY') {
+        const orderData = {
+          items: cartItems.map(item => {
+            const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+            return {
+              productId: item.id,
+              quantity: item.quantity,
+              price: itemPrice
+            }
+          }),
+          subtotal: subtotal,
+          taxAmount: tax,
+          totalAmount: total,
+          coinsUsed: coinsApplied,
+          finalAmount: finalAmount,
+          paymentMethod: 'CASH_ON_DELIVERY',
+          addressId: selectedAddress
+        }
+        const response = await apiClient.post('/orders', orderData)
+        localStorage.removeItem('farmeazy_cart')
+        localStorage.removeItem('farmeazy_checkout_coins')
+        showToast('✅ Order placed successfully!', 'success')
         navigate(`/order-confirmation/${response.data.id}`)
-      } else if (selectedPayment === 'UPI') {
-        openUPIPayment(response.data.id)
-      } else if (selectedPayment === 'PHONEPAY') {
-        openPhonePayPayment(response.data.id)
       }
     } catch (error) {
       showToast('Failed to place order: ' + error.message, 'error')
