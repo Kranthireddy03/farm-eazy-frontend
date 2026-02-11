@@ -1,14 +1,3 @@
-/**
- * Comprehensive Checkout Page
- * 
- * Features:
- * - Order summary
- * - Multiple payment options (UPI, PhonePay, QR, Cash on Delivery)
- * - Address management for COD
- * - QR code generation for UPI payments
- * - Order confirmation flow
- */
-
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
@@ -27,6 +16,12 @@ function loadRazorpayScript() {
 }
 
 function Checkout() {
+  // State for payment retry logic
+  const [pendingOrderId, setPendingOrderId] = useState(null);
+  const [retryTimer, setRetryTimer] = useState(0);
+  const [retryInterval, setRetryInterval] = useState(null);
+  const [retryActive, setRetryActive] = useState(false);
+
   const navigate = useNavigate()
   const { showToast } = useToast()
 
@@ -63,14 +58,47 @@ function Checkout() {
     loadCheckoutData()
   }, [])
 
-  const loadCheckoutData = () => {
-    const savedCart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]')
-    setCartItems(savedCart)
-    const savedCoins = JSON.parse(localStorage.getItem('farmeazy_checkout_coins') || '{}')
-    setUseCoins(Boolean(savedCoins.useCoins))
-    setCoinsToUse(Number(savedCoins.coinsToUse || 0))
-    fetchCoins()
-    fetchAddresses()
+  // Cleanup retry interval on unmount
+  useEffect(() => {
+    return () => {
+      if (retryInterval) clearInterval(retryInterval);
+    };
+  }, [retryInterval]);
+
+  // Retry Screen at top of render
+  if (retryActive && pendingOrderId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-yellow-50">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+          <h2 className="text-2xl font-bold text-yellow-700 mb-4">Order On Hold</h2>
+          <p className="mb-2">Your order is on hold due to payment failure.</p>
+          <p className="mb-4">
+            You have 
+            <span className="font-bold">
+              {Math.floor(retryTimer/60)}:
+              {(retryTimer % 60).toString().padStart(2, '0')}
+            </span> 
+            minutes to retry payment.
+          </p>
+          <button
+            onClick={handleRetryPayment}
+            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition mb-2"
+            disabled={razorpayLoading}
+          >
+            Retry Payment
+          </button>
+          <button
+            onClick={() => {
+              setRetryActive(false);
+              navigate('/');
+            }}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition"
+          >
+            Cancel Order
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const fetchCoins = async () => {
@@ -185,7 +213,7 @@ function Checkout() {
                 email: paymentData.email,
                 phone: paymentData.phone
               });
-              // Place order in system
+              // Only after payment is verified, place the order
               const orderData = {
                 items: cartItems.map(item => {
                   const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
@@ -205,10 +233,10 @@ function Checkout() {
                 paymentId: response.razorpay_payment_id
               };
               const placedOrder = await apiClient.post('/orders', orderData);
-              localStorage.removeItem('farmeazy_cart')
-              localStorage.removeItem('farmeazy_checkout_coins')
-              showToast('✅ Payment successful & order placed!', 'success')
-              navigate(`/order-confirmation/${placedOrder.data.id}`)
+              localStorage.removeItem('farmeazy_cart');
+              localStorage.removeItem('farmeazy_checkout_coins');
+              showToast('✅ Payment successful & order placed!', 'success');
+              navigate(`/order-confirmation/${placedOrder.data.id}`);
             } catch (err) {
               showToast('Payment verification failed. Contact support.', 'error')
             }
@@ -217,13 +245,59 @@ function Checkout() {
             email: paymentData.email,
             contact: paymentData.phone
           },
-          theme: { color: '#22c55e' }
+          theme: { color: '#22c55e' },
+          modal: {
+            ondismiss: async function () {
+              // Payment failed or closed, create pending order and start retry timer
+              const orderData = {
+                items: cartItems.map(item => {
+                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                  return {
+                    productId: item.id,
+                    quantity: item.quantity,
+                    price: itemPrice
+                  }
+                }),
+                subtotal: subtotal,
+                taxAmount: tax,
+                totalAmount: total,
+                coinsUsed: coinsApplied,
+                finalAmount: finalAmount,
+                paymentMethod: 'RAZORPAY',
+                addressId: selectedAddress,
+                paymentStatus: 'FAILED',
+                orderStatus: 'PENDING'
+              };
+              try {
+                const pendingOrder = await apiClient.post('/orders', orderData);
+                setPendingOrderId(pendingOrder.data.id);
+                setRetryActive(true);
+                setRetryTimer(600); // 10 minutes in seconds
+                showToast('Payment failed. Order is on hold for 10 minutes. You can retry payment.', 'warning');
+                // Start timer
+                if (retryInterval) clearInterval(retryInterval);
+                const interval = setInterval(() => {
+                  setRetryTimer(prev => {
+                    if (prev <= 1) {
+                      clearInterval(interval);
+                      setRetryActive(false);
+                      // Optionally call backend to cancel order
+                      apiClient.patch(`/orders/${pendingOrder.data.id}/cancel`);
+                      showToast('Order cancelled due to payment timeout.', 'error');
+                      return 0;
+                    }
+                    return prev - 1;
+                  });
+                }, 1000);
+                setRetryInterval(interval);
+              } catch (err) {
+                showToast('Failed to create pending order.', 'error');
+              }
+            }
+          }
         };
         const rzp = new window.Razorpay(options);
         rzp.open();
-        setRazorpayLoading(false)
-        setCheckingOut(false)
-        return;
       }
 
       // Default flow for other payment methods
