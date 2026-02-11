@@ -55,8 +55,9 @@ function IrrigationServices() {
 
   const fetchListings = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await apiClient.get('/services/listings/my');
+      console.log('[DEBUG] /services/listings/my response:', response.data);
       const userListings = Array.isArray(response.data) ? response.data : [];
       setListings(userListings);
       setMyListingIds(new Set(userListings.map(listing => listing.id)));
@@ -65,7 +66,7 @@ function IrrigationServices() {
       setListings([]);
       setMyListingIds(new Set());
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -969,7 +970,7 @@ function IrrigationServices() {
                   <div key={listing.id} className="card hover:shadow-lg transition-shadow">
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-bold text-gray-800">{listing.title || 'Untitled Listing'}</h3>
+                        <h3 className="text-lg font-bold text-gray-800">{listing.title || listing.serviceName || 'Untitled Listing'}</h3>
                         <p className="text-gray-600 text-sm">📍 {listing.location || 'Location not specified'}</p>
                       </div>
                       <span className="text-2xl">{getServiceIcon(listing.type)}</span>
@@ -982,7 +983,7 @@ function IrrigationServices() {
                       </div>
                       <div className="flex justify-between items-center">
                         <p className="text-sm text-gray-600">Rate</p>
-                        <p className="text-sm text-orange-600 font-semibold">{listing.rate || 'Rate not set'}</p>
+                        <p className="text-sm text-orange-600 font-semibold">{listing.rate || listing.price || 'Rate not set'}</p>
                       </div>
                       <div className="flex justify-between items-center">
                         <p className="text-sm text-gray-600">Status</p>

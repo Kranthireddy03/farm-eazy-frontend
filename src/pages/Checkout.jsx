@@ -16,6 +16,14 @@ function loadRazorpayScript() {
 }
 
 function Checkout() {
+  // Add missing handleRetryPayment function
+  const handleRetryPayment = () => {
+    console.log("Retry payment clicked");
+    // Re-invoke Razorpay payment flow for pending order
+    // You may want to call the backend to get the pending order details and re-initiate payment
+    // For now, just reload the page or re-run handleCheckout
+    handleCheckout();
+  };
     // Loads cart, coins, and addresses for checkout page
     const loadCheckoutData = async () => {
       try {
@@ -43,6 +51,20 @@ function Checkout() {
   const [coins, setCoins] = useState(0)
   const [useCoins, setUseCoins] = useState(false)
   const [coinsToUse, setCoinsToUse] = useState(0)
+    // Restore coin discount UI logic
+    const handleCoinToggle = () => {
+      setUseCoins(!useCoins);
+      if (!useCoins) {
+        setCoinsToUse(Math.min(coins, Math.floor(total)));
+      } else {
+        setCoinsToUse(0);
+      }
+    };
+
+    const handleCoinsToUseChange = (e) => {
+      const value = Math.max(0, Math.min(Number(e.target.value), Math.min(coins, Math.floor(total))));
+      setCoinsToUse(value);
+    };
   const [selectedPayment, setSelectedPayment] = useState('CASH_ON_DELIVERY')
   const [razorpayLoading, setRazorpayLoading] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
@@ -148,10 +170,10 @@ function Checkout() {
     return { subtotal, tax, total }
   }
 
-  const { subtotal, tax, total } = calculateTotals()
-  const maxCoinsUsable = Math.min(coins, Math.floor(total))
-  const coinsApplied = useCoins ? Math.min(coinsToUse, maxCoinsUsable) : 0
-  const finalAmount = Math.max(0, total - (coinsApplied * COIN_VALUE))
+  const { subtotal, tax, total } = calculateTotals();
+  const maxCoinsUsable = Math.min(coins, Math.floor(total));
+  const coinsApplied = useCoins ? Math.min(coinsToUse, maxCoinsUsable) : 0;
+  const finalAmount = Math.max(0, total - (coinsApplied * COIN_VALUE));
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target
@@ -181,6 +203,7 @@ function Checkout() {
   }
 
   const handleCheckout = async () => {
+    console.log('[DEBUG] Checkout triggered. Cart:', cartItems, 'Coins:', coins, 'UseCoins:', useCoins, 'CoinsToUse:', coinsToUse, 'CoinsApplied:', coinsApplied, 'FinalAmount:', finalAmount, 'SelectedPayment:', selectedPayment);
     try {
       setCheckingOut(true)
 
@@ -193,31 +216,34 @@ function Checkout() {
 
       // Razorpay flow
       if (selectedPayment === 'RAZORPAY') {
-        setRazorpayLoading(true)
+        setRazorpayLoading(true);
         const loaded = await loadRazorpayScript();
         if (!loaded) {
           showToast('Failed to load Razorpay. Please try again.', 'error');
-          setRazorpayLoading(false)
-          setCheckingOut(false)
+          setRazorpayLoading(false);
+          setCheckingOut(false);
           return;
         }
-        // Create Razorpay order on backend
+        // Create Razorpay order on backend (amount in paise)
         const paymentData = {
           amount: Math.round(finalAmount * 100), // in paise
           email: addresses.find(a => a.id === selectedAddress)?.email || '',
           phone: addresses.find(a => a.id === selectedAddress)?.phoneNumber || ''
         };
+        console.log('[DEBUG] Creating Razorpay order with:', paymentData, `(Rupees: ₹${finalAmount}, Paise: ${Math.round(finalAmount * 100)})`);
         const orderRes = await apiClient.post('/payment/create-order', paymentData);
         const order = orderRes.data;
+        console.log('[DEBUG] Razorpay order response:', order);
 
         const options = {
           key: order.key_id,
-          amount: order.amount,
+          amount: order.amount, // in paise
           currency: order.currency,
           name: 'FarmEazy',
           description: 'Order Payment',
           order_id: order.id,
           handler: async function (response) {
+            console.log('[DEBUG] Razorpay handler response:', response);
             // Verify payment on backend
             try {
               const verifyResult = await apiClient.post('/payment/verify', {
@@ -227,16 +253,17 @@ function Checkout() {
                 email: paymentData.email,
                 phone: paymentData.phone
               });
+              console.log('[DEBUG] Payment verify result:', verifyResult.data);
               // Only after payment is verified, place the order
               if (verifyResult.data.status === 'success') {
                 const orderData = {
                   items: cartItems.map(item => {
-                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
                     return {
                       productId: item.id,
                       quantity: item.quantity,
                       price: itemPrice
-                    }
+                    };
                   }),
                   subtotal: subtotal,
                   taxAmount: tax,
@@ -247,6 +274,7 @@ function Checkout() {
                   addressId: selectedAddress,
                   paymentId: response.razorpay_payment_id
                 };
+                console.log('[DEBUG] Placing order after payment success:', orderData);
                 const placedOrder = await apiClient.post('/orders', orderData);
                 localStorage.removeItem('farmeazy_cart');
                 localStorage.removeItem('farmeazy_checkout_coins');
@@ -256,12 +284,12 @@ function Checkout() {
                 // Payment failed, create pending order and allow retry
                 const failedOrderData = {
                   items: cartItems.map(item => {
-                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
                     return {
                       productId: item.id,
                       quantity: item.quantity,
                       price: itemPrice
-                    }
+                    };
                   }),
                   subtotal: subtotal,
                   taxAmount: tax,
@@ -274,6 +302,7 @@ function Checkout() {
                   orderStatus: 'PENDING',
                   paymentId: response.razorpay_payment_id
                 };
+                console.log('[DEBUG] Creating pending order after payment failure:', failedOrderData);
                 const pendingOrder = await apiClient.post('/orders', failedOrderData);
                 setPendingOrderId(pendingOrder.data.id);
                 setRetryActive(true);
@@ -281,7 +310,8 @@ function Checkout() {
                 showToast('Payment failed. Order is on hold for 10 minutes. You can retry payment.', 'warning');
               }
             } catch (err) {
-              showToast('Payment verification failed. Contact support.', 'error')
+              console.error('[DEBUG] Payment verification failed:', err);
+              showToast('Payment verification failed. Contact support.', 'error');
             }
           },
           prefill: {
@@ -641,10 +671,35 @@ function Checkout() {
           <div className="bg-white rounded-lg shadow-lg p-6 h-fit sticky top-20">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Price Breakdown</h2>
 
+
             <div className="space-y-3 border-b pb-4 mb-4">
               <div className="flex justify-between text-gray-700">
                 <span>Subtotal:</span>
                 <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
+              </div>
+
+              {/* Coin discount UI */}
+              <div className="flex items-center gap-2 my-2">
+                <input
+                  type="checkbox"
+                  checked={useCoins}
+                  onChange={handleCoinToggle}
+                  id="use-coins-toggle"
+                  className="w-4 h-4"
+                />
+                <label htmlFor="use-coins-toggle" className="text-sm text-gray-700 font-semibold cursor-pointer">
+                  Use Coins ({coins} available)
+                </label>
+                {useCoins && (
+                  <input
+                    type="number"
+                    min="1"
+                    max={maxCoinsUsable}
+                    value={coinsToUse}
+                    onChange={handleCoinsToUseChange}
+                    className="ml-2 px-2 py-1 border rounded w-20 text-right"
+                  />
+                )}
               </div>
 
               {coinsApplied > 0 && (
