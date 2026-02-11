@@ -12,7 +12,7 @@
 
 function DashboardEnhanced() {
   const navigate = useNavigate()
-  const { showToast } = useToast()
+  const { toast, showToast, closeToast } = useToast()
   const { coins } = useCoin()
 
   const [stats, setStats] = useState({
@@ -87,16 +87,28 @@ function DashboardEnhanced() {
       }
       if (servicesRes.status === 'fulfilled') {
         const servicesData = servicesRes.value.data
+        // Get user info from localStorage (assumes user object with id or email)
+        let user = null;
+        try {
+          user = JSON.parse(localStorage.getItem('user'));
+        } catch {}
         // Handle paginated response (Spring Boot Page object)
+        let allServices = [];
         if (servicesData.content && Array.isArray(servicesData.content)) {
-          setServiceListings(servicesData.content)
-          newStats.totalServices = servicesData.totalElements || servicesData.content.length
+          allServices = servicesData.content;
         } else if (Array.isArray(servicesData)) {
-          setServiceListings(servicesData)
-          newStats.totalServices = servicesData.length
-        } else {
-          setServiceListings([])
-          newStats.totalServices = 0
+          allServices = servicesData;
+        }
+        // Filter by user if possible
+        let filtered = allServices;
+        if (user && user.id) {
+          filtered = allServices.filter(s => s.userId === user.id);
+        }
+        setServiceListings(filtered);
+        newStats.totalServices = filtered.length;
+        if (!allServices.length) {
+          setServiceListings([]);
+          newStats.totalServices = 0;
         }
       }
         const editService = (id) => {
@@ -193,6 +205,10 @@ function DashboardEnhanced() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+      {/* Toast Notification */}
+      {toast && (
+        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
+      )}
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
