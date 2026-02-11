@@ -1,3 +1,74 @@
+        // Razorpay JS SDK must be loaded in index.html: <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+        // Replace 'RAZORPAY_KEY_ID' with your actual key in production.
+      // Payment state
+      const [paymentLoading, setPaymentLoading] = useState(false);
+      const [paymentStatus, setPaymentStatus] = useState(null); // 'success' | 'failure' | null
+      const [paymentAmount, setPaymentAmount] = useState(0);
+      const [paymentEmail, setPaymentEmail] = useState('');
+      const [paymentPhone, setPaymentPhone] = useState('');
+
+      // Secure payment handler
+      const handlePayNow = async () => {
+        setPaymentLoading(true);
+        try {
+          // Call backend to create order
+          const res = await apiClient.post('/payment/create-order', {
+            amount: paymentAmount,
+            email: paymentEmail,
+            phone: paymentPhone
+          });
+          const order = res.data;
+          // Razorpay options
+          const options = {
+            key: 'rzp_test_SErVEqprf03ItT',
+            amount: order.amount, // Already in paise from backend
+            currency: 'INR',
+            name: 'FarmEazy',
+            description: 'Farm Service Payment',
+            order_id: order.id,
+            handler: async function(response) {
+              // Securely verify payment
+              try {
+                const verifyRes = await apiClient.post('/payment/verify', {
+                  paymentId: response.razorpay_payment_id,
+                  orderId: response.razorpay_order_id,
+                  signature: response.razorpay_signature,
+                  email: paymentEmail,
+                  phone: paymentPhone
+                });
+                if (verifyRes.data.success) {
+                  setPaymentStatus('success');
+                } else {
+                  setPaymentStatus('failure');
+                }
+              } catch (err) {
+                setPaymentStatus('failure');
+              }
+            },
+            prefill: {
+              email: paymentEmail,
+              contact: paymentPhone
+            },
+            theme: {
+              color: '#3399cc'
+            }
+          };
+          // Ensure Razorpay JS SDK is loaded
+          if (window.Razorpay) {
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+          } else {
+            setPaymentStatus('failure');
+          }
+        } catch (error) {
+          setPaymentStatus('failure');
+        } finally {
+          setPaymentLoading(false);
+        }
+      };
+    const [serviceFilter, setServiceFilter] = useState('');
+    const [serviceSort, setServiceSort] = useState('name');
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 /**
  * Enhanced Dashboard with Analytics & Activity Feed
  * 
@@ -35,6 +106,7 @@ function DashboardEnhanced() {
   const [loading, setLoading] = useState(true)
   const [selectedActivityType, setSelectedActivityType] = useState('ALL')
   const [searchTerm, setSearchTerm] = useState('')
+  const [serviceListings, setServiceListings] = useState([])
 
   const activityTypes = [
     { value: 'ALL', label: 'All Activities', icon: '📝' },
@@ -93,13 +165,31 @@ function DashboardEnhanced() {
         const servicesData = servicesRes.value.data
         // Handle paginated response (Spring Boot Page object)
         if (servicesData.content && Array.isArray(servicesData.content)) {
+          setServiceListings(servicesData.content)
           newStats.totalServices = servicesData.totalElements || servicesData.content.length
         } else if (Array.isArray(servicesData)) {
+          setServiceListings(servicesData)
           newStats.totalServices = servicesData.length
         } else {
+          setServiceListings([])
           newStats.totalServices = 0
         }
       }
+        const editService = (id) => {
+          navigate(`/services/edit/${id}`);
+        };
+
+        const deleteService = async (id) => {
+          try {
+            await apiClient.delete(`/services/${id}`);
+            setServiceListings(serviceListings.filter(s => s.id !== id));
+            showToast('Service deleted successfully', 'success');
+            setDeleteConfirmId(null);
+          } catch (error) {
+            showToast('Failed to delete service', 'error');
+            setDeleteConfirmId(null);
+          }
+        };
       if (ordersRes.status === 'fulfilled') {
         newStats.totalOrders = Array.isArray(ordersRes.value.data) ? ordersRes.value.data.length : 0
       }
@@ -316,6 +406,162 @@ function DashboardEnhanced() {
               View Services →
             </Link>
           </div>
+        </div>
+
+        {/* Service Listings Section */}
+                {/* Payment Section */}
+                <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                    <span className="mr-2">💳</span> Make a Payment
+                  </h2>
+                  <div className="flex flex-col md:flex-row gap-4 mb-4">
+                    <input
+                      type="number"
+                      min="1"
+                      value={paymentAmount}
+                      onChange={e => setPaymentAmount(Number(e.target.value))}
+                      placeholder="Amount (₹)"
+                      className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/4"
+                    />
+                    <input
+                      type="email"
+                      value={paymentEmail}
+                      onChange={e => setPaymentEmail(e.target.value)}
+                      placeholder="Email"
+                      className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/4"
+                    />
+                    <input
+                      type="tel"
+                      value={paymentPhone}
+                      onChange={e => setPaymentPhone(e.target.value)}
+                      placeholder="Phone"
+                      className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/4"
+                    />
+                    <button
+                      className={`bg-green-600 text-white px-4 py-2 rounded-lg font-semibold ${paymentLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      disabled={paymentLoading || !paymentAmount || !paymentEmail || !paymentPhone}
+                      onClick={handlePayNow}
+                    >
+                      {paymentLoading ? 'Processing...' : 'Pay Now'}
+                    </button>
+                  </div>
+                  {paymentStatus === 'success' && (
+                    <div className="bg-green-100 text-green-700 p-4 rounded-lg mt-4 font-semibold">
+                      Payment successful! Confirmation sent to your email.
+                    </div>
+                  )}
+                  {paymentStatus === 'failure' && (
+                    <div className="bg-red-100 text-red-700 p-4 rounded-lg mt-4 font-semibold">
+                      Payment failed. Please try again or contact support.
+                    </div>
+                  )}
+                </div>
+        <div className="bg-white rounded-lg shadow-lg p-6 mt-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+            <span className="mr-2">🚜</span> My Service Listings
+          </h2>
+          {/* Filter and Sort Controls */}
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
+            <input
+              type="text"
+              value={serviceFilter}
+              onChange={e => setServiceFilter(e.target.value)}
+              placeholder="Filter by name or description..."
+              className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/2"
+            />
+            <select
+              value={serviceSort}
+              onChange={e => setServiceSort(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg w-full md:w-1/4"
+            >
+              <option value="name">Sort by Name</option>
+              <option value="price">Sort by Price</option>
+              <option value="status">Sort by Status</option>
+            </select>
+          </div>
+
+          {/* Filtered and Sorted Listings */}
+          {serviceListings.length === 0 ? (
+            <p className="text-gray-500">No service listings yet.</p>
+          ) : (
+            <ul>
+              {serviceListings
+                .filter(service =>
+                  (!serviceFilter ||
+                    (service.name && service.name.toLowerCase().includes(serviceFilter.toLowerCase())) ||
+                    (service.description && service.description.toLowerCase().includes(serviceFilter.toLowerCase()))
+                  )
+                )
+                .sort((a, b) => {
+                  if (serviceSort === 'name') {
+                    return (a.name || '').localeCompare(b.name || '');
+                  } else if (serviceSort === 'price') {
+                    return (a.price || 0) - (b.price || 0);
+                  } else if (serviceSort === 'status') {
+                    return (a.status || '').localeCompare(b.status || '');
+                  }
+                  return 0;
+                })
+                .map(service => (
+                  <li key={service.id} className="flex items-center justify-between border-b py-3">
+                    <div className="flex items-center gap-4">
+                      <span className="text-2xl">🔧</span>
+                      <div>
+                        <div className="font-semibold text-gray-800">{service.name}</div>
+                        {service.description && (
+                          <div className="text-sm text-gray-500 mt-1">{service.description}</div>
+                        )}
+                        {service.price && (
+                          <div className="text-sm text-green-600 mt-1">₹{service.price}</div>
+                        )}
+                        {service.status && (
+                          <div className="text-xs text-indigo-600 mt-1">Status: {service.status}</div>
+                        )}
+                      </div>
+                    </div>
+                    <div>
+                      <button
+                        className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
+                        onClick={() => editService(service.id)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="bg-red-500 text-white px-3 py-1 rounded"
+                        onClick={() => setDeleteConfirmId(service.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </li>
+                ))}
+            </ul>
+          )}
+
+          {/* Delete Confirmation Dialog */}
+          {deleteConfirmId && (
+            <div className="fixed inset-0 flex items-center justify-center z-50">
+              <div className="bg-black bg-opacity-30 absolute inset-0"></div>
+              <div className="bg-white rounded-lg shadow-lg p-6 relative z-10 w-96">
+                <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
+                <p className="mb-6">Are you sure you want to delete this service?</p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    className="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                    onClick={() => setDeleteConfirmId(null)}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                    onClick={() => deleteService(deleteConfirmId)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Activity Feed Section */}
