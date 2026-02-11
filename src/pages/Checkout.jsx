@@ -47,6 +47,8 @@ function Checkout() {
     email: '',
     addressLine1: '',
     addressLine2: '',
+    landmark: '',
+    addressType: '',
     city: '',
     state: '',
     postalCode: ''
@@ -354,10 +356,9 @@ function Checkout() {
             {/* Payment Methods */}
             <div className="bg-white rounded-lg shadow-lg p-6">
               <h2 className="text-2xl font-bold text-gray-800 mb-4">💳 Payment Method</h2>
-              
               <div className="space-y-3">
                 {/* Cash on Delivery */}
-                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition" 
+                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition"
                        style={{ borderColor: selectedPayment === 'CASH_ON_DELIVERY' ? '#f97316' : '#e5e7eb',
                                backgroundColor: selectedPayment === 'CASH_ON_DELIVERY' ? '#fff7ed' : '#fff' }}>
                   <input
@@ -374,63 +375,8 @@ function Checkout() {
                     <p className="text-xs text-green-600 mt-1">✓ Free | Delivery in 3-5 days</p>
                   </div>
                 </label>
-
-                {/* UPI */}
-                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition" 
-                       style={{ borderColor: selectedPayment === 'UPI' ? '#f97316' : '#e5e7eb',
-                               backgroundColor: selectedPayment === 'UPI' ? '#fff7ed' : '#fff' }}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="UPI"
-                    checked={selectedPayment === 'UPI'}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="w-4 h-4 cursor-pointer"
-                  />
-                  <div className="ml-4 flex-1">
-                    <p className="font-semibold text-gray-800">📱 UPI Payment</p>
-                    <p className="text-sm text-gray-600">Pay using any UPI app</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <code className="bg-gray-100 px-3 py-1 rounded text-sm text-gray-800 flex-1">{UPI_ID}</code>
-                      <button
-                        onClick={copyUPI}
-                        className="px-3 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600 transition"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-                </label>
-
-                {/* PhonePay */}
-                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition" 
-                       style={{ borderColor: selectedPayment === 'PHONEPAY' ? '#f97316' : '#e5e7eb',
-                               backgroundColor: selectedPayment === 'PHONEPAY' ? '#fff7ed' : '#fff' }}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="PHONEPAY"
-                    checked={selectedPayment === 'PHONEPAY'}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="w-4 h-4 cursor-pointer"
-                  />
-                  <div className="ml-4 flex-1">
-                    <p className="font-semibold text-gray-800">📱 PhonePay</p>
-                    <p className="text-sm text-gray-600">Fast and secure payment</p>
-                    <div className="mt-2 flex items-center gap-2">
-                      <code className="bg-gray-100 px-3 py-1 rounded text-sm text-gray-800 flex-1">{PHONE_PAY_ID}</code>
-                      <button
-                        onClick={copyPhonePay}
-                        className="px-3 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600 transition"
-                      >
-                        Copy
-                      </button>
-                    </div>
-                  </div>
-                </label>
-
                 {/* Razorpay */}
-                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition" 
+                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition"
                        style={{ borderColor: selectedPayment === 'RAZORPAY' ? '#22c55e' : '#e5e7eb',
                                backgroundColor: selectedPayment === 'RAZORPAY' ? '#f0fdf4' : '#fff' }}>
                   <input
@@ -481,8 +427,17 @@ function Checkout() {
                   <input
                     type="text"
                     name="fullName"
-                    placeholder="Full Name"
+                    placeholder="Full Name (as per ID proof)"
                     value={addressForm.fullName}
+                    onChange={handleAddressChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    required
+                  />
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Email Address"
+                    value={addressForm.email}
                     onChange={handleAddressChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                     required
@@ -490,7 +445,7 @@ function Checkout() {
                   <input
                     type="tel"
                     name="phoneNumber"
-                    placeholder="Phone Number"
+                    placeholder="10-digit Mobile Number"
                     pattern="[0-9]{10}"
                     value={addressForm.phoneNumber}
                     onChange={handleAddressChange}
@@ -500,7 +455,7 @@ function Checkout() {
                   <input
                     type="text"
                     name="addressLine1"
-                    placeholder="Address Line 1"
+                    placeholder="Flat, House no., Building, Company, Apartment"
                     value={addressForm.addressLine1}
                     onChange={handleAddressChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -508,8 +463,36 @@ function Checkout() {
                   />
                   <input
                     type="text"
+                    name="addressLine2"
+                    placeholder="Area, Street, Sector, Village (optional)"
+                    value={addressForm.addressLine2}
+                    onChange={handleAddressChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                  <input
+                    type="text"
+                    name="landmark"
+                    placeholder="Landmark (e.g. near temple, school)"
+                    value={addressForm.landmark}
+                    onChange={handleAddressChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                  />
+                  <select
+                    name="addressType"
+                    value={addressForm.addressType}
+                    onChange={handleAddressChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
+                    required
+                  >
+                    <option value="">Select Address Type</option>
+                    <option value="Home">Home</option>
+                    <option value="Work">Work</option>
+                    <option value="Other">Other</option>
+                  </select>
+                  <input
+                    type="text"
                     name="city"
-                    placeholder="City"
+                    placeholder="City / Town"
                     value={addressForm.city}
                     onChange={handleAddressChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -518,7 +501,7 @@ function Checkout() {
                   <input
                     type="text"
                     name="state"
-                    placeholder="State"
+                    placeholder="State / Province"
                     value={addressForm.state}
                     onChange={handleAddressChange}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg"
@@ -527,7 +510,7 @@ function Checkout() {
                   <input
                     type="text"
                     name="postalCode"
-                    placeholder="Postal Code"
+                    placeholder="6-digit PIN Code"
                     pattern="[0-9]{6}"
                     value={addressForm.postalCode}
                     onChange={handleAddressChange}
