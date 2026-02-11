@@ -169,7 +169,7 @@ function Checkout() {
         const order = orderRes.data;
 
         const options = {
-          key: order.key_id || process.env.REACT_APP_RAZORPAY_KEY_ID,
+          key: order.key_id,
           amount: order.amount,
           currency: order.currency,
           name: 'FarmEazy',
