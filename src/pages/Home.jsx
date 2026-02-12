@@ -21,13 +21,13 @@ import { useCoin } from '../context/CoinContext'
 import Loader from '../components/Loader';
 
 function Home() {
+  const { coins, loading: coinsLoading, refreshCoins } = useCoin()
   if (coinsLoading) {
     return <Loader message="Loading dashboard, please wait..." />;
   }
   const navigate = useNavigate()
   const [userFullName, setUserFullName] = useState('')
   const [userUsername, setUserUsername] = useState('')
-  const { coins, loading: coinsLoading, refreshCoins } = useCoin()
   const [statsLoading, setStatsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalFarms: 0,
