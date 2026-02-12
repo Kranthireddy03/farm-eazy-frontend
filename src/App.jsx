@@ -34,8 +34,13 @@ import ChangePassword from './pages/ChangePassword'
 import Orders from './pages/Orders'
 import OrderConfirmation from './pages/OrderConfirmation'
 import Support from './pages/Support'
+
 import IrrigationServices from './pages/IrrigationServices'
 import Activities from './pages/Activities'
+import About from './pages/About'
+import Contact from './pages/Contact'
+import Services from './pages/Services'
+import Blog from './pages/Blog'
 import Layout from './components/Layout'
 
 /**
@@ -119,6 +124,10 @@ function App() {
         <Route path="/orders" element={<Orders />} />
         <Route path="/support" element={<Support />} />
         <Route path="/activities" element={<Activities />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/blog" element={<Blog />} />
       </Route>
 
       {/* Catch-all redirect */}
