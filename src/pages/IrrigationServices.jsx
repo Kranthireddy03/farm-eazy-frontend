@@ -58,7 +58,7 @@ function IrrigationServices() {
       setLoading(true);
       const response = await apiClient.get('/services/listings/my');
       console.log('[DEBUG] /services/listings/my response:', response.data);
-      const userListings = Array.isArray(response.data) ? response.data : [];
+      const userListings = Array.isArray(response.data.content) ? response.data.content : Array.isArray(response.data) ? response.data : [];
       setListings(userListings);
       setMyListingIds(new Set(userListings.map(listing => listing.id)));
     } catch (error) {
