@@ -15,6 +15,8 @@ import { useState } from 'react'
 import PasswordInput from '../components/PasswordInput'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
+import Loader from '../components/Loader'
+
 
 function Register({ onRegisterSuccess }) {
   const navigate = useNavigate()

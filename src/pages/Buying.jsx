@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
@@ -112,6 +113,9 @@ function Buying() {
     // Emit event to update cart count in header
     window.dispatchEvent(new Event('cart-updated'))
   }
+        if (loading) {
+          return <Loader message="Loading products, please wait..." />;
+        }
 
   const handleProductClick = (product) => {
     setSelectedProduct(product)

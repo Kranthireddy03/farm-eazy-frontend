@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Loader from '../components/Loader';
 import { formatDate } from '../utils/formatDate';
 import { useNavigate } from 'react-router-dom';
 import OtpService from '../services/OtpService';
@@ -6,6 +7,37 @@ import ProductService from '../services/ProductService';
 import { useToast } from '../hooks/useToast';
 
 function Selling() {
+      // Edit product handler
+      const handleEditProduct = (product) => {
+        setShowForm(true);
+        setCurrentStep(2);
+        setOtpVerified(true);
+        setFormData({
+          ...product,
+          imageUrls: product.imageUrls || '',
+          videoUrls: product.videoUrls || '',
+          contactEmail: product.contactEmail || '',
+          contactPhone: product.contactPhone || ''
+        });
+      };
+
+      // Delete product handler
+      const handleDeleteProduct = async (productId) => {
+        if (!window.confirm('Are you sure you want to delete this product?')) return;
+        setLoading(true);
+        try {
+          await ProductService.deleteProduct(productId);
+          showToast('Product deleted successfully!', 'success');
+          fetchMyProducts();
+        } catch (error) {
+          showToast(error.response?.data?.message || 'Failed to delete product', 'error');
+        } finally {
+          setLoading(false);
+        }
+      };
+    if (loading) {
+      return <Loader message="Processing, please wait..." />;
+    }
   const navigate = useNavigate();
   const { showToast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
@@ -17,32 +49,8 @@ function Selling() {
   const [myProducts, setMyProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   
-  const userEmail = localStorage.getItem('farmEazy_email') || '';
-  
-  const [formData, setFormData] = useState({
-    productName: '',
-    category: '',
-    description: '',
-    price: '',
-    discountPercentage: 0,
-    quantity: '',
-    unit: '',
-    weight: '',
-    specifications: '',
-    warrantyInfo: '',
-    imageUrls: '',
-    videoUrls: '',
-    contactEmail: '',
-    contactPhone: ''
-  });
-
-  const categories = [
-    { value: 'seeds', label: '🌱 Seeds', color: 'from-green-400 to-green-600' },
-    { value: 'fertilizers', label: '🌿 Fertilizers', color: 'from-emerald-400 to-emerald-600' },
-    { value: 'pesticides', label: '🛡️ Pesticides', color: 'from-teal-400 to-teal-600' },
-    { value: 'tools', label: '🔧 Tools', color: 'from-blue-400 to-blue-600' },
-    { value: 'machinery', label: '🚜 Machinery', color: 'from-indigo-400 to-indigo-600' },
-    { value: 'irrigation', label: '💧 Irrigation', color: 'from-cyan-400 to-cyan-600' },
+  // Category options for products
+  const categoryOptions = [
     { value: 'produce', label: '🥕 Fresh Produce', color: 'from-orange-400 to-orange-600' },
     { value: 'others', label: '📦 Others', color: 'from-gray-400 to-gray-600' }
   ];
@@ -700,12 +708,27 @@ function Selling() {
                   <p className="text-sm text-gray-600 mb-4">
                     Stock: <span className="font-semibold">{product.quantity} {product.unit}</span>
                   </p>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 mb-2">
                     Listed {formatDate(product.createdAt)}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <button
+                      onClick={() => handleEditProduct(product)}
+                      className="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteProduct(product.id)}
+                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors"
+                    >
+                      🗑️ Delete
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
+// Duplicate handler function declarations after JSX removed
           </div>
         )}
       </div>

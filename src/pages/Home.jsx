@@ -20,6 +20,9 @@ import apiClient from '../services/apiClient'
 import { useCoin } from '../context/CoinContext'
 
 function Home() {
+  if (coinsLoading) {
+    return <Loader message="Loading dashboard, please wait..." />;
+  }
   const navigate = useNavigate()
   const [userFullName, setUserFullName] = useState('')
   const [userUsername, setUserUsername] = useState('')

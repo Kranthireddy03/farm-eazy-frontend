@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
@@ -103,38 +104,7 @@ function Checkout() {
 
   // Retry Screen at top of render
   if (retryActive && pendingOrderId) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-yellow-50">
-        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
-          <h2 className="text-2xl font-bold text-yellow-700 mb-4">Order On Hold</h2>
-          <p className="mb-2">Your order is on hold due to payment failure.</p>
-          <p className="mb-4">
-            You have 
-            <span className="font-bold">
-              {Math.floor(retryTimer/60)}:
-              {(retryTimer % 60).toString().padStart(2, '0')}
-            </span> 
-            minutes to retry payment.
-          </p>
-          <button
-            onClick={handleRetryPayment}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition mb-2"
-            disabled={razorpayLoading}
-          >
-            Retry Payment
-          </button>
-          <button
-            onClick={() => {
-              setRetryActive(false);
-              navigate('/');
-            }}
-            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition"
-          >
-            Cancel Order
-          </button>
-        </div>
-      </div>
-    );
+    return <Loader message={`Order on hold. You have ${Math.floor(retryTimer/60)}:${(retryTimer % 60).toString().padStart(2, '0')} minutes to retry payment.`} />;
   }
 
   const fetchCoins = async () => {
@@ -428,23 +398,12 @@ function Checkout() {
   }
 
   if (cartItems.length === 0) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 py-8 px-4">
-        <div className="max-w-2xl mx-auto text-center py-16">
-          <p className="text-6xl mb-4">🛒</p>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Your Cart is Empty</h1>
-          <p className="text-gray-600 mb-8">Add products to proceed with checkout</p>
-          <button
-            onClick={() => navigate('/buying')}
-            className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg transition"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
-    )
+    return <Loader message="Loading your cart..." />;
   }
 
+  if (checkingOut || razorpayLoading) {
+    return <Loader message="Processing your order/payment, please wait..." />;
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">

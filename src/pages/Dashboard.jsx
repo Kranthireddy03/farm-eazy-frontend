@@ -9,6 +9,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import Loader from '../components/Loader'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 
@@ -188,28 +189,7 @@ For more details, visit: https://farm-eazy.com
   }, [])
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-center">
-          <div className="spinner text-green-600 mb-4">
-            <svg
-              className="w-12 h-12"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
-              />
-            </svg>
-          </div>
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    )
+    return <Loader message="Loading dashboard, please wait..." />;
   }
 
   return (

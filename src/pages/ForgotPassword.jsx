@@ -15,8 +15,12 @@ import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
+import Loader from '../components/Loader'
 
 function ForgotPassword() {
+  if (loading) {
+    return <Loader message="Processing, please wait..." />;
+  }
   const navigate = useNavigate()
   const { toast, showToast, closeToast } = useToast()
   const [email, setEmail] = useState('')

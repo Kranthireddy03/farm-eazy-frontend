@@ -11,6 +11,7 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { formatDate } from '../utils/formatDate';
 import { useState, useEffect } from 'react'
+import Loader from '../components/Loader';
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 
@@ -32,6 +33,9 @@ function FarmDetail() {
       setFarm(response.data)
       setError('')
     } catch (err) {
+  if (loading) {
+    return <Loader message="Loading farm details, please wait..." />;
+  }
       setError('Failed to load farm details')
       console.error(err)
     } finally {

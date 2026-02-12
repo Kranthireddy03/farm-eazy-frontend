@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import Loader from '../components/Loader';
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
 import apiClient from '../services/apiClient'
@@ -60,6 +61,10 @@ function Crops() {
     } catch (err) {
       console.error('Failed to fetch farms:', err)
     }
+  }
+
+  if (loading) {
+    return <Loader message="Loading crops, please wait..." />;
   }
 
   const handleChange = (e) => {

@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react'
+import Loader from '../components/Loader'
 import PasswordInput from '../components/PasswordInput'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
@@ -75,6 +76,9 @@ function Login({ onLoginSuccess }) {
       return
     }
 
+    if (loading) {
+      return <Loader message="Logging in, please wait..." />
+    }
     setLoading(true)
 
     try {
