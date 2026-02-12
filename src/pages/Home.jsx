@@ -18,6 +18,7 @@ import { useState, useEffect } from 'react'
 import AuthService from '../services/AuthService'
 import apiClient from '../services/apiClient'
 import { useCoin } from '../context/CoinContext'
+import Loader from '../components/Loader';
 
 function Home() {
   if (coinsLoading) {
