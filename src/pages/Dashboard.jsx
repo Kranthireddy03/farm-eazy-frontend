@@ -9,11 +9,12 @@
  */
 
 import { useState, useEffect } from 'react'
-import Loader from '../components/Loader'
+import { useLoader } from '../context/LoaderContext'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 
 function Dashboard() {
+  const { show, hide } = useLoader();
   const [stats, setStats] = useState({
     totalFarms: 0,
     totalCrops: 0,
@@ -161,12 +162,13 @@ For more details, visit: https://farm-eazy.com
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        setLoading(true)
+        show();
+        setLoading(true);
         const [statsResponse, activitiesResponse, productsResponse] = await Promise.all([
           apiClient.get('/irrigation/stats'),
           apiClient.get('/activities/recent'),
           apiClient.get('/products/my-products/count')
-        ])
+        ]);
         
         setStats({
           totalFarms: statsResponse.data.totalFarms || 0,
@@ -174,22 +176,23 @@ For more details, visit: https://farm-eazy.com
           totalIrrigations: statsResponse.data.totalIrrigations || 0,
           activeAlerts: statsResponse.data.upcomingIrrigations || 0,
           totalProducts: productsResponse.data.count || 0,
-        })
-        setActivities(activitiesResponse.data || [])
-        setError('')
+        });
+        setActivities(activitiesResponse.data || []);
+        setError('');
       } catch (err) {
-        setError('Failed to load dashboard data')
-        console.error(err)
+        setError('Failed to load dashboard data');
+        console.error(err);
       } finally {
-        setLoading(false)
+        setLoading(false);
+        hide();
       }
-    }
+    };
 
-    fetchDashboardData()
-  }, [])
+    fetchDashboardData();
+  }, []);
 
   if (loading) {
-    return <Loader message="Loading dashboard, please wait..." />;
+    return null; // Loader is now global
   }
 
   return (

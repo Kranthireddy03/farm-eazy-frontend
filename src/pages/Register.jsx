@@ -15,11 +15,12 @@ import { useState } from 'react'
 import PasswordInput from '../components/PasswordInput'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
-import Loader from '../components/Loader'
+import { useLoader } from '../context/LoaderContext'
 
 
 function Register({ onRegisterSuccess }) {
   const navigate = useNavigate()
+  const { show, hide } = useLoader()
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -118,6 +119,7 @@ function Register({ onRegisterSuccess }) {
     } catch (error) {
       setApiError(error.message || 'Registration failed. Please try again.')
     } finally {
+      hide()
       setLoading(false)
     }
   }

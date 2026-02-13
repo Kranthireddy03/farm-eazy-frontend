@@ -10,7 +10,7 @@
  */
 
 import { useState } from 'react'
-import Loader from '../components/Loader'
+import { useLoader } from '../context/LoaderContext'
 import PasswordInput from '../components/PasswordInput'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
@@ -23,7 +23,7 @@ function Login({ onLoginSuccess }) {
   })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const { show, hide } = useLoader()
 
   /**
    * Validate form data
@@ -70,16 +70,12 @@ function Login({ onLoginSuccess }) {
    */
   const handleSubmit = async (e) => {
     e.preventDefault()
+    show()
     setApiError('')
 
     if (!validateForm()) {
       return
     }
-
-    if (loading) {
-      return <Loader message="Logging in, please wait..." />
-    }
-    setLoading(true)
 
     try {
       await AuthService.login(formData.email, formData.password)
@@ -96,7 +92,7 @@ function Login({ onLoginSuccess }) {
         setApiError(errorMsg || 'Login failed. Please try again.')
       }
     } finally {
-      setLoading(false)
+      hide()
     }
   }
 

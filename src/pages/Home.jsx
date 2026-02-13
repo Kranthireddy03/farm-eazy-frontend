@@ -18,13 +18,11 @@ import { useState, useEffect } from 'react'
 import AuthService from '../services/AuthService'
 import apiClient from '../services/apiClient'
 import { useCoin } from '../context/CoinContext'
-import Loader from '../components/Loader';
+import { useLoader } from '../context/LoaderContext';
 
 function Home() {
   const { coins, loading: coinsLoading, refreshCoins } = useCoin()
-  if (coinsLoading) {
-    return <Loader message="Loading dashboard, please wait..." />;
-  }
+  const { show, hide } = useLoader()
   const navigate = useNavigate()
   const [userFullName, setUserFullName] = useState('')
   const [userUsername, setUserUsername] = useState('')
@@ -51,6 +49,7 @@ function Home() {
 
   const fetchStats = async () => {
     try {
+      show();
       setStatsLoading(true)
       const [farmsRes, productsRes, servicesRes] = await Promise.allSettled([
         apiClient.get('/farms'),
@@ -91,6 +90,7 @@ function Home() {
       console.error('Error fetching stats:', error)
     } finally {
       setStatsLoading(false)
+      hide();
     }
   }
 

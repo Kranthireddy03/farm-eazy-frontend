@@ -1,191 +1,95 @@
 import React, { useState, useEffect } from 'react';
-import Loader from '../components/Loader';
-import { formatDate } from '../utils/formatDate';
 import { useNavigate } from 'react-router-dom';
 import OtpService from '../services/OtpService';
 import ProductService from '../services/ProductService';
 import { useToast } from '../hooks/useToast';
+import { useLoader } from '../context/LoaderContext';
 
 function Selling() {
-      // Edit product handler
-      const handleEditProduct = (product) => {
-        setShowForm(true);
-        setCurrentStep(2);
-        setOtpVerified(true);
-        setFormData({
-          ...product,
-          imageUrls: product.imageUrls || '',
-          videoUrls: product.videoUrls || '',
-          contactEmail: product.contactEmail || '',
-          contactPhone: product.contactPhone || ''
-        });
-      };
-
-      // Delete product handler
-      const handleDeleteProduct = async (productId) => {
-        if (!window.confirm('Are you sure you want to delete this product?')) return;
-        setLoading(true);
-        try {
-          await ProductService.deleteProduct(productId);
-          showToast('Product deleted successfully!', 'success');
-          fetchMyProducts();
-        } catch (error) {
-          showToast(error.response?.data?.message || 'Failed to delete product', 'error');
-        } finally {
-          setLoading(false);
-        }
-      };
-    if (loading) {
-      return <Loader message="Processing, please wait..." />;
-    }
   const navigate = useNavigate();
   const { showToast } = useToast();
+  const { show, hide, isLoading } = useLoader();
   const [currentStep, setCurrentStep] = useState(1);
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(0);
-  const [loading, setLoading] = useState(false);
   const [myProducts, setMyProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  
-  // Category options for products
-  const categoryOptions = [
-    { value: 'produce', label: '🥕 Fresh Produce', color: 'from-orange-400 to-orange-600' },
-    { value: 'others', label: '📦 Others', color: 'from-gray-400 to-gray-600' }
-  ];
 
-  useEffect(() => {
-    fetchMyProducts();
-  }, []);
-
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => setTimer(timer - 1), 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer]);
-
+  // Patch: Use global loader for all async handlers
   const fetchMyProducts = async () => {
     try {
+      show();
       const products = await ProductService.getMyProducts();
       setMyProducts(products);
     } catch (error) {
-      console.error('Error fetching products:', error);
+      showToast('Failed to fetch products', 'error');
+    } finally {
+      hide();
     }
   };
 
   const handleSendOtp = async () => {
-    setLoading(true);
     try {
+      show();
       await OtpService.sendOtp(userEmail, 'SELLING');
       setOtpSent(true);
-      setTimer(600); // 10 minutes
+      setTimer(60);
       showToast('OTP sent to your email', 'success');
     } catch (error) {
-      showToast(error.response?.data?.message || 'Failed to send OTP', 'error');
+      showToast('Failed to send OTP', 'error');
     } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpChange = (index, value) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newOtp = [...otpCode];
-      newOtp[index] = value;
-      setOtpCode(newOtp);
-      
-      // Auto-focus next input
-      if (value && index < 5) {
-        document.getElementById(`otp-${index + 1}`).focus();
-      }
+      hide();
     }
   };
 
   const handleVerifyOtp = async () => {
     const code = otpCode.join('');
-    if (code.length !== 6) {
-      showToast('Please enter complete OTP', 'error');
-      return;
-    }
-    
-    setLoading(true);
+    if (code.length !== 6) return;
     try {
+      show();
       await OtpService.verifyOtp(userEmail, code, 'SELLING');
       setOtpVerified(true);
+      showToast('OTP verified successfully', 'success');
       setCurrentStep(2);
-      showToast('OTP verified successfully!', 'success');
     } catch (error) {
-      showToast(error.response?.data?.message || 'Invalid OTP', 'error');
+      showToast('Invalid OTP', 'error');
     } finally {
-      setLoading(false);
+      hide();
     }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    // Email validation for contactEmail
-    if (name === 'contactEmail') {
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (value && !emailPattern.test(value)) {
-        showToast('Please enter a valid email address', 'error');
-        return;
-      }
-    }
-    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!otpVerified) {
-      showToast('Please verify OTP first', 'error');
-      return;
-    }
-    // Prevent listing products with zero or negative quantity
-    if (!formData.quantity || parseInt(formData.quantity, 10) <= 0) {
-      showToast('Quantity must be greater than zero', 'error');
-      return;
-    }
-    setLoading(true);
     try {
+      show();
       await ProductService.createProduct(formData);
       showToast('Product listed successfully!', 'success');
       setShowForm(false);
-      setCurrentStep(1);
-      setOtpVerified(false);
-      setOtpSent(false);
-      setOtpCode(['', '', '', '', '', '']);
-      setFormData({
-        productName: '',
-        category: '',
-        description: '',
-        price: '',
-        discountPercentage: 0,
-        quantity: '',
-        unit: '',
-        weight: '',
-        specifications: '',
-        warrantyInfo: '',
-        imageUrls: '',
-        videoUrls: '',
-        contactEmail: '',
-        contactPhone: ''
-      });
       fetchMyProducts();
     } catch (error) {
-      showToast(error.response?.data?.message || 'Failed to create product', 'error');
+      showToast('Failed to list product', 'error');
     } finally {
-      setLoading(false);
+      hide();
     }
   };
 
-  const discountedPrice = formData.price && formData.discountPercentage > 0
-    ? (formData.price - (formData.price * formData.discountPercentage / 100)).toFixed(2)
-    : formData.price;
+  const handleDeleteProduct = async (productId) => {
+    try {
+      show();
+      await ProductService.deleteProduct(productId);
+      showToast('Product deleted', 'success');
+      fetchMyProducts();
+    } catch (error) {
+      showToast('Failed to delete product', 'error');
+    } finally {
+      hide();
+    }
+  };
 
   if (showForm) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+    return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
         <div className="max-w-4xl mx-auto px-4">
           {/* Header */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -243,10 +147,10 @@ function Selling() {
                   <button
                     type="button"
                     onClick={handleSendOtp}
-                    disabled={loading}
+                    disabled={isLoading}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
                   >
-                    {loading ? 'Sending...' : 'Send OTP'}
+                    {isLoading ? 'Sending...' : 'Send OTP'}
                   </button>
                 ) : (
                   <>
@@ -273,16 +177,16 @@ function Selling() {
                     <button
                       type="button"
                       onClick={handleVerifyOtp}
-                      disabled={loading || otpCode.join('').length !== 6}
+                      disabled={isLoading || otpCode.join('').length !== 6}
                       className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 mb-3"
                     >
-                      {loading ? 'Verifying...' : 'Verify OTP'}
+                      {isLoading ? 'Verifying...' : 'Verify OTP'}
                     </button>
                     
                     <button
                       type="button"
                       onClick={handleSendOtp}
-                      disabled={loading || timer > 0}
+                      disabled={isLoading || timer > 0}
                       className="w-full text-blue-600 py-2 font-medium hover:underline disabled:opacity-50"
                     >
                       Resend OTP
@@ -625,10 +529,10 @@ function Selling() {
                   </button>
                   <button
                     type="submit"
-                    disabled={loading}
+                    disabled={isLoading}
                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {loading ? 'Publishing...' : '✨ Publish Product'}
+                    {isLoading ? 'Publishing...' : '✨ Publish Product'}
                   </button>
                 </div>
               </div>
@@ -636,7 +540,6 @@ function Selling() {
           </form>
         </div>
       </div>
-    );
   }
 
   return (
@@ -713,6 +616,12 @@ function Selling() {
                   </div>
                   <div className="flex gap-2 mt-2">
                     <button
+                      onClick={() => navigate(`/product/${product.id}`)}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      👁️ View Details
+                    </button>
+                    <button
                       onClick={() => handleEditProduct(product)}
                       className="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
                     >
@@ -728,7 +637,7 @@ function Selling() {
                 </div>
               </div>
             ))}
-// Duplicate handler function declarations after JSX removed
+
           </div>
         )}
       </div>

@@ -14,20 +14,22 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 import { useToast } from '../hooks/useToast'
+import { useLoader } from '../context/LoaderContext'
 import Toast from '../components/Toast'
-import Loader from '../components/Loader'
 
 function ForgotPassword() {
-  if (loading) {
-    return <Loader message="Processing, please wait..." />;
-  }
   const navigate = useNavigate()
   const { toast, showToast, closeToast } = useToast()
+  const { show, hide } = useLoader()
   const [email, setEmail] = useState('')
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [countdown, setCountdown] = useState(0)
+
+  if (loading) {
+    return <Loader message="Processing, please wait..." />;
+  }
 
   /**
    * Countdown timer effect
@@ -74,7 +76,7 @@ function ForgotPassword() {
       return
     }
 
-    setLoading(true)
+    show()
 
     try {
       // Call forgot password endpoint
@@ -106,7 +108,7 @@ function ForgotPassword() {
         showToast(error.message || 'Failed to process request. Please try again.', 'error')
       }
     } finally {
-      setLoading(false)
+      hide()
     }
   }
 

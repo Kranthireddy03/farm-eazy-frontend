@@ -2,9 +2,11 @@ import { useState } from 'react'
 import PasswordInput from '../components/PasswordInput'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
+import { useLoader } from '../context/LoaderContext'
 
 function ChangePassword() {
   const { showToast } = useToast()
+  const { show, hide } = useLoader()
   const [form, setForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -18,6 +20,7 @@ function ChangePassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    show()
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
       showToast('Please fill all fields', 'warning')
       return
@@ -36,6 +39,8 @@ function ChangePassword() {
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Password change failed. Please try again.'
       showToast(errorMessage, 'error')
+    } finally {
+      hide()
     }
   }
 
@@ -74,9 +79,10 @@ function ChangePassword() {
           />
           <button
             type="submit"
-            className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition"
+            className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 disabled:opacity-60"
+            disabled={loading}
           >
-            Update Password
+            {loading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
       </div>
