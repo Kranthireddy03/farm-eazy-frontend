@@ -23,7 +23,7 @@ function Login({ onLoginSuccess }) {
   })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
-  const { show, hide } = useLoader()
+  const { show, hide, isLoading } = useLoader()
 
   /**
    * Validate form data
@@ -178,10 +178,10 @@ function Login({ onLoginSuccess }) {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {isLoading ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
