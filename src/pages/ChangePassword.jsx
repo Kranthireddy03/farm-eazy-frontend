@@ -6,7 +6,7 @@ import { useLoader } from '../context/LoaderContext'
 
 function ChangePassword() {
   const { showToast } = useToast()
-  const { show, hide } = useLoader()
+  const { show, hide, isLoading } = useLoader()
   const [form, setForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -80,9 +80,9 @@ function ChangePassword() {
           <button
             type="submit"
             className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 disabled:opacity-60"
-            disabled={loading}
+            disabled={isLoading}
           >
-            {loading ? 'Updating...' : 'Update Password'}
+            {isLoading ? 'Updating...' : 'Update Password'}
           </button>
         </form>
       </div>

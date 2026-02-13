@@ -20,7 +20,7 @@ import { useLoader } from '../context/LoaderContext'
 
 function Register({ onRegisterSuccess }) {
   const navigate = useNavigate()
-  const { show, hide } = useLoader()
+  const { show, hide, isLoading } = useLoader()
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -30,39 +30,33 @@ function Register({ onRegisterSuccess }) {
   })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
-  const [loading, setLoading] = useState(false)
+  // Removed local loading state
 
   /**
    * Validate form data
    */
   const validateForm = () => {
     const newErrors = {}
-
     if (!formData.fullName) {
       newErrors.fullName = 'Full name is required'
     } else if (formData.fullName.length < 3) {
       newErrors.fullName = 'Full name must be at least 3 characters'
     }
-
     if (!formData.email) {
       newErrors.email = 'Email is required'
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email'
     }
-
     if (!formData.password) {
       newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters'
     }
-
     if (!formData.phone) {
       newErrors.phone = 'Phone number is required'
     } else if (!/^[0-9]{10}$/.test(formData.phone)) {
       newErrors.phone = 'Phone number must be 10 digits'
     }
-
-    // Username is required
     if (!formData.username) {
       newErrors.username = 'Username is required'
     } else if (formData.username.length < 3) {
@@ -70,7 +64,6 @@ function Register({ onRegisterSuccess }) {
     } else if (!/^[a-zA-Z0-9_]*$/.test(formData.username)) {
       newErrors.username = 'Username can only contain letters, numbers, and underscores'
     }
-
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -99,13 +92,10 @@ function Register({ onRegisterSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setApiError('')
-
     if (!validateForm()) {
       return
     }
-
-    setLoading(true)
-
+    show()
     try {
       await AuthService.register(
         formData.fullName,
@@ -114,13 +104,12 @@ function Register({ onRegisterSuccess }) {
         formData.phone,
         formData.username
       )
-      onRegisterSuccess()
+      if (onRegisterSuccess) onRegisterSuccess()
       navigate('/')
     } catch (error) {
       setApiError(error.message || 'Registration failed. Please try again.')
     } finally {
       hide()
-      setLoading(false)
     }
   }
 
@@ -133,7 +122,6 @@ function Register({ onRegisterSuccess }) {
       onClick={onClick}
       aria-label={label}
       className="ml-2 px-3 py-1 rounded-full border-2 border-green-600 bg-gradient-to-r from-green-200 to-yellow-100 hover:from-green-300 hover:to-yellow-200 transition flex items-center focus:outline-none focus:ring-2 focus:ring-green-500"
-      style={{ fontWeight: 'bold', fontSize: '1.1em' }}
     >
       <span style={{ marginRight: 4 }}>{visible ? '👁️' : '🌱'}</span>
       {visible ? 'Hide' : 'Show'}
@@ -242,10 +230,10 @@ function Register({ onRegisterSuccess }) {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? (
+              {isLoading ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -273,5 +261,4 @@ function Register({ onRegisterSuccess }) {
     </div>
   )
 }
-
 export default Register

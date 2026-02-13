@@ -67,8 +67,7 @@ function Checkout() {
       setCoinsToUse(value);
     };
   const [selectedPayment, setSelectedPayment] = useState('CASH_ON_DELIVERY')
-  const [razorpayLoading, setRazorpayLoading] = useState(false)
-  const [checkingOut, setCheckingOut] = useState(false)
+  const { show, hide, isLoading } = useLoader()
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [addresses, setAddresses] = useState([])
   const [selectedAddress, setSelectedAddress] = useState(null)
@@ -103,9 +102,7 @@ function Checkout() {
   }, [retryInterval]);
 
   // Retry Screen at top of render
-  if (retryActive && pendingOrderId) {
-    return <Loader message={`Order on hold. You have ${Math.floor(retryTimer/60)}:${(retryTimer % 60).toString().padStart(2, '0')} minutes to retry payment.`} />;
-  }
+  // Loader is now global
 
   const fetchCoins = async () => {
     try {

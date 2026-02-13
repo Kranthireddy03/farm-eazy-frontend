@@ -12,6 +12,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { useLoader } from '../context/LoaderContext'
 import AuthService from '../services/AuthService'
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
@@ -36,17 +37,18 @@ function ResetPassword() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { showToast } = useToast()
-  
+  const { show, hide, isLoading } = useLoader()
+
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: '',
   })
   const [errors, setErrors] = useState({})
-  const [loading, setLoading] = useState(false)
   const [token, setToken] = useState('')
   const [invalidToken, setInvalidToken] = useState(false)
   const [showNew, setShowNew] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     // Get token from URL query parameter
@@ -101,15 +103,15 @@ function ResetPassword() {
     e.preventDefault()
     setErrors({})
     if (!validateForm()) return
-    setLoading(true)
+    show()
     try {
       await AuthService.resetPassword(token, formData.password)
-      showToast('Password reset successful!', 'success')
-      setTimeout(() => navigate('/login'), 1500)
+      setSuccess(true)
+      setTimeout(() => navigate('/login'), 2000)
     } catch (err) {
       showToast('Failed to reset password. Please try again.', 'error')
     } finally {
-      setLoading(false)
+      hide()
     }
   }
 
@@ -131,6 +133,23 @@ function ResetPassword() {
             >
               Request New Link
             </Link>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center px-4">
+        <div className="w-full max-w-md">
+          <div className="card text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-4xl">✅</span>
+            </div>
+            <h1 className="text-2xl font-bold text-green-800 mb-2">Password Reset Successful!</h1>
+            <p className="text-gray-600 mb-6">You will be redirected to the login page shortly.</p>
+            <Link to="/login" className="btn-primary w-full inline-block">Go to Login</Link>
           </div>
         </div>
       </div>
@@ -202,10 +221,10 @@ function ResetPassword() {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={loading || formData.password !== formData.confirmPassword}
+              disabled={isLoading || formData.password !== formData.confirmPassword}
               className="btn-primary w-full mt-4"
             >
-              {loading ? 'Resetting...' : 'Reset Password'}
+              {isLoading ? 'Resetting...' : 'Reset Password'}
             </button>
           </form>
           {/* Footer */}

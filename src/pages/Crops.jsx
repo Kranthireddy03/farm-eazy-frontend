@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import Loader from '../components/Loader';
+import { useLoader } from '../context/LoaderContext';
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
 import apiClient from '../services/apiClient'
@@ -19,7 +19,7 @@ import { API_ENDPOINTS } from '../config/api'
 function Crops() {
   const { toast, showToast, closeToast } = useToast()
   const [crops, setCrops] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { show, hide, isLoading } = useLoader()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -41,7 +41,7 @@ function Crops() {
 
   const fetchCrops = async () => {
     try {
-      setLoading(true)
+      show()
       const response = await apiClient.get(API_ENDPOINTS.GET_CROPS)
       setCrops(response.data)
       setError('')
@@ -50,7 +50,7 @@ function Crops() {
       console.error(err)
       showToast('Failed to load crops', 'error')
     } finally {
-      setLoading(false)
+      hide()
     }
   }
 
@@ -63,9 +63,7 @@ function Crops() {
     }
   }
 
-  if (loading) {
-    return <Loader message="Loading crops, please wait..." />;
-  }
+  // Loader is now global
 
   const handleChange = (e) => {
     const { name, value } = e.target

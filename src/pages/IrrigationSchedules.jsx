@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useLoader } from '../context/LoaderContext';
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 
@@ -17,7 +18,7 @@ function IrrigationSchedules() {
   const [schedules, setSchedules] = useState([])
   const [crops, setCrops] = useState([])
   const [farms, setFarms] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { show, hide, isLoading } = useLoader()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -40,7 +41,7 @@ function IrrigationSchedules() {
 
   const fetchSchedules = async () => {
     try {
-      setLoading(true)
+      show()
       const response = await apiClient.get(API_ENDPOINTS.GET_IRRIGATION_SCHEDULES)
       setSchedules(response.data)
       setError('')
@@ -48,7 +49,7 @@ function IrrigationSchedules() {
       setError('Failed to load irrigation schedules')
       console.error(err)
     } finally {
-      setLoading(false)
+      hide()
     }
   }
 
@@ -197,13 +198,7 @@ function IrrigationSchedules() {
     })
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-gray-600">Loading schedules...</p>
-      </div>
-    )
-  }
+  // Loader is now global
 
   return (
     <div className="space-y-8">

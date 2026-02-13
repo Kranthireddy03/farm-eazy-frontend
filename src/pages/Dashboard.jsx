@@ -14,7 +14,7 @@ import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 
 function Dashboard() {
-  const { show, hide } = useLoader();
+  const { show, hide, isLoading } = useLoader();
   const [stats, setStats] = useState({
     totalFarms: 0,
     totalCrops: 0,
@@ -23,7 +23,7 @@ function Dashboard() {
     totalProducts: 0,
   })
   const [activities, setActivities] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Removed local loading state
   const [error, setError] = useState('')
   const [generatingReport, setGeneratingReport] = useState(false)
 
@@ -163,13 +163,11 @@ For more details, visit: https://farm-eazy.com
     const fetchDashboardData = async () => {
       try {
         show();
-        setLoading(true);
         const [statsResponse, activitiesResponse, productsResponse] = await Promise.all([
           apiClient.get('/irrigation/stats'),
           apiClient.get('/activities/recent'),
           apiClient.get('/products/my-products/count')
         ]);
-        
         setStats({
           totalFarms: statsResponse.data.totalFarms || 0,
           totalCrops: statsResponse.data.totalCrops || 0,
@@ -183,17 +181,13 @@ For more details, visit: https://farm-eazy.com
         setError('Failed to load dashboard data');
         console.error(err);
       } finally {
-        setLoading(false);
         hide();
       }
     };
-
     fetchDashboardData();
   }, []);
 
-  if (loading) {
-    return null; // Loader is now global
-  }
+  // Loader is now global
 
   return (
     <div className="space-y-8">

@@ -10,7 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
-import Loader from '../components/Loader';
+import { useLoader } from '../context/LoaderContext';
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
@@ -21,7 +21,7 @@ function Buying() {
   const { showToast } = useToast()
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { show, hide, isLoading } = useLoader()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -49,14 +49,14 @@ function Buying() {
 
   const fetchProducts = async () => {
     try {
-      setLoading(true)
+      show()
       const response = await apiClient.get('/products')
       setProducts(response.data)
     } catch (error) {
       showToast('Failed to load products', 'error')
       console.error('Error fetching products:', error)
     } finally {
-      setLoading(false)
+      hide()
     }
   }
 
@@ -113,9 +113,7 @@ function Buying() {
     // Emit event to update cart count in header
     window.dispatchEvent(new Event('cart-updated'))
   }
-        if (loading) {
-          return <Loader message="Loading products, please wait..." />;
-        }
+        // Loader is now global
 
   const handleProductClick = (product) => {
     setSelectedProduct(product)
