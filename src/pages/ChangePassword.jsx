@@ -30,7 +30,7 @@ function ChangePassword() {
       return
     }
     try {
-      const response = await apiClient.post('/auth/change-password', {
+      const response = await apiClient.post('/api/auth/change-password', {
         currentPassword: form.currentPassword,
         newPassword: form.newPassword
       })
