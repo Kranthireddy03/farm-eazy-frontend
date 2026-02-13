@@ -19,7 +19,7 @@ function IrrigationSchedules() {
   const [crops, setCrops] = useState([])
   const [farms, setFarms] = useState([])
   const { show, hide, isLoading } = useLoader()
-  const [submitting, setSubmitting] = useState(false)
+  // Removed local submitting state; use isLoading from global loader
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingSchedule, setEditingSchedule] = useState(null)
@@ -87,7 +87,7 @@ function IrrigationSchedules() {
       return
     }
 
-    setSubmitting(true)
+    show()
     try {
       await apiClient.post(API_ENDPOINTS.CREATE_IRRIGATION, {
         cropId: parseInt(formData.cropId),
@@ -114,7 +114,7 @@ function IrrigationSchedules() {
     } catch (err) {
       setError(err.message || 'Failed to create schedule')
     } finally {
-      setSubmitting(false)
+      hide()
     }
   }
 
@@ -123,12 +123,15 @@ function IrrigationSchedules() {
       return
     }
 
+    show()
     try {
       await apiClient.delete(API_ENDPOINTS.DELETE_IRRIGATION(scheduleId))
       setError('')
       await fetchSchedules()
     } catch (err) {
       setError('Failed to delete schedule')
+    } finally {
+      hide()
     }
   }
 
@@ -154,7 +157,7 @@ function IrrigationSchedules() {
       return
     }
 
-    setSubmitting(true)
+    show()
     try {
       await apiClient.put(API_ENDPOINTS.UPDATE_IRRIGATION(editingSchedule.id), {
         cropId: parseInt(formData.cropId),
@@ -181,7 +184,7 @@ function IrrigationSchedules() {
     } catch (err) {
       setError(err.message || 'Failed to update schedule')
     } finally {
-      setSubmitting(false)
+      hide()
     }
   }
 
@@ -330,8 +333,8 @@ function IrrigationSchedules() {
                 rows="3"
               ></textarea>
             </div>
-            <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-              {submitting ? (
+            <button type="submit" disabled={isLoading} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+              {isLoading ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -445,8 +448,8 @@ function IrrigationSchedules() {
               ></textarea>
             </div>
             <div className="flex space-x-2">
-              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                {submitting ? (
+              <button type="submit" disabled={isLoading} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+                {isLoading ? (
                   <span className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
