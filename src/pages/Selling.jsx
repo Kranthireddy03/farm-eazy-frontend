@@ -89,6 +89,21 @@ function Selling() {
     }
   };
 
+  // Add handleOtpChange for OTP input
+  const handleOtpChange = (index, value) => {
+    if (!/^[0-9]?$/.test(value)) return;
+    setOtpCode((prev) => {
+      const updated = [...prev];
+      updated[index] = value;
+      return updated;
+    });
+    // Optionally auto-focus next input
+    if (value && index < otpCode.length - 1) {
+      const nextInput = document.getElementById(`otp-input-${index + 1}`);
+      if (nextInput) nextInput.focus();
+    }
+  };
+
   if (showForm) {
     return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
         <div className="max-w-4xl mx-auto px-4">
