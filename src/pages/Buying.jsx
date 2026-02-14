@@ -39,16 +39,18 @@ function Buying() {
     { value: 'OTHERS', label: 'Others', icon: '📦' }
   ]
 
-  useEffect(() => {
-    fetchProducts()
-  }, [])
+  const { show, hide, loading: globalLoading } = useLoader();
 
   useEffect(() => {
-    filterProducts()
-  }, [products, searchTerm, selectedCategory])
+    show();
+    fetchProducts();
+  }, []);
+
+  useEffect(() => {
+    filterProducts();
+  }, [products, searchTerm, selectedCategory]);
 
   const fetchProducts = async () => {
-    setLoading(true)
     try {
       const response = await apiClient.get('/products')
       setProducts(response.data)
@@ -56,9 +58,11 @@ function Buying() {
       showToast('Failed to load products', 'error')
       console.error('Error fetching products:', error)
     } finally {
-      setLoading(false)
+      hide();
     }
-  }
+  };
+
+  if (globalLoading) return null; // Loader handled globally
 
   const filterProducts = () => {
     let filtered = products

@@ -47,6 +47,7 @@ function IrrigationServices() {
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
+    show();
     fetchFarms();
     fetchCrops();
     fetchListings();
@@ -69,6 +70,7 @@ function IrrigationServices() {
       setMyListingIds(new Set());
     } finally {
       setLoading(false);
+      hide();
     }
   };
 
@@ -82,6 +84,7 @@ function IrrigationServices() {
       setBookings([]);
     } finally {
       setLoading(false)
+      hide();
     }
   };
 

@@ -44,13 +44,8 @@ function FarmDetail() {
   }
 
   if (globalLoading) return null; // Loader handled globally
-
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <p className="text-gray-600">Loading farm details...</p>
-      </div>
-    )
+    return null; // Remove local loader, global loader will show
   }
 
   if (!farm) {
