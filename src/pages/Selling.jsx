@@ -140,6 +140,17 @@ function Selling() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Add missing categories array for product form
+  const categories = [
+    { value: 'SEEDS', label: 'Seeds', icon: '🌱' },
+    { value: 'FERTILIZERS', label: 'Fertilizers', icon: '🧪' },
+    { value: 'PESTICIDES', label: 'Pesticides', icon: '🦟' },
+    { value: 'TOOLS', label: 'Tools', icon: '🔧' },
+    { value: 'EQUIPMENT', label: 'Equipment', icon: '🚜' },
+    { value: 'ORGANIC', label: 'Organic', icon: '🌿' },
+    { value: 'OTHERS', label: 'Others', icon: '📦' }
+  ];
+
   if (showForm) {
     return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
         <div className="max-w-4xl mx-auto px-4">
