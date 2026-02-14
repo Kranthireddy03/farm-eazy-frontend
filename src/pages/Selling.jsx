@@ -8,7 +8,7 @@ import { useLoader } from '../context/LoaderContext';
 function Selling() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { show, hide, isLoading } = useLoader();
+  const { show, hide, loading: globalLoading } = useLoader();
   const [currentStep, setCurrentStep] = useState(1);
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
