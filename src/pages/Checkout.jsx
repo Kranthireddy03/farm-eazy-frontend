@@ -18,28 +18,22 @@ function loadRazorpayScript() {
 }
 
 function Checkout() {
-  // Add missing handleRetryPayment function
-  const handleRetryPayment = () => {
-    console.log("Retry payment clicked");
-    // Re-invoke Razorpay payment flow for pending order
-    // You may want to call the backend to get the pending order details and re-initiate payment
-    // For now, just reload the page or re-run handleCheckout
-    handleCheckout();
+  // Add missing checkingOut state
+  const [checkingOut, setCheckingOut] = useState(false);
+  // Loads cart, coins, and addresses for checkout page
+  const loadCheckoutData = async () => {
+    try {
+      // Load cart from localStorage
+      const cart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]');
+      setCartItems(cart);
+      // Fetch coins
+      await fetchCoins();
+      // Fetch addresses
+      await fetchAddresses();
+    } catch (error) {
+      showToast('Failed to load checkout data', 'error');
+    }
   };
-    // Loads cart, coins, and addresses for checkout page
-    const loadCheckoutData = async () => {
-      try {
-        // Load cart from localStorage
-        const cart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]');
-        setCartItems(cart);
-        // Fetch coins
-        await fetchCoins();
-        // Fetch addresses
-        await fetchAddresses();
-      } catch (error) {
-        showToast('Failed to load checkout data', 'error');
-      }
-    };
   // State for payment retry logic
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [retryTimer, setRetryTimer] = useState(0);
