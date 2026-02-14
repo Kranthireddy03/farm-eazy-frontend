@@ -89,15 +89,31 @@ function Selling() {
     }
   };
 
-  // Add handleOtpChange for OTP input
+  // Improved handleOtpChange for continuous input
   const handleOtpChange = (index, value) => {
-    if (!/^[0-9]?$/.test(value)) return;
+    if (!/^[0-9]*$/.test(value)) return;
+    // If user pastes or types multiple digits, fill all
+    if (value.length > 1) {
+      const digits = value.split('').slice(0, otpCode.length);
+      setOtpCode((prev) => {
+        const updated = [...prev];
+        for (let i = 0; i < digits.length; i++) {
+          updated[index + i] = digits[i];
+        }
+        return updated;
+      });
+      // Focus next empty input
+      const nextIndex = index + value.length < otpCode.length ? index + value.length : otpCode.length - 1;
+      const nextInput = document.getElementById(`otp-input-${nextIndex}`);
+      if (nextInput) nextInput.focus();
+      return;
+    }
     setOtpCode((prev) => {
       const updated = [...prev];
       updated[index] = value;
       return updated;
     });
-    // Optionally auto-focus next input
+    // Auto-focus next input
     if (value && index < otpCode.length - 1) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       if (nextInput) nextInput.focus();

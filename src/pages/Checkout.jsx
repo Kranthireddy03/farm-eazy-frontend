@@ -20,6 +20,8 @@ function loadRazorpayScript() {
 function Checkout() {
   // Add missing checkingOut state
   const [checkingOut, setCheckingOut] = useState(false);
+  // Add missing razorpayLoading state
+  const [razorpayLoading, setRazorpayLoading] = useState(false);
   // Loads cart, coins, and addresses for checkout page
   const loadCheckoutData = async () => {
     try {
