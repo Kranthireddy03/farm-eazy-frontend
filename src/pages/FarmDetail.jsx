@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react'
 import Loader from '../components/Loader';
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
+import { useLoader } from '../context/LoaderContext'
 
 function FarmDetail() {
   const { farmId } = useParams()
@@ -22,26 +23,27 @@ function FarmDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
+  const { show, hide, loading: globalLoading } = useLoader()
+
   useEffect(() => {
+    show()
     fetchFarmDetail()
   }, [farmId])
 
   const fetchFarmDetail = async () => {
     try {
-      setLoading(true)
       const response = await apiClient.get(API_ENDPOINTS.GET_FARM_BY_ID(farmId))
       setFarm(response.data)
       setError('')
     } catch (err) {
-  if (loading) {
-    return <Loader message="Loading farm details, please wait..." />;
-  }
       setError('Failed to load farm details')
       console.error(err)
     } finally {
-      setLoading(false)
+      hide()
     }
   }
+
+  if (globalLoading) return null; // Loader handled globally
 
   if (loading) {
     return (

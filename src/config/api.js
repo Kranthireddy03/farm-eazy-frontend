@@ -50,10 +50,11 @@ api.interceptors.response.use(
 // API Endpoints
 export const API_ENDPOINTS = {
   // Authentication
-  REGISTER: `${API_BASE_URL}/auth/register`,
-  LOGIN: `${API_BASE_URL}/auth/login`,
-  FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
-  RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
+    REGISTER: `${API_BASE_URL}/auth/register`,
+    LOGIN: `${API_BASE_URL}/auth/login`,
+    FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
+    RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
+    CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
   
   // Farms
   GET_FARMS: `${API_BASE_URL}/farms`,

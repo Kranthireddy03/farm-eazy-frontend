@@ -2,8 +2,10 @@ import { useEffect, useState } from 'react'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
+import { useLoader } from '../context/LoaderContext'
 
 function IrrigationServices() {
+  const { show, hide, loading: globalLoading } = useLoader()
   const { toast, showToast, closeToast } = useToast()
   const [activeTab, setActiveTab] = useState('listings') // 'listings', 'browse', 'bookings', or 'provider-requests'
 

@@ -21,7 +21,7 @@ function Buying() {
   const { showToast } = useToast()
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
-  const { show, hide, isLoading } = useLoader()
+  const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [selectedProduct, setSelectedProduct] = useState(null)
@@ -48,15 +48,15 @@ function Buying() {
   }, [products, searchTerm, selectedCategory])
 
   const fetchProducts = async () => {
+    setLoading(true)
     try {
-      show()
       const response = await apiClient.get('/products')
       setProducts(response.data)
     } catch (error) {
       showToast('Failed to load products', 'error')
       console.error('Error fetching products:', error)
     } finally {
-      hide()
+      setLoading(false)
     }
   }
 
