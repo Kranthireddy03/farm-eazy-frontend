@@ -16,6 +16,7 @@ function Selling() {
   const [timer, setTimer] = useState(0);
   const [myProducts, setMyProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const userEmail = localStorage.getItem('farmEazy_email') || '';
 
   // Patch: Use global loader for all async handlers
   const fetchMyProducts = async () => {
