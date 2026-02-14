@@ -120,6 +120,20 @@ function Selling() {
     }
   };
 
+  // Add missing formData state for product listing
+  const [formData, setFormData] = useState({
+    productName: '',
+    description: '',
+    price: '',
+    discountedPrice: '',
+    discountPercentage: 0,
+    quantity: '',
+    unit: '',
+    category: '',
+    imageUrl: '',
+    // Add other fields as needed
+  });
+
   if (showForm) {
     return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
         <div className="max-w-4xl mx-auto px-4">
@@ -187,17 +201,19 @@ function Selling() {
                 ) : (
                   <>
                     <div className="flex gap-3 justify-center mb-6">
-                      {otpCode.map((digit, index) => (
-                        <input
-                          key={index}
-                          id={`otp-${index}`}
-                          type="text"
-                          maxLength="1"
-                          value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
-                          className="w-14 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
-                        />
-                      ))}
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        maxLength="6"
+                        value={otpCode.join('')}
+                        onChange={e => {
+                          handleOtpChange(0, e.target.value);
+                        }}
+                        className="w-full h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all tracking-widest"
+                        placeholder="------"
+                        autoFocus
+                      />
                     </div>
                     
                     {timer > 0 && (
