@@ -148,10 +148,10 @@ function Selling() {
                   <button
                     type="button"
                     onClick={handleSendOtp}
-                    disabled={isLoading}
+                    disabled={globalLoading}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
                   >
-                    {isLoading ? 'Sending...' : 'Send OTP'}
+                    {globalLoading ? 'Sending...' : 'Send OTP'}
                   </button>
                 ) : (
                   <>
@@ -178,16 +178,16 @@ function Selling() {
                     <button
                       type="button"
                       onClick={handleVerifyOtp}
-                      disabled={isLoading || otpCode.join('').length !== 6}
+                      disabled={globalLoading || otpCode.join('').length !== 6}
                       className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 mb-3"
                     >
-                      {isLoading ? 'Verifying...' : 'Verify OTP'}
+                      {globalLoading ? 'Verifying...' : 'Verify OTP'}
                     </button>
                     
                     <button
                       type="button"
                       onClick={handleSendOtp}
-                      disabled={isLoading || timer > 0}
+                      disabled={globalLoading || timer > 0}
                       className="w-full text-blue-600 py-2 font-medium hover:underline disabled:opacity-50"
                     >
                       Resend OTP
@@ -530,10 +530,10 @@ function Selling() {
                   </button>
                   <button
                     type="submit"
-                    disabled={isLoading}
+                    disabled={globalLoading}
                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {isLoading ? 'Publishing...' : '✨ Publish Product'}
+                    {globalLoading ? 'Publishing...' : '✨ Publish Product'}
                   </button>
                 </div>
               </div>
