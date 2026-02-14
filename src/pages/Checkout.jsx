@@ -3,6 +3,7 @@ import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
+import { useLoader } from '../context/LoaderContext'
 
 // Razorpay script loader
 function loadRazorpayScript() {
@@ -67,7 +68,7 @@ function Checkout() {
       setCoinsToUse(value);
     };
   const [selectedPayment, setSelectedPayment] = useState('CASH_ON_DELIVERY')
-  const { show, hide, isLoading } = useLoader()
+  const { show, hide, loading: globalLoading } = useLoader()
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [addresses, setAddresses] = useState([])
   const [selectedAddress, setSelectedAddress] = useState(null)
@@ -91,8 +92,9 @@ function Checkout() {
   const COIN_VALUE = 1
 
   useEffect(() => {
-    loadCheckoutData()
-  }, [])
+    show();
+    loadCheckoutData();
+  }, []);
 
   // Cleanup retry interval on unmount
   useEffect(() => {
@@ -225,7 +227,7 @@ function Checkout() {
               if (verifyResult.data.status === 'success') {
                 const orderData = {
                   items: cartItems.map(item => {
-                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
                     return {
                       productId: item.id,
                       quantity: item.quantity,
@@ -251,7 +253,7 @@ function Checkout() {
                 // Payment failed, create pending order and allow retry
                 const failedOrderData = {
                   items: cartItems.map(item => {
-                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
                     return {
                       productId: item.id,
                       quantity: item.quantity,
