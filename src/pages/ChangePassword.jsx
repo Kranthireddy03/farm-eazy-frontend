@@ -2,12 +2,9 @@ import { useState } from 'react'
 import PasswordInput from '../components/PasswordInput'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
-import { useLoader } from '../context/LoaderContext'
-import { API_ENDPOINTS } from '../config/api'
 
 function ChangePassword() {
   const { showToast } = useToast()
-  const { show, hide, loading } = useLoader()
   const [form, setForm] = useState({
     currentPassword: '',
     newPassword: '',
@@ -21,7 +18,6 @@ function ChangePassword() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    show()
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
       showToast('Please fill all fields', 'warning')
       return
@@ -31,7 +27,7 @@ function ChangePassword() {
       return
     }
     try {
-      const response = await apiClient.post(API_ENDPOINTS.CHANGE_PASSWORD, {
+      const response = await apiClient.post('/auth/change-password', {
         currentPassword: form.currentPassword,
         newPassword: form.newPassword
       })
@@ -40,8 +36,6 @@ function ChangePassword() {
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Password change failed. Please try again.'
       showToast(errorMessage, 'error')
-    } finally {
-      hide()
     }
   }
 
@@ -80,10 +74,9 @@ function ChangePassword() {
           />
           <button
             type="submit"
-            className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition flex items-center justify-center gap-2 disabled:opacity-60"
-            disabled={loading}
+            className="w-full bg-green-600 text-white font-semibold py-3 rounded-lg hover:bg-green-700 transition"
           >
-            {loading ? 'Updating...' : 'Update Password'}
+            Update Password
           </button>
         </form>
       </div>

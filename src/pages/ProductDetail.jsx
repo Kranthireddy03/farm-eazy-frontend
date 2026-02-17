@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { useLoader } from '../context/LoaderContext';
 import { useParams, useNavigate } from 'react-router-dom'
 import ProductService from '../services/ProductService'
 import { useToast } from '../hooks/useToast'
@@ -7,8 +6,16 @@ import { useToast } from '../hooks/useToast'
 function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { show, hide, isLoading } = useLoader();
-  // Loader is now global
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-orange-600"></div>
+          <p className="mt-4 text-gray-600 text-lg">Loading product details...</p>
+        </div>
+      </div>
+    );
+  }
   if (!product) {
     return (
       <div className="flex items-center justify-center min-h-screen">

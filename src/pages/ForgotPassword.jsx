@@ -14,22 +14,16 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 import { useToast } from '../hooks/useToast'
-import { useLoader } from '../context/LoaderContext'
 import Toast from '../components/Toast'
 
 function ForgotPassword() {
   const navigate = useNavigate()
   const { toast, showToast, closeToast } = useToast()
-  const { show, hide, isLoading } = useLoader()
   const [email, setEmail] = useState('')
   const [errors, setErrors] = useState({})
-  // Removed local loading state
+  const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [countdown, setCountdown] = useState(0)
-
-  if (loading) {
-    return <Loader message="Processing, please wait..." />;
-  }
 
   /**
    * Countdown timer effect
@@ -76,7 +70,7 @@ function ForgotPassword() {
       return
     }
 
-    show()
+    setLoading(true)
 
     try {
       // Call forgot password endpoint
@@ -108,7 +102,7 @@ function ForgotPassword() {
         showToast(error.message || 'Failed to process request. Please try again.', 'error')
       }
     } finally {
-      hide()
+      setLoading(false)
     }
   }
 
@@ -156,7 +150,7 @@ function ForgotPassword() {
                   onChange={handleChange}
                   className="form-input"
                   placeholder="your@email.com"
-                  disabled={isLoading}
+                  disabled={loading}
                 />
                 {errors.email && <p className="error-message">{errors.email}</p>}
               </div>
@@ -164,10 +158,10 @@ function ForgotPassword() {
               {/* Submit Button */}
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={loading}
                 className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? (
+                {loading ? (
                   <span className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

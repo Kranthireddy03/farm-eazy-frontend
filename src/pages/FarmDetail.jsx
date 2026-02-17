@@ -11,10 +11,8 @@
 import { useParams, useNavigate } from 'react-router-dom'
 import { formatDate } from '../utils/formatDate';
 import { useState, useEffect } from 'react'
-import Loader from '../components/Loader';
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
-import { useLoader } from '../context/LoaderContext'
 
 function FarmDetail() {
   const { farmId } = useParams()
@@ -23,15 +21,13 @@ function FarmDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
-  const { show, hide, loading: globalLoading } = useLoader()
-
   useEffect(() => {
-    show()
     fetchFarmDetail()
   }, [farmId])
 
   const fetchFarmDetail = async () => {
     try {
+      setLoading(true)
       const response = await apiClient.get(API_ENDPOINTS.GET_FARM_BY_ID(farmId))
       setFarm(response.data)
       setError('')
@@ -39,13 +35,16 @@ function FarmDetail() {
       setError('Failed to load farm details')
       console.error(err)
     } finally {
-      hide()
+      setLoading(false)
     }
   }
 
-  if (globalLoading) return null; // Loader handled globally
   if (loading) {
-    return null; // Remove local loader, global loader will show
+    return (
+      <div className="flex items-center justify-center h-96">
+        <p className="text-gray-600">Loading farm details...</p>
+      </div>
+    )
   }
 
   if (!farm) {

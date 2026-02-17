@@ -9,12 +9,10 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useLoader } from '../context/LoaderContext'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 
 function Dashboard() {
-  const { show, hide, isLoading } = useLoader();
   const [stats, setStats] = useState({
     totalFarms: 0,
     totalCrops: 0,
@@ -23,7 +21,7 @@ function Dashboard() {
     totalProducts: 0,
   })
   const [activities, setActivities] = useState([])
-  // Removed local loading state
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [generatingReport, setGeneratingReport] = useState(false)
 
@@ -162,32 +160,57 @@ For more details, visit: https://farm-eazy.com
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        show();
+        setLoading(true)
         const [statsResponse, activitiesResponse, productsResponse] = await Promise.all([
           apiClient.get('/irrigation/stats'),
           apiClient.get('/activities/recent'),
           apiClient.get('/products/my-products/count')
-        ]);
+        ])
+        
         setStats({
           totalFarms: statsResponse.data.totalFarms || 0,
           totalCrops: statsResponse.data.totalCrops || 0,
           totalIrrigations: statsResponse.data.totalIrrigations || 0,
           activeAlerts: statsResponse.data.upcomingIrrigations || 0,
           totalProducts: productsResponse.data.count || 0,
-        });
-        setActivities(activitiesResponse.data || []);
-        setError('');
+        })
+        setActivities(activitiesResponse.data || [])
+        setError('')
       } catch (err) {
-        setError('Failed to load dashboard data');
-        console.error(err);
+        setError('Failed to load dashboard data')
+        console.error(err)
       } finally {
-        hide();
+        setLoading(false)
       }
-    };
-    fetchDashboardData();
-  }, []);
+    }
 
-  // Loader is now global
+    fetchDashboardData()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="spinner text-green-600 mb-4">
+            <svg
+              className="w-12 h-12"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"
+              />
+            </svg>
+          </div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8">

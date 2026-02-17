@@ -18,14 +18,12 @@ import { useState, useEffect } from 'react'
 import AuthService from '../services/AuthService'
 import apiClient from '../services/apiClient'
 import { useCoin } from '../context/CoinContext'
-import { useLoader } from '../context/LoaderContext';
 
 function Home() {
-  const { coins, loading: coinsLoading, refreshCoins } = useCoin()
-  const { show, hide } = useLoader()
   const navigate = useNavigate()
   const [userFullName, setUserFullName] = useState('')
   const [userUsername, setUserUsername] = useState('')
+  const { coins, loading: coinsLoading, refreshCoins } = useCoin()
   const [statsLoading, setStatsLoading] = useState(true)
   const [stats, setStats] = useState({
     totalFarms: 0,
@@ -49,7 +47,6 @@ function Home() {
 
   const fetchStats = async () => {
     try {
-      show();
       setStatsLoading(true)
       const [farmsRes, productsRes, servicesRes] = await Promise.allSettled([
         apiClient.get('/farms'),
@@ -90,7 +87,6 @@ function Home() {
       console.error('Error fetching stats:', error)
     } finally {
       setStatsLoading(false)
-      hide();
     }
   }
 

@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useLoader } from '../context/LoaderContext';
 import { useToast } from '../hooks/useToast'
 import Toast from '../components/Toast'
 import apiClient from '../services/apiClient'
@@ -19,7 +18,7 @@ import { API_ENDPOINTS } from '../config/api'
 function Crops() {
   const { toast, showToast, closeToast } = useToast()
   const [crops, setCrops] = useState([])
-  const { show, hide, isLoading } = useLoader()
+  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -41,7 +40,7 @@ function Crops() {
 
   const fetchCrops = async () => {
     try {
-      show()
+      setLoading(true)
       const response = await apiClient.get(API_ENDPOINTS.GET_CROPS)
       setCrops(response.data)
       setError('')
@@ -50,7 +49,7 @@ function Crops() {
       console.error(err)
       showToast('Failed to load crops', 'error')
     } finally {
-      hide()
+      setLoading(false)
     }
   }
 
@@ -62,8 +61,6 @@ function Crops() {
       console.error('Failed to fetch farms:', err)
     }
   }
-
-  // Loader is now global
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -188,7 +185,7 @@ function Crops() {
     return colors[status] || 'bg-gray-100 text-gray-800'
   }
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">

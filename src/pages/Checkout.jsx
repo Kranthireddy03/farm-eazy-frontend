@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
-import Loader from '../components/Loader';
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
-import { useLoader } from '../context/LoaderContext'
 
 // Razorpay script loader
 function loadRazorpayScript() {
@@ -18,24 +16,28 @@ function loadRazorpayScript() {
 }
 
 function Checkout() {
-  // Add missing checkingOut state
-  const [checkingOut, setCheckingOut] = useState(false);
-  // Add missing razorpayLoading state
-  const [razorpayLoading, setRazorpayLoading] = useState(false);
-  // Loads cart, coins, and addresses for checkout page
-  const loadCheckoutData = async () => {
-    try {
-      // Load cart from localStorage
-      const cart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]');
-      setCartItems(cart);
-      // Fetch coins
-      await fetchCoins();
-      // Fetch addresses
-      await fetchAddresses();
-    } catch (error) {
-      showToast('Failed to load checkout data', 'error');
-    }
+  // Add missing handleRetryPayment function
+  const handleRetryPayment = () => {
+    console.log("Retry payment clicked");
+    // Re-invoke Razorpay payment flow for pending order
+    // You may want to call the backend to get the pending order details and re-initiate payment
+    // For now, just reload the page or re-run handleCheckout
+    handleCheckout();
   };
+    // Loads cart, coins, and addresses for checkout page
+    const loadCheckoutData = async () => {
+      try {
+        // Load cart from localStorage
+        const cart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]');
+        setCartItems(cart);
+        // Fetch coins
+        await fetchCoins();
+        // Fetch addresses
+        await fetchAddresses();
+      } catch (error) {
+        showToast('Failed to load checkout data', 'error');
+      }
+    };
   // State for payment retry logic
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [retryTimer, setRetryTimer] = useState(0);
@@ -64,7 +66,8 @@ function Checkout() {
       setCoinsToUse(value);
     };
   const [selectedPayment, setSelectedPayment] = useState('CASH_ON_DELIVERY')
-  const { show, hide, loading: globalLoading } = useLoader()
+  const [razorpayLoading, setRazorpayLoading] = useState(false)
+  const [checkingOut, setCheckingOut] = useState(false)
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [addresses, setAddresses] = useState([])
   const [selectedAddress, setSelectedAddress] = useState(null)
@@ -88,9 +91,8 @@ function Checkout() {
   const COIN_VALUE = 1
 
   useEffect(() => {
-    show();
-    loadCheckoutData();
-  }, []);
+    loadCheckoutData()
+  }, [])
 
   // Cleanup retry interval on unmount
   useEffect(() => {
@@ -100,7 +102,40 @@ function Checkout() {
   }, [retryInterval]);
 
   // Retry Screen at top of render
-  // Loader is now global
+  if (retryActive && pendingOrderId) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-yellow-50">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full text-center">
+          <h2 className="text-2xl font-bold text-yellow-700 mb-4">Order On Hold</h2>
+          <p className="mb-2">Your order is on hold due to payment failure.</p>
+          <p className="mb-4">
+            You have 
+            <span className="font-bold">
+              {Math.floor(retryTimer/60)}:
+              {(retryTimer % 60).toString().padStart(2, '0')}
+            </span> 
+            minutes to retry payment.
+          </p>
+          <button
+            onClick={handleRetryPayment}
+            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition mb-2"
+            disabled={razorpayLoading}
+          >
+            Retry Payment
+          </button>
+          <button
+            onClick={() => {
+              setRetryActive(false);
+              navigate('/');
+            }}
+            className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition"
+          >
+            Cancel Order
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const fetchCoins = async () => {
     try {
@@ -223,7 +258,7 @@ function Checkout() {
               if (verifyResult.data.status === 'success') {
                 const orderData = {
                   items: cartItems.map(item => {
-                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
                     return {
                       productId: item.id,
                       quantity: item.quantity,
@@ -249,7 +284,7 @@ function Checkout() {
                 // Payment failed, create pending order and allow retry
                 const failedOrderData = {
                   items: cartItems.map(item => {
-                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
                     return {
                       productId: item.id,
                       quantity: item.quantity,
@@ -393,12 +428,23 @@ function Checkout() {
   }
 
   if (cartItems.length === 0) {
-    return <Loader message="Loading your cart..." />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 py-8 px-4">
+        <div className="max-w-2xl mx-auto text-center py-16">
+          <p className="text-6xl mb-4">🛒</p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Your Cart is Empty</h1>
+          <p className="text-gray-600 mb-8">Add products to proceed with checkout</p>
+          <button
+            onClick={() => navigate('/buying')}
+            className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-8 rounded-lg transition"
+          >
+            Continue Shopping
+          </button>
+        </div>
+      </div>
+    )
   }
 
-  if (checkingOut || razorpayLoading) {
-    return <Loader message="Processing your order/payment, please wait..." />;
-  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div className="max-w-6xl mx-auto">

@@ -1,158 +1,183 @@
 import React, { useState, useEffect } from 'react';
+import { formatDate } from '../utils/formatDate';
 import { useNavigate } from 'react-router-dom';
 import OtpService from '../services/OtpService';
 import ProductService from '../services/ProductService';
 import { useToast } from '../hooks/useToast';
-import { useLoader } from '../context/LoaderContext';
 
 function Selling() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { show, hide, loading: globalLoading } = useLoader();
   const [currentStep, setCurrentStep] = useState(1);
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(0);
+  const [loading, setLoading] = useState(false);
   const [myProducts, setMyProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  
   const userEmail = localStorage.getItem('farmEazy_email') || '';
+  
+  const [formData, setFormData] = useState({
+    productName: '',
+    category: '',
+    description: '',
+    price: '',
+    discountPercentage: 0,
+    quantity: '',
+    unit: '',
+    weight: '',
+    specifications: '',
+    warrantyInfo: '',
+    imageUrls: '',
+    videoUrls: '',
+    contactEmail: '',
+    contactPhone: ''
+  });
 
-  // Patch: Use global loader for all async handlers
+  const categories = [
+    { value: 'seeds', label: '🌱 Seeds', color: 'from-green-400 to-green-600' },
+    { value: 'fertilizers', label: '🌿 Fertilizers', color: 'from-emerald-400 to-emerald-600' },
+    { value: 'pesticides', label: '🛡️ Pesticides', color: 'from-teal-400 to-teal-600' },
+    { value: 'tools', label: '🔧 Tools', color: 'from-blue-400 to-blue-600' },
+    { value: 'machinery', label: '🚜 Machinery', color: 'from-indigo-400 to-indigo-600' },
+    { value: 'irrigation', label: '💧 Irrigation', color: 'from-cyan-400 to-cyan-600' },
+    { value: 'produce', label: '🥕 Fresh Produce', color: 'from-orange-400 to-orange-600' },
+    { value: 'others', label: '📦 Others', color: 'from-gray-400 to-gray-600' }
+  ];
+
+  useEffect(() => {
+    fetchMyProducts();
+  }, []);
+
+  useEffect(() => {
+    if (timer > 0) {
+      const interval = setInterval(() => setTimer(timer - 1), 1000);
+      return () => clearInterval(interval);
+    }
+  }, [timer]);
+
   const fetchMyProducts = async () => {
     try {
-      show();
       const products = await ProductService.getMyProducts();
       setMyProducts(products);
     } catch (error) {
-      showToast('Failed to fetch products', 'error');
-    } finally {
-      hide();
+      console.error('Error fetching products:', error);
     }
   };
 
   const handleSendOtp = async () => {
+    setLoading(true);
     try {
-      show();
       await OtpService.sendOtp(userEmail, 'SELLING');
       setOtpSent(true);
-      setTimer(60);
+      setTimer(600); // 10 minutes
       showToast('OTP sent to your email', 'success');
     } catch (error) {
-      showToast('Failed to send OTP', 'error');
+      showToast(error.response?.data?.message || 'Failed to send OTP', 'error');
     } finally {
-      hide();
+      setLoading(false);
+    }
+  };
+
+  const handleOtpChange = (index, value) => {
+    if (value.length <= 1 && /^\d*$/.test(value)) {
+      const newOtp = [...otpCode];
+      newOtp[index] = value;
+      setOtpCode(newOtp);
+      
+      // Auto-focus next input
+      if (value && index < 5) {
+        document.getElementById(`otp-${index + 1}`).focus();
+      }
     }
   };
 
   const handleVerifyOtp = async () => {
     const code = otpCode.join('');
-    if (code.length !== 6) return;
+    if (code.length !== 6) {
+      showToast('Please enter complete OTP', 'error');
+      return;
+    }
+    
+    setLoading(true);
     try {
-      show();
       await OtpService.verifyOtp(userEmail, code, 'SELLING');
       setOtpVerified(true);
-      showToast('OTP verified successfully', 'success');
       setCurrentStep(2);
+      showToast('OTP verified successfully!', 'success');
     } catch (error) {
-      showToast('Invalid OTP', 'error');
+      showToast(error.response?.data?.message || 'Invalid OTP', 'error');
     } finally {
-      hide();
+      setLoading(false);
     }
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    // Email validation for contactEmail
+    if (name === 'contactEmail') {
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (value && !emailPattern.test(value)) {
+        showToast('Please enter a valid email address', 'error');
+        return;
+      }
+    }
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!otpVerified) {
+      showToast('Please verify OTP first', 'error');
+      return;
+    }
+    // Prevent listing products with zero or negative quantity
+    if (!formData.quantity || parseInt(formData.quantity, 10) <= 0) {
+      showToast('Quantity must be greater than zero', 'error');
+      return;
+    }
+    setLoading(true);
     try {
-      show();
       await ProductService.createProduct(formData);
       showToast('Product listed successfully!', 'success');
       setShowForm(false);
-      fetchMyProducts();
-    } catch (error) {
-      showToast('Failed to list product', 'error');
-    } finally {
-      hide();
-    }
-  };
-
-  const handleDeleteProduct = async (productId) => {
-    try {
-      show();
-      await ProductService.deleteProduct(productId);
-      showToast('Product deleted', 'success');
-      fetchMyProducts();
-    } catch (error) {
-      showToast('Failed to delete product', 'error');
-    } finally {
-      hide();
-    }
-  };
-
-  // Improved handleOtpChange for continuous input
-  const handleOtpChange = (index, value) => {
-    if (!/^[0-9]*$/.test(value)) return;
-    // If user pastes or types multiple digits, fill all
-    if (value.length > 1) {
-      const digits = value.split('').slice(0, otpCode.length);
-      setOtpCode((prev) => {
-        const updated = [...prev];
-        for (let i = 0; i < digits.length; i++) {
-          updated[index + i] = digits[i];
-        }
-        return updated;
+      setCurrentStep(1);
+      setOtpVerified(false);
+      setOtpSent(false);
+      setOtpCode(['', '', '', '', '', '']);
+      setFormData({
+        productName: '',
+        category: '',
+        description: '',
+        price: '',
+        discountPercentage: 0,
+        quantity: '',
+        unit: '',
+        weight: '',
+        specifications: '',
+        warrantyInfo: '',
+        imageUrls: '',
+        videoUrls: '',
+        contactEmail: '',
+        contactPhone: ''
       });
-      // Focus next empty input
-      const nextIndex = index + value.length < otpCode.length ? index + value.length : otpCode.length - 1;
-      const nextInput = document.getElementById(`otp-input-${nextIndex}`);
-      if (nextInput) nextInput.focus();
-      return;
-    }
-    setOtpCode((prev) => {
-      const updated = [...prev];
-      updated[index] = value;
-      return updated;
-    });
-    // Auto-focus next input
-    if (value && index < otpCode.length - 1) {
-      const nextInput = document.getElementById(`otp-input-${index + 1}`);
-      if (nextInput) nextInput.focus();
+      fetchMyProducts();
+    } catch (error) {
+      showToast(error.response?.data?.message || 'Failed to create product', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Add missing formData state for product listing
-  const [formData, setFormData] = useState({
-    productName: '',
-    description: '',
-    price: '',
-    discountedPrice: '',
-    discountPercentage: 0,
-    quantity: '',
-    unit: '',
-    category: '',
-    imageUrl: '',
-    // Add other fields as needed
-  });
-
-  // Add missing handleInputChange for product form
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Add missing categories array for product form
-  const categories = [
-    { value: 'SEEDS', label: 'Seeds', icon: '🌱' },
-    { value: 'FERTILIZERS', label: 'Fertilizers', icon: '🧪' },
-    { value: 'PESTICIDES', label: 'Pesticides', icon: '🦟' },
-    { value: 'TOOLS', label: 'Tools', icon: '🔧' },
-    { value: 'EQUIPMENT', label: 'Equipment', icon: '🚜' },
-    { value: 'ORGANIC', label: 'Organic', icon: '🌿' },
-    { value: 'OTHERS', label: 'Others', icon: '📦' }
-  ];
+  const discountedPrice = formData.price && formData.discountPercentage > 0
+    ? (formData.price - (formData.price * formData.discountPercentage / 100)).toFixed(2)
+    : formData.price;
 
   if (showForm) {
-    return <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
         <div className="max-w-4xl mx-auto px-4">
           {/* Header */}
           <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
@@ -210,27 +235,25 @@ function Selling() {
                   <button
                     type="button"
                     onClick={handleSendOtp}
-                    disabled={globalLoading}
+                    disabled={loading}
                     className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
                   >
-                    {globalLoading ? 'Sending...' : 'Send OTP'}
+                    {loading ? 'Sending...' : 'Send OTP'}
                   </button>
                 ) : (
                   <>
                     <div className="flex gap-3 justify-center mb-6">
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        maxLength="6"
-                        value={otpCode.join('')}
-                        onChange={e => {
-                          handleOtpChange(0, e.target.value);
-                        }}
-                        className="w-full h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all tracking-widest"
-                        placeholder="------"
-                        autoFocus
-                      />
+                      {otpCode.map((digit, index) => (
+                        <input
+                          key={index}
+                          id={`otp-${index}`}
+                          type="text"
+                          maxLength="1"
+                          value={digit}
+                          onChange={(e) => handleOtpChange(index, e.target.value)}
+                          className="w-14 h-14 text-center text-2xl font-bold border-2 border-gray-300 rounded-xl focus:border-blue-500 focus:outline-none transition-all"
+                        />
+                      ))}
                     </div>
                     
                     {timer > 0 && (
@@ -242,16 +265,16 @@ function Selling() {
                     <button
                       type="button"
                       onClick={handleVerifyOtp}
-                      disabled={globalLoading || otpCode.join('').length !== 6}
+                      disabled={loading || otpCode.join('').length !== 6}
                       className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 mb-3"
                     >
-                      {globalLoading ? 'Verifying...' : 'Verify OTP'}
+                      {loading ? 'Verifying...' : 'Verify OTP'}
                     </button>
                     
                     <button
                       type="button"
                       onClick={handleSendOtp}
-                      disabled={globalLoading || timer > 0}
+                      disabled={loading || timer > 0}
                       className="w-full text-blue-600 py-2 font-medium hover:underline disabled:opacity-50"
                     >
                       Resend OTP
@@ -594,10 +617,10 @@ function Selling() {
                   </button>
                   <button
                     type="submit"
-                    disabled={globalLoading}
+                    disabled={loading}
                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {globalLoading ? 'Publishing...' : '✨ Publish Product'}
+                    {loading ? 'Publishing...' : '✨ Publish Product'}
                   </button>
                 </div>
               </div>
@@ -605,6 +628,7 @@ function Selling() {
           </form>
         </div>
       </div>
+    );
   }
 
   return (
@@ -676,33 +700,12 @@ function Selling() {
                   <p className="text-sm text-gray-600 mb-4">
                     Stock: <span className="font-semibold">{product.quantity} {product.unit}</span>
                   </p>
-                  <div className="text-xs text-gray-500 mb-2">
+                  <div className="text-xs text-gray-500">
                     Listed {formatDate(product.createdAt)}
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <button
-                      onClick={() => navigate(`/product/${product.id}`)}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                    >
-                      👁️ View Details
-                    </button>
-                    <button
-                      onClick={() => handleEditProduct(product)}
-                      className="flex-1 px-4 py-2 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors"
-                    >
-                      🗑️ Delete
-                    </button>
                   </div>
                 </div>
               </div>
             ))}
-
           </div>
         )}
       </div>

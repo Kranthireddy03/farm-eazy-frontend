@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
-import { useLoader } from '../context/LoaderContext'
 
 function Orders() {
-  const { show, hide, loading: globalLoading } = useLoader()
   const navigate = useNavigate()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -13,25 +11,20 @@ function Orders() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        show()
         const response = await apiClient.get('/orders')
         const list = Array.isArray(response.data) ? response.data : []
         setOrders(list)
       } catch (err) {
         setError('Could not load orders')
       } finally {
-        hide()
+        setLoading(false)
       }
     }
 
     fetchOrders()
   }, [])
 
-  if (globalLoading) return null // Loader handled globally
-
   const formatCurrency = (amount) => `₹${Number(amount || 0).toFixed(2)}`
-
-  setLoading(false)
 
   if (loading) {
     return (

@@ -10,7 +10,6 @@
  */
 
 import { useState } from 'react'
-import { useLoader } from '../context/LoaderContext'
 import PasswordInput from '../components/PasswordInput'
 import { useNavigate, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
@@ -23,7 +22,7 @@ function Login({ onLoginSuccess }) {
   })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
-  const { show, hide, isLoading } = useLoader()
+  const [loading, setLoading] = useState(false)
 
   /**
    * Validate form data
@@ -70,12 +69,13 @@ function Login({ onLoginSuccess }) {
    */
   const handleSubmit = async (e) => {
     e.preventDefault()
-    show()
     setApiError('')
 
     if (!validateForm()) {
       return
     }
+
+    setLoading(true)
 
     try {
       await AuthService.login(formData.email, formData.password)
@@ -92,7 +92,7 @@ function Login({ onLoginSuccess }) {
         setApiError(errorMsg || 'Login failed. Please try again.')
       }
     } finally {
-      hide()
+      setLoading(false)
     }
   }
 
@@ -178,10 +178,10 @@ function Login({ onLoginSuccess }) {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={loading}
               className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? (
+              {loading ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

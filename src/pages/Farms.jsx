@@ -10,7 +10,6 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useLoader } from '../context/LoaderContext';
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { Link } from 'react-router-dom'
@@ -20,7 +19,7 @@ import { API_ENDPOINTS } from '../config/api'
 function Farms() {
   const { toast, showToast, closeToast } = useToast();
   const [farms, setFarms] = useState([])
-  const { show, hide, isLoading } = useLoader()
+  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -43,7 +42,7 @@ function Farms() {
    */
   const fetchFarms = async () => {
     try {
-      show()
+      setLoading(true)
       const response = await apiClient.get(API_ENDPOINTS.GET_FARMS)
       setFarms(response.data)
       setError('')
@@ -51,7 +50,7 @@ function Farms() {
       setError('Failed to load farms')
       console.error(err)
     } finally {
-      hide()
+      setLoading(false)
     }
   }
 
@@ -168,7 +167,20 @@ function Farms() {
     setFormData({ farmName: '', location: '', areaSize: '' })
   }
 
-  // Loader is now global
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="spinner text-green-600 mb-4">
+            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+            </svg>
+          </div>
+          <p className="text-gray-600">Loading farms...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <>

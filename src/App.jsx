@@ -11,7 +11,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import AuthService from './services/AuthService'
 import { CoinProvider } from './context/CoinContext';
-import { LoaderProvider } from './context/LoaderContext';
 
 // Pages
 import Login from './pages/Login'
@@ -90,53 +89,51 @@ function App() {
   }
 
   return (
-    <LoaderProvider>
-      <CoinProvider>
-        <Routes>
-        {/* Public Routes */}
-        <Route path="/login" element={<Login onLoginSuccess={() => setIsLoggedIn(true)} />} />
-        <Route path="/register" element={<Register onRegisterSuccess={() => setIsLoggedIn(true)} />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/r/:shortCode" element={<RedirectReset />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/email-error" element={<EmailError />} />
+    <CoinProvider>
+      <Routes>
+      {/* Public Routes */}
+      <Route path="/login" element={<Login onLoginSuccess={() => setIsLoggedIn(true)} />} />
+      <Route path="/register" element={<Register onRegisterSuccess={() => setIsLoggedIn(true)} />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/r/:shortCode" element={<RedirectReset />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/email-error" element={<EmailError />} />
 
-        {/* Protected Routes with Layout */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <Layout />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/" element={<Home />} />
-          <Route path="/dashboard" element={<DashboardEnhanced />} />
-          <Route path="/farms" element={<Farms />} />
-          <Route path="/farms/:farmId" element={<FarmDetail />} />
-          <Route path="/crops" element={<Crops />} />
-          <Route path="/irrigation" element={<IrrigationSchedules />} />
-          <Route path="/irrigation-services" element={<IrrigationServices />} />
-          <Route path="/selling" element={<Selling />} />
-          <Route path="/buying" element={<Buying />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/support" element={<Support />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/blog" element={<Blog />} />
-        </Route>
+      {/* Protected Routes with Layout */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
+        <Route path="/" element={<Home />} />
+        <Route path="/dashboard" element={<DashboardEnhanced />} />
+        <Route path="/farms" element={<Farms />} />
+        <Route path="/farms/:farmId" element={<FarmDetail />} />
+        <Route path="/crops" element={<Crops />} />
+        <Route path="/irrigation" element={<IrrigationSchedules />} />
+        <Route path="/irrigation-services" element={<IrrigationServices />} />
+        <Route path="/selling" element={<Selling />} />
+        <Route path="/buying" element={<Buying />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/support" element={<Support />} />
+        <Route path="/activities" element={<Activities />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/blog" element={<Blog />} />
+      </Route>
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </CoinProvider>
-    </LoaderProvider>
+      {/* Catch-all redirect */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </CoinProvider>
   )
 }
 
