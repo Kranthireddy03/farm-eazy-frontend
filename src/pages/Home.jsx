@@ -32,6 +32,8 @@ function Home() {
   })
   const [showSupport, setShowSupport] = useState(false)
   const { showLoader, hideLoader } = useLoader();
+  const [statsLoading, setStatsLoading] = useState(true);
+  const [coinsLoading, setCoinsLoading] = useState(false); // If you want to show coin loading, otherwise remove
 
     useEffect(() => {
       // Get user info from localStorage
@@ -41,53 +43,56 @@ function Home() {
       setUserUsername(username || 'user')
     }, [])
 
-    useEffect(() => {
-      const fetchStats = async () => {
-        try {
-          showLoader();
-          const [farmsRes, productsRes, servicesRes] = await Promise.allSettled([
-            apiClient.get('/farms'),
-            apiClient.get('/products'),
-            apiClient.get('/services/listings')
-          ])
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setStatsLoading(true);
+        showLoader();
+        const [farmsRes, productsRes, servicesRes] = await Promise.allSettled([
+          apiClient.get('/farms'),
+          apiClient.get('/products'),
+          apiClient.get('/services/listings')
+        ])
 
-          const nextStats = { totalFarms: 0, totalProducts: 0, totalServices: 0 }
+        const nextStats = { totalFarms: 0, totalProducts: 0, totalServices: 0 }
 
-          if (farmsRes.status === 'fulfilled') {
-            const data = farmsRes.value.data
-            nextStats.totalFarms = Array.isArray(data)
-              ? data.length
-              : (data?.totalFarms || data?.count || 0)
-          }
-
-          if (productsRes.status === 'fulfilled') {
-            const data = productsRes.value.data
-            nextStats.totalProducts = Array.isArray(data)
-              ? data.length
-              : (data?.totalProducts || data?.count || 0)
-          }
-
-          if (servicesRes.status === 'fulfilled') {
-            const data = servicesRes.value.data
-            // Handle paginated response
-            if (data.content && Array.isArray(data.content)) {
-              nextStats.totalServices = data.totalElements || data.content.length
-            } else if (Array.isArray(data)) {
-              nextStats.totalServices = data.length
-            } else {
-              nextStats.totalServices = 0
-            }
-          }
-
-          setStats(nextStats)
-        } catch (error) {
-          console.error('Error fetching stats:', error)
-        } finally {
-          hideLoader();
+        if (farmsRes.status === 'fulfilled') {
+          const data = farmsRes.value.data
+          nextStats.totalFarms = Array.isArray(data)
+            ? data.length
+            : (data?.totalFarms || data?.count || 0)
         }
-      };
-      fetchStats();
-    }, [showLoader, hideLoader])
+
+        if (productsRes.status === 'fulfilled') {
+          const data = productsRes.value.data
+          nextStats.totalProducts = Array.isArray(data)
+            ? data.length
+            : (data?.totalProducts || data?.count || 0)
+        }
+
+        if (servicesRes.status === 'fulfilled') {
+          const data = servicesRes.value.data
+          // Handle paginated response
+          if (data.content && Array.isArray(data.content)) {
+            nextStats.totalServices = data.totalElements || data.content.length
+          } else if (Array.isArray(data)) {
+            nextStats.totalServices = data.length
+          } else {
+            nextStats.totalServices = 0
+          }
+        }
+
+        setStats(nextStats)
+      } catch (error) {
+        console.error('Error fetching stats:', error)
+      } finally {
+        setStatsLoading(false);
+        hideLoader();
+      }
+    };
+    fetchStats();
+    // eslint-disable-next-line
+  }, [showLoader, hideLoader])
 
   // Section data with icons and descriptions
   const sections = [
