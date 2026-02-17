@@ -11,6 +11,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import AuthService from './services/AuthService'
 import { CoinProvider } from './context/CoinContext';
+import { LoaderProvider } from './context/LoaderContext';
 
 // Pages
 import Login from './pages/Login'
@@ -89,8 +90,9 @@ function App() {
   }
 
   return (
-    <CoinProvider>
-      <Routes>
+    <LoaderProvider>
+      <CoinProvider>
+        <Routes>
       {/* Public Routes */}
       <Route path="/login" element={<Login onLoginSuccess={() => setIsLoggedIn(true)} />} />
       <Route path="/register" element={<Register onRegisterSuccess={() => setIsLoggedIn(true)} />} />
@@ -132,8 +134,9 @@ function App() {
 
       {/* Catch-all redirect */}
       <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </CoinProvider>
+        </Routes>
+      </CoinProvider>
+    </LoaderProvider>
   )
 }
 

@@ -32,6 +32,7 @@ function DashboardEnhanced() {
   const [searchTerm, setSearchTerm] = useState('')
   const [serviceListings, setServiceListings] = useState([])
 
+    const { showLoader, hideLoader } = useLoader();
   const activityTypes = [
     { value: 'ALL', label: 'All Activities', icon: '📝' },
     { value: 'REGISTERED', label: 'Account', icon: '✍️' },
@@ -45,10 +46,22 @@ function DashboardEnhanced() {
   // Fetch dashboard statistics
   useEffect(() => {
     fetchStats()
-  }, [])
+    const [selectedActivityType, setSelectedActivityType] = useState('ALL')
+    const [searchTerm, setSearchTerm] = useState('')
+    const [serviceListings, setServiceListings] = useState([])
+    const [loading, setLoading] = useState(true)
 
   // Filter activities when type or search changes
-  useEffect(() => {
+      const fetchStatsWithLoader = async () => {
+        try {
+          showLoader();
+          await fetchStats();
+        } finally {
+          hideLoader();
+        }
+      };
+      fetchStatsWithLoader();
+      // eslint-disable-next-line
     filterActivities()
   }, [activities, selectedActivityType, searchTerm])
 

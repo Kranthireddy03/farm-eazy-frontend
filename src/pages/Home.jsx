@@ -18,77 +18,76 @@ import { useState, useEffect } from 'react'
 import AuthService from '../services/AuthService'
 import apiClient from '../services/apiClient'
 import { useCoin } from '../context/CoinContext'
+import { useLoader } from '../context/LoaderContext'
 
 function Home() {
   const navigate = useNavigate()
   const [userFullName, setUserFullName] = useState('')
   const [userUsername, setUserUsername] = useState('')
-  const { coins, loading: coinsLoading, refreshCoins } = useCoin()
-  const [statsLoading, setStatsLoading] = useState(true)
+  const { coins, refreshCoins } = useCoin()
   const [stats, setStats] = useState({
     totalFarms: 0,
     totalProducts: 0,
     totalServices: 0
   })
   const [showSupport, setShowSupport] = useState(false)
+  const { showLoader, hideLoader } = useLoader();
 
-  useEffect(() => {
-    // Get user info from localStorage
-    const fullName = localStorage.getItem('farmEazy_fullName')
-    const username = localStorage.getItem('farmEazy_username')
-    setUserFullName(fullName || 'Farmer')
-    setUserUsername(username || 'user')
-    fetchStats()
-  }, [])
-  
-  const fetchCoins = async () => {
-    // Removed: now handled by CoinContext
-  }
+    useEffect(() => {
+      // Get user info from localStorage
+      const fullName = localStorage.getItem('farmEazy_fullName')
+      const username = localStorage.getItem('farmEazy_username')
+      setUserFullName(fullName || 'Farmer')
+      setUserUsername(username || 'user')
+    }, [])
 
-  const fetchStats = async () => {
-    try {
-      setStatsLoading(true)
-      const [farmsRes, productsRes, servicesRes] = await Promise.allSettled([
-        apiClient.get('/farms'),
-        apiClient.get('/products'),
-        apiClient.get('/services/listings')
-      ])
+    useEffect(() => {
+      const fetchStats = async () => {
+        try {
+          showLoader();
+          const [farmsRes, productsRes, servicesRes] = await Promise.allSettled([
+            apiClient.get('/farms'),
+            apiClient.get('/products'),
+            apiClient.get('/services/listings')
+          ])
 
-      const nextStats = { totalFarms: 0, totalProducts: 0, totalServices: 0 }
+          const nextStats = { totalFarms: 0, totalProducts: 0, totalServices: 0 }
 
-      if (farmsRes.status === 'fulfilled') {
-        const data = farmsRes.value.data
-        nextStats.totalFarms = Array.isArray(data)
-          ? data.length
-          : (data?.totalFarms || data?.count || 0)
-      }
+          if (farmsRes.status === 'fulfilled') {
+            const data = farmsRes.value.data
+            nextStats.totalFarms = Array.isArray(data)
+              ? data.length
+              : (data?.totalFarms || data?.count || 0)
+          }
 
-      if (productsRes.status === 'fulfilled') {
-        const data = productsRes.value.data
-        nextStats.totalProducts = Array.isArray(data)
-          ? data.length
-          : (data?.totalProducts || data?.count || 0)
-      }
+          if (productsRes.status === 'fulfilled') {
+            const data = productsRes.value.data
+            nextStats.totalProducts = Array.isArray(data)
+              ? data.length
+              : (data?.totalProducts || data?.count || 0)
+          }
 
-      if (servicesRes.status === 'fulfilled') {
-        const data = servicesRes.value.data
-        // Handle paginated response
-        if (data.content && Array.isArray(data.content)) {
-          nextStats.totalServices = data.totalElements || data.content.length
-        } else if (Array.isArray(data)) {
-          nextStats.totalServices = data.length
-        } else {
-          nextStats.totalServices = 0
+          if (servicesRes.status === 'fulfilled') {
+            const data = servicesRes.value.data
+            // Handle paginated response
+            if (data.content && Array.isArray(data.content)) {
+              nextStats.totalServices = data.totalElements || data.content.length
+            } else if (Array.isArray(data)) {
+              nextStats.totalServices = data.length
+            } else {
+              nextStats.totalServices = 0
+            }
+          }
+
+          setStats(nextStats)
+        } catch (error) {
+          console.error('Error fetching stats:', error)
+        } finally {
+          hideLoader();
         }
-      }
-
-      setStats(nextStats)
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    } finally {
-      setStatsLoading(false)
-    }
-  }
+      };
+      fetchStats();
+    }, [showLoader, hideLoader])
 
   // Section data with icons and descriptions
   const sections = [
@@ -443,5 +442,4 @@ function Home() {
     </div>
   )
 }
-
-export default Home
+export default Home;

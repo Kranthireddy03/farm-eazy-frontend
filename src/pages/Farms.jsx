@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import { useLoader } from '../context/LoaderContext'
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { Link } from 'react-router-dom'
@@ -19,7 +20,6 @@ import { API_ENDPOINTS } from '../config/api'
 function Farms() {
   const { toast, showToast, closeToast } = useToast();
   const [farms, setFarms] = useState([])
-  const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
   const [showAddForm, setShowAddForm] = useState(false)
@@ -29,12 +29,22 @@ function Farms() {
     location: '',
     areaSize: '',
   })
+  const { showLoader, hideLoader } = useLoader();
 
   /**
    * Fetch farms on component mount
    */
   useEffect(() => {
-    fetchFarms()
+    const fetchWithLoader = async () => {
+      try {
+        showLoader();
+        await fetchFarms();
+      } finally {
+        hideLoader();
+      }
+    };
+    fetchWithLoader();
+    // eslint-disable-next-line
   }, [])
 
   /**
@@ -42,15 +52,12 @@ function Farms() {
    */
   const fetchFarms = async () => {
     try {
-      setLoading(true)
       const response = await apiClient.get(API_ENDPOINTS.GET_FARMS)
       setFarms(response.data)
       setError('')
     } catch (err) {
       setError('Failed to load farms')
       console.error(err)
-    } finally {
-      setLoading(false)
     }
   }
 
