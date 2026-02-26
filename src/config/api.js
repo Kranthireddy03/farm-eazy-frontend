@@ -55,6 +55,10 @@ export const API_ENDPOINTS = {
   FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
   RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
   
+  // OTP
+  REQUEST_OTP: `${API_BASE_URL}/otp/send`,
+  VERIFY_OTP: `${API_BASE_URL}/otp/verify`,
+  
   // Farms
   GET_FARMS: `${API_BASE_URL}/farms`,
   GET_FARM_BY_ID: (id) => `${API_BASE_URL}/farms/${id}`,

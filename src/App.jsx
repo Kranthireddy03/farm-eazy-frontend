@@ -1,19 +1,5 @@
-import { useTranslation } from 'react-i18next';
-// Global Language Switcher
-function LanguageSwitcher() {
-  const { i18n } = useTranslation();
-  const setLang = (lng) => {
-    i18n.changeLanguage(lng);
-    localStorage.setItem('language', lng);
-  };
-  return (
-    <div style={{ position: 'fixed', top: 10, right: 10, zIndex: 1000 }}>
-      <button className="btn btn-sm mr-2" onClick={() => setLang('en')}>English</button>
-      <button className="btn btn-sm mr-2" onClick={() => setLang('hi')}>हिन्दी</button>
-      <button className="btn btn-sm" onClick={() => setLang('te')}>తెలుగు</button>
-    </div>
-  );
-}
+// Global Language Switcher - DISABLED
+// function LanguageSwitcher() { ... }
 import React from 'react';
 
 // Global Error Boundary
@@ -44,7 +30,7 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-import NotificationCenter from './components/NotificationCenter';
+// NotificationCenter removed
 /**
  * Root App Component
  * 
@@ -146,8 +132,6 @@ function App() {
     <ErrorBoundary>
       <LoaderProvider>
         <CoinProvider>
-          <NotificationCenter />
-          <LanguageSwitcher />
           {showOnboarding && (
             <OnboardingTour onFinish={() => {
               setShowOnboarding(false);
