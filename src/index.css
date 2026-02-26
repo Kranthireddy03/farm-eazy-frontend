@@ -1,0 +1,61 @@
+/**
+ * Global CSS
+ * 
+ * Tailwind CSS imports and global styles for the FarmEazy application
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global styles */
+* {
+  @apply box-border;
+}
+
+body {
+  @apply bg-slate-900;
+}
+
+html,
+body,
+#root {
+  @apply h-full;
+}
+
+/* Utility classes */
+.container-main {
+  @apply max-w-7xl mx-auto px-4;
+}
+
+.btn-primary {
+  @apply bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 px-4 rounded-lg transition-colors;
+}
+
+.form-input {
+  @apply w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent;
+}
+
+.form-label {
+  @apply block text-slate-300 text-sm font-semibold mb-2;
+}
+
+.card {
+  @apply bg-slate-800 border border-slate-700 rounded-lg shadow-md p-6;
+}
+
+.error-message {
+  @apply text-red-600 text-sm mt-1;
+}
+
+.success-message {
+  @apply text-green-600 text-sm mt-1;
+}
+
+.spinner {
+  @apply inline-block animate-spin;
+}
