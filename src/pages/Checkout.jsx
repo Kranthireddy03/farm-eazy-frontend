@@ -238,7 +238,7 @@ function Checkout() {
           phone: addresses.find(a => a.id === selectedAddress)?.phoneNumber || ''
         };
         console.log('[DEBUG] Creating Razorpay order with:', paymentData, `(Rupees: ₹${finalAmount}, Paise: ${Math.round(finalAmount * 100)})`);
-        const orderRes = await apiClient.post('/api/payment/create-order', paymentData);
+        const orderRes = await apiClient.post('/payment/create-order', paymentData);
         if (orderRes.status !== 200) {
           console.error('Backend order creation failed:', orderRes);
           showToast('Order creation failed: ' + (orderRes.data || orderRes.statusText), 'error');
