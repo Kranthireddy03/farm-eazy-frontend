@@ -61,8 +61,8 @@ function Register() {
       newErrors.username = 'Username is required'
     } else if (formData.username.length < 3) {
       newErrors.username = 'Username must be at least 3 characters'
-    } else if (!/^[a-zA-Z0-9_]*$/.test(formData.username)) {
-      newErrors.username = 'Username can only contain letters, numbers, and underscores'
+    } else if (!/^[a-zA-Z0-9_ ]*$/.test(formData.username)) {
+      newErrors.username = 'Username can only contain letters, numbers, underscores, and spaces'
     }
     if (!formData.email) {
       newErrors.email = 'Email is required'
