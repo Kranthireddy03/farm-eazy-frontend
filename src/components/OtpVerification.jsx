@@ -1,10 +1,13 @@
 /**
  * OTP Verification Modal Component - Modern FarmEazy Design
  * Features elegant glass morphism design with animated elements
+ * 
+ * Now includes global toast notifications for SMS sending status
  */
 
 import { useState, useRef, useEffect } from 'react';
 import AuthService from '../services/AuthService';
+import { useGlobalToast } from '../context/ToastContext';
 
 function OtpVerification({ 
   isOpen, 
@@ -15,6 +18,7 @@ function OtpVerification({
   onVerified,
   onResend 
 }) {
+  const { showOtpNotification, success: toastSuccess, error: toastError } = useGlobalToast();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -107,13 +111,22 @@ function OtpVerification({
     setError('');
 
     try {
-      await AuthService.requestOtp(email, phone, purpose);
-      setSuccess('OTP resent successfully! Check your email.');
+      const response = await AuthService.requestOtp(email, phone, purpose);
+      
+      // Show global toast notification with SMS/Email sending status
+      if (response && (response.sentVia || response.displayMessage)) {
+        showOtpNotification(response);
+      } else {
+        toastSuccess('OTP sent successfully!');
+      }
+      
+      setSuccess('OTP resent! Check your email' + (phone ? ' and phone.' : '.'));
       setResendCountdown(60);
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } catch (err) {
       setError(err.message || 'Failed to resend OTP. Please try again.');
+      toastError(err.message || 'Failed to resend OTP');
     } finally {
       setLoading(false);
     }

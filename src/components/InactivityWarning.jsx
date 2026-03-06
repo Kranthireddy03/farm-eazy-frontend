@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 /**
  * INACTIVITY WARNING COMPONENT
  * 
- * Displays warning modal when user is inactive for 90 seconds
+ * Displays warning modal when user is inactive for 120 seconds (2 minutes)
  * Shows countdown timer with auto-logout message
  * User can click "Stay Online" to reset the timer
  */
@@ -69,7 +69,7 @@ function InactivityWarning({ showWarning, timeRemaining, onStayOnline }) {
         </button>
 
         <p className="text-center text-slate-500 text-xs mt-6">
-          Warning appears after 90 seconds of inactivity.
+          Warning appears after 120 seconds of inactivity.
         </p>
       </div>
     </div>

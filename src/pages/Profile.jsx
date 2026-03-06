@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import AvatarCropper from '../components/AvatarCropper';
+import { useTheme } from '../context/ThemeContext';
 
 function Profile() {
+  const { isDark } = useTheme();
   // Example user data, replace with real API/user context
   const [user, setUser] = useState({
-    fullName: 'John Doe',
+    username: 'john_doe',
     email: 'john@example.com',
     phone: '9876543210',
-    username: 'john_doe',
     avatar: '',
   });
   const [editMode, setEditMode] = useState(false);
@@ -73,13 +74,13 @@ function Profile() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800 px-4">
-      <div className="w-full max-w-md bg-slate-800 rounded-xl shadow-lg p-8 border border-slate-700">
-        <h2 className="text-2xl font-bold mb-6 text-white">Profile</h2>
+    <div className={`min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`w-full max-w-md rounded-xl shadow-lg p-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Profile</h2>
         <div className="flex flex-col items-center mb-6">
           <label htmlFor="avatar-upload" className="cursor-pointer">
             <img
-              src={avatarPreview || 'https://ui-avatars.com/api/?name=' + user.fullName + '&background=374151&color=fff'}
+              src={avatarPreview || 'https://ui-avatars.com/api/?name=' + user.username + '&background=374151&color=fff'}
               alt="User avatar"
               className="w-24 h-24 rounded-full border-2 border-green-500 object-cover mb-2"
               onDrop={handleDrop}
@@ -97,65 +98,65 @@ function Profile() {
           </label>
           {cropMode && avatarPreview && <AvatarCropper src={avatarPreview} onCrop={handleCrop} />}
           {uploadProgress > 0 && uploadProgress < 100 && (
-            <div className="w-full bg-slate-600 rounded-full h-2 mt-2">
+            <div className={`w-full rounded-full h-2 mt-2 ${isDark ? 'bg-slate-600' : 'bg-gray-200'}`}>
               <div className="bg-green-500 h-2 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
             </div>
           )}
           {uploadError && (
             <div className="text-red-400 text-sm mt-2">{uploadError}</div>
           )}
-          <span className="text-white font-medium">{user.fullName}</span>
-          <span className="text-xs text-slate-400 mt-1">Drag and drop image to upload</span>
+          <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>@{user.username}</span>
+          <span className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Drag and drop image to upload</span>
         </div>
         <form className="space-y-4" aria-label="Profile form">
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1" htmlFor="fullName">Full Name</label>
-            <input
-              type="text"
-              name="fullName"
-              id="fullName"
-              value={user.fullName}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60"
-              disabled={!editMode}
-              aria-label="Full Name"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1" htmlFor="email">Email</label>
-            <input
-              type="email"
-              name="email"
-              id="email"
-              value={user.email}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60"
-              disabled={!editMode}
-              aria-label="Email"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1" htmlFor="phone">Phone</label>
-            <input
-              type="tel"
-              name="phone"
-              id="phone"
-              value={user.phone}
-              onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60"
-              disabled={!editMode}
-              aria-label="Phone"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-slate-300 mb-1" htmlFor="username">Username</label>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="username">Username</label>
             <input
               type="text"
               name="username"
               id="username"
               value={user.username}
               onChange={handleChange}
-              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60"
+              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+              disabled={!editMode}
+              aria-label="Username"
+            />
+          </div>
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="email">Email</label>
+            <input
+              type="email"
+              name="email"
+              id="email"
+              value={user.email}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+              disabled={!editMode}
+              aria-label="Email"
+            />
+          </div>
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="phone">Phone</label>
+            <input
+              type="tel"
+              name="phone"
+              id="phone"
+              value={user.phone}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+              disabled={!editMode}
+              aria-label="Phone"
+            />
+          </div>
+          <div>
+            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="username">Username</label>
+            <input
+              type="text"
+              name="username"
+              id="username"
+              value={user.username}
+              onChange={handleChange}
+              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
               disabled={!editMode}
               aria-label="Username"
             />
@@ -163,7 +164,7 @@ function Profile() {
           {editMode ? (
             <button type="button" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition" onClick={handleSave} aria-label="Save profile">Save</button>
           ) : (
-            <button type="button" className="w-full bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-4 rounded-lg transition" onClick={() => setEditMode(true)} aria-label="Edit profile">Edit</button>
+            <button type="button" className={`w-full font-bold py-3 px-4 rounded-lg transition ${isDark ? 'bg-slate-600 hover:bg-slate-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`} onClick={() => setEditMode(true)} aria-label="Edit profile">Edit</button>
           )}
         </form>
       </div>

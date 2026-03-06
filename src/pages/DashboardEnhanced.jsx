@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useToast } from '../hooks/useToast';
 import { useCoin } from '../context/CoinContext';
+import { useTheme } from '../context/ThemeContext';
 import apiClient from '../services/apiClient';
 import Toast from '../components/Toast';
 
@@ -20,6 +21,7 @@ function DashboardEnhanced() {
   const navigate = useNavigate()
   const { toast, showToast, closeToast } = useToast()
   const { coins } = useCoin()
+  const { isDark } = useTheme()
 
   // Service filter/sort states
   const [serviceFilter, setServiceFilter] = useState('')
@@ -207,17 +209,17 @@ function DashboardEnhanced() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-8 px-4 flex items-center justify-center">
+      <div className={`min-h-screen py-8 px-4 flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
-          <p className="text-slate-400">Loading dashboard...</p>
+          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Loading dashboard...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-8 px-4">
+    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       {/* Toast Notification */}
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
@@ -225,19 +227,19 @@ function DashboardEnhanced() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2">Welcome Back! 👋</h1>
-          <p className="text-slate-400">Here's your farming dashboard overview</p>
+          <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Welcome Back! 👋</h1>
+          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Here's your farming dashboard overview</p>
         </div>
 
         {/* Analytics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Farms Card */}
-          <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-green-500">
+          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-green-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Active Farms</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats.totalFarms}</p>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Active Farms</p>
+                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalFarms}</p>
+                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   {stats.totalFarms === 0 ? '✚ Add your first farm' : '📊 Manage farms'}
                 </p>
               </div>
@@ -245,19 +247,19 @@ function DashboardEnhanced() {
             </div>
             <Link 
               to="/farms"
-              className="mt-4 inline-block px-4 py-2 bg-green-900/50 text-green-400 rounded-lg text-sm font-semibold hover:bg-green-900/70 transition"
+              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-green-900/50 text-green-400 hover:bg-green-900/70' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
             >
               View Farms →
             </Link>
           </div>
 
           {/* Crops Card */}
-          <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-blue-500">
+          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-blue-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Growing Crops</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats.totalCrops}</p>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Growing Crops</p>
+                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalCrops}</p>
+                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   {stats.totalCrops === 0 ? '✚ Plant your first crop' : '🌱 Monitor growth'}
                 </p>
               </div>
@@ -265,19 +267,19 @@ function DashboardEnhanced() {
             </div>
             <Link 
               to="/crops"
-              className="mt-4 inline-block px-4 py-2 bg-blue-900/50 text-blue-400 rounded-lg text-sm font-semibold hover:bg-blue-900/70 transition"
+              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-blue-900/50 text-blue-400 hover:bg-blue-900/70' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
             >
               View Crops →
             </Link>
           </div>
 
           {/* Products Card */}
-          <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-orange-500">
+          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-orange-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Listed Products</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats.totalProducts}</p>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Listed Products</p>
+                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalProducts}</p>
+                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   {stats.totalProducts === 0 ? '✚ Sell products' : '🛍️ Manage sales'}
                 </p>
               </div>
@@ -285,19 +287,19 @@ function DashboardEnhanced() {
             </div>
             <Link 
               to="/selling"
-              className="mt-4 inline-block px-4 py-2 bg-orange-900/50 text-orange-400 rounded-lg text-sm font-semibold hover:bg-orange-900/70 transition"
+              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-orange-900/50 text-orange-400 hover:bg-orange-900/70' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}
             >
               Manage →
             </Link>
           </div>
 
           {/* Orders Card */}
-          <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-purple-500">
+          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-purple-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-slate-400 text-sm font-medium">Orders Placed</p>
-                <p className="text-3xl font-bold text-white mt-2">{stats.totalOrders}</p>
-                <p className="text-xs text-slate-500 mt-2">
+                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Orders Placed</p>
+                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalOrders}</p>
+                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                   {stats.totalOrders === 0 ? '✚ Start shopping' : '🛒 View orders'}
                 </p>
               </div>
@@ -305,7 +307,7 @@ function DashboardEnhanced() {
             </div>
             <button
               onClick={() => navigate('/cart')}
-              className="mt-4 inline-block px-4 py-2 bg-purple-900/50 text-purple-400 rounded-lg text-sm font-semibold hover:bg-purple-900/70 transition"
+              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-purple-900/50 text-purple-400 hover:bg-purple-900/70' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
             >
               Go to Cart →
             </button>
@@ -362,8 +364,8 @@ function DashboardEnhanced() {
         </div>
 
         {/* Service Listings Section */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg p-6 mt-8">
-          <h2 className="text-2xl font-bold text-white mb-4 flex items-center">
+        <div className={`rounded-lg shadow-lg p-6 mt-8 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+          <h2 className={`text-2xl font-bold mb-4 flex items-center ${isDark ? 'text-white' : 'text-slate-800'}`}>
             <span className="mr-2">🚜</span> My Service Listings
           </h2>
           {/* Filter and Sort Controls */}
@@ -373,12 +375,12 @@ function DashboardEnhanced() {
               value={serviceFilter}
               onChange={e => setServiceFilter(e.target.value)}
               placeholder="Filter by name or description..."
-              className="px-3 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`px-3 py-2 border rounded-lg w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-slate-800 placeholder-gray-400'}`}
             />
             <select
               value={serviceSort}
               onChange={e => setServiceSort(e.target.value)}
-              className="px-3 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className={`px-3 py-2 border rounded-lg w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-slate-800'}`}
             >
               <option value="name">Sort by Name</option>
               <option value="price">Sort by Price</option>
@@ -388,7 +390,7 @@ function DashboardEnhanced() {
 
           {/* Filtered and Sorted Listings */}
           {serviceListings.length === 0 ? (
-            <p className="text-slate-500">No service listings yet.</p>
+            <p className={isDark ? 'text-slate-500' : 'text-slate-400'}>No service listings yet.</p>
           ) : (
             <ul>
               {serviceListings
@@ -409,19 +411,19 @@ function DashboardEnhanced() {
                   return 0;
                 })
                 .map(service => (
-                  <li key={service.id} className="flex items-center justify-between border-b border-slate-700 py-3">
+                  <li key={service.id} className={`flex items-center justify-between py-3 ${isDark ? 'border-b border-slate-700' : 'border-b border-gray-200'}`}>
                     <div className="flex items-center gap-4">
                       <span className="text-2xl">🔧</span>
                       <div>
-                        <div className="font-semibold text-white">{service.name}</div>
+                        <div className={`font-semibold ${isDark ? 'text-white' : 'text-slate-800'}`}>{service.name}</div>
                         {service.description && (
-                          <div className="text-sm text-slate-400 mt-1">{service.description}</div>
+                          <div className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{service.description}</div>
                         )}
                         {service.price && (
-                          <div className="text-sm text-green-400 mt-1">₹{service.price}</div>
+                          <div className="text-sm text-green-500 mt-1">₹{service.price}</div>
                         )}
                         {service.status && (
-                          <div className="text-xs text-indigo-400 mt-1">Status: {service.status}</div>
+                          <div className="text-xs text-indigo-500 mt-1">Status: {service.status}</div>
                         )}
                       </div>
                     </div>
@@ -448,12 +450,12 @@ function DashboardEnhanced() {
           {deleteConfirmId && (
             <div className="fixed inset-0 flex items-center justify-center z-50">
               <div className="bg-black bg-opacity-50 absolute inset-0"></div>
-              <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-xl p-6 relative z-10 w-96">
-                <h3 className="text-lg font-bold text-white mb-4">Confirm Delete</h3>
-                <p className="text-slate-300 mb-6">Are you sure you want to delete this service?</p>
+              <div className={`rounded-lg shadow-xl p-6 relative z-10 w-96 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+                <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-800'}`}>Confirm Delete</h3>
+                <p className={`mb-6 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Are you sure you want to delete this service?</p>
                 <div className="flex justify-end gap-3">
                   <button
-                    className="bg-slate-600 text-slate-200 px-4 py-2 rounded hover:bg-slate-500 transition"
+                    className={`px-4 py-2 rounded transition ${isDark ? 'bg-slate-600 text-slate-200 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                     onClick={() => setDeleteConfirmId(null)}
                   >
                     Cancel
@@ -471,22 +473,22 @@ function DashboardEnhanced() {
         </div>
 
         {/* Activity Feed Section */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-lg overflow-hidden">
+        <div className={`rounded-lg shadow-lg overflow-hidden ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
           <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
             <h2 className="text-2xl font-bold text-white">📊 Your Activity Feed</h2>
             <p className="text-indigo-100 text-sm mt-1">Track all your actions and interactions</p>
           </div>
 
           {/* Filters */}
-          <div className="px-6 py-4 border-b border-slate-700 bg-slate-700/50">
+          <div className={`px-6 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-700/50' : 'border-gray-200 bg-gray-50'}`}>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Activity Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Activity Type</label>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Activity Type</label>
                 <select
                   value={selectedActivityType}
                   onChange={(e) => setSelectedActivityType(e.target.value)}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-slate-800'}`}
                 >
                   {activityTypes.map(type => (
                     <option key={type.value} value={type.value}>
@@ -498,19 +500,19 @@ function DashboardEnhanced() {
 
               {/* Search */}
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Search Activities</label>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Search Activities</label>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search description..."
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-slate-800 placeholder-gray-400'}`}
                 />
               </div>
 
               {/* Results Count */}
               <div className="flex items-end">
-                <div className="px-4 py-2 bg-indigo-900/50 text-indigo-300 rounded-lg font-semibold">
+                <div className={`px-4 py-2 rounded-lg font-semibold ${isDark ? 'bg-indigo-900/50 text-indigo-300' : 'bg-indigo-100 text-indigo-700'}`}>
                   {filteredActivities.length} result{filteredActivities.length !== 1 ? 's' : ''}
                 </div>
               </div>
@@ -551,31 +553,31 @@ function DashboardEnhanced() {
 
           {/* Activity Stats */}
           {activities.length > 0 && (
-            <div className="px-6 py-4 bg-slate-700/50 border-t border-slate-700">
+            <div className={`px-6 py-4 border-t ${isDark ? 'bg-slate-700/50 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
                     {activities.filter(a => a.activityType.includes('FARM')).length}
                   </p>
-                  <p className="text-xs text-slate-400">Farm Actions</p>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Actions</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
                     {activities.filter(a => a.activityType.includes('CROP')).length}
                   </p>
-                  <p className="text-xs text-slate-400">Crop Actions</p>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Crop Actions</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
                     {activities.filter(a => a.activityType.includes('ORDER')).length}
                   </p>
-                  <p className="text-xs text-slate-400">Order Actions</p>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Order Actions</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-white">
+                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
                     {activities.filter(a => a.activityType.includes('COIN')).length}
                   </p>
-                  <p className="text-xs text-slate-400">Coin Actions</p>
+                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Coin Actions</p>
                 </div>
               </div>
             </div>
@@ -586,29 +588,29 @@ function DashboardEnhanced() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={() => navigate('/farms')}
-            className="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-4 hover:shadow-lg hover:bg-slate-700 transition text-left border-l-4 border-l-green-500"
+            className={`rounded-lg shadow-md p-4 hover:shadow-lg transition text-left border-l-4 border-l-green-500 ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
           >
             <p className="text-2xl">🌾</p>
-            <p className="font-semibold text-white mt-2">Add Farm</p>
-            <p className="text-sm text-slate-400">Create a new farm</p>
+            <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Add Farm</p>
+            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Create a new farm</p>
           </button>
           
           <button
             onClick={() => navigate('/crops')}
-            className="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-4 hover:shadow-lg hover:bg-slate-700 transition text-left border-l-4 border-l-blue-500"
+            className={`rounded-lg shadow-md p-4 hover:shadow-lg transition text-left border-l-4 border-l-blue-500 ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
           >
             <p className="text-2xl">🌱</p>
-            <p className="font-semibold text-white mt-2">Plant Crop</p>
-            <p className="text-sm text-slate-400">Add new crop</p>
+            <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Plant Crop</p>
+            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Add new crop</p>
           </button>
 
           <button
             onClick={() => navigate('/buying')}
-            className="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-4 hover:shadow-lg hover:bg-slate-700 transition text-left border-l-4 border-l-orange-500"
+            className={`rounded-lg shadow-md p-4 hover:shadow-lg transition text-left border-l-4 border-l-orange-500 ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
           >
             <p className="text-2xl">🛒</p>
-            <p className="font-semibold text-white mt-2">Shop</p>
-            <p className="text-sm text-slate-400">Browse marketplace</p>
+            <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Shop</p>
+            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Browse marketplace</p>
           </button>
         </div>
       </div>

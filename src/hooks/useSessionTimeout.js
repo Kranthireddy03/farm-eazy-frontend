@@ -14,9 +14,9 @@ const formatTimeDisplay = (seconds) => {
 /**
  * SESSION TIMEOUT HOOK
  * 
- * Total session: 5 minutes (300 seconds) with continuous countdown
- * Inactivity warning: 90 seconds of no activity
- * Auto-logout: 60 additional seconds after warning (150 seconds total inactivity)
+ * Total session: 15 minutes (900 seconds) with continuous countdown
+ * Inactivity warning: 150 seconds of no activity
+ * Auto-logout: 30 additional seconds after warning (180 seconds total inactivity)
  * Notification: Shows at 2 minutes (120 seconds) remaining
  * 
  * @returns {Object} { timeRemaining, showWarning, resetTimer, formatTimeDisplay }
@@ -24,8 +24,8 @@ const formatTimeDisplay = (seconds) => {
 const useSessionTimeout = () => {
   const navigate = useNavigate()
   const TOTAL_SESSION_TIME = 900 // 15 minutes
-  const INACTIVITY_WARNING_TIME = 180 // 3 minutes
-  const INACTIVITY_LOGOUT_TIME = 120 // 2 minutes after warning
+  const INACTIVITY_WARNING_TIME = 150 // 150 seconds (2.5 minutes) of inactivity triggers warning
+  const INACTIVITY_LOGOUT_TIME = 30 // 30 seconds after warning = auto-logout
   const TWO_MINUTE_NOTIFICATION = 120 // 2 minutes remaining
   
   const [timeRemaining, setTimeRemaining] = useState(TOTAL_SESSION_TIME)

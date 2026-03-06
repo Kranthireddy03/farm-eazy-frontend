@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
+import LocationPicker from '../components/LocationPicker'
+import { sendNotification } from '../components/NotificationCenter'
 
 // Razorpay script loader
 function loadRazorpayScript() {
@@ -51,26 +53,52 @@ function Checkout() {
   const [coins, setCoins] = useState(0)
   const [useCoins, setUseCoins] = useState(false)
   const [coinsToUse, setCoinsToUse] = useState(0)
-    // Restore coin discount UI logic
-    const handleCoinToggle = () => {
-      setUseCoins(!useCoins);
-      if (!useCoins) {
-        setCoinsToUse(Math.min(coins, Math.floor(total)));
-      } else {
-        setCoinsToUse(0);
-      }
-    };
+  
+  // Constants
+  const MINIMUM_PAYMENT = 1 // Minimum payment required in rupees
+  
+  // Calculate max coins that can be used while maintaining minimum payment
+  const getMaxUsableCoins = (totalAmount, availableCoins) => {
+    const maxAllowedDiscount = Math.max(0, totalAmount - MINIMUM_PAYMENT)
+    return Math.min(availableCoins, Math.floor(maxAllowedDiscount))
+  }
+  
+  // Restore coin discount UI logic with 1 rupee minimum
+  const handleCoinToggle = () => {
+    setUseCoins(!useCoins);
+    if (!useCoins) {
+      const maxCoins = getMaxUsableCoins(total, coins)
+      setCoinsToUse(maxCoins);
+    } else {
+      setCoinsToUse(0);
+    }
+  };
 
-    const handleCoinsToUseChange = (e) => {
-      const value = Math.max(0, Math.min(Number(e.target.value), Math.min(coins, Math.floor(total))));
-      setCoinsToUse(value);
-    };
+  const handleCoinsToUseChange = (e) => {
+    const maxCoins = getMaxUsableCoins(total, coins)
+    const value = Math.max(0, Math.min(Number(e.target.value), maxCoins));
+    setCoinsToUse(value);
+  };
+  
+  const handleCoinSliderChange = (e) => {
+    const maxCoins = getMaxUsableCoins(total, coins)
+    const value = Math.max(0, Math.min(Number(e.target.value), maxCoins));
+    setCoinsToUse(value);
+  };
   const [selectedPayment, setSelectedPayment] = useState('CASH_ON_DELIVERY')
   const [razorpayLoading, setRazorpayLoading] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
   const [showAddressForm, setShowAddressForm] = useState(false)
   const [addresses, setAddresses] = useState([])
   const [selectedAddress, setSelectedAddress] = useState(null)
+  
+  // Processing overlay state for smoother transitions
+  const [processingState, setProcessingState] = useState({
+    active: false,
+    message: '',
+    step: 0,
+    totalSteps: 3
+  })
 
   const [addressForm, setAddressForm] = useState({
     fullName: '',
@@ -137,6 +165,59 @@ function Checkout() {
     );
   }
 
+  // Processing Overlay - shows during payment/order processing
+  if (processingState.active) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
+        <div className="bg-slate-800 rounded-2xl shadow-2xl p-10 max-w-md w-full text-center border border-slate-700">
+          {/* Animated spinner */}
+          <div className="relative mx-auto w-24 h-24 mb-6">
+            <div className="absolute inset-0 border-4 border-slate-600 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-transparent border-t-green-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-2 border-4 border-transparent border-t-orange-500 rounded-full animate-spin" style={{animationDuration: '1.5s', animationDirection: 'reverse'}}></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-3xl">{processingState.step === 1 ? '💳' : processingState.step === 2 ? '📦' : '🚀'}</span>
+            </div>
+          </div>
+
+          <h2 className="text-2xl font-bold text-white mb-2">
+            {processingState.message || 'Processing...'}
+          </h2>
+          
+          {/* Progress indicator */}
+          <div className="mt-6 mb-4">
+            <div className="flex justify-between mb-2">
+              {['Payment', 'Order', 'Complete'].map((label, idx) => (
+                <div key={label} className="flex flex-col items-center">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                    idx + 1 <= processingState.step 
+                      ? 'bg-green-500 text-white scale-110' 
+                      : 'bg-slate-600 text-slate-400'
+                  }`}>
+                    {idx + 1 <= processingState.step ? '✓' : idx + 1}
+                  </div>
+                  <span className={`text-xs mt-1 ${idx + 1 <= processingState.step ? 'text-green-400' : 'text-slate-500'}`}>
+                    {label}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-green-500 to-orange-500 transition-all duration-500 ease-out"
+                style={{width: `${(processingState.step / processingState.totalSteps) * 100}%`}}
+              ></div>
+            </div>
+          </div>
+
+          <p className="text-slate-400 text-sm animate-pulse">
+            Please wait, do not close or refresh this page...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   const fetchCoins = async () => {
     try {
       const response = await apiClient.get('/coins')
@@ -171,9 +252,11 @@ function Checkout() {
   }
 
   const { subtotal, tax, total } = calculateTotals();
-  const maxCoinsUsable = Math.min(coins, Math.floor(total));
+  // Updated: Calculate max usable coins based on minimum payment requirement
+  const maxCoinsUsable = getMaxUsableCoins(total, coins);
   const coinsApplied = useCoins ? Math.min(coinsToUse, maxCoinsUsable) : 0;
-  const finalAmount = Math.max(0, total - (coinsApplied * COIN_VALUE));
+  const finalAmount = Math.max(MINIMUM_PAYMENT, total - (coinsApplied * COIN_VALUE));
+  const remainingCoinsAfterUse = coins - coinsApplied;
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target
@@ -185,6 +268,7 @@ function Checkout() {
     try {
       const response = await apiClient.post('/addresses', addressForm)
       showToast('Address added successfully', 'success')
+      sendNotification('New delivery address saved!', 'success', '📍');
       setAddressForm({
         fullName: '',
         phoneNumber: '',
@@ -258,6 +342,15 @@ function Checkout() {
           order_id: order.id,
           handler: async function (response) {
             console.log('[DEBUG] Razorpay handler response:', response);
+            
+            // Show processing overlay immediately
+            setProcessingState({
+              active: true,
+              message: 'Verifying payment...',
+              step: 1,
+              totalSteps: 3
+            });
+            
             // Verify payment on backend
             try {
               const verifyResult = await apiClient.post('/payment/verify', {
@@ -268,8 +361,15 @@ function Checkout() {
                 phone: paymentData.phone
               });
               console.log('[DEBUG] Payment verify result:', verifyResult.data);
+              
               // Only after payment is verified, place the order
               if (verifyResult.data.status === 'success') {
+                setProcessingState(prev => ({
+                  ...prev,
+                  message: 'Creating your order...',
+                  step: 2
+                }));
+                
                 const orderData = {
                   items: cartItems.map(item => {
                     const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
@@ -289,13 +389,40 @@ function Checkout() {
                   paymentId: response.razorpay_payment_id
                 };
                 console.log('[DEBUG] Placing order after payment success:', orderData);
-                const placedOrder = await apiClient.post('/orders', orderData);
-                localStorage.removeItem('farmeazy_cart');
-                localStorage.removeItem('farmeazy_checkout_coins');
-                showToast('✅ Payment successful & order placed!', 'success');
-                navigate(`/order-confirmation/${placedOrder.data.id}`);
+                console.log('[DEBUG] addressId type:', typeof orderData.addressId, 'value:', orderData.addressId);
+                console.log('[DEBUG] items[0]:', orderData.items[0]);
+                try {
+                  const placedOrder = await apiClient.post('/orders', orderData);
+                  
+                  // Clear cart immediately and notify Layout
+                  localStorage.removeItem('farmeazy_cart');
+                  localStorage.removeItem('farmeazy_checkout_coins');
+                  window.dispatchEvent(new CustomEvent('cart-updated'));
+                  sendNotification(`Order #${placedOrder.data.id} placed successfully!`, 'success', '✅');
+                  
+                  // Update to complete state
+                  setProcessingState(prev => ({
+                    ...prev,
+                    message: 'Order confirmed! Redirecting...',
+                    step: 3
+                  }));
+                  
+                  // Small delay for visual feedback then navigate
+                  setTimeout(() => {
+                    setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
+                    navigate(`/order-confirmation/${placedOrder.data.id}`);
+                  }, 500);
+                } catch (orderErr) {
+                  console.error('[DEBUG] Order creation failed:', orderErr);
+                  console.error('[DEBUG] Order error response:', orderErr.response?.data);
+                  setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
+                  const errorMsg = orderErr.response?.data?.message || orderErr.response?.data?.error || orderErr.message || 'Unknown error';
+                  showToast(`Order failed: ${errorMsg}. Payment was successful - contact support.`, 'error');
+                }
+                
               } else {
                 // Payment failed, create pending order and allow retry
+                setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
                 const failedOrderData = {
                   items: cartItems.map(item => {
                     const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
@@ -325,6 +452,7 @@ function Checkout() {
               }
             } catch (err) {
               console.error('[DEBUG] Payment verification failed:', err);
+              setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
               showToast('Payment verification failed. Contact support.', 'error');
             }
           },
@@ -389,6 +517,14 @@ function Checkout() {
 
       // Default flow for other payment methods
       if (selectedPayment === 'CASH_ON_DELIVERY') {
+        // Show processing overlay
+        setProcessingState({
+          active: true,
+          message: 'Creating your order...',
+          step: 2,
+          totalSteps: 3
+        });
+        
         const orderData = {
           items: cartItems.map(item => {
             const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
@@ -407,12 +543,28 @@ function Checkout() {
           addressId: selectedAddress
         }
         const response = await apiClient.post('/orders', orderData)
+        
+        // Clear cart immediately and notify Layout
         localStorage.removeItem('farmeazy_cart')
         localStorage.removeItem('farmeazy_checkout_coins')
-        showToast('✅ Order placed successfully!', 'success')
-        navigate(`/order-confirmation/${response.data.id}`)
+        window.dispatchEvent(new CustomEvent('cart-updated'))
+        sendNotification(`Order #${response.data.id} placed! Cash on Delivery`, 'success', '📦');
+        
+        // Update to complete state
+        setProcessingState(prev => ({
+          ...prev,
+          message: 'Order confirmed! Redirecting...',
+          step: 3
+        }));
+        
+        // Small delay for visual feedback then navigate
+        setTimeout(() => {
+          setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
+          navigate(`/order-confirmation/${response.data.id}`);
+        }, 500);
       }
     } catch (error) {
+      setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
       showToast('Failed to place order: ' + error.message, 'error')
       setRazorpayLoading(false)
     } finally {
@@ -548,135 +700,88 @@ function Checkout() {
               </div>
             </div>
 
-            {/* Address selection & form */}
+            {/* Address selection & form - Enhanced with Map */}
             <div className="bg-slate-800 rounded-lg shadow-lg p-6 border border-slate-700">
               <h2 className="text-2xl font-bold text-white mb-4">📍 Delivery Address</h2>
 
-              {addresses.length > 0 && (
-                <div className="mb-4">
-                  <select
-                    value={selectedAddress || ''}
-                    onChange={(e) => setSelectedAddress(e.target.value)}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-orange-500"
-                  >
+              {/* Existing addresses dropdown */}
+              {addresses.length > 0 && !showAddressForm && (
+                <div className="mb-4 space-y-3">
+                  <p className="text-sm text-slate-400">Select from saved addresses:</p>
+                  <div className="space-y-2">
                     {addresses.map(addr => (
-                      <option key={addr.id} value={addr.id}>
-                        {addr.fullName} - {addr.addressLine1}, {addr.city}
-                      </option>
+                      <label 
+                        key={addr.id} 
+                        className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition ${
+                          selectedAddress === addr.id 
+                            ? 'border-orange-500 bg-orange-500/10' 
+                            : 'border-slate-600 hover:border-slate-500'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="address"
+                          value={addr.id}
+                          checked={selectedAddress === addr.id}
+                          onChange={(e) => setSelectedAddress(Number(e.target.value))}
+                          className="mt-1 mr-3"
+                        />
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-lg">
+                              {addr.addressType === 'Home' ? '🏠' : addr.addressType === 'Work' ? '🏢' : '📍'}
+                            </span>
+                            <span className="font-semibold text-white">{addr.fullName}</span>
+                            <span className="text-xs bg-slate-600 text-slate-300 px-2 py-0.5 rounded">{addr.addressType}</span>
+                          </div>
+                          <p className="text-sm text-slate-300 mt-1">{addr.addressLine1}</p>
+                          {addr.addressLine2 && <p className="text-sm text-slate-400">{addr.addressLine2}</p>}
+                          <p className="text-sm text-slate-400">{addr.city}, {addr.state} - {addr.postalCode}</p>
+                          <p className="text-sm text-slate-500 mt-1">📱 {addr.phoneNumber}</p>
+                        </div>
+                      </label>
                     ))}
-                  </select>
+                  </div>
                 </div>
               )}
 
+              {/* Add new address button */}
               <button
+                type="button"
                 onClick={() => setShowAddressForm(!showAddressForm)}
-                className="w-full px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition font-semibold"
+                className={`w-full px-4 py-3 rounded-lg transition font-semibold flex items-center justify-center gap-2 ${
+                  showAddressForm 
+                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white'
+                }`}
               >
-                {showAddressForm ? '❌ Cancel' : '➕ Add New Address'}
+                {showAddressForm ? (
+                  <><span>❌</span> Cancel</>
+                ) : (
+                  <><span>➕</span> Add New Address</>
+                )}
               </button>
 
+              {/* LocationPicker component */}
               {showAddressForm && (
-                <form onSubmit={handleAddressSubmit} className="mt-4 space-y-3">
-                  <input
-                    type="text"
-                    name="fullName"
-                    placeholder="Full Name (as per ID proof)"
-                    value={addressForm.fullName}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg"
-                    required
+                <div className="mt-4">
+                  <LocationPicker
+                    onAddressSubmit={async (addressData) => {
+                      try {
+                        const response = await apiClient.post('/addresses', addressData)
+                        showToast('Address added successfully!', 'success')
+                        setShowAddressForm(false)
+                        fetchAddresses()
+                        // Auto-select the new address
+                        if (response.data && response.data.id) {
+                          setSelectedAddress(response.data.id)
+                        }
+                      } catch (error) {
+                        showToast('Failed to add address: ' + (error.response?.data?.message || error.message), 'error')
+                      }
+                    }}
                   />
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="Email Address"
-                    value={addressForm.email}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg"
-                    required
-                  />
-                  <input
-                    type="tel"
-                    name="phoneNumber"
-                    placeholder="10-digit Mobile Number"
-                    pattern="[0-9]{10}"
-                    value={addressForm.phoneNumber}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="addressLine1"
-                    placeholder="Flat, House no., Building, Company, Apartment"
-                    value={addressForm.addressLine1}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="addressLine2"
-                    placeholder="Area, Street, Sector, Village (optional)"
-                    value={addressForm.addressLine2}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg"
-                  />
-                  <input
-                    type="text"
-                    name="landmark"
-                    placeholder="Landmark (e.g. near temple, school)"
-                    value={addressForm.landmark}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg"
-                  />
-                  <select
-                    name="addressType"
-                    value={addressForm.addressType}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white rounded-lg"
-                    required
-                  >
-                    <option value="">Select Address Type</option>
-                    <option value="Home">Home</option>
-                    <option value="Work">Work</option>
-                    <option value="Other">Other</option>
-                  </select>
-                  <input
-                    type="text"
-                    name="city"
-                    placeholder="City / Town"
-                    value={addressForm.city}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="state"
-                    placeholder="State / Province"
-                    value={addressForm.state}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="postalCode"
-                    placeholder="6-digit PIN Code"
-                    pattern="[0-9]{6}"
-                    value={addressForm.postalCode}
-                    onChange={handleAddressChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg"
-                    required
-                  />
-                  <button
-                    type="submit"
-                    className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
-                  >
-                    Save Address
-                  </button>
-                </form>
+                </div>
               )}
             </div>
           </div>
@@ -692,27 +797,84 @@ function Checkout() {
                 <span className="font-semibold text-white">₹{subtotal.toFixed(2)}</span>
               </div>
 
-              {/* Coin discount UI */}
-              <div className="flex items-center gap-2 my-2">
-                <input
-                  type="checkbox"
-                  checked={useCoins}
-                  onChange={handleCoinToggle}
-                  id="use-coins-toggle"
-                  className="w-4 h-4"
-                />
-                <label htmlFor="use-coins-toggle" className="text-sm text-slate-300 font-semibold cursor-pointer">
-                  Use Coins ({coins} available)
-                </label>
-                {useCoins && (
-                  <input
-                    type="number"
-                    min="1"
-                    max={maxCoinsUsable}
-                    value={coinsToUse}
-                    onChange={handleCoinsToUseChange}
-                    className="ml-2 px-2 py-1 bg-slate-700 border border-slate-600 text-white rounded w-20 text-right"
-                  />
+              {/* Coin discount UI - Improved with slider and minimum payment info */}
+              <div className="bg-slate-700/50 rounded-lg p-4 my-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={useCoins}
+                      onChange={handleCoinToggle}
+                      id="use-coins-toggle"
+                      className="w-5 h-5 accent-orange-500 cursor-pointer"
+                      disabled={maxCoinsUsable === 0}
+                    />
+                    <label htmlFor="use-coins-toggle" className="text-sm text-slate-200 font-semibold cursor-pointer flex items-center gap-2">
+                      <span className="text-lg">🪙</span> Use Coins
+                    </label>
+                  </div>
+                  <span className="text-sm text-orange-400 font-bold">{coins} coins available</span>
+                </div>
+
+                {coins > 0 && maxCoinsUsable === 0 && (
+                  <div className="bg-amber-900/30 border border-amber-600/30 rounded-lg p-2 mb-2">
+                    <p className="text-xs text-amber-300">⚠️ Order total is too low to use coins (min ₹{MINIMUM_PAYMENT} payment required)</p>
+                  </div>
+                )}
+
+                {useCoins && maxCoinsUsable > 0 && (
+                  <div className="space-y-3 mt-3 border-t border-slate-600 pt-3">
+                    {/* Slider */}
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs text-slate-400">
+                        <span>0 coins</span>
+                        <span>{maxCoinsUsable} coins (max)</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max={maxCoinsUsable}
+                        value={coinsToUse}
+                        onChange={handleCoinSliderChange}
+                        className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                        style={{
+                          background: `linear-gradient(to right, #f97316 0%, #f97316 ${(coinsToUse / maxCoinsUsable) * 100}%, #475569 ${(coinsToUse / maxCoinsUsable) * 100}%, #475569 100%)`
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Number input and summary */}
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-slate-300">Use:</span>
+                        <input
+                          type="number"
+                          min="0"
+                          max={maxCoinsUsable}
+                          value={coinsToUse}
+                          onChange={handleCoinsToUseChange}
+                          className="px-3 py-2 bg-slate-600 border border-slate-500 text-white rounded-lg w-24 text-center font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        />
+                        <span className="text-sm text-slate-300">coins</span>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-green-400 font-bold">-₹{(coinsToUse * COIN_VALUE).toFixed(2)}</p>
+                      </div>
+                    </div>
+
+                    {/* Remaining coins info */}
+                    <div className="flex justify-between text-xs text-slate-400 bg-slate-800 rounded p-2">
+                      <span>Remaining after use:</span>
+                      <span className="text-orange-400 font-semibold">{remainingCoinsAfterUse} coins</span>
+                    </div>
+
+                    {/* Minimum payment notice */}
+                    <div className="bg-blue-900/30 border border-blue-600/30 rounded-lg p-2">
+                      <p className="text-xs text-blue-300 flex items-center gap-1">
+                        <span>ℹ️</span> Minimum payment required: <span className="font-bold">₹{MINIMUM_PAYMENT}</span>
+                      </p>
+                    </div>
+                  </div>
                 )}
               </div>
 

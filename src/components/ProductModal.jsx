@@ -11,9 +11,11 @@
 
 import { useState, useEffect } from 'react'
 import { useToast } from '../hooks/useToast'
+import { useTheme } from '../context/ThemeContext'
 
 function ProductModal({ product, isOpen, onClose, onAddToCart }) {
   const { showToast } = useToast()
+  const { isDark } = useTheme()
   const [quantity, setQuantity] = useState(1)
   const [adding, setAdding] = useState(false)
 
@@ -96,7 +98,7 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4">
-      <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className={`rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
         {/* Header */}
         <div className="sticky top-0 bg-gradient-to-r from-orange-500 to-orange-600 p-6 flex justify-between items-center">
           <div className="text-4xl">{getCategoryIcon(product.category)}</div>
@@ -111,20 +113,20 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
         {/* Content */}
         <div className="p-8">
           {/* Product Title */}
-          <h2 className="text-3xl font-bold text-white mb-2">{product.productName}</h2>
+          <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.productName}</h2>
           
           {/* Seller Info */}
-          <div className="flex items-center gap-3 mb-6 pb-6 border-b border-slate-700">
+          <div className={`flex items-center gap-3 mb-6 pb-6 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
             <span className="text-2xl">👨‍🌾</span>
             <div>
-              <p className="text-sm text-slate-400">Seller</p>
-              <p className="font-semibold text-white">{product.sellerFullName}</p>
+              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Seller</p>
+              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.sellerFullName}</p>
             </div>
           </div>
 
           {/* Price */}
-          <div className="bg-orange-900/40 rounded-lg p-4 mb-6">
-            <p className="text-slate-300 text-sm mb-1">Price per unit</p>
+          <div className={`rounded-lg p-4 mb-6 ${isDark ? 'bg-orange-900/40' : 'bg-orange-50'}`}>
+            <p className={`text-sm mb-1 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Price per unit</p>
             {product.discountPercentage && product.discountPercentage > 0 ? (
               <div>
                 <div className="flex items-center gap-3 mb-1">
@@ -145,15 +147,15 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
           {/* Description */}
           {product.description && (
             <div className="mb-6">
-              <h3 className="text-lg font-semibold text-white mb-2">About this product</h3>
-              <p className="text-slate-300 leading-relaxed">{product.description}</p>
+              <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>About this product</h3>
+              <p className={`leading-relaxed ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{product.description}</p>
             </div>
           )}
 
           {/* Category */}
           <div className="mb-6">
-            <p className="text-sm text-slate-400 mb-1">Category</p>
-            <div className="inline-block bg-orange-900/50 text-orange-400 px-4 py-2 rounded-full font-semibold">
+            <p className={`text-sm mb-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Category</p>
+            <div className={`inline-block px-4 py-2 rounded-full font-semibold ${isDark ? 'bg-orange-900/50 text-orange-400' : 'bg-orange-100 text-orange-600'}`}>
               {product.category}
             </div>
           </div>
@@ -161,12 +163,12 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
           {/* Stock Status */}
           <div className="mb-8">
             <div className="flex justify-between items-center mb-2">
-              <p className="text-sm font-semibold text-slate-300">Stock Status</p>
-              <p className={`font-bold ${product.quantity > 0 ? 'text-green-400' : 'text-red-400'}`}>
+              <p className={`text-sm font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Stock Status</p>
+              <p className={`font-bold ${product.quantity > 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {product.quantity > 0 ? `${product.quantity} in stock` : 'Out of Stock'}
               </p>
             </div>
-            <div className="w-full bg-slate-700 rounded-full h-3 overflow-hidden">
+            <div className={`w-full rounded-full h-3 overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-gray-200'}`}>
               <div
                 className={`h-full transition-all ${product.quantity > 5 ? 'bg-green-500' : 'bg-yellow-500'}`}
                 style={{ width: `${Math.min(inStockPercentage, 100)}%` }}
@@ -177,13 +179,13 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
           {/* Quantity Selector */}
           {!isOutOfStock && (
             <div className="mb-8">
-              <label className="text-lg font-semibold text-white mb-3 block">
+              <label className={`text-lg font-semibold mb-3 block ${isDark ? 'text-white' : 'text-gray-800'}`}>
                 How many would you like?
               </label>
-              <div className="flex items-center gap-4 bg-slate-700 rounded-lg w-fit p-2">
+              <div className={`flex items-center gap-4 rounded-lg w-fit p-2 ${isDark ? 'bg-slate-700' : 'bg-gray-100'}`}>
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="bg-slate-600 hover:bg-slate-500 text-white font-bold text-xl px-4 py-2 rounded transition"
+                  className={`font-bold text-xl px-4 py-2 rounded transition ${isDark ? 'bg-slate-600 hover:bg-slate-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
                 >
                   −
                 </button>
@@ -194,27 +196,27 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
                     const value = parseInt(e.target.value) || 1
                     setQuantity(Math.min(Math.max(1, value), product.quantity))
                   }}
-                  className="w-20 text-center text-xl font-bold bg-transparent text-white border-none outline-none"
+                  className={`w-20 text-center text-xl font-bold bg-transparent border-none outline-none ${isDark ? 'text-white' : 'text-gray-800'}`}
                   min="1"
                   max={product.quantity}
                 />
                 <button
                   onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
-                  className="bg-slate-600 hover:bg-slate-500 text-white font-bold text-xl px-4 py-2 rounded transition"
+                  className={`font-bold text-xl px-4 py-2 rounded transition ${isDark ? 'bg-slate-600 hover:bg-slate-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
                 >
                   +
                 </button>
               </div>
-              <p className="text-sm text-slate-400 mt-2">Max available: {product.quantity} units</p>
+              <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Max available: {product.quantity} units</p>
             </div>
           )}
 
           {/* Price Summary */}
-          <div className="bg-gradient-to-r from-orange-900/40 to-amber-900/40 rounded-lg p-4 mb-8 border-2 border-orange-800">
-            <p className="text-slate-300 mb-1">Total for {quantity} item(s):</p>
+          <div className={`rounded-lg p-4 mb-8 border-2 ${isDark ? 'bg-gradient-to-r from-orange-900/40 to-amber-900/40 border-orange-800' : 'bg-gradient-to-r from-orange-50 to-amber-50 border-orange-300'}`}>
+            <p className={`mb-1 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Total for {quantity} item(s):</p>
             {product.discountPercentage && product.discountPercentage > 0 ? (
               <div>
-                <p className="text-3xl font-bold text-orange-600">
+                <p className="text-3xl font-bold text-orange-500">
                   ₹{((product.discountedPrice || (product.price - (product.price * product.discountPercentage / 100))) * quantity).toFixed(2)}
                 </p>
                 <p className="text-sm text-green-600 font-semibold mt-1">
@@ -222,7 +224,7 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
                 </p>
               </div>
             ) : (
-              <p className="text-3xl font-bold text-orange-600">₹{(product.price * quantity).toFixed(2)}</p>
+              <p className="text-3xl font-bold text-orange-500">₹{(product.price * quantity).toFixed(2)}</p>
             )}
           </div>
 
@@ -230,7 +232,7 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
           <div className="flex gap-4">
             <button
               onClick={onClose}
-              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-3 px-6 rounded-lg transition text-lg"
+              className={`flex-1 font-bold py-3 px-6 rounded-lg transition text-lg ${isDark ? 'bg-slate-600 hover:bg-slate-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
             >
               Cancel
             </button>

@@ -12,6 +12,7 @@ import { useState, useEffect, Suspense, lazy } from 'react'
 import OnboardingTour from '../components/OnboardingTour';
 // NotificationBell removed; notifications only in header
 import DarkModeToggle from '../components/DarkModeToggle'
+import { useTheme } from '../context/ThemeContext'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useTranslation } from 'react-i18next'
@@ -19,6 +20,7 @@ import ChatSupport from '../components/ChatSupport'
 const DashboardCharts = lazy(() => import('../components/DashboardCharts'))
 
 function Dashboard() {
+  const { isDark } = useTheme()
   // Onboarding tour state
   const [showTour, setShowTour] = useState(false);
 
@@ -266,14 +268,14 @@ For more details, visit: https://farm-eazy.com
   }
 
   return (
-    <div className="space-y-8 px-2 sm:px-6 py-4 max-w-lg mx-auto" role="main" aria-label="Dashboard main content">
+    <div className={`space-y-8 px-2 sm:px-6 py-4 max-w-lg mx-auto min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`} role="main" aria-label="Dashboard main content">
       {showTour && (
         <OnboardingTour onFinish={handleTourFinish} />
       )}
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-800" tabIndex={0} aria-label="Dashboard heading">{t('Dashboard')}</h1>
-        <p className="text-gray-600 mt-1" tabIndex={0} aria-label="Dashboard welcome message">
+        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`} tabIndex={0} aria-label="Dashboard heading">{t('Dashboard')}</h1>
+        <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`} tabIndex={0} aria-label="Dashboard welcome message">
           {getGreeting()}, {userName}! {window.history.state && window.history.state.usr && window.history.state.usr.welcome
             ? t('Welcome')
             : t('Welcome')}
@@ -282,7 +284,7 @@ For more details, visit: https://farm-eazy.com
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className={`px-4 py-3 rounded-lg border ${isDark ? 'bg-red-900/30 border-red-700 text-red-400' : 'bg-red-50 border-red-200 text-red-700'}`}>
           {error}
         </div>
       )}
@@ -293,10 +295,10 @@ For more details, visit: https://farm-eazy.com
         <div className="card hover:shadow-lg transition-shadow" aria-label="Total Farms statistic">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium" aria-label="Total Farms label">{t('Total Farms')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`} aria-label="Total Farms label">{t('Total Farms')}</p>
               <p className="text-3xl font-bold text-green-600 mt-2" aria-label={`Total Farms value: ${stats.totalFarms}`}>{stats.totalFarms}</p>
             </div>
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center text-2xl" aria-label="Farm icon" role="img">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-green-900/50' : 'bg-green-100'}`} aria-label="Farm icon" role="img">
               <span aria-label="Farm">🌾</span>
             </div>
           </div>
@@ -306,10 +308,10 @@ For more details, visit: https://farm-eazy.com
         <div className="card hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">{t('Total Crops')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{t('Total Crops')}</p>
               <p className="text-3xl font-bold text-blue-600 mt-2">{stats.totalCrops}</p>
             </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-2xl">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-blue-900/50' : 'bg-blue-100'}`}>
               🌱
             </div>
           </div>
@@ -319,26 +321,26 @@ For more details, visit: https://farm-eazy.com
         <div className="card hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">{t('Products Listed')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{t('Products Listed')}</p>
               <p className="text-3xl font-bold text-purple-600 mt-2">{stats.productsListed}</p>
             </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center text-2xl">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-purple-900/50' : 'bg-purple-100'}`}>
               💧
             </div>
           </div>
         </div>
         {/* Analytics Charts */}
-        <Suspense fallback={<div className="text-center text-gray-500">Loading charts...</div>}>
+        <Suspense fallback={<div className={`text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Loading charts...</div>}>
           <DashboardCharts stats={stats} />
         </Suspense>
         {/* Active Alerts */}
         <div className="card hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-600 text-sm font-medium">{t('Active Alerts')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{t('Active Alerts')}</p>
               <p className="text-3xl font-bold text-orange-600 mt-2">{stats.activeAlerts}</p>
             </div>
-            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center text-2xl">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-orange-900/50' : 'bg-orange-100'}`}>
               ⚠️
             </div>
           </div>
@@ -346,11 +348,11 @@ For more details, visit: https://farm-eazy.com
       </div>
 
       {/* Weather Widget */}
-      <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2 mb-2" aria-label="Weather widget">
+      <div className={`flex items-center gap-3 rounded-lg px-4 py-2 mb-2 border ${isDark ? 'bg-blue-900/30 border-blue-800' : 'bg-blue-50 border-blue-200'}`} aria-label="Weather widget">
         <span className="text-2xl" aria-label="Weather icon">☀️</span>
         <div>
-          <div className="text-blue-800 font-bold" aria-label="Weather label">Weather</div>
-          <div className="text-blue-700" aria-label="Weather value">{weather.temp}°C, {weather.desc}</div>
+          <div className={`font-bold ${isDark ? 'text-blue-300' : 'text-blue-800'}`} aria-label="Weather label">Weather</div>
+          <div className={isDark ? 'text-blue-400' : 'text-blue-700'} aria-label="Weather value">{weather.temp}°C, {weather.desc}</div>
         </div>
       </div>
 
@@ -361,14 +363,14 @@ For more details, visit: https://farm-eazy.com
           value={search}
           onChange={handleSearch}
           placeholder="Search farms or crops..."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring focus:border-blue-400"
+          className="form-input"
           aria-label="Search farms or crops"
         />
       </div>
 
       {/* Quick Actions */}
       <div className="card" aria-label="Dashboard quick actions">
-        <h2 className="text-xl font-bold text-gray-800 mb-4" aria-label="Quick actions heading">{t('Quick Actions')}</h2>
+        <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`} aria-label="Quick actions heading">{t('Quick Actions')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Quick actions grid">
           <Link
             to="/farms"

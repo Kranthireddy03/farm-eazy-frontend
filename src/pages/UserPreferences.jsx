@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const defaultPrefs = {
   notifications: true,
@@ -120,6 +121,45 @@ const UserPreferences = () => {
               </div>
             </div>
           ))}
+
+          {/* Payment & Refund Section */}
+          <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-green-500 to-teal-500 px-6 py-4 text-white">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <span>💳</span> Payment & Refunds
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between py-3 border-b border-slate-700">
+                <div className="flex-1">
+                  <span className="font-medium text-white">Refund Details</span>
+                  <p className="text-sm text-slate-400 mt-1">Manage your bank/UPI details for refunds</p>
+                </div>
+                <div className="ml-4">
+                  <Link 
+                    to="/refund-details" 
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  >
+                    Manage
+                  </Link>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-3">
+                <div className="flex-1">
+                  <span className="font-medium text-white">My Orders</span>
+                  <p className="text-sm text-slate-400 mt-1">View orders, cancellations and refund status</p>
+                </div>
+                <div className="ml-4">
+                  <Link 
+                    to="/orders" 
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                  >
+                    View
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Reset Button */}

@@ -50,7 +50,6 @@ class SupabaseAuthService {
    * @returns {Promise} User object and session
    * 
    * WHAT IS metadata?
-   * ├─ fullName: User's full name
    * ├─ username: Unique username
    * ├─ phone: Phone number
    * └─ Other custom fields
@@ -78,10 +77,6 @@ class SupabaseAuthService {
 
         // Store metadata
         if (data.user.user_metadata) {
-          localStorage.setItem(
-            STORAGE_KEYS.USER_FULLNAME,
-            data.user.user_metadata.fullName || ''
-          )
           localStorage.setItem(
             STORAGE_KEYS.USER_USERNAME,
             data.user.user_metadata.username || ''
@@ -132,10 +127,6 @@ class SupabaseAuthService {
         // Store metadata
         if (data.user.user_metadata) {
           localStorage.setItem(
-            STORAGE_KEYS.USER_FULLNAME,
-            data.user.user_metadata.fullName || ''
-          )
-          localStorage.setItem(
             STORAGE_KEYS.USER_USERNAME,
             data.user.user_metadata.username || ''
           )
@@ -172,7 +163,6 @@ class SupabaseAuthService {
       localStorage.removeItem(STORAGE_KEYS.USER_TOKEN)
       localStorage.removeItem(STORAGE_KEYS.USER_EMAIL)
       localStorage.removeItem(STORAGE_KEYS.USER_ID)
-      localStorage.removeItem(STORAGE_KEYS.USER_FULLNAME)
       localStorage.removeItem(STORAGE_KEYS.USER_USERNAME)
 
       return true

@@ -2,18 +2,63 @@
  * Global CSS
  * 
  * Tailwind CSS imports and global styles for the FarmEazy application
+ * Supports both dark and light themes
  */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ================================
+   CSS Variables for Themes
+   ================================ */
+:root {
+  /* Light Mode Colors */
+  --color-bg-primary: #f8fafc;
+  --color-bg-secondary: #f1f5f9;
+  --color-bg-card: #ffffff;
+  --color-bg-hover: #e2e8f0;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-border: #cbd5e1;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+}
+
+:root.dark {
+  /* Dark Mode Colors */
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-card: #334155;
+  --color-bg-hover: #475569;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-border: #475569;
+  --color-shadow: rgba(0, 0, 0, 0.5);
+}
+
 /* Global styles */
 * {
   @apply box-border;
 }
 
+/* Body base styles - theme aware */
 body {
+  @apply transition-colors duration-300;
+  background-color: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+/* Light mode body */
+.light body,
+html.light body {
+  @apply bg-gradient-to-br from-slate-50 via-white to-emerald-50;
+}
+
+/* Dark mode body */
+.dark body,
+html.dark body {
   @apply bg-slate-900;
 }
 
@@ -23,29 +68,45 @@ body,
   @apply h-full;
 }
 
-/* Utility classes */
+/* ================================
+   Utility Classes - Theme Aware
+   ================================ */
 .container-main {
   @apply max-w-7xl mx-auto px-4;
 }
 
+/* Primary button - works in both themes */
 .btn-primary {
   @apply bg-green-600 hover:bg-green-500 text-white font-semibold py-2 px-4 rounded-lg transition-colors;
 }
 
+/* Secondary button - theme aware */
 .btn-secondary {
-  @apply bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold py-2 px-4 rounded-lg transition-colors;
+  @apply font-semibold py-2 px-4 rounded-lg transition-colors;
+  @apply dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200;
+  @apply bg-gray-200 hover:bg-gray-300 text-slate-700;
 }
 
+/* Form input - theme aware */
 .form-input {
-  @apply w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent;
+  @apply w-full px-4 py-2 rounded-lg transition-colors;
+  @apply focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent;
+  @apply dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400;
+  @apply bg-white border border-gray-300 text-slate-800 placeholder-gray-400;
 }
 
+/* Form label - theme aware */
 .form-label {
-  @apply block text-slate-300 text-sm font-semibold mb-2;
+  @apply block text-sm font-semibold mb-2;
+  @apply dark:text-slate-300;
+  @apply text-slate-700;
 }
 
+/* Card - theme aware */
 .card {
-  @apply bg-slate-800 border border-slate-700 rounded-lg shadow-md p-6;
+  @apply rounded-lg shadow-md p-6 border transition-colors;
+  @apply dark:bg-slate-800 dark:border-slate-700;
+  @apply bg-white border-gray-200;
 }
 
 .error-message {
@@ -58,4 +119,83 @@ body,
 
 .spinner {
   @apply inline-block animate-spin;
+}
+
+/* ================================
+   Theme-specific overrides
+   ================================ */
+
+/* Light mode specific gradients */
+.light .bg-gradient-dark {
+  @apply bg-gradient-to-br from-emerald-50 via-white to-teal-50;
+}
+
+/* Ensure text visibility in light mode */
+.light .text-white {
+  @apply text-slate-800;
+}
+
+.light .text-slate-300,
+.light .text-slate-400 {
+  @apply text-slate-600;
+}
+
+/* Input focus states */
+input:focus,
+select:focus,
+textarea:focus {
+  @apply ring-2 ring-green-500 ring-opacity-50;
+}
+
+/* ================================
+   Browser Autofill Dark Mode Fix
+   ================================ */
+/* Dark mode autofill styling - prevents white background on saved credentials */
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active,
+.dark textarea:-webkit-autofill,
+.dark textarea:-webkit-autofill:hover,
+.dark textarea:-webkit-autofill:focus,
+.dark textarea:-webkit-autofill:active,
+.dark select:-webkit-autofill,
+.dark select:-webkit-autofill:hover,
+.dark select:-webkit-autofill:focus,
+.dark select:-webkit-autofill:active,
+html.dark input:-webkit-autofill,
+html.dark input:-webkit-autofill:hover,
+html.dark input:-webkit-autofill:focus,
+html.dark input:-webkit-autofill:active,
+html.dark textarea:-webkit-autofill,
+html.dark textarea:-webkit-autofill:hover,
+html.dark textarea:-webkit-autofill:focus,
+html.dark textarea:-webkit-autofill:active,
+html.dark select:-webkit-autofill,
+html.dark select:-webkit-autofill:hover,
+html.dark select:-webkit-autofill:focus,
+html.dark select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #334155 inset !important;
+  -webkit-text-fill-color: #f1f5f9 !important;
+  caret-color: #f1f5f9 !important;
+  transition: background-color 5000s ease-in-out 0s;
+  border-color: #475569 !important;
+}
+
+/* Light mode autofill styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:hover,
+textarea:-webkit-autofill:focus,
+textarea:-webkit-autofill:active,
+select:-webkit-autofill,
+select:-webkit-autofill:hover,
+select:-webkit-autofill:focus,
+select:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #ffffff inset !important;
+  -webkit-text-fill-color: #1e293b !important;
+  caret-color: #1e293b !important;
 }

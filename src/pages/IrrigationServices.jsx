@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
+import { useTheme } from '../context/ThemeContext'
 import Toast from '../components/Toast'
 
 function IrrigationServices() {
+  const { isDark } = useTheme()
   const { toast, showToast, closeToast } = useToast()
   const [activeTab, setActiveTab] = useState('listings') // 'listings', 'browse', 'bookings', or 'provider-requests'
 
@@ -384,23 +386,23 @@ function IrrigationServices() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className="space-y-8">
+      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-white">Irrigation Services</h1>
-            <p className="text-slate-400 mt-1">Equipment & workers marketplace for your farm needs</p>
+            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Irrigation Services</h1>
+            <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Equipment & workers marketplace for your farm needs</p>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex space-x-2 border-b border-slate-700 overflow-x-auto">
+        <div className={`flex space-x-2 border-b overflow-x-auto ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
           <button
             onClick={() => setActiveTab('listings')}
             className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
               activeTab === 'listings'
                 ? 'text-green-400 border-b-2 border-green-400'
-                : 'text-slate-400 hover:text-white'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
             My Service Listings
@@ -410,7 +412,7 @@ function IrrigationServices() {
             className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
               activeTab === 'browse'
                 ? 'text-green-400 border-b-2 border-green-400'
-                : 'text-slate-400 hover:text-white'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
             Browse & Book Services
@@ -420,7 +422,7 @@ function IrrigationServices() {
             className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
               activeTab === 'bookings'
                 ? 'text-green-400 border-b-2 border-green-400'
-                : 'text-slate-400 hover:text-white'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
             My Booking Requests
@@ -430,7 +432,7 @@ function IrrigationServices() {
             className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
               activeTab === 'provider-requests'
                 ? 'text-green-400 border-b-2 border-green-400'
-                : 'text-slate-400 hover:text-white'
+                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
             }`}
           >
             Provider Requests
@@ -452,7 +454,7 @@ function IrrigationServices() {
 
             {/* Post Service Form */}
             {showPostForm && (
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+              <div className={`rounded-xl shadow-2xl overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
                 {/* Form Header */}
                 <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-6">
                   <div className="flex items-center justify-between">
@@ -471,8 +473,8 @@ function IrrigationServices() {
                 {/* Form Body */}
                 <form onSubmit={handlePostSubmit} className="p-8 space-y-6">
                   {/* Service Type Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       <span className="text-2xl">📋</span>
                       Service Details
                     </h3>
@@ -570,11 +572,11 @@ function IrrigationServices() {
                   </div>
 
                   {/* Contact Information Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       <span className="text-2xl">📞</span>
                       Contact Information
-                      <span className="text-xs font-normal text-slate-400 ml-2">(Optional - uses profile info if blank)</span>
+                      <span className={`text-xs font-normal ml-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>(Optional - uses profile info if blank)</span>
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
@@ -678,7 +680,7 @@ function IrrigationServices() {
                     <button
                       type="button"
                       onClick={() => setShowPostForm(false)}
-                      className="px-8 py-4 border-2 border-slate-600 hover:border-slate-500 text-slate-300 font-semibold rounded-xl transition-all duration-300 hover:bg-slate-700"
+                      className={`px-8 py-4 border-2 font-semibold rounded-xl transition-all duration-300 ${isDark ? 'border-slate-600 hover:border-slate-500 text-slate-300 hover:bg-slate-700' : 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100'}`}
                     >
                       Cancel
                     </button>
@@ -702,7 +704,7 @@ function IrrigationServices() {
 
             {/* Edit Service Form */}
             {editingListing && (
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-2xl border-2 border-blue-400 overflow-hidden">
+              <div className={`rounded-xl shadow-2xl border-2 border-blue-400 overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'}`}>
                 {/* Form Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
                   <div className="flex items-center justify-between">
@@ -728,8 +730,8 @@ function IrrigationServices() {
                 {/* Form Body */}
                 <form onSubmit={handleUpdateListing} className="p-8 space-y-6">
                   {/* Service Type Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
-                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       <span className="text-2xl">📋</span>
                       Service Details
                     </h3>
@@ -935,7 +937,7 @@ function IrrigationServices() {
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="px-8 py-4 border-2 border-slate-600 hover:border-slate-500 text-slate-300 font-semibold rounded-xl transition-all duration-300 hover:bg-slate-700"
+                      className={`px-8 py-4 border-2 font-semibold rounded-xl transition-all duration-300 ${isDark ? 'border-slate-600 hover:border-slate-500 text-slate-300 hover:bg-slate-700' : 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100'}`}
                     >
                       Cancel
                     </button>
@@ -959,56 +961,56 @@ function IrrigationServices() {
 
             {/* Services Listings Grid */}
             {listings.length === 0 ? (
-              <div className="card text-center py-12">
+              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                 <div className="text-6xl mb-4">🔧</div>
-                <p className="text-slate-300 text-lg font-semibold">No service listings yet</p>
-                <p className="text-slate-400 text-sm mt-2">Post the first service to enable booking requests!</p>
+                <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>No service listings yet</p>
+                <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Post the first service to enable booking requests!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((listing) => (
-                  <div key={listing.id} className="card hover:shadow-lg transition-shadow">
+                  <div key={listing.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-bold text-white">{listing.title || listing.serviceName || 'Untitled Listing'}</h3>
-                        <p className="text-slate-400 text-sm">📍 {listing.location || 'Location not specified'}</p>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{listing.title || listing.serviceName || 'Untitled Listing'}</h3>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>📍 {listing.location || 'Location not specified'}</p>
                       </div>
                       <span className="text-2xl">{getServiceIcon(listing.type)}</span>
                     </div>
 
-                    <div className="space-y-2 mb-4 pb-4 border-b border-slate-700">
+                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Type</p>
-                        <span className="text-xs bg-green-900/50 text-green-400 px-2 py-1 rounded-full font-semibold">{listing.type}</span>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Type</p>
+                        <span className={`text-xs px-2 py-1 rounded-full font-semibold ${isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'}`}>{listing.type}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Rate</p>
-                        <p className="text-sm text-orange-400 font-semibold">{listing.rate || listing.price || 'Rate not set'}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Rate</p>
+                        <p className="text-sm text-orange-500 font-semibold">{listing.rate || listing.price || 'Rate not set'}</p>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Status</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Status</p>
                         <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                          listing.availability === 'Available' ? 'bg-green-900/50 text-green-400' :
-                          listing.availability === 'Limited' ? 'bg-yellow-900/50 text-yellow-400' :
-                          'bg-red-900/50 text-red-400'
+                          listing.availability === 'Available' ? (isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700') :
+                          listing.availability === 'Limited' ? (isDark ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700') :
+                          (isDark ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-700')
                         }`}>{listing.availability}</span>
                       </div>
                     </div>
 
                     <div className="space-y-1">
                       {listing.contactName && (
-                        <p className="text-sm text-slate-300">👤 {listing.contactName}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>👤 {listing.contactName}</p>
                       )}
                       {listing.contactPhone && (
-                        <p className="text-sm text-slate-300">📞 {listing.contactPhone}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>📞 {listing.contactPhone}</p>
                       )}
                       {listing.contactEmail && (
-                        <p className="text-sm text-slate-300">✉️ {listing.contactEmail}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>✉️ {listing.contactEmail}</p>
                       )}
                     </div>
 
                     {/* Edit and Delete Buttons */}
-                    <div className="flex gap-2 mt-4 pt-4 border-t border-slate-700">
+                    <div className={`flex gap-2 mt-4 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       <button
                         onClick={() => handleEditClick(listing)}
                         className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
@@ -1032,60 +1034,60 @@ function IrrigationServices() {
         {/* BROWSE & BOOK SERVICES TAB */}
         {activeTab === 'browse' && (
           <>
-            {/* Browse Services Grid */}
-            {allListings.length === 0 ? (
-              <div className="card text-center py-12">
+            {/* Browse Services Grid - Filters out user's own services */}
+            {allListings.filter(listing => !myListingIds.has(listing.id)).length === 0 ? (
+              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                 <div className="text-6xl mb-4">🔍</div>
-                <p className="text-slate-300 text-lg font-semibold">No services available yet</p>
-                <p className="text-slate-400 text-sm mt-2">Check back later for available services!</p>
+                <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>No services available yet</p>
+                <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Check back later for available services!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {allListings.map((listing) => (
-                  <div key={listing.id} className="card hover:shadow-lg transition-shadow border-2 border-slate-600">
+                {allListings.filter(listing => !myListingIds.has(listing.id)).map((listing) => (
+                  <div key={listing.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border-2 ${isDark ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-300'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className="text-lg font-bold text-white">{listing.serviceName || listing.title || 'Untitled Service'}</h3>
-                        <p className="text-slate-400 text-sm">📍 {listing.location || 'Location not specified'}</p>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{listing.serviceName || listing.title || 'Untitled Service'}</h3>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>📍 {listing.location || 'Location not specified'}</p>
                       </div>
                       <span className="text-3xl">{getServiceIcon(listing.type)}</span>
                     </div>
 
-                    <div className="space-y-2 mb-4 pb-4 border-b border-slate-700">
+                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Type</p>
-                        <span className="text-xs bg-green-900/50 text-green-400 px-3 py-1 rounded-full font-semibold">{listing.type}</span>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Type</p>
+                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'}`}>{listing.type}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Hourly Rate</p>
-                        <p className="text-lg text-green-400 font-bold">₹{listing.price || listing.rate || 'N/A'}/hr</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Hourly Rate</p>
+                        <p className="text-lg text-green-500 font-bold">₹{listing.price || listing.rate || 'N/A'}/hr</p>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Availability</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Availability</p>
                         <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                          listing.availability === 'Available' ? 'bg-green-900/50 text-green-400' :
-                          listing.availability === 'Limited' ? 'bg-yellow-900/50 text-yellow-400' :
-                          'bg-red-900/50 text-red-400'
+                          listing.availability === 'Available' ? (isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700') :
+                          listing.availability === 'Limited' ? (isDark ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700') :
+                          (isDark ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-700')
                         }`}>{listing.availability}</span>
                       </div>
                     </div>
 
                     {listing.description && (
                       <div className="mb-4">
-                        <p className="text-xs text-slate-500 mb-1">Description:</p>
-                        <p className="text-sm text-slate-300 line-clamp-3">{listing.description}</p>
+                        <p className={`text-xs mb-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Description:</p>
+                        <p className={`text-sm line-clamp-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{listing.description}</p>
                       </div>
                     )}
 
                     <div className="space-y-1 mb-4">
                       {listing.contactName && (
-                        <p className="text-sm text-slate-300">👤 {listing.contactName}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>👤 {listing.contactName}</p>
                       )}
                       {listing.contactPhone && (
-                        <p className="text-sm text-slate-300">📞 {listing.contactPhone}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>📞 {listing.contactPhone}</p>
                       )}
                       {listing.contactEmail && (
-                        <p className="text-sm text-slate-300">✉️ {listing.contactEmail}</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>✉️ {listing.contactEmail}</p>
                       )}
                     </div>
 
@@ -1124,7 +1126,7 @@ function IrrigationServices() {
 
             {/* Booking Form */}
             {showBookingForm && (
-              <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-2xl border-2 border-green-500 overflow-hidden">
+              <div className={`rounded-xl shadow-2xl border-2 border-green-500 overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'}`}>
                 {/* Form Header */}
                 <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -1277,7 +1279,7 @@ function IrrigationServices() {
                         setShowBookingForm(false)
                         setSelectedService(null)
                       }}
-                      className="px-8 py-3 border-2 border-slate-600 hover:border-slate-500 text-slate-300 font-semibold rounded-lg transition-all duration-300 hover:bg-slate-700"
+                      className={`px-8 py-3 border-2 font-semibold rounded-lg transition-all duration-300 ${isDark ? 'border-slate-600 hover:border-slate-500 text-slate-300 hover:bg-slate-700' : 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100'}`}
                     >
                       Cancel
                     </button>
@@ -1302,21 +1304,21 @@ function IrrigationServices() {
 
             {/* Booking Requests Grid */}
             {bookings.length === 0 ? (
-              <div className="card text-center py-12">
+              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                 <div className="text-6xl mb-4">📋</div>
-                <p className="text-slate-300 text-lg font-semibold">No booking requests yet</p>
-                <p className="text-slate-400 text-sm mt-2">Browse available services and make your first booking!</p>
+                <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>No booking requests yet</p>
+                <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Browse available services and make your first booking!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className="card hover:shadow-lg transition-shadow">
+                  <div key={booking.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className="text-lg font-bold text-white">{booking.serviceType} Service</h3>
-                        <p className="text-slate-400 text-sm">📍 {booking.location || 'Location not specified'}</p>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.serviceType} Service</h3>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>📍 {booking.location || 'Location not specified'}</p>
                         {booking.providerName && (
-                          <p className="text-slate-400 text-xs mt-1">Provider: {booking.providerName}</p>
+                          <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Provider: {booking.providerName}</p>
                         )}
                       </div>
                       <span className="text-2xl">{getServiceIcon(booking.serviceType)}</span>
@@ -1328,22 +1330,22 @@ function IrrigationServices() {
                       </span>
                     </div>
 
-                    <div className="space-y-2 mb-4 pb-4 border-b border-slate-700">
+                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       {booking.farmName && (
                         <div className="flex justify-between items-center">
-                          <p className="text-sm text-slate-400">Farm</p>
-                          <p className="text-sm font-semibold text-white">{booking.farmName}</p>
+                          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Farm</p>
+                          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.farmName}</p>
                         </div>
                       )}
                       {booking.cropName && (
                         <div className="flex justify-between items-center">
-                          <p className="text-sm text-slate-400">Crop</p>
-                          <p className="text-sm font-semibold text-white">{booking.cropName}</p>
+                          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Crop</p>
+                          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.cropName}</p>
                         </div>
                       )}
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Hours</p>
-                        <p className="text-sm font-semibold text-white">{booking.hours}hrs</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Hours</p>
+                        <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.hours}hrs</p>
                       </div>
                       <div className="flex justify-between items-center">
                         <p className="text-sm text-slate-400">People</p>

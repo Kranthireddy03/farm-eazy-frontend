@@ -1,5 +1,3 @@
-// Global Language Switcher - DISABLED
-// function LanguageSwitcher() { ... }
 import React from 'react';
 
 // Global Error Boundary
@@ -30,7 +28,7 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
-// NotificationCenter removed
+
 /**
  * Root App Component
  * 
@@ -38,6 +36,7 @@ class ErrorBoundary extends React.Component {
  * - Public routes: Login, Register
  * - Protected routes: Dashboard, Farms, Crops, Irrigation
  * - Redirect unauthenticated users to login
+ * - Professional session management with AuthContext
  */
 
 import { Routes, Route, Navigate } from 'react-router-dom'
@@ -45,10 +44,16 @@ import { useState, useEffect } from 'react'
 import AuthService from './services/AuthService'
 import { CoinProvider } from './context/CoinContext';
 import { LoaderProvider } from './context/LoaderContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { ToastProvider } from './context/ToastContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import SessionWarningModal from './components/SessionWarningModal';
 import './i18n';
 import { Suspense, lazy } from 'react';
 import Layout from './components/Layout';
+import DarkModeToggle from './components/DarkModeToggle';
 const UserPreferences = lazy(() => import('./pages/UserPreferences'));
+const CommunicationPreferences = lazy(() => import('./pages/CommunicationPreferences'));
 import OnboardingTour from './components/OnboardingTour';
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -70,6 +75,7 @@ const Checkout = lazy(() => import('./pages/Checkout'));
 const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const Orders = lazy(() => import('./pages/Orders'));
 const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
+const RefundDetails = lazy(() => import('./pages/RefundDetails'));
 const Support = lazy(() => import('./pages/Support'));
 const IrrigationServices = lazy(() => import('./pages/IrrigationServices'));
 const Activities = lazy(() => import('./pages/Activities'));
@@ -77,41 +83,51 @@ const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Services = lazy(() => import('./pages/Services'));
 const Blog = lazy(() => import('./pages/Blog'));
+const ServiceRequests = lazy(() => import('./pages/ServiceRequests'));
+const ServiceRequestDetail = lazy(() => import('./pages/ServiceRequestDetail'));
+const BankVerification = lazy(() => import('./pages/BankVerification'));
+const IrrigationSensorDashboard = lazy(() => import('./pages/IrrigationSensorDashboard'));
+const SessionExpired = lazy(() => import('./pages/SessionExpired'));
 
 /**
  * ProtectedRoute Component
- * Redirects to login if user is not authenticated
+ * Uses AuthContext for consistent session management
  */
 function ProtectedRoute({ children }) {
-  const isLoggedIn = AuthService.isLoggedIn()
-  return isLoggedIn ? children : <Navigate to="/login" replace />
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    );
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 }
 
 /**
- * App Component
- * Main routing configuration
+ * AppContent Component
+ * Main app content that uses auth context
  */
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [loading, setLoading] = useState(true)
+function AppContent() {
+  const { isAuthenticated, isLoading } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  // Check if user is logged in on app load
+  // Check for onboarding on auth state change
   useEffect(() => {
-    const loggedIn = AuthService.isLoggedIn();
-    setIsLoggedIn(loggedIn);
-    if (loggedIn && !localStorage.getItem('onboardingComplete')) {
+    if (isAuthenticated && !localStorage.getItem('onboardingComplete')) {
       setShowOnboarding(true);
     }
-    setLoading(false);
-  }, [])
+  }, [isAuthenticated]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="spinner">
           <svg
-            className="w-10 h-10 text-green-600"
+            className="w-10 h-10 text-green-600 animate-spin"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -125,69 +141,101 @@ function App() {
           </svg>
         </div>
       </div>
-    )
+    );
   }
 
   return (
+    <>
+      {/* Session Warning Modal */}
+      <SessionWarningModal />
+      
+      {/* Floating Theme Toggle - Always visible on all pages */}
+      <DarkModeToggle floating />
+      
+      {showOnboarding && (
+        <OnboardingTour onFinish={() => {
+          setShowOnboarding(false);
+          localStorage.setItem('onboardingComplete', 'true');
+        }} />
+      )}
+      
+      <Suspense fallback={<div className="flex items-center justify-center h-screen text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900">Loading page...</div>}>
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/r/:shortCode" element={<RedirectReset />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/email-error" element={<EmailError />} />
+          <Route path="/session-expired" element={<SessionExpired />} />
+
+          {/* Protected Routes with Layout */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout onShowTour={() => setShowOnboarding(true)} />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/" element={<Home />} />
+            <Route path="/settings" element={<ProtectedRoute><UserPreferences /></ProtectedRoute>} />
+            <Route path="/communication-preferences" element={<CommunicationPreferences />} />
+            <Route path="/dashboard" element={<DashboardEnhanced />} />
+            <Route path="/farms" element={<Farms />} />
+            <Route path="/farms/:farmId" element={<FarmDetail />} />
+            <Route path="/crops" element={<Crops />} />
+            <Route path="/irrigation" element={<IrrigationSchedules />} />
+            <Route path="/irrigation-services" element={<IrrigationServices />} />
+            <Route path="/selling" element={<Selling />} />
+            <Route path="/buying" element={<Buying />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/refund-details" element={<RefundDetails />} />
+            <Route path="/support" element={<Support />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/service-requests" element={<ServiceRequests />} />
+            <Route path="/service-requests/:requestNumber" element={<ServiceRequestDetail />} />
+            <Route path="/bank-verification" element={<BankVerification />} />
+            <Route path="/irrigation-sensors" element={<IrrigationSensorDashboard />} />
+          </Route>
+
+          {/* Catch-all redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+    </>
+  );
+}
+
+/**
+ * App Component
+ * Main routing configuration with all providers
+ */
+function App() {
+  return (
     <ErrorBoundary>
-      <LoaderProvider>
-        <CoinProvider>
-          {showOnboarding && (
-            <OnboardingTour onFinish={() => {
-              setShowOnboarding(false);
-              localStorage.setItem('onboardingComplete', 'true');
-            }} />
-          )}
-          <Suspense fallback={<div className="flex items-center justify-center h-screen text-gray-500">Loading page...</div>}>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<Login onLoginSuccess={() => setIsLoggedIn(true)} />} />
-              <Route path="/register" element={<Register onRegisterSuccess={() => setIsLoggedIn(true)} />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/r/:shortCode" element={<RedirectReset />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/email-error" element={<EmailError />} />
-
-              {/* Protected Routes with Layout */}
-              <Route
-                element={
-                  <ProtectedRoute>
-                    <Layout onShowTour={() => setShowOnboarding(true)} />
-                  </ProtectedRoute>
-                }
-              >
-                <Route path="/" element={<Home />} />
-                <Route path="/settings" element={<ProtectedRoute><UserPreferences /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<DashboardEnhanced />} />
-                <Route path="/farms" element={<Farms />} />
-                <Route path="/farms/:farmId" element={<FarmDetail />} />
-                <Route path="/crops" element={<Crops />} />
-                <Route path="/irrigation" element={<IrrigationSchedules />} />
-                <Route path="/irrigation-services" element={<IrrigationServices />} />
-                <Route path="/selling" element={<Selling />} />
-                <Route path="/buying" element={<Buying />} />
-                <Route path="/cart" element={<Cart />} />
-                <Route path="/checkout" element={<Checkout />} />
-                <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/change-password" element={<ChangePassword />} />
-                <Route path="/orders" element={<Orders />} />
-                <Route path="/support" element={<Support />} />
-                <Route path="/activities" element={<Activities />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/services" element={<Services />} />
-                <Route path="/blog" element={<Blog />} />
-              </Route>
-
-              {/* Catch-all redirect */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </CoinProvider>
-      </LoaderProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <LoaderProvider>
+            <CoinProvider>
+              <ToastProvider>
+                <AppContent />
+              </ToastProvider>
+            </CoinProvider>
+          </LoaderProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </ErrorBoundary>
-  )
+  );
 }
 
 export default App

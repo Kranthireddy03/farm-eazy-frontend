@@ -11,13 +11,16 @@
 
 import { useState, useEffect } from 'react'
 import { useLoader } from '../context/LoaderContext'
+import { useTheme } from '../context/ThemeContext'
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
+import { sendNotification } from '../components/NotificationCenter'
 
 function Farms() {
+    const { isDark } = useTheme()
     // Import dashboard stats refresh
     const dashboardWindow = window;
     const refreshDashboardStats = () => {
@@ -105,6 +108,7 @@ function Farms() {
       setShowAddForm(false)
       setError('')
       showToast('Farm created successfully!', 'success');
+      sendNotification(`Farm "${formData.farmName}" created!`, 'success', '🌾');
       await fetchFarms()
       refreshDashboardStats();
     } catch (err) {
@@ -190,14 +194,14 @@ function Farms() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className={`flex items-center justify-center h-96 ${isDark ? 'bg-slate-900' : ''}`}>
         <div className="text-center">
           <div className="spinner text-green-600 mb-4">
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
             </svg>
           </div>
-          <p className="text-gray-600">Loading farms...</p>
+          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading farms...</p>
         </div>
       </div>
     )
@@ -208,12 +212,12 @@ function Farms() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className="space-y-8">
+      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       {/* Page Header */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Farms</h1>
-          <p className="text-gray-600 mt-1">Manage all your farms in one place</p>
+          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Farms</h1>
+          <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Manage all your farms in one place</p>
         </div>
         <button
           onClick={() => {
@@ -229,7 +233,7 @@ function Farms() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className={`px-4 py-3 rounded-lg border ${isDark ? 'bg-red-900/30 border-red-700 text-red-400' : 'bg-red-50 border-red-200 text-red-700'}`}>
           {error}
         </div>
       )}
@@ -237,7 +241,7 @@ function Farms() {
       {/* Add Farm Form */}
       {showAddForm && (
         <div className="card">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Add New Farm</h2>
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New Farm</h2>
           <form onSubmit={handleAddFarm} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -298,7 +302,7 @@ function Farms() {
       {/* Edit Farm Form */}
       {editingFarm && (
         <div className="card">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Edit Farm</h2>
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Farm</h2>
           <form onSubmit={handleUpdateFarm} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -364,7 +368,7 @@ function Farms() {
       {/* Farms List */}
       {farms.length === 0 ? (
         <div className="card text-center py-12">
-          <p className="text-gray-600 text-lg">No farms yet. Create your first farm to get started!</p>
+          <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No farms yet. Create your first farm to get started!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -372,16 +376,16 @@ function Farms() {
             <div key={farm.id} className="card hover:shadow-lg transition-shadow">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800">{farm.farmName}</h3>
-                  <p className="text-gray-600 text-sm">{farm.location}</p>
+                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{farm.farmName}</h3>
+                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{farm.location}</p>
                 </div>
                 <span className="text-2xl">🌾</span>
               </div>
 
-              <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
+              <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                 <div>
-                  <p className="text-gray-600 text-sm">Area Size</p>
-                  <p className="font-semibold text-gray-800">{farm.areaSize} hectares</p>
+                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Area Size</p>
+                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{farm.areaSize} hectares</p>
                 </div>
               </div>
 

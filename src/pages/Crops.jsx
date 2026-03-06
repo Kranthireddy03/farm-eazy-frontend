@@ -11,11 +11,13 @@
 
 import { useState, useEffect } from 'react'
 import { useToast } from '../hooks/useToast'
+import { useTheme } from '../context/ThemeContext'
 import Toast from '../components/Toast'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 
 function Crops() {
+  const { isDark } = useTheme()
   const { toast, showToast, closeToast } = useToast()
   const [crops, setCrops] = useState([])
   const [loading, setLoading] = useState(true)
@@ -176,25 +178,30 @@ function Crops() {
   }
 
   const getStatusColor = (status) => {
-    const colors = {
+    const colors = isDark ? {
+      PLANTED: 'bg-blue-900/50 text-blue-300',
+      GROWING: 'bg-green-900/50 text-green-300',
+      READY: 'bg-yellow-900/50 text-yellow-300',
+      HARVESTED: 'bg-gray-700 text-gray-300',
+    } : {
       PLANTED: 'bg-blue-100 text-blue-800',
       GROWING: 'bg-green-100 text-green-800',
       READY: 'bg-yellow-100 text-yellow-800',
       HARVESTED: 'bg-gray-100 text-gray-800',
     }
-    return colors[status] || 'bg-gray-100 text-gray-800'
+    return colors[status] || (isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800')
   }
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className={`flex items-center justify-center h-96 ${isDark ? 'bg-slate-900' : ''}`}>
         <div className="text-center">
           <div className="spinner text-green-600 mb-4">
             <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
             </svg>
           </div>
-          <p className="text-gray-600">Loading crops...</p>
+          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading crops...</p>
         </div>
       </div>
     )
@@ -205,12 +212,12 @@ function Crops() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className="space-y-8">
+      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-800">Crops</h1>
-            <p className="text-gray-600 mt-1">Track all your crops and their status</p>
+            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Crops</h1>
+            <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Track all your crops and their status</p>
           </div>
           <button
             onClick={() => {
@@ -226,7 +233,7 @@ function Crops() {
 
         {/* Error Message */}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className={`px-4 py-3 rounded-lg border ${isDark ? 'bg-red-900/30 border-red-700 text-red-400' : 'bg-red-50 border-red-200 text-red-700'}`}>
             {error}
           </div>
         )}
@@ -234,7 +241,7 @@ function Crops() {
         {/* Add Crop Form */}
         {showAddForm && (
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Add New Crop</h2>
+            <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New Crop</h2>
             <form onSubmit={handleAddCrop} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -335,7 +342,7 @@ function Crops() {
         {/* Edit Crop Form */}
         {editingCrop && (
           <div className="card">
-            <h2 className="text-xl font-bold text-gray-800 mb-4">Edit Crop</h2>
+            <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Crop</h2>
             <form onSubmit={handleUpdateCrop} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -441,7 +448,7 @@ function Crops() {
         {/* Crops Grid */}
         {crops.length === 0 ? (
           <div className="card text-center py-12">
-            <p className="text-gray-600 text-lg">No crops yet. Add your first crop!</p>
+            <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No crops yet. Add your first crop!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -449,30 +456,30 @@ function Crops() {
               <div key={crop.id} className="card hover:shadow-lg transition-shadow">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-lg font-bold text-gray-800">{crop.cropName}</h3>
-                    <p className="text-gray-600 text-sm">📍 {getFarmName(crop.farmId)}</p>
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{crop.cropName}</h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>📍 {getFarmName(crop.farmId)}</p>
                   </div>
                   <span className="text-2xl">🌱</span>
                 </div>
 
-                <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
+                <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                   <div className="flex justify-between items-center">
-                    <p className="text-gray-600 text-sm">Season</p>
-                    <p className="font-semibold text-gray-800">{crop.season}</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Season</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{crop.season}</p>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-gray-600 text-sm">Status</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</p>
                     <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(crop.status)}`}>
                       {crop.status}
                     </span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-gray-600 text-sm">Sowing Date</p>
-                    <p className="font-semibold text-gray-800">{new Date(crop.sowingDate).toLocaleDateString()}</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Sowing Date</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{new Date(crop.sowingDate).toLocaleDateString()}</p>
                   </div>
                   <div className="flex justify-between items-center">
-                    <p className="text-gray-600 text-sm">Expected Harvest</p>
-                    <p className="font-semibold text-gray-800">{new Date(crop.expectedHarvestDate).toLocaleDateString()}</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Expected Harvest</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{new Date(crop.expectedHarvestDate).toLocaleDateString()}</p>
                   </div>
                 </div>
 

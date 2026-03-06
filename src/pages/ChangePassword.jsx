@@ -6,9 +6,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
+import { useTheme } from '../context/ThemeContext'
 
 function ChangePassword() {
   const navigate = useNavigate()
+  const { isDark } = useTheme()
   const [formData, setFormData] = useState({
     currentPassword: '',
     newPassword: '',
@@ -95,7 +97,7 @@ function ChangePassword() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className={`max-w-2xl mx-auto px-4 py-8 ${isDark ? '' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 min-h-screen'}`}>
       {/* Header Card */}
       <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-t-3xl p-6 shadow-lg">
         <div className="flex items-center gap-4">
@@ -110,23 +112,23 @@ function ChangePassword() {
       </div>
 
       {/* Form Card */}
-      <div className="bg-slate-800 border border-slate-700 rounded-b-3xl shadow-2xl p-8">
+      <div className={`rounded-b-3xl shadow-2xl p-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error Display */}
           {apiError && (
-            <div className="bg-red-900/30 border-2 border-red-700 text-red-400 px-4 py-3 rounded-xl flex items-center gap-3">
+            <div className={`px-4 py-3 rounded-xl flex items-center gap-3 ${isDark ? 'bg-red-900/30 border-2 border-red-700 text-red-400' : 'bg-red-50 border-2 border-red-300 text-red-600'}`}>
               <span className="text-xl">⚠️</span>
               <p className="font-medium">{apiError}</p>
             </div>
           )}
 
           {/* Security Tips */}
-          <div className="bg-amber-900/30 border-2 border-amber-700 rounded-xl p-4">
+          <div className={`rounded-xl p-4 ${isDark ? 'bg-amber-900/30 border-2 border-amber-700' : 'bg-amber-50 border-2 border-amber-200'}`}>
             <div className="flex items-start gap-3">
               <span className="text-2xl">💡</span>
               <div>
-                <p className="font-semibold text-amber-400">Password Tips</p>
-                <ul className="text-sm text-amber-300 mt-1 space-y-1">
+                <p className={`font-semibold ${isDark ? 'text-amber-400' : 'text-amber-700'}`}>Password Tips</p>
+                <ul className={`text-sm mt-1 space-y-1 ${isDark ? 'text-amber-300' : 'text-amber-600'}`}>
                   <li>• Use at least 6 characters</li>
                   <li>• Mix letters, numbers, and symbols</li>
                   <li>• Avoid common words or personal info</li>
@@ -137,7 +139,7 @@ function ChangePassword() {
 
           {/* Current Password */}
           <div className="space-y-2">
-            <label className="text-slate-300 text-sm font-semibold flex items-center gap-2">
+            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
               <span>🔒</span> Current Password
             </label>
             <div className="relative">
@@ -146,13 +148,13 @@ function ChangePassword() {
                 name="currentPassword"
                 value={formData.currentPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-3.5 bg-slate-700 border-2 border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12"
+                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
                 placeholder="Enter current password"
               />
               <button
                 type="button"
                 onClick={() => setShowCurrent(!showCurrent)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 {showCurrent ? '👁️' : '👁️‍🗨️'}
               </button>
@@ -162,14 +164,14 @@ function ChangePassword() {
 
           {/* Divider */}
           <div className="flex items-center gap-4">
-            <div className="flex-1 h-px bg-slate-600"></div>
-            <span className="text-slate-500 text-sm">New Password</span>
-            <div className="flex-1 h-px bg-slate-600"></div>
+            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
+            <span className={`text-sm ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>New Password</span>
+            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
           </div>
 
           {/* New Password */}
           <div className="space-y-2">
-            <label className="text-slate-300 text-sm font-semibold flex items-center gap-2">
+            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
               <span>🔐</span> New Password
             </label>
             <div className="relative">
@@ -178,13 +180,13 @@ function ChangePassword() {
                 name="newPassword"
                 value={formData.newPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-3.5 bg-slate-700 border-2 border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12"
+                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
                 placeholder="Enter new password"
               />
               <button
                 type="button"
                 onClick={() => setShowNew(!showNew)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 {showNew ? '👁️' : '👁️‍🗨️'}
               </button>
@@ -197,7 +199,7 @@ function ChangePassword() {
 
           {/* Confirm Password */}
           <div className="space-y-2">
-            <label className="text-slate-300 text-sm font-semibold flex items-center gap-2">
+            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
               <span>🔐</span> Confirm New Password
             </label>
             <div className="relative">
@@ -206,13 +208,13 @@ function ChangePassword() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="w-full px-4 py-3.5 bg-slate-700 border-2 border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12"
+                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
                 placeholder="Confirm new password"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
               >
                 {showConfirm ? '👁️' : '👁️‍🗨️'}
               </button>
@@ -247,7 +249,7 @@ function ChangePassword() {
       </div>
 
       {/* Footer Note */}
-      <div className="text-center mt-6 text-slate-500 text-sm">
+      <div className={`text-center mt-6 text-sm ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
         <p>🔒 Your password is encrypted and secure</p>
       </div>
     </div>

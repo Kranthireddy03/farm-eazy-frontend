@@ -13,11 +13,16 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
+import { sendNotification } from '../components/NotificationCenter'
+import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 import ProductModal from '../components/ProductModal'
 
 function Buying() {
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const { isDark } = useTheme()
+  const { getUserId, getUserEmail } = useAuth()
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,6 +31,8 @@ function Buying() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [revealedContacts, setRevealedContacts] = useState({})
+  const [showCartPrompt, setShowCartPrompt] = useState(false)
+  const [lastAddedProduct, setLastAddedProduct] = useState(null)
 
   const categories = [
     { value: 'ALL', label: 'All Products', icon: '🛒' },
@@ -61,6 +68,19 @@ function Buying() {
 
   const filterProducts = () => {
     let filtered = products
+    
+    // Filter out the current user's own products
+    const currentUserId = getUserId()
+    const currentUserEmail = getUserEmail()
+    if (currentUserId || currentUserEmail) {
+      filtered = filtered.filter(product => {
+        // Check both sellerId and sellerEmail to be safe
+        const isOwnProduct = 
+          (currentUserId && product.sellerId && product.sellerId.toString() === currentUserId.toString()) ||
+          (currentUserEmail && product.sellerEmail && product.sellerEmail.toLowerCase() === currentUserEmail.toLowerCase())
+        return !isOwnProduct
+      })
+    }
 
     // Filter by category
     if (selectedCategory !== 'ALL') {
@@ -111,6 +131,12 @@ function Buying() {
     localStorage.setItem('farmeazy_cart', JSON.stringify(existingCart))
     // Emit event to update cart count in header
     window.dispatchEvent(new Event('cart-updated'))
+    sendNotification(`${cartItem.productName} added to cart!`, 'info', '🛒')
+    
+    // Show cart prompt modal
+    setLastAddedProduct(cartItem)
+    setShowCartPrompt(true)
+    setShowModal(false) // Close product modal if open
   }
 
   const handleProductClick = (product) => {
@@ -143,19 +169,19 @@ function Buying() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-8 px-4">
+    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="text-5xl mb-3">🛒</div>
-          <h1 className="text-4xl font-bold text-white mb-2">Buying Center</h1>
-          <p className="text-lg text-slate-400">
+          <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Buying Center</h1>
+          <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
             Browse quality agricultural products from verified sellers
           </p>
         </div>
 
         {/* Search and Filter */}
-        <div className="bg-slate-800 rounded-lg shadow-lg p-6 mb-8 border border-slate-700">
+        <div className={`rounded-lg shadow-lg p-6 mb-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search Bar */}
             <div className="flex-1">
@@ -165,7 +191,7 @@ function Buying() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search products, sellers..."
-                  className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent border ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-slate-800 placeholder-gray-400'}`}
                 />
                 <span className="absolute left-3 top-3.5 text-slate-400">🔍</span>
               </div>
@@ -176,7 +202,7 @@ function Buying() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 focus:border-transparent ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
               >
                 {categories.map(cat => (
                   <option key={cat.value} value={cat.value}>
@@ -188,7 +214,7 @@ function Buying() {
           </div>
 
           {/* Results Count */}
-          <div className="mt-4 text-sm text-slate-400">
+          <div className={`mt-4 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
             Showing {filteredProducts.length} of {products.length} products
           </div>
         </div>
@@ -197,16 +223,16 @@ function Buying() {
         {loading && (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-            <p className="mt-4 text-slate-400">Loading products...</p>
+            <p className={`mt-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Loading products...</p>
           </div>
         )}
 
         {/* Empty State */}
         {!loading && filteredProducts.length === 0 && (
-          <div className="bg-slate-800 rounded-lg shadow-lg p-12 text-center border border-slate-700">
+          <div className={`rounded-lg shadow-lg p-12 text-center border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
             <div className="text-6xl mb-4">📦</div>
-            <h2 className="text-2xl font-bold text-white mb-2">No Products Found</h2>
-            <p className="text-slate-400 mb-6">
+            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No Products Found</h2>
+            <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
               {products.length === 0
                 ? 'No products are available yet. Be the first to list a product!'
                 : 'Try adjusting your search or filters'}
@@ -229,11 +255,11 @@ function Buying() {
               {filteredProducts.map(product => (
                 <div 
                   key={product.id} 
-                  className="bg-slate-800 rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border border-slate-700"
+                  className={`rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}
                 >
                   {/* Product Image */}
                   <div
-                    className="relative h-48 bg-gradient-to-br from-slate-700 to-slate-600 cursor-pointer"
+                    className={`relative h-48 cursor-pointer ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-600' : 'bg-gradient-to-br from-gray-100 to-gray-200'}`}
                     onClick={() => handleViewDetails(product.id)}
                   >
                     {product.imageUrl ? (
@@ -251,7 +277,7 @@ function Buying() {
                       </div>
                     )}
                     {/* Category Badge */}
-                    <div className="absolute top-3 right-3 bg-slate-900/80 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-semibold ${isDark ? 'bg-slate-900/80 text-white' : 'bg-white/90 text-gray-800'}`}>
                       {getCategoryIcon(product.category)} {product.category}
                     </div>
                     {/* Discount Badge */}
@@ -268,23 +294,23 @@ function Buying() {
                       onClick={() => handleViewDetails(product.id)}
                       className="text-left"
                     >
-                      <h3 className="text-xl font-bold text-white mb-2 hover:text-orange-400 transition">
+                      <h3 className={`text-xl font-bold mb-2 hover:text-orange-400 transition ${isDark ? 'text-white' : 'text-gray-800'}`}>
                         {product.productName}
                       </h3>
                     </button>
                     
-                    <p className="text-slate-400 text-sm mb-3 line-clamp-2">
+                    <p className={`text-sm mb-3 line-clamp-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
                       {product.description}
                     </p>
 
                     {/* Seller Info */}
-                    <div className="flex items-center gap-2 mb-3 text-sm text-slate-400">
+                    <div className={`flex items-center gap-2 mb-3 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
                       <span>👤</span>
                       <span>{product.sellerFullName}</span>
                     </div>
 
                     {/* Location */}
-                    <div className="flex items-center gap-2 mb-3 text-sm text-slate-400">
+                    <div className={`flex items-center gap-2 mb-3 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
                       <span>📍</span>
                       <span>{product.sellerLocation || 'Location not specified'}</span>
                     </div>
@@ -292,30 +318,30 @@ function Buying() {
                     {/* Quantity and Price */}
                     <div className="flex justify-between items-center mb-4">
                       <div>
-                        <p className="text-sm text-slate-400">Available</p>
-                        <p className="font-semibold text-white">
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Available</p>
+                        <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                           {product.quantity} {product.unit}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm text-slate-400">Price</p>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Price</p>
                         {product.discountPercentage && product.discountPercentage > 0 ? (
                           <div>
                             <div className="flex items-center justify-end gap-2 mb-1">
-                              <span className="line-through text-slate-500 text-sm">₹{product.price}</span>
+                              <span className={`line-through text-sm ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{product.price}</span>
                               <span className="bg-green-600 text-white text-xs font-bold px-2 py-0.5 rounded">
                                 {product.discountPercentage}% OFF
                               </span>
                             </div>
-                            <p className="text-2xl font-bold text-orange-400">
+                            <p className="text-2xl font-bold text-orange-500">
                               ₹{product.discountedPrice || (product.price - (product.price * product.discountPercentage / 100)).toFixed(2)}
-                              <span className="text-sm text-slate-400">/{product.unit}</span>
+                              <span className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>/{product.unit}</span>
                             </p>
                           </div>
                         ) : (
-                          <p className="text-2xl font-bold text-orange-400">
+                          <p className="text-2xl font-bold text-orange-500">
                             ₹{product.price}
-                            <span className="text-sm text-slate-400">/{product.unit}</span>
+                            <span className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>/{product.unit}</span>
                           </p>
                         )}
                       </div>
@@ -363,19 +389,19 @@ function Buying() {
                     </div>
 
                     {(revealedContacts[product.id]?.phone || revealedContacts[product.id]?.email) && (
-                      <div className="mt-3 text-xs text-slate-300 space-y-1">
+                      <div className={`mt-3 text-xs space-y-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
                         {revealedContacts[product.id]?.phone && product.sellerPhone && (
                           <div className="flex items-center gap-2">
-                            <span className="text-green-400">📞</span>
-                            <a href={`tel:${product.sellerPhone}`} className="text-green-400 font-semibold hover:underline">
+                            <span className="text-green-500">📞</span>
+                            <a href={`tel:${product.sellerPhone}`} className="text-green-500 font-semibold hover:underline">
                               {product.sellerPhone}
                             </a>
                           </div>
                         )}
                         {revealedContacts[product.id]?.email && product.sellerEmail && (
                           <div className="flex items-center gap-2">
-                            <span className="text-blue-400">✉️</span>
-                            <a href={`mailto:${product.sellerEmail}`} className="text-blue-400 font-semibold hover:underline">
+                            <span className="text-blue-500">✉️</span>
+                            <a href={`mailto:${product.sellerEmail}`} className="text-blue-500 font-semibold hover:underline">
                               {product.sellerEmail}
                             </a>
                           </div>
@@ -385,7 +411,7 @@ function Buying() {
 
                     <button
                       onClick={() => handleViewDetails(product.id, true)}
-                      className="mt-3 w-full px-4 py-2 bg-slate-700 border border-slate-600 text-orange-400 rounded-lg font-semibold hover:bg-slate-600 transition"
+                      className={`mt-3 w-full px-4 py-2 border rounded-lg font-semibold transition ${isDark ? 'bg-slate-700 border-slate-600 text-orange-400 hover:bg-slate-600' : 'bg-gray-100 border-gray-300 text-orange-500 hover:bg-gray-200'}`}
                     >
                       View Details
                     </button>
@@ -402,6 +428,42 @@ function Buying() {
               onAddToCart={handleAddToCart}
             />
           </>
+        )}
+
+        {/* Cart Prompt Modal */}
+        {showCartPrompt && lastAddedProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
+            <div className={`border-2 border-green-500/50 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+              <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-5xl">✅</span>
+              </div>
+              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Added to Cart!</h2>
+              <div className={`rounded-lg p-4 mb-6 ${isDark ? 'bg-slate-700/50' : 'bg-gray-100'}`}>
+                <p className="text-orange-500 font-semibold text-lg">{lastAddedProduct.productName}</p>
+                <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                  Quantity: {lastAddedProduct.quantity} × ₹{lastAddedProduct.discountedPrice !== undefined ? lastAddedProduct.discountedPrice.toFixed(2) : lastAddedProduct.price.toFixed(2)}
+                </p>
+              </div>
+              <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>What would you like to do next?</p>
+              <div className="flex flex-col gap-3">
+                <button
+                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+                  onClick={() => {
+                    setShowCartPrompt(false)
+                    navigate('/cart')
+                  }}
+                >
+                  <span>🛒</span> View Cart & Checkout
+                </button>
+                <button
+                  className={`font-bold py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+                  onClick={() => setShowCartPrompt(false)}
+                >
+                  <span>🛍️</span> Continue Shopping
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

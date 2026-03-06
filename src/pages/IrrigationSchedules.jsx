@@ -12,8 +12,10 @@
 import { useState, useEffect } from 'react'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
+import { useTheme } from '../context/ThemeContext'
 
 function IrrigationSchedules() {
+    const { isDark } = useTheme()
     // Import dashboard stats refresh
     const dashboardWindow = window;
     const refreshDashboardStats = () => {
@@ -210,13 +212,13 @@ function IrrigationSchedules() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <p className="text-slate-400">Loading schedules...</p>
+        <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading schedules...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 -m-6 p-6">
+    <div className={`min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       <div className="space-y-8">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg p-6 text-white">
@@ -242,7 +244,7 @@ function IrrigationSchedules() {
                   notes: '',
                 })
               }}
-              className="bg-slate-800 text-cyan-400 px-6 py-3 rounded-lg font-semibold hover:bg-slate-700 transition-colors shadow-md border border-slate-600"
+              className={`px-6 py-3 rounded-lg font-semibold transition-colors shadow-md border ${isDark ? 'bg-slate-800 text-cyan-400 hover:bg-slate-700 border-slate-600' : 'bg-white text-blue-600 hover:bg-gray-50 border-gray-200'}`}
             >
               {showAddForm ? 'Cancel' : '+ New Schedule'}
             </button>
@@ -250,14 +252,14 @@ function IrrigationSchedules() {
         </div>
 
       {error && (
-        <div className="bg-red-900/30 border border-red-700 text-red-400 px-4 py-3 rounded-lg">
+        <div className={`px-4 py-3 rounded-lg ${isDark ? 'bg-red-900/30 border border-red-700 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
           {error}
         </div>
       )}
 
       {showAddForm && (
-        <div className="card">
-          <h2 className="text-xl font-bold text-white mb-4">Create New Schedule</h2>
+        <div className={`rounded-xl shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Create New Schedule</h2>
           <form onSubmit={handleAddSchedule} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -370,8 +372,8 @@ function IrrigationSchedules() {
       )}
 
       {editingSchedule && (
-        <div className="card">
-          <h2 className="text-xl font-bold text-white mb-4">Edit Irrigation Schedule</h2>
+        <div className={`rounded-xl shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Irrigation Schedule</h2>
           <form onSubmit={handleUpdateSchedule} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -489,14 +491,14 @@ function IrrigationSchedules() {
       )}
 
       {schedules.length === 0 ? (
-        <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-lg text-center py-12">
+        <div className={`rounded-xl shadow-lg text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <span className="text-5xl mb-4 block">🌱</span>
-          <p className="text-slate-400 text-lg">No schedules yet. Create your first irrigation schedule!</p>
+          <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No schedules yet. Create your first irrigation schedule!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {schedules.map((schedule) => (
-            <div key={schedule.id} className="bg-slate-800 border border-slate-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+            <div key={schedule.id} className={`rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
               <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white">
                 <div className="flex items-start justify-between">
                   <div>
@@ -511,8 +513,8 @@ function IrrigationSchedules() {
                 <div className="flex items-center gap-2">
                   <span className="text-blue-400">📅</span>
                   <div>
-                    <p className="text-slate-500 text-xs">Date</p>
-                    <p className="font-semibold text-white">
+                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Date</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                       {new Date(schedule.scheduleDate).toLocaleDateString()}
                     </p>
                   </div>
@@ -520,15 +522,15 @@ function IrrigationSchedules() {
                 <div className="flex items-center gap-2">
                   <span className="text-blue-400">⏱️</span>
                   <div>
-                    <p className="text-slate-500 text-xs">Duration</p>
-                    <p className="font-semibold text-white">{schedule.duration} minutes</p>
+                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Duration</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{schedule.duration} minutes</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-blue-400">💦</span>
                   <div>
-                    <p className="text-slate-500 text-xs">Water Amount</p>
-                    <p className="font-semibold text-white">{schedule.waterAmount} liters</p>
+                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Water Amount</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{schedule.waterAmount} liters</p>
                   </div>
                 </div>
               </div>
@@ -542,7 +544,7 @@ function IrrigationSchedules() {
                 </button>
                 <button
                   onClick={() => handleDeleteSchedule(schedule.id)}
-                  className="flex-1 bg-slate-700 text-slate-300 py-2 rounded-lg font-medium hover:bg-red-900/50 hover:text-red-400 transition-colors text-sm"
+                  className={`flex-1 py-2 rounded-lg font-medium transition-colors text-sm ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-red-900/50 hover:text-red-400' : 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-600'}`}
                 >
                   Delete
                 </button>

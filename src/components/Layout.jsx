@@ -5,12 +5,14 @@
  * - Header with FarmEazy branding
  * - Navigation menu
  * - User profile menu
- * - Logout functionality
+ * - Logout functionality with AuthContext
  * - Page content outlet
+ * - Professional session management
  */
 
 import { Outlet, Link, useNavigate } from 'react-router-dom'
 import { useRef, useState, useEffect } from 'react';
+import NotificationCenter, { sendNotification } from './NotificationCenter';
 // Add prop for triggering onboarding tour
 // ...existing code...
 import AuthService from '../services/AuthService'
@@ -20,19 +22,29 @@ import InactivityWarning from './InactivityWarning'
 import { useToast } from '../hooks/useToast'
 import Toast from './Toast'
 import { useCoin } from '../context/CoinContext'
+import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
 
 function Layout({ onShowTour }) {
   const navigate = useNavigate()
+  const { isDark } = useTheme()
+  const { logout: authLogout, getUserEmail, getUserName } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const notifBellRef = useRef(null)
   const { coins, refreshCoins } = useCoin()
   const [coinsLoading, setCoinsLoading] = useState(false)
   const [sessionCoinsEarned, setSessionCoinsEarned] = useState(0)
   const [showSessionCoinBonus, setShowSessionCoinBonus] = useState(false)
   const [cartCount, setCartCount] = useState(0)
   const hasFetchedCoinsRef = useRef(false)
-  const userEmail = AuthService.getUserEmail()
-  const userUsername = localStorage.getItem('farmEazy_username')
-  const userFullName = localStorage.getItem('farmEazy_fullName')
+  const hasRedirectedRef = useRef(false)
+  // Use AuthContext for user info instead of direct localStorage
+  const userEmail = getUserEmail()
+  const userUsername = localStorage.getItem('farmEazy_username') || getUserName()
+  const userId = localStorage.getItem('farmEazy_userId')
+  // Format user ID as 5-digit display (e.g., 00001, 00123)
+  const userDisplayId = userId ? String(userId).padStart(5, '0') : '-----'
   const { toast, showToast, closeToast } = useToast()
 
   // Refresh coins manually
@@ -51,13 +63,17 @@ function Layout({ onShowTour }) {
 
   // Check if user is authenticated on mount
   useEffect(() => {
+    // Prevent multiple redirects
+    if (hasRedirectedRef.current) return
+    
     const token = localStorage.getItem('farmEazy_token')
     const email = localStorage.getItem('farmEazy_email')
     
     if (!token || !email) {
-      // User data missing, redirect to login
-      alert('Session expired. Please login again.')
-      navigate('/login')
+      hasRedirectedRef.current = true
+      // User data missing, redirect to login (no alert to avoid loop)
+      sessionStorage.setItem('logoutReason', 'Session expired. Please login again.')
+      navigate('/login', { replace: true })
     }
   }, [navigate])
   
@@ -95,6 +111,7 @@ function Layout({ onShowTour }) {
           setSessionCoinsEarned(earned)
           setShowSessionCoinBonus(true)
           showToast(`🪙 +${earned} coins! Daily login bonus earned`, 'success')
+          sendNotification(`+${earned} coins daily login bonus!`, 'success', '🪙')
           localStorage.setItem('lastLoginBonusDate', today)
           // Hide session coin bonus after 5 seconds
           setTimeout(() => {
@@ -157,7 +174,8 @@ function Layout({ onShowTour }) {
   }, [])
 
   const handleLogout = () => {
-    AuthService.logout()
+    // Use AuthContext logout for proper session cleanup
+    authLogout('user')
     navigate('/login')
   }
   
@@ -167,7 +185,7 @@ function Layout({ onShowTour }) {
 
   // Determine timer color based on remaining time
   const getTimerStatusColor = () => {
-    if (timeRemaining <= 90) {
+    if (timeRemaining <= 120) {
       return 'text-red-600 bg-red-50 border-red-200'
     } else if (timeRemaining <= 300) {
       return 'text-yellow-600 bg-yellow-50 border-yellow-200'
@@ -183,17 +201,26 @@ function Layout({ onShowTour }) {
     { name: 'Irrigation', path: '/irrigation' },
     { name: 'Services', path: '/irrigation-services' },
     { name: 'Shopping', path: '/buying' },
+    { name: 'Support', path: '/support' },
+  ]
+  
+  // Irrigation sub-menu items (for future dropdown)
+  const irrigationSubItems = [
+    { name: 'Schedules', path: '/irrigation' },
+    { name: 'Sensors', path: '/irrigation-sensors' },
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      {/* Toast Notification */}
+    <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 to-teal-50'}`}>
+      {/* Toast Notification - Fixed bottom-right positioning */}
       {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={closeToast}
-        />
+        <div className="fixed bottom-6 right-6 z-[100]">
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={closeToast}
+          />
+        </div>
       )}
 
       {/* Inactivity Warning Modal */}
@@ -253,6 +280,26 @@ function Layout({ onShowTour }) {
                 <span>Tour</span>
               </button>
 
+              {/* Notification Bell - Modern */}
+              <div className="relative">
+                <button 
+                  ref={notifBellRef} 
+                  onClick={() => setShowNotifications((v) => !v)} 
+                  className="relative w-10 h-10 flex items-center justify-center bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all border border-white/20" 
+                  aria-label="Notifications"
+                >
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {!showNotifications && (
+                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-teal-600 animate-pulse"></span>
+                  )}
+                </button>
+                {showNotifications && (
+                  <NotificationCenter anchorRef={notifBellRef} onClose={() => setShowNotifications(false)} />
+                )}
+              </div>
+
               {/* Shopping Cart - Floating Badge */}
               <button
                 onClick={() => navigate('/cart')}
@@ -287,7 +334,7 @@ function Layout({ onShowTour }) {
 
               {/* Session Timer - Pill Style */}
               <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full font-mono text-xs transition-colors ${
-                timeRemaining <= 90 ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 
+                timeRemaining <= 120 ? 'bg-red-500 text-white shadow-lg shadow-red-500/30' : 
                 timeRemaining <= 300 ? 'bg-amber-400 text-amber-900 shadow-lg shadow-amber-400/30' : 
                 'bg-white/15 text-white border border-white/20'
               }`}>
@@ -304,12 +351,9 @@ function Layout({ onShowTour }) {
                   className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all border border-white/20"
                 >
                   <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner">
-                    {(userFullName || userUsername || 'U').charAt(0).toUpperCase()}
+                    {(userUsername || 'U').charAt(0).toUpperCase()}
                   </div>
-                  <div className="hidden md:block text-left">
-                    <span className="text-xs text-white/70 block leading-tight">@{userUsername || 'user'}</span>
-                    <span className="text-sm font-medium text-white leading-tight">{userFullName?.split(' ')[0] || 'User'}</span>
-                  </div>
+                  <span className="hidden sm:inline text-sm font-mono font-semibold text-white">#{userDisplayId}</span>
                   <svg className="w-4 h-4 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -317,31 +361,31 @@ function Layout({ onShowTour }) {
 
                 {/* Modern User Dropdown */}
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-3 w-72 bg-slate-800 border border-slate-700 backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] overflow-hidden" style={{top: '100%'}}>
+                  <div className={`absolute right-0 mt-3 w-72 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} border backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] overflow-hidden`} style={{top: '100%'}}>
                     {/* User Info Header */}
                     <div className="px-4 py-4 bg-gradient-to-r from-emerald-500 to-teal-500">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
-                          {(userFullName || userUsername || 'U').charAt(0).toUpperCase()}
+                          {(userUsername || 'U').charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-white">{userFullName || 'User'}</p>
-                          <p className="text-sm text-white/80">@{userUsername || 'user'}</p>
+                          <p className="font-bold text-white">@{userUsername || 'User'}</p>
+                          <p className="text-xs text-white/70 font-mono">ID: #{userId ? String(userId).padStart(5, '0') : '-----'}</p>
                           <p className="text-xs text-white/60 truncate">{userEmail}</p>
                         </div>
                       </div>
                     </div>
                     
                     {/* Quick Stats */}
-                    <div className="flex items-center justify-around py-3 border-b border-slate-700">
+                    <div className={`flex items-center justify-around py-3 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       <div className="text-center">
                         <div className="text-lg font-bold text-amber-400">🪙 {coins?.totalCoins || 0}</div>
-                        <div className="text-xs text-slate-400">Coins</div>
+                        <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Coins</div>
                       </div>
-                      <div className="w-px h-8 bg-slate-600"></div>
+                      <div className={`w-px h-8 ${isDark ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
                       <div className="text-center">
                         <div className="text-lg font-bold text-emerald-400">🛒 {cartCount}</div>
-                        <div className="text-xs text-slate-400">In Cart</div>
+                        <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>In Cart</div>
                       </div>
                     </div>
 
@@ -352,12 +396,12 @@ function Layout({ onShowTour }) {
                           setShowUserMenu(false)
                           navigate('/change-password')
                         }}
-                        className="w-full text-left px-4 py-3 rounded-xl text-slate-200 hover:bg-slate-700 transition-colors flex items-center gap-3 group"
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
                       >
-                        <span className="w-9 h-9 bg-blue-900/50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">🔐</span>
+                        <span className={`w-9 h-9 ${isDark ? 'bg-blue-900/50' : 'bg-blue-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🔐</span>
                         <div>
                           <span className="font-medium block">Change Password</span>
-                          <span className="text-xs text-slate-400">Update your security</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Update your security</span>
                         </div>
                       </button>
                       <button
@@ -365,12 +409,12 @@ function Layout({ onShowTour }) {
                           setShowUserMenu(false)
                           navigate('/orders')
                         }}
-                        className="w-full text-left px-4 py-3 rounded-xl text-slate-200 hover:bg-slate-700 transition-colors flex items-center gap-3 group"
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
                       >
-                        <span className="w-9 h-9 bg-purple-900/50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">📦</span>
+                        <span className={`w-9 h-9 ${isDark ? 'bg-purple-900/50' : 'bg-purple-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📦</span>
                         <div>
                           <span className="font-medium block">My Orders</span>
-                          <span className="text-xs text-slate-400">Track your purchases</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Track your purchases</span>
                         </div>
                       </button>
                       <button
@@ -378,12 +422,25 @@ function Layout({ onShowTour }) {
                           setShowUserMenu(false)
                           navigate('/support')
                         }}
-                        className="w-full text-left px-4 py-3 rounded-xl text-slate-200 hover:bg-slate-700 transition-colors flex items-center gap-3 group"
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
                       >
-                        <span className="w-9 h-9 bg-green-900/50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">💬</span>
+                        <span className={`w-9 h-9 ${isDark ? 'bg-green-900/50' : 'bg-green-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>💬</span>
                         <div>
                           <span className="font-medium block">Support</span>
-                          <span className="text-xs text-slate-400">Get help anytime</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Get help anytime</span>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false)
+                          navigate('/bank-verification')
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                      >
+                        <span className={`w-9 h-9 ${isDark ? 'bg-teal-900/50' : 'bg-teal-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🏦</span>
+                        <div>
+                          <span className="font-medium block">Bank Verification</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Verify bank details</span>
                         </div>
                       </button>
                       <button
@@ -391,26 +448,39 @@ function Layout({ onShowTour }) {
                           setShowUserMenu(false)
                           navigate('/activities')
                         }}
-                        className="w-full text-left px-4 py-3 rounded-xl text-slate-200 hover:bg-slate-700 transition-colors flex items-center gap-3 group"
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
                       >
-                        <span className="w-9 h-9 bg-amber-900/50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">📜</span>
+                        <span className={`w-9 h-9 ${isDark ? 'bg-amber-900/50' : 'bg-amber-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📜</span>
                         <div>
                           <span className="font-medium block">My Activities</span>
-                          <span className="text-xs text-slate-400">View recent actions</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>View recent actions</span>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false)
+                          navigate('/communication-preferences')
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                      >
+                        <span className={`w-9 h-9 ${isDark ? 'bg-indigo-900/50' : 'bg-indigo-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📬</span>
+                        <div>
+                          <span className="font-medium block">Communication</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Email & SMS preferences</span>
                         </div>
                       </button>
                     </div>
                     
                     {/* Logout Button */}
-                    <div className="p-2 border-t border-slate-700">
+                    <div className={`p-2 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       <button
                         onClick={handleLogout}
-                        className="w-full text-left px-4 py-3 rounded-xl text-red-400 hover:bg-red-900/30 transition-colors flex items-center gap-3 group"
+                        className={`w-full text-left px-4 py-3 rounded-xl text-red-400 ${isDark ? 'hover:bg-red-900/30' : 'hover:bg-red-50'} transition-colors flex items-center gap-3 group`}
                       >
-                        <span className="w-9 h-9 bg-red-900/50 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">🚪</span>
+                        <span className={`w-9 h-9 ${isDark ? 'bg-red-900/50' : 'bg-red-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🚪</span>
                         <div>
                           <span className="font-medium block">Logout</span>
-                          <span className="text-xs text-red-400/70">End your session</span>
+                          <span className={`text-xs ${isDark ? 'text-red-400/70' : 'text-red-400'}`}>End your session</span>
                         </div>
                       </button>
                     </div>
@@ -443,23 +513,23 @@ function Layout({ onShowTour }) {
 
       {/* Main Content */}
       <main className="container-main py-8">
-        <div className="rounded-2xl shadow-xl bg-slate-800/90 border border-slate-700 p-6 md:p-10 min-h-[60vh]">
+        <div className={`rounded-2xl shadow-xl ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border p-6 md:p-10 min-h-[60vh]`}>
           <Outlet />
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="bg-slate-800/90 border-t border-slate-700 mt-12 shadow-inner backdrop-blur-md">
+      <footer className={`${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border-t mt-12 shadow-inner backdrop-blur-md`}>
         <div className="container-main py-8">
           <div className="flex justify-between items-center">
-            <p className="text-slate-400 text-sm">
+            <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
               © 2024 FarmEazy. Smart Farm Management.
             </p>
             <div className="flex items-center gap-4">
-              <p className="text-slate-400 text-sm">
+              <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
                 Contact: support@farmeazy.com
               </p>
-              <a href="https://instagram.com/kranthireddy0309" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-slate-400 hover:text-pink-400">
+              <a href="https://instagram.com/kranthireddy0309" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={`${isDark ? 'text-slate-400 hover:text-pink-400' : 'text-gray-400 hover:text-pink-500'}`}>
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5zm4.25 3.25a5.25 5.25 0 1 1 0 10.5a5.25 5.25 0 0 1 0-10.5zm0 1.5a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5zm5.25.75a1 1 0 1 1-2 0a1 1 0 0 1 2 0z" />
                 </svg>

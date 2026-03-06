@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../config/api';
 import { useToast } from '../hooks/useToast';
+import { useTheme } from '../context/ThemeContext';
 import Toast from '../components/Toast';
 
 const Activities = () => {
+    const { isDark } = useTheme();
     const [activities, setActivities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
@@ -74,31 +76,31 @@ const Activities = () => {
     };
 
     const getTypeColor = (type) => {
-        switch(type) {
-            case 'Created': return 'bg-green-900/50 text-green-400 border-green-700';
-            case 'Updated': return 'bg-blue-900/50 text-blue-400 border-blue-700';
-            case 'Deleted': return 'bg-red-900/50 text-red-400 border-red-700';
-            case 'Placed': return 'bg-purple-900/50 text-purple-400 border-purple-700';
-            case 'Confirmed': return 'bg-teal-900/50 text-teal-400 border-teal-700';
-            case 'Cancelled': return 'bg-orange-900/50 text-orange-400 border-orange-700';
-            case 'Earned': return 'bg-yellow-900/50 text-yellow-400 border-yellow-700';
-            case 'Spent': return 'bg-pink-900/50 text-pink-400 border-pink-700';
-            default: return 'bg-slate-700 text-slate-300 border-slate-600';
-        }
+        const colors = {
+            'Created': isDark ? 'bg-green-900/50 text-green-400 border-green-700' : 'bg-green-100 text-green-700 border-green-300',
+            'Updated': isDark ? 'bg-blue-900/50 text-blue-400 border-blue-700' : 'bg-blue-100 text-blue-700 border-blue-300',
+            'Deleted': isDark ? 'bg-red-900/50 text-red-400 border-red-700' : 'bg-red-100 text-red-700 border-red-300',
+            'Placed': isDark ? 'bg-purple-900/50 text-purple-400 border-purple-700' : 'bg-purple-100 text-purple-700 border-purple-300',
+            'Confirmed': isDark ? 'bg-teal-900/50 text-teal-400 border-teal-700' : 'bg-teal-100 text-teal-700 border-teal-300',
+            'Cancelled': isDark ? 'bg-orange-900/50 text-orange-400 border-orange-700' : 'bg-orange-100 text-orange-700 border-orange-300',
+            'Earned': isDark ? 'bg-yellow-900/50 text-yellow-400 border-yellow-700' : 'bg-yellow-100 text-yellow-700 border-yellow-300',
+            'Spent': isDark ? 'bg-pink-900/50 text-pink-400 border-pink-700' : 'bg-pink-100 text-pink-700 border-pink-300'
+        };
+        return colors[type] || (isDark ? 'bg-slate-700 text-slate-300 border-slate-600' : 'bg-gray-100 text-gray-700 border-gray-300');
     };
 
     const getCategoryColor = (category) => {
-        switch(category) {
-            case 'Coins': return 'bg-yellow-900/40 text-yellow-400 border-yellow-700';
-            case 'Farm': return 'bg-green-900/40 text-green-400 border-green-700';
-            case 'Crop': return 'bg-lime-900/40 text-lime-400 border-lime-700';
-            case 'Product': return 'bg-blue-900/40 text-blue-400 border-blue-700';
-            case 'Service': return 'bg-purple-900/40 text-purple-400 border-purple-700';
-            case 'Order': return 'bg-orange-900/40 text-orange-400 border-orange-700';
-            case 'Security': return 'bg-red-900/40 text-red-400 border-red-700';
-            case 'Account': return 'bg-indigo-900/40 text-indigo-400 border-indigo-700';
-            default: return 'bg-slate-700 text-slate-300 border-slate-600';
-        }
+        const colors = {
+            'Coins': isDark ? 'bg-yellow-900/40 text-yellow-400 border-yellow-700' : 'bg-yellow-100 text-yellow-700 border-yellow-300',
+            'Farm': isDark ? 'bg-green-900/40 text-green-400 border-green-700' : 'bg-green-100 text-green-700 border-green-300',
+            'Crop': isDark ? 'bg-lime-900/40 text-lime-400 border-lime-700' : 'bg-lime-100 text-lime-700 border-lime-300',
+            'Product': isDark ? 'bg-blue-900/40 text-blue-400 border-blue-700' : 'bg-blue-100 text-blue-700 border-blue-300',
+            'Service': isDark ? 'bg-purple-900/40 text-purple-400 border-purple-700' : 'bg-purple-100 text-purple-700 border-purple-300',
+            'Order': isDark ? 'bg-orange-900/40 text-orange-400 border-orange-700' : 'bg-orange-100 text-orange-700 border-orange-300',
+            'Security': isDark ? 'bg-red-900/40 text-red-400 border-red-700' : 'bg-red-100 text-red-700 border-red-300',
+            'Account': isDark ? 'bg-indigo-900/40 text-indigo-400 border-indigo-700' : 'bg-indigo-100 text-indigo-700 border-indigo-300'
+        };
+        return colors[category] || (isDark ? 'bg-slate-700 text-slate-300 border-slate-600' : 'bg-gray-100 text-gray-700 border-gray-300');
     };
 
     const formatDateTime = (dateString) => {
@@ -144,7 +146,7 @@ const Activities = () => {
                 </div>
 
                 {/* Filter Tabs */}
-                <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-md p-2 overflow-x-auto">
+                <div className={`rounded-xl shadow-md p-2 overflow-x-auto border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                     <div className="flex gap-2">
                         {['all', 'coins', 'farm', 'crop', 'product', 'service', 'order'].map((filterType) => (
                             <button
@@ -153,7 +155,7 @@ const Activities = () => {
                                 className={`px-6 py-3 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${
                                     filter === filterType
                                         ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg scale-105'
-                                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                        : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                 }`}
                             >
                                 {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
@@ -163,7 +165,7 @@ const Activities = () => {
                 </div>
 
                 {loading ? (
-                    <div className="flex items-center justify-center h-96 bg-slate-800 border border-slate-700 rounded-xl shadow-md">
+                    <div className={`flex items-center justify-center h-96 rounded-xl shadow-md border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                         <div className="text-center">
                             <div className="spinner text-green-500 mb-4">
                                 <svg className="animate-spin w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +173,7 @@ const Activities = () => {
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             </div>
-                            <p className="text-slate-400 text-lg">Loading your activities...</p>
+                            <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Loading your activities...</p>
                         </div>
                     </div>
                 ) : (
@@ -179,32 +181,32 @@ const Activities = () => {
                         {filteredActivities.length > 0 ? (
                             <>
                                 {/* Desktop Table View */}
-                                <div className="hidden lg:block bg-slate-800 border border-slate-700 rounded-xl shadow-lg overflow-hidden">
+                                <div className={`hidden lg:block rounded-xl shadow-lg overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                                     <div className="overflow-x-auto">
-                                        <table className="min-w-full divide-y divide-slate-700">
-                                            <thead className="bg-gradient-to-r from-slate-700 to-slate-600">
+                                        <table className={`min-w-full divide-y ${isDark ? 'divide-slate-700' : 'divide-gray-200'}`}>
+                                            <thead className={isDark ? 'bg-gradient-to-r from-slate-700 to-slate-600' : 'bg-gradient-to-r from-gray-100 to-gray-50'}>
                                                 <tr>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                         Icon
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                         Category
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                         Activity Description
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                         Action Type
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                         Date
                                                     </th>
-                                                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-300 uppercase tracking-wider">
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                         Time
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="bg-slate-800 divide-y divide-slate-700">
+                                            <tbody className={`divide-y ${isDark ? 'bg-slate-800 divide-slate-700' : 'bg-white divide-gray-200'}`}>
                                                 {filteredActivities.map((activity, idx) => {
                                                     const category = getActivityCategory(activity.description);
                                                     const type = getActivityType(activity.description);
@@ -213,10 +215,10 @@ const Activities = () => {
                                                     return (
                                                         <tr
                                                             key={activity.id}
-                                                            className={`hover:bg-slate-700 transition-colors ${idx % 2 === 0 ? 'bg-slate-800' : 'bg-slate-750'}`}
+                                                            className={`transition-colors ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-50'} ${idx % 2 === 0 ? (isDark ? 'bg-slate-800' : 'bg-white') : (isDark ? 'bg-slate-750' : 'bg-gray-50')}`}
                                                         >
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-900/50 to-green-800/50 shadow-sm">
+                                                                <div className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm ${isDark ? 'bg-gradient-to-br from-green-900/50 to-green-800/50' : 'bg-gradient-to-br from-green-100 to-green-200'}`}>
                                                                     <span className="text-2xl">{getActivityIcon(category)}</span>
                                                                 </div>
                                                             </td>
@@ -226,11 +228,11 @@ const Activities = () => {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                <div className="text-sm font-medium text-white">
+                                                                <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
                                                                     {activity.description}
                                                                 </div>
                                                                 {activity.details && (
-                                                                    <div className="text-xs text-slate-400 mt-1">
+                                                                    <div className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                                                                         {activity.details}
                                                                     </div>
                                                                 )}
@@ -241,13 +243,13 @@ const Activities = () => {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className="flex items-center gap-2 text-sm text-slate-300">
+                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                                     <span className="text-lg">📅</span>
                                                                     <span className="font-mono font-medium">{dateTime.date}</span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className="flex items-center gap-2 text-sm text-slate-300">
+                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                                                     <span className="text-lg">⏰</span>
                                                                     <span className="font-mono font-medium">{dateTime.time}</span>
                                                                 </div>
@@ -268,12 +270,12 @@ const Activities = () => {
                                         const dateTime = formatDateTime(activity.createdAt);
 
                                         return (
-                                            <div key={activity.id} className="bg-slate-800 border border-slate-700 rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                                                            <div key={activity.id} className={`rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                                                 <div className="p-5 space-y-4">
                                                     {/* Header */}
                                                     <div className="flex items-start justify-between">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-br from-green-900/50 to-green-800/50 shadow-sm">
+                                                            <div className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm ${isDark ? 'bg-gradient-to-br from-green-900/50 to-green-800/50' : 'bg-gradient-to-br from-green-100 to-green-200'}`}>
                                                                 <span className="text-2xl">{getActivityIcon(category)}</span>
                                                             </div>
                                                             <div>
@@ -291,23 +293,23 @@ const Activities = () => {
 
                                                     {/* Description */}
                                                     <div>
-                                                        <p className="text-sm font-medium text-white">
+                                                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
                                                             {activity.description}
                                                         </p>
                                                         {activity.details && (
-                                                            <p className="text-xs text-slate-400 mt-1 bg-slate-700 p-2 rounded">
+                                                            <p className={`text-xs mt-1 p-2 rounded ${isDark ? 'text-slate-400 bg-slate-700' : 'text-gray-500 bg-gray-100'}`}>
                                                                 {activity.details}
                                                             </p>
                                                         )}
                                                     </div>
 
                                                     {/* Date & Time */}
-                                                    <div className="flex items-center justify-between pt-3 border-t border-slate-700">
-                                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                    <div className={`flex items-center justify-between pt-3 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                                                             <span>📅</span>
                                                             <span className="font-mono font-medium">{dateTime.date}</span>
                                                         </div>
-                                                        <div className="flex items-center gap-2 text-xs text-slate-400">
+                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                                                             <span>⏰</span>
                                                             <span className="font-mono font-medium">{dateTime.time}</span>
                                                         </div>
@@ -319,10 +321,10 @@ const Activities = () => {
                                 </div>
 
                                 {/* Pagination */}
-                                <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-md p-6">
+                                <div className={`rounded-xl shadow-md p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                                     <div className="flex justify-between items-center">
                                         <button
-                                            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            className={`px-6 py-3 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
                                             onClick={() => setPage(page - 1)}
                                             disabled={page === 0}
                                         >
@@ -330,8 +332,8 @@ const Activities = () => {
                                             Previous
                                         </button>
                                         <div className="text-center">
-                                            <div className="text-sm font-medium text-slate-300">Page {page + 1}</div>
-                                            <div className="text-xs text-slate-500">{filteredActivities.length} activities</div>
+                                            <div className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Page {page + 1}</div>
+                                            <div className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{filteredActivities.length} activities</div>
                                         </div>
                                         <button
                                             className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -345,15 +347,15 @@ const Activities = () => {
                                 </div>
                             </>
                         ) : (
-                            <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-lg p-12 text-center">
+                            <div className={`rounded-xl shadow-lg p-12 text-center border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                                 <div className="text-8xl mb-6">📭</div>
-                                <h3 className="text-2xl font-bold text-white mb-2">No Activities Found</h3>
-                                <p className="text-slate-300 mb-1">
+                                <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No Activities Found</h3>
+                                <p className={`mb-1 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                                     {filter !== 'all'
                                         ? `No ${filter} activities to display.`
                                         : 'Start using FarmEazy to see your activities here!'}
                                 </p>
-                                <p className="text-slate-400 text-sm">
+                                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
                                     Activities like creating farms, adding crops, or placing orders will appear here.
                                 </p>
                             </div>
