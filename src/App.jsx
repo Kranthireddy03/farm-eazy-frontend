@@ -197,17 +197,21 @@ function AppContent() {
             <Route path="/change-password" element={<ChangePassword />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/refund-details" element={<RefundDetails />} />
-            <Route path="/support" element={<Support />} />
-            <Route path="/activities" element={<Activities />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/service-requests" element={<ServiceRequests />} />
-            <Route path="/service-requests/:requestNumber" element={<ServiceRequestDetail />} />
             <Route path="/bank-verification" element={<BankVerification />} />
             <Route path="/irrigation-sensors" element={<IrrigationSensorDashboard />} />
           </Route>
+
+          {/* Public pages (accessible without login) */}
+          <Route path="/support" element={<Support />} />
+          <Route path="/activities" element={<Activities />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/services" element={<Services />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/service-requests" element={<ServiceRequests />} />
+          <Route path="/service-requests/:requestNumber" element={<ServiceRequestDetail />} />
+          <Route path="/user-preferences" element={<UserPreferences />} />
+          <Route path="/communication-preferences" element={<CommunicationPreferences />} />
 
           {/* Catch-all redirect */}
           <Route path="*" element={<Navigate to="/" replace />} />

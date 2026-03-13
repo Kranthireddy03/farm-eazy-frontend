@@ -1,2 +1,0 @@
-import{a as n}from"./index-0bHCmeKv.js";const r={sendOtp:async(e,s)=>(await n.post("/otp/send",{email:e,purpose:s})).data,sendOtpDetailed:async(e,s,t=null)=>{const a={email:e,purpose:s};return t&&(a.phone=t),(await n.post("/otp/send-detailed",a)).data},verifyOtp:async(e,s,t)=>(await n.post("/otp/verify",{email:e,otpCode:s,purpose:t})).data};export{r as O};
-//# sourceMappingURL=OtpService-D5H9_5lR.js.map
