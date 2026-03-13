@@ -114,16 +114,11 @@ apiClient.interceptors.request.use(
     if (token) {
       // Check if token is expired before making request
       if (isTokenExpiredOrExpiring(token)) {
-        console.warn('Token expired or expiring, redirecting to login');
+        console.warn('Token expired or expiring, clearing session');
         clearSessionData();
         broadcastAuthEvent(false, 'expired');
         
-        // Only redirect if not already on login page
-        if (window.location.pathname !== '/login') {
-          sessionStorage.setItem('logoutReason', 'Your session has expired. Please log in again.');
-          window.location.href = '/login';
-        }
-        
+        // Do not force navigation here; let the router decide whether to show login or landing page.
         return Promise.reject(new Error('Token expired'));
       }
       
@@ -172,16 +167,12 @@ apiClient.interceptors.response.use(
       clearSessionData();
       broadcastAuthEvent(false, 'unauthorized');
       
-      // Only redirect if not already on login page
-      if (window.location.pathname !== '/login') {
-        sessionStorage.setItem('logoutReason', 
-          status === 401 
-            ? 'Your session has expired. Please log in again.' 
-            : 'You are not authorized to access this resource. Please log in again.'
-        );
-        window.location.href = '/login';
-      }
-      
+      // Store logout reason; routing decisions are handled by the app.
+      sessionStorage.setItem('logoutReason', 
+        status === 401 
+          ? 'Your session has expired. Please log in again.' 
+          : 'You are not authorized to access this resource. Please log in again.'
+      );
       return Promise.reject(error);
     }
 

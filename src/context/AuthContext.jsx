@@ -338,9 +338,10 @@ export function AuthProvider({ children }) {
     
     if (!newAuthState && isAuthenticated) {
       clearSession();
-      if (reason && window.location.pathname !== '/login') {
-        window.location.href = '/login';
+      if (reason) {
+        setLogoutReason(reason);
       }
+      // Do not force navigation; let the router show the public landing or login page as appropriate.
     }
   }, [isAuthenticated, clearSession]);
 
