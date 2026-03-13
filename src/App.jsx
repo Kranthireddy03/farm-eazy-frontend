@@ -62,6 +62,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const RedirectReset = lazy(() => import('./pages/RedirectReset'));
 const EmailError = lazy(() => import('./pages/EmailError'));
 const Home = lazy(() => import('./pages/Home'));
+const LandingHome = lazy(() => import('./pages/LandingHome'));
 const DashboardEnhanced = lazy(() => import('./pages/DashboardEnhanced'));
 const Farms = lazy(() => import('./pages/Farms'));
 const FarmDetail = lazy(() => import('./pages/FarmDetail'));
@@ -162,6 +163,7 @@ function AppContent() {
       <Suspense fallback={<div className="flex items-center justify-center h-screen text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900">Loading page...</div>}>
         <Routes>
           {/* Public Routes */}
+          <Route path="/" element={isAuthenticated ? <Home /> : <LandingHome />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -178,10 +180,9 @@ function AppContent() {
               </ProtectedRoute>
             }
           >
-            <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<DashboardEnhanced />} />
             <Route path="/settings" element={<ProtectedRoute><UserPreferences /></ProtectedRoute>} />
             <Route path="/communication-preferences" element={<CommunicationPreferences />} />
-            <Route path="/dashboard" element={<DashboardEnhanced />} />
             <Route path="/farms" element={<Farms />} />
             <Route path="/farms/:farmId" element={<FarmDetail />} />
             <Route path="/crops" element={<Crops />} />
