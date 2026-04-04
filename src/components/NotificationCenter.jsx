@@ -109,7 +109,7 @@ export default function NotificationCenter({ anchorRef, onClose }) {
   return (
     <div 
       ref={dropdownRef} 
-      className="absolute right-0 mt-2 w-96 bg-slate-800 shadow-2xl rounded-xl z-50 border border-slate-700 overflow-hidden"
+      className="absolute right-0 mt-2 w-[min(24rem,calc(100vw-1rem))] bg-slate-800 shadow-2xl rounded-xl z-50 border border-slate-700 overflow-hidden"
       style={{ top: '100%', maxHeight: '80vh' }}
     >
       {/* Header */}

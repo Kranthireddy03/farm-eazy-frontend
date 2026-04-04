@@ -16,7 +16,6 @@ import { useTheme } from '../context/ThemeContext'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useTranslation } from 'react-i18next'
-import ChatSupport from '../components/ChatSupport'
 const DashboardCharts = lazy(() => import('../components/DashboardCharts'))
 
 function Dashboard() {
@@ -199,18 +198,22 @@ For more details, visit: https://farm-eazy.com
     const fetchDashboardData = async () => {
       try {
         setLoading(true)
-        const [statsResponse, activitiesResponse, productsResponse] = await Promise.all([
+        const [statsResponse, activitiesResponse, myProductsResponse, allProductsResponse] = await Promise.all([
           apiClient.get('/irrigation/stats'),
           apiClient.get('/activities/recent'),
-          apiClient.get('/products/my-products/count')
+          apiClient.get('/products/my-products/count'),
+          apiClient.get('/products')
         ])
-        
+        // Calculate products listed by other users
+        const myCount = myProductsResponse.data.count || 0;
+        const allProducts = Array.isArray(allProductsResponse.data) ? allProductsResponse.data : [];
+        const otherCount = Math.max(0, allProducts.length - myCount);
         setStats({
           totalFarms: statsResponse.data.totalFarms || 0,
           totalCrops: statsResponse.data.totalCrops || 0,
           totalIrrigations: statsResponse.data.totalIrrigations || 0,
           activeAlerts: statsResponse.data.upcomingIrrigations || 0,
-          totalProducts: productsResponse.data.count || 0,
+          productsListed: otherCount,
         })
         setActivities(activitiesResponse.data || [])
         setError('')
@@ -457,7 +460,6 @@ For more details, visit: https://farm-eazy.com
           </li>
         </ul>
       </div>
-      <ChatSupport />
     </div>
   );
 }

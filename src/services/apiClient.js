@@ -88,6 +88,7 @@ function broadcastAuthEvent(isAuthenticated, reason = null) {
  */
 function clearSessionData() {
   localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
   localStorage.removeItem(STORAGE_KEYS.USER_EMAIL);
   localStorage.removeItem(STORAGE_KEYS.USER_ID);
   localStorage.removeItem(STORAGE_KEYS.USER_USERNAME);
@@ -95,6 +96,46 @@ function clearSessionData() {
   localStorage.removeItem(SESSION_KEYS.LAST_ACTIVITY);
   localStorage.removeItem(SESSION_KEYS.TOKEN_EXPIRY);
   localStorage.removeItem('lastLoginBonusDate');
+}
+
+let isRefreshingToken = false;
+let refreshQueue = [];
+
+function flushRefreshQueue(error, token = null) {
+  refreshQueue.forEach((entry) => {
+    if (error) {
+      entry.reject(error);
+    } else {
+      entry.resolve(token);
+    }
+  });
+  refreshQueue = [];
+}
+
+async function refreshAccessToken() {
+  const refreshToken = localStorage.getItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken }, {
+    headers: { 'Content-Type': 'application/json' },
+    timeout: 15000,
+  });
+
+  const newAccessToken = refreshResponse?.data?.token || refreshResponse?.data?.accessToken;
+  const nextRefreshToken = refreshResponse?.data?.refreshToken || refreshResponse?.data?.refresh_token;
+
+  if (!newAccessToken) {
+    throw new Error('Refresh response did not include access token');
+  }
+
+  localStorage.setItem(STORAGE_KEYS.USER_TOKEN, newAccessToken);
+  if (nextRefreshToken) {
+    localStorage.setItem(STORAGE_KEYS.USER_REFRESH_TOKEN, nextRefreshToken);
+  }
+
+  return newAccessToken;
 }
 
 // --- Create Axios Instance ---
@@ -108,31 +149,36 @@ const apiClient = axios.create({
 
 // --- Request Interceptor ---
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
-    
-    if (token) {
-      // Check if token is expired before making request
-      if (isTokenExpiredOrExpiring(token)) {
-        console.warn('Token expired or expiring, clearing session');
-        clearSessionData();
-        broadcastAuthEvent(false, 'expired');
-        
-        // Do not force navigation here; let the router decide whether to show login or landing page.
-        return Promise.reject(new Error('Token expired'));
+  async (config) => {
+    // Make /faq/question and /admin/faq-questions public (no token check)
+    if (config.url && (config.url.includes('/faq/question') || config.url.includes('/admin/faq-questions'))) {
+      // Development logging
+      if (import.meta.env.DEV) {
+        console.debug(`[API] ${config.method?.toUpperCase()} ${config.url} (public)`);
       }
-      
-      config.headers.Authorization = `Bearer ${token}`;
-      
-      // Update last activity on each request
+      return config;
+    }
+    const token = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
+    if (token) {
+      config.headers = config.headers || {};
+      if (isTokenExpiredOrExpiring(token)) {
+        try {
+          const refreshedToken = await refreshAccessToken();
+          config.headers.Authorization = `Bearer ${refreshedToken}`;
+        } catch (_refreshError) {
+          console.warn('Token refresh failed, clearing session');
+          clearSessionData();
+          broadcastAuthEvent(false, 'expired');
+          return Promise.reject(new Error('Token expired'));
+        }
+      } else {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
       localStorage.setItem(SESSION_KEYS.LAST_ACTIVITY, Date.now().toString());
     }
-    
-    // Development logging
     if (import.meta.env.DEV) {
       console.debug(`[API] ${config.method?.toUpperCase()} ${config.url}`);
     }
-    
     return config;
   },
   (error) => {
@@ -149,7 +195,7 @@ apiClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
     // Offline handling - queue POST/PUT/DELETE for retry
     if (!window.navigator.onLine && error.config && ['post', 'put', 'delete'].includes(error.config.method)) {
       queueAction(error.config);
@@ -158,8 +204,50 @@ apiClient.interceptors.response.use(
     }
 
     const status = error.response?.status;
+    const originalRequest = error.config;
+    const requestUrl = String(originalRequest?.url || '');
+    const isAuthEndpoint = requestUrl.includes('/auth/');
 
     // Handle authentication errors
+    if (status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
+      const refreshToken = localStorage.getItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+      if (!refreshToken) {
+        clearSessionData();
+        broadcastAuthEvent(false, 'unauthorized');
+        sessionStorage.setItem('logoutReason', 'Your session has expired. Please log in again.');
+        return Promise.reject(error);
+      }
+
+      if (isRefreshingToken) {
+        return new Promise((resolve, reject) => {
+          refreshQueue.push({ resolve, reject });
+        }).then((newToken) => {
+          originalRequest.headers = originalRequest.headers || {};
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
+          return apiClient(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshingToken = true;
+
+      try {
+        const newToken = await refreshAccessToken();
+        flushRefreshQueue(null, newToken);
+        originalRequest.headers = originalRequest.headers || {};
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        flushRefreshQueue(refreshError, null);
+        clearSessionData();
+        broadcastAuthEvent(false, 'unauthorized');
+        sessionStorage.setItem('logoutReason', 'Your session has expired. Please log in again.');
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshingToken = false;
+      }
+    }
+
     if (status === 401 || status === 403) {
       const errorMessage = error.response?.data?.message || 'Session expired';
       
@@ -167,12 +255,14 @@ apiClient.interceptors.response.use(
       clearSessionData();
       broadcastAuthEvent(false, 'unauthorized');
       
-      // Store logout reason; routing decisions are handled by the app.
-      sessionStorage.setItem('logoutReason', 
-        status === 401 
-          ? 'Your session has expired. Please log in again.' 
-          : 'You are not authorized to access this resource. Please log in again.'
-      );
+      // Store logout reason so other parts of the app can display it.
+      if (status === 401) {
+        sessionStorage.setItem('logoutReason', 'Your session has expired. Please log in again.');
+      } else {
+        sessionStorage.setItem('logoutReason', 'You are not authorized to access this resource. Please log in again.');
+      }
+
+      // Do not force navigation here; leave routing decisions to the application.
       return Promise.reject(error);
     }
 

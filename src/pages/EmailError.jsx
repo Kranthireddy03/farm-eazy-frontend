@@ -13,10 +13,12 @@
 
 import { useLocation, Link, useNavigate } from 'react-router-dom'
 import { useEffect, useState } from 'react'
+import { useTheme } from '../context/ThemeContext'
 
 function EmailError() {
   const location = useLocation()
   const navigate = useNavigate()
+  const { isDark } = useTheme()
   const [errorDetails, setErrorDetails] = useState({
     title: 'Email Delivery Failed',
     message: 'We were unable to send the email. Please try again later.',
@@ -49,10 +51,10 @@ function EmailError() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center px-4">
+    <div className={`min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-rose-50 to-orange-50'}`}>
       <div className="w-full max-w-lg">
         {/* Error Card */}
-        <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-xl overflow-hidden">
+        <div className={`${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-rose-200'} border rounded-2xl shadow-xl overflow-hidden`}>
           {/* Header with Icon */}
           <div className="bg-gradient-to-r from-red-500 to-orange-500 px-8 py-10 text-center">
             <div className="w-20 h-20 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
@@ -102,7 +104,7 @@ function EmailError() {
                   <h3 className="text-red-300 font-semibold mb-1">
                     What happened?
                   </h3>
-                  <p className="text-red-400 text-sm leading-relaxed">
+                  <p className={`${isDark ? 'text-red-400' : 'text-red-700'} text-sm leading-relaxed`}>
                     {errorDetails.message}
                   </p>
                 </div>
@@ -111,27 +113,27 @@ function EmailError() {
 
             {/* Email Info (if available) */}
             {errorDetails.email && (
-              <div className="bg-slate-700 border border-slate-600 rounded-xl p-4 mb-6">
-                <p className="text-slate-400 text-sm">
+              <div className={`${isDark ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-200'} border rounded-xl p-4 mb-6`}>
+                <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>
                   <span className="font-medium">Recipient:</span>{' '}
-                  <span className="text-white">{errorDetails.email}</span>
+                  <span className={isDark ? 'text-white' : 'text-slate-900'}>{errorDetails.email}</span>
                 </p>
               </div>
             )}
 
             {/* Suggestions */}
             <div className="mb-8">
-              <h3 className="text-white font-semibold mb-3">What you can do:</h3>
+              <h3 className={`${isDark ? 'text-white' : 'text-slate-900'} font-semibold mb-3`}>What you can do:</h3>
               <ul className="space-y-2">
-                <li className="flex items-start space-x-2 text-sm text-slate-300">
+                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   <span className="text-green-400 mt-0.5">✓</span>
                   <span>Wait a few minutes and try again</span>
                 </li>
-                <li className="flex items-start space-x-2 text-sm text-slate-300">
+                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   <span className="text-green-400 mt-0.5">✓</span>
                   <span>Check that your email address is correct</span>
                 </li>
-                <li className="flex items-start space-x-2 text-sm text-slate-300">
+                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   <span className="text-green-400 mt-0.5">✓</span>
                   <span>Contact our support team if the issue persists</span>
                 </li>
@@ -149,15 +151,15 @@ function EmailError() {
               
               <Link
                 to="/login"
-                className="block w-full text-center bg-slate-700 hover:bg-slate-600 text-slate-300 font-semibold py-3 px-6 rounded-lg transition-all duration-200"
+                className={`block w-full text-center font-semibold py-3 px-6 rounded-lg transition-all duration-200 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
               >
                 Back to Login
               </Link>
             </div>
 
             {/* Support Link */}
-            <div className="mt-6 pt-6 border-t border-slate-700 text-center">
-              <p className="text-slate-400 text-sm">
+            <div className={`mt-6 pt-6 border-t text-center ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>
                 Need help?{' '}
                 <Link 
                   to="/support" 
@@ -171,7 +173,7 @@ function EmailError() {
             {/* Error Code (for debugging) */}
             {errorDetails.errorCode && (
               <div className="mt-4 text-center">
-                <p className="text-xs text-slate-500">
+                <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
                   Error Code: {errorDetails.errorCode}
                 </p>
               </div>
@@ -181,7 +183,7 @@ function EmailError() {
 
         {/* Bottom Info */}
         <div className="mt-6 text-center">
-          <p className="text-slate-500 text-sm">
+          <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
             © 2026 FarmEazy. All rights reserved.
           </p>
         </div>

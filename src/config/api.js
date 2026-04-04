@@ -6,9 +6,9 @@ import axios from 'axios';
  * This file centralizes all API configuration for communicating with the FarmEazy backend.
  */
 
-// Backend API URL from environment variable
-const API_URL = import.meta.env.VITE_API_URL || 'https://farm-eazy-backend.onrender.com';
-export const API_BASE_URL = `${API_URL}/api`;
+// Backend API URL from environment variable — default to local development server
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
+export const API_BASE_URL = `${API_URL.replace(/\/$/, '')}/api`;
 
 // Create a configured Axios instance
 export const api = axios.create({
@@ -56,8 +56,10 @@ export const API_ENDPOINTS = {
   RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
   REQUEST_OTP: `${API_BASE_URL}/auth/request-otp`,
   VERIFY_OTP: `${API_BASE_URL}/auth/verify-otp`,
+    REGISTER_AVAILABILITY: `${API_BASE_URL}/auth/register/availability`,
   
   // OTP Login (phone-based)
+    LOGIN_PREVIEW_USER: `${API_BASE_URL}/auth/login/preview-user`,
   LOGIN_REQUEST_OTP: `${API_BASE_URL}/auth/login/request-otp`,
   LOGIN_VERIFY_OTP: `${API_BASE_URL}/auth/login/verify-otp`,
   
@@ -92,11 +94,14 @@ export const API_ENDPOINTS = {
 
 // Storage Keys
 export const STORAGE_KEYS = {
-  USER_TOKEN: 'farmEazy_token',
-  USER_EMAIL: 'farmEazy_email',
-  USER_ID: 'farmEazy_userId',
-  USER_USERNAME: 'farmEazy_username',
-  USER_FULLNAME: 'farmEazy_fullName',
+    USER_TOKEN: 'farmEazy_token',
+    USER_REFRESH_TOKEN: 'farmEazy_refresh_token',
+    USER_EMAIL: 'farmEazy_email',
+    USER_ID: 'farmEazy_userId',
+    USER_USERNAME: 'farmEazy_username',
+    USER_FULLNAME: 'farmEazy_fullName',
+    USER_ROLES: 'farmEazy_roles',
+    USER_PHONE: 'farmEazy_phone',
 };
 
 export default API_BASE_URL;

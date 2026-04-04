@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
 import { useTheme } from '../context/ThemeContext'
@@ -6,6 +7,7 @@ import Toast from '../components/Toast'
 
 function IrrigationServices() {
   const { isDark } = useTheme()
+  const navigate = useNavigate()
   const { toast, showToast, closeToast } = useToast()
   const [activeTab, setActiveTab] = useState('listings') // 'listings', 'browse', 'bookings', or 'provider-requests'
 
@@ -13,11 +15,13 @@ function IrrigationServices() {
     type: 'TRACTOR',
     title: '',
     location: '',
+    serviceableLocations: '',
     rate: '',
     contactName: '',
     contactPhone: '',
     contactEmail: '',
-    availability: 'Available'
+    availability: 'Available',
+    attachmentUrls: ''
   })
 
   const [bookingForm, setBookingForm] = useState({
@@ -45,15 +49,62 @@ function IrrigationServices() {
   const [selectedService, setSelectedService] = useState(null) // Service being booked
   const [editingListing, setEditingListing] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [attachmentFiles, setAttachmentFiles] = useState([])
+  const [uploadingAttachments, setUploadingAttachments] = useState(false)
+  const [eligibilityLoading, setEligibilityLoading] = useState(true)
+  const [listingEligibility, setListingEligibility] = useState(null)
 
   useEffect(() => {
-    fetchFarms();
-    fetchCrops();
-    fetchListings();
-    fetchBookings();
-    fetchAllListings();
-    fetchProviderRequests();
+    const loadInitialData = async () => {
+      const eligibility = await fetchListingEligibility();
+      fetchFarms();
+      fetchCrops();
+      fetchBookings();
+      fetchAllListings();
+
+      if (eligibility?.eligible) {
+        fetchListings();
+        fetchProviderRequests();
+      } else {
+        setListings([]);
+        setProviderRequests([]);
+        setMyListingIds(new Set());
+      }
+    };
+
+    loadInitialData();
   }, []);
+
+  const fetchListingEligibility = async () => {
+    try {
+      setEligibilityLoading(true)
+      const response = await apiClient.get('/vendors/listing-eligibility?listingType=SERVICE')
+      const eligibility = response?.data || null
+      setListingEligibility(eligibility)
+      return eligibility
+    } catch (error) {
+      console.error('Error fetching listing eligibility:', error)
+      const fallbackEligibility = {
+        eligible: false,
+        verificationInProgress: false,
+        verificationMessage: 'Unable to validate vendor verification right now. Please complete or retry verification.',
+        verificationRedirectPath: '/vendor-verification'
+      }
+      setListingEligibility(fallbackEligibility)
+      return fallbackEligibility
+    } finally {
+      setEligibilityLoading(false)
+    }
+  }
+
+  const handleOpenPostService = () => {
+    if (!listingEligibility?.eligible) {
+      showToast(listingEligibility?.verificationMessage || 'Complete vendor verification first.', 'warning')
+      navigate('/vendor-dashboard')
+      return
+    }
+    setShowPostForm(!showPostForm)
+  }
 
   const fetchListings = async () => {
     try {
@@ -156,6 +207,32 @@ function IrrigationServices() {
     setPostForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleAttachmentFilesChange = (e) => {
+    const files = Array.from(e.target.files || [])
+    setAttachmentFiles(files.slice(0, 8))
+  }
+
+  const uploadAttachmentFilesIfAny = async () => {
+    if (!attachmentFiles.length) {
+      return []
+    }
+
+    const formData = new FormData()
+    attachmentFiles.forEach((file) => formData.append('files', file))
+
+    setUploadingAttachments(true)
+    try {
+      const uploadResponse = await apiClient.post('/services/attachments/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+      return Array.isArray(uploadResponse?.data?.urls) ? uploadResponse.data.urls : []
+    } finally {
+      setUploadingAttachments(false)
+    }
+  }
+
   const handleBookingChange = (e) => {
     const { name, value } = e.target
     setBookingForm((prev) => ({ ...prev, [name]: value }))
@@ -167,19 +244,45 @@ function IrrigationServices() {
       showToast('Please fill all required fields', 'warning')
       return
     }
+
+    const confirmation = window.confirm(
+      `Confirm service listing details:\n\nService: ${postForm.title}\nPrimary Location: ${postForm.location}\nServiceable Locations: ${postForm.serviceableLocations || postForm.location}\nRate: INR ${postForm.rate}/hour\n\nProceed to publish?`
+    );
+    if (!confirmation) {
+      return;
+    }
+
+    try {
+      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=SERVICE');
+      const eligibility = eligibilityResponse?.data || {};
+      if (!eligibility.eligible) {
+        const firstReason = Array.isArray(eligibility.missingRequirements) && eligibility.missingRequirements.length
+          ? eligibility.missingRequirements[0]
+          : 'Listing eligibility requirements are not complete.';
+        showToast(firstReason, 'warning');
+        navigate('/vendor-dashboard');
+        return;
+      }
+    } catch (eligibilityError) {
+      showToast('Unable to validate listing eligibility right now. Please try again.', 'error');
+      return;
+    }
+
     try {
       setLoading(true)
+      const uploadedAttachmentUrls = await uploadAttachmentFilesIfAny()
       // Send all fields to backend
       const serviceData = {
         serviceName: postForm.title,
-        description: `${postForm.type} service available in ${postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
+        description: `${postForm.type} service available in ${postForm.location}. Serviceable: ${postForm.serviceableLocations || postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
         price: parseFloat(postForm.rate),
         type: postForm.type,
         location: postForm.location,
         availability: postForm.availability || 'Available',
         contactName: postForm.contactName,
         contactPhone: postForm.contactPhone,
-        contactEmail: postForm.contactEmail
+        contactEmail: postForm.contactEmail,
+        attachmentUrls: uploadedAttachmentUrls
       };
       const response = await apiClient.post('/services/listings', serviceData);
       setListings((prev) => [response.data, ...prev]);
@@ -187,12 +290,15 @@ function IrrigationServices() {
         type: 'TRACTOR',
         title: '',
         location: '',
+        serviceableLocations: '',
         rate: '',
         contactName: '',
         contactPhone: '',
         contactEmail: '',
-        availability: 'Available'
+        availability: 'Available',
+        attachmentUrls: ''
       });
+      setAttachmentFiles([])
       setShowPostForm(false);
       showToast('Service listing created successfully!', 'success');
       fetchListings();
@@ -237,11 +343,13 @@ function IrrigationServices() {
       type: listing.type || 'TRACTOR',
       title: listing.title || listing.serviceName || '',
       location: listing.location || '',
+      serviceableLocations: listing.serviceableLocations || '',
       rate: listing.rate?.toString() || listing.price?.toString() || '',
       contactName: listing.contactName || '',
       contactPhone: listing.contactPhone || '',
       contactEmail: listing.contactEmail || '',
-      availability: listing.availability || 'Available'
+      availability: listing.availability || 'Available',
+      attachmentUrls: Array.isArray(listing.attachmentUrls) ? listing.attachmentUrls.join('\n') : ''
     })
     setShowPostForm(false)
   }
@@ -252,12 +360,15 @@ function IrrigationServices() {
       type: 'TRACTOR',
       title: '',
       location: '',
+      serviceableLocations: '',
       rate: '',
       contactName: '',
       contactPhone: '',
       contactEmail: '',
-      availability: 'Available'
+      availability: 'Available',
+      attachmentUrls: ''
     })
+    setAttachmentFiles([])
   }
 
   const handleUpdateListing = async (e) => {
@@ -268,16 +379,20 @@ function IrrigationServices() {
     }
     try {
       setLoading(true)
+      const uploadedAttachmentUrls = await uploadAttachmentFilesIfAny()
       const serviceData = {
         serviceName: postForm.title,
-        description: `${postForm.type} service available in ${postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
+        description: `${postForm.type} service available in ${postForm.location}. Serviceable: ${postForm.serviceableLocations || postForm.location}. Contact: ${postForm.contactName || 'N/A'}, Phone: ${postForm.contactPhone || 'N/A'}. Status: ${postForm.availability}`,
         price: parseFloat(postForm.rate),
         type: postForm.type,
         location: postForm.location,
         availability: postForm.availability || 'Available',
         contactName: postForm.contactName,
         contactPhone: postForm.contactPhone,
-        contactEmail: postForm.contactEmail
+        contactEmail: postForm.contactEmail,
+        attachmentUrls: uploadedAttachmentUrls.length
+          ? uploadedAttachmentUrls
+          : (Array.isArray(editingListing?.attachmentUrls) ? editingListing.attachmentUrls : [])
       }
       await apiClient.put(`/services/listings/${editingListing.id}`, serviceData)
       showToast('Service listing updated successfully!', 'success')
@@ -381,12 +496,53 @@ function IrrigationServices() {
     }
   }
 
+  const getServiceAttachments = (listing) => {
+    if (!listing || !Array.isArray(listing.attachmentUrls)) {
+      return [];
+    }
+    return listing.attachmentUrls.filter((url) => typeof url === 'string' && url.trim());
+  }
+
+  const isVideoAttachment = (url) => /\.(mp4|webm|ogg|mov|m4v)(\?.*)?$/i.test(url || '');
+
+  const getVideoType = (url) => {
+    if (/\.webm(\?.*)?$/i.test(url || '')) return 'video/webm'
+    if (/\.ogg(\?.*)?$/i.test(url || '')) return 'video/ogg'
+    if (/\.mov(\?.*)?$/i.test(url || '')) return 'video/quicktime'
+    if (/\.m4v(\?.*)?$/i.test(url || '')) return 'video/x-m4v'
+    return 'video/mp4'
+  }
+
+  const renderAttachmentShowcase = (listing) => {
+    const attachments = getServiceAttachments(listing);
+    if (!attachments.length) return null;
+
+    return (
+      <div className={`mt-3 rounded-xl p-3 border ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
+        <p className={`text-xs font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Service Attachments</p>
+        <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
+          {attachments.map((url, index) => (
+            <div key={`${url}-${index}`} className="snap-start flex-shrink-0 w-28 h-20 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600 bg-black">
+              {isVideoAttachment(url) ? (
+                <video className="w-full h-full object-cover" controls preload="metadata" playsInline>
+                  <source src={url} type={getVideoType(url)} />
+                </video>
+              ) : (
+                <img src={url} alt={`Attachment ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`space-y-8 min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
         {/* Page Header */}
         <div className="flex justify-between items-center">
           <div>
@@ -396,7 +552,7 @@ function IrrigationServices() {
         </div>
 
         {/* Tab Navigation */}
-        <div className={`flex space-x-2 border-b overflow-x-auto ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+        <div className={`flex flex-wrap gap-2 border-b pb-2 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
           <button
             onClick={() => setActiveTab('listings')}
             className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
@@ -442,10 +598,39 @@ function IrrigationServices() {
         {/* LISTINGS TAB */}
         {activeTab === 'listings' && (
           <>
+            {!eligibilityLoading && !listingEligibility?.eligible && (
+              <div className={`rounded-2xl border p-6 mb-4 ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}>
+                <h2 className="text-xl font-bold">Vendor verification required</h2>
+                <p className="mt-2 text-sm">
+                  {listingEligibility?.verificationMessage || 'Complete vendor verification first to access paid service listing tools.'}
+                </p>
+                {listingEligibility?.verificationInProgress && (
+                  <p className={`mt-2 text-sm ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                    Verification is in progress. After successful verification, vendor dashboard and paid listings will unlock.
+                  </p>
+                )}
+                <div className="mt-4 flex gap-3">
+                  <button
+                    onClick={() => navigate('/vendor-dashboard')}
+                    className="btn-primary"
+                  >
+                    Open Vendor Dashboard
+                  </button>
+                  <button
+                    onClick={fetchListingEligibility}
+                    className="px-4 py-2 rounded-lg border border-slate-400 text-sm hover:bg-slate-700/10"
+                  >
+                    Refresh Status
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Add Listing Button */}
             <div className="flex justify-end">
               <button
-                onClick={() => setShowPostForm(!showPostForm)}
+                onClick={handleOpenPostService}
+                disabled={eligibilityLoading || !listingEligibility?.eligible}
                 className="btn-primary"
               >
                 {showPostForm ? 'Cancel' : '+ Post Service'}
@@ -550,6 +735,24 @@ function IrrigationServices() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-300 mb-2">
+                          Serviceable Locations
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="serviceableLocations"
+                            value={postForm.serviceableLocations}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="e.g., Guntur, Vijayawada, Tenali"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-slate-400">🧭</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Tell users where this service can be delivered.</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-2">
                           Hourly Rate <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -569,6 +772,35 @@ function IrrigationServices() {
                         <p className="text-xs text-slate-500 mt-1">Enter amount per hour</p>
                       </div>
                     </div>
+                  </div>
+
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      <span className="text-2xl">🖼️</span>
+                      Optional Showcase Attachments
+                    </h3>
+                    <input
+                      type="file"
+                      accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v"
+                      multiple
+                      onChange={handleAttachmentFilesChange}
+                      className="form-input"
+                    />
+                    <p className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                      Select up to 8 files (images/videos). Files upload automatically on save.
+                    </p>
+                    {attachmentFiles.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {attachmentFiles.map((file, index) => (
+                          <span
+                            key={`${file.name}-${index}`}
+                            className={`text-xs px-2 py-1 rounded-full border ${isDark ? 'bg-slate-800 border-slate-600 text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}
+                          >
+                            {file.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Contact Information Section */}
@@ -662,10 +894,10 @@ function IrrigationServices() {
                   <div className="flex gap-4 pt-4">
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || uploadingAttachments}
                       className="flex-1 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
                     >
-                      {loading ? (
+                      {loading || uploadingAttachments ? (
                         <span className="flex items-center justify-center gap-2">
                           <span className="animate-spin">⏳</span>
                           Creating Listing...
@@ -807,6 +1039,23 @@ function IrrigationServices() {
                       </div>
                       <div>
                         <label className="block text-sm font-semibold text-slate-300 mb-2">
+                          Serviceable Locations
+                        </label>
+                        <div className="relative">
+                          <input
+                            name="serviceableLocations"
+                            value={postForm.serviceableLocations}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="e.g., Guntur, Vijayawada, Tenali"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-slate-400">🧭</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-2">
                           Hourly Rate <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -826,6 +1075,35 @@ function IrrigationServices() {
                         <p className="text-xs text-slate-500 mt-1">Enter amount per hour</p>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
+                    <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                      <span className="text-2xl">🖼️</span>
+                      Optional Showcase Attachments
+                    </h3>
+                    <input
+                      type="file"
+                      accept="image/*,video/mp4,video/webm,video/ogg,video/quicktime,video/x-m4v"
+                      multiple
+                      onChange={handleAttachmentFilesChange}
+                      className="form-input"
+                    />
+                    <p className="text-xs mt-2 text-slate-400">
+                      Select up to 8 files (images/videos). Files upload automatically on save.
+                    </p>
+                    {attachmentFiles.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {attachmentFiles.map((file, index) => (
+                          <span
+                            key={`${file.name}-${index}`}
+                            className="text-xs px-2 py-1 rounded-full border bg-slate-800 border-slate-600 text-slate-200"
+                          >
+                            {file.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Contact Information Section */}
@@ -919,10 +1197,10 @@ function IrrigationServices() {
                   <div className="flex gap-4 pt-4">
                     <button
                       type="submit"
-                      disabled={loading}
+                      disabled={loading || uploadingAttachments}
                       className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none shadow-lg"
                     >
-                      {loading ? (
+                      {loading || uploadingAttachments ? (
                         <span className="flex items-center justify-center gap-2">
                           <span className="animate-spin">⏳</span>
                           Updating Listing...
@@ -1009,6 +1287,8 @@ function IrrigationServices() {
                       )}
                     </div>
 
+                    {renderAttachmentShowcase(listing)}
+
                     {/* Edit and Delete Buttons */}
                     <div className={`flex gap-2 mt-4 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       <button
@@ -1078,6 +1358,8 @@ function IrrigationServices() {
                         <p className={`text-sm line-clamp-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{listing.description}</p>
                       </div>
                     )}
+
+                    {renderAttachmentShowcase(listing)}
 
                     <div className="space-y-1 mb-4">
                       {listing.contactName && (

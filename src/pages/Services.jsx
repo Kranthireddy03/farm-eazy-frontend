@@ -67,6 +67,13 @@ export default function Services() {
                   {service.title}
                 </h3>
                 <p className="text-slate-400">{service.description}</p>
+                  {/* Vendor Transparency UI */}
+                  <div className="mt-2 text-sm text-green-200">
+                    Vendor Name: {service.vendorName || 'N/A'}<br />
+                    Vendor ID: {service.vendorId || 'N/A'}<br />
+                    Vendor Location: {service.vendorLocation || 'N/A'}<br />
+                    Vendor Type: {service.vendorType || 'N/A'}
+                  </div>
               </div>
             </div>
           ))}

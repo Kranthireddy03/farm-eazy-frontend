@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import apiClient from '../services/apiClient'
+import { useTheme } from '../context/ThemeContext';
 import LocationPicker from '../components/LocationPicker'
 import { sendNotification } from '../components/NotificationCenter'
 
@@ -18,6 +19,7 @@ function loadRazorpayScript() {
 }
 
 function Checkout() {
+    const { isDark } = useTheme();
   // Add missing handleRetryPayment function
   const handleRetryPayment = () => {
     console.log("Retry payment clicked");
@@ -117,6 +119,7 @@ function Checkout() {
   const PHONE_PAY_ID = '6301630368'
   const TAX_RATE = 0.18
   const COIN_VALUE = 1
+  const paymentSimulationEnabled = String(import.meta.env.VITE_PAYMENT_SIMULATION_ENABLED || 'false').toLowerCase() === 'true'
 
   useEffect(() => {
     loadCheckoutData()
@@ -129,13 +132,31 @@ function Checkout() {
     };
   }, [retryInterval]);
 
+  const startRetryWindow = () => {
+    setRetryActive(true);
+    setRetryTimer(600);
+    if (retryInterval) clearInterval(retryInterval);
+    const interval = setInterval(() => {
+      setRetryTimer(prev => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          setRetryActive(false);
+          showToast('Payment window expired. Please try checkout again.', 'error');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    setRetryInterval(interval);
+  }
+
   // Retry Screen at top of render
-  if (retryActive && pendingOrderId) {
+  if (retryActive) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-amber-900/30">
         <div className="bg-slate-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-slate-700">
-          <h2 className="text-2xl font-bold text-amber-400 mb-4">Order On Hold</h2>
-          <p className="mb-2 text-slate-300">Your order is on hold due to payment failure.</p>
+          <h2 className="text-2xl font-bold text-amber-400 mb-4">Payment Retry Required</h2>
+          <p className="mb-2 text-slate-300">Payment did not complete. No order has been placed yet.</p>
           <p className="mb-4 text-slate-300">
             You have 
             <span className="font-bold text-white">
@@ -154,11 +175,17 @@ function Checkout() {
           <button
             onClick={() => {
               setRetryActive(false);
-              navigate('/');
+              showToast('You can now edit details and retry payment.', 'info');
             }}
             className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg transition"
           >
-            Cancel Order
+            Edit Order Details
+          </button>
+          <button
+            onClick={() => navigate('/buying')}
+            className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition mt-2"
+          >
+            Back to Shopping
           </button>
         </div>
       </div>
@@ -333,6 +360,85 @@ function Checkout() {
         const order = orderRes.data;
         console.log('[DEBUG] Razorpay order response:', order);
 
+        if (order?.simulation) {
+          if (!paymentSimulationEnabled) {
+            showToast('Razorpay is not configured. Please contact support.', 'error');
+            setRazorpayLoading(false);
+            setCheckingOut(false);
+            return;
+          }
+
+          setProcessingState({
+            active: true,
+            message: 'Processing simulated payment...',
+            step: 1,
+            totalSteps: 3
+          });
+
+          try {
+            const verifyResult = await apiClient.post('/payment/verify', {
+              orderId: order.id,
+              paymentId: order.simulation_payment_id || `pay_sim_${Date.now()}`,
+              signature: 'SIMULATED',
+              email: paymentData.email,
+              phone: paymentData.phone,
+              simulation: true
+            });
+
+            if (verifyResult.data.status === 'success') {
+              setProcessingState(prev => ({
+                ...prev,
+                message: 'Creating your order...',
+                step: 2
+              }));
+
+              const orderData = {
+                items: cartItems.map(item => {
+                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
+                  return {
+                    productId: item.id,
+                    quantity: item.quantity,
+                    price: itemPrice
+                  };
+                }),
+                subtotal: subtotal,
+                taxAmount: tax,
+                totalAmount: total,
+                coinsUsed: coinsApplied,
+                finalAmount: finalAmount,
+                paymentMethod: 'RAZORPAY',
+                addressId: selectedAddress,
+                paymentId: order.simulation_payment_id || `pay_sim_${Date.now()}`
+              };
+
+              const placedOrder = await apiClient.post('/orders', orderData);
+              localStorage.removeItem('farmeazy_cart');
+              localStorage.removeItem('farmeazy_checkout_coins');
+              window.dispatchEvent(new CustomEvent('cart-updated'));
+              sendNotification(`Order #${placedOrder.data.id} placed successfully!`, 'success', '✅');
+              setProcessingState(prev => ({
+                ...prev,
+                message: 'Order confirmed! Redirecting...',
+                step: 3
+              }));
+              setTimeout(() => {
+                setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
+                navigate(`/order-confirmation/${placedOrder.data.id}`);
+              }, 500);
+            } else {
+              throw new Error('Simulated payment verification failed');
+            }
+          } catch (simError) {
+            console.error('[DEBUG] Simulated payment flow failed:', simError);
+            setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
+            showToast('Payment simulation failed. Please try again.', 'error');
+          } finally {
+            setRazorpayLoading(false);
+            setCheckingOut(false);
+          }
+          return;
+        }
+
         const options = {
           key: order.key_id,
           amount: order.amount, // in paise
@@ -421,39 +527,18 @@ function Checkout() {
                 }
                 
               } else {
-                // Payment failed, create pending order and allow retry
+                // Payment failed, keep checkout in retry mode and do not create order
                 setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
-                const failedOrderData = {
-                  items: cartItems.map(item => {
-                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
-                    return {
-                      productId: item.id,
-                      quantity: item.quantity,
-                      price: itemPrice
-                    };
-                  }),
-                  subtotal: subtotal,
-                  taxAmount: tax,
-                  totalAmount: total,
-                  coinsUsed: coinsApplied,
-                  finalAmount: finalAmount,
-                  paymentMethod: 'RAZORPAY',
-                  addressId: selectedAddress,
-                  paymentStatus: 'FAILED',
-                  orderStatus: 'PENDING',
-                  paymentId: response.razorpay_payment_id
-                };
-                console.log('[DEBUG] Creating pending order after payment failure:', failedOrderData);
-                const pendingOrder = await apiClient.post('/orders', failedOrderData);
-                setPendingOrderId(pendingOrder.data.id);
-                setRetryActive(true);
-                setRetryTimer(600); // 10 minutes
-                showToast('Payment failed. Order is on hold for 10 minutes. You can retry payment.', 'warning');
+                showToast('Payment failed. Please retry payment.', 'warning');
+                sendNotification('Payment failed. Retry payment to place your order.', 'warning', '⚠️');
+                startRetryWindow();
               }
             } catch (err) {
               console.error('[DEBUG] Payment verification failed:', err);
               setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
-              showToast('Payment verification failed. Contact support.', 'error');
+              showToast('Payment verification failed. Please retry.', 'error');
+              sendNotification('Payment verification failed. Retry payment.', 'error', '❌');
+              startRetryWindow();
             }
           },
           prefill: {
@@ -463,51 +548,10 @@ function Checkout() {
           theme: { color: '#22c55e' },
           modal: {
             ondismiss: async function () {
-              // Payment failed or closed, create pending order and start retry timer
-              const failedOrderData = {
-                items: cartItems.map(item => {
-                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
-                  return {
-                    productId: item.id,
-                    quantity: item.quantity,
-                    price: itemPrice
-                  }
-                }),
-                subtotal: subtotal,
-                taxAmount: tax,
-                totalAmount: total,
-                coinsUsed: coinsApplied,
-                finalAmount: finalAmount,
-                paymentMethod: 'RAZORPAY',
-                addressId: selectedAddress,
-                paymentStatus: 'FAILED',
-                orderStatus: 'PENDING'
-              };
-              try {
-                const pendingOrder = await apiClient.post('/orders', failedOrderData);
-                setPendingOrderId(pendingOrder.data.id);
-                setRetryActive(true);
-                setRetryTimer(600); // 10 minutes in seconds
-                showToast('Payment failed. Order is on hold for 10 minutes. You can retry payment.', 'warning');
-                // Start timer
-                if (retryInterval) clearInterval(retryInterval);
-                const interval = setInterval(() => {
-                  setRetryTimer(prev => {
-                    if (prev <= 1) {
-                      clearInterval(interval);
-                      setRetryActive(false);
-                      // Optionally call backend to cancel order
-                      apiClient.patch(`/orders/${pendingOrder.data.id}/cancel`);
-                      showToast('Order cancelled due to payment timeout.', 'error');
-                      return 0;
-                    }
-                    return prev - 1;
-                  });
-                }, 1000);
-                setRetryInterval(interval);
-              } catch (err) {
-                showToast('Failed to create pending order.', 'error');
-              }
+              // User closed Razorpay modal before successful payment, so do not place order.
+              showToast('Payment was cancelled. You can retry now.', 'warning');
+              sendNotification('Payment cancelled. Retry payment to place order.', 'warning', '⚠️');
+              startRetryWindow();
             }
           }
         };
@@ -565,7 +609,8 @@ function Checkout() {
       }
     } catch (error) {
       setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
-      showToast('Failed to place order: ' + error.message, 'error')
+      const backendError = error?.response?.data?.message || error?.response?.data
+      showToast('Failed to place order: ' + (backendError || error.message), 'error')
       setRazorpayLoading(false)
     } finally {
       setCheckingOut(false)
@@ -612,17 +657,17 @@ function Checkout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-8 px-4">
+    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}> 
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-2">🛍️ Checkout</h1>
-        <p className="text-slate-400 mb-8">Complete your order securely</p>
+        <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>🛍️ Checkout</h1>
+        <p className={`${isDark ? 'text-slate-400' : 'text-gray-600'} mb-8`}>Complete your order securely</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Checkout */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order Items Review */}
-            <div className="bg-slate-800 rounded-lg shadow-lg p-6 border border-slate-700">
-              <h2 className="text-2xl font-bold text-white mb-4">Order Summary</h2>
+            <div className={`rounded-lg shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+              <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Order Summary</h2>
               <div className="space-y-4">
                 {cartItems.map(item => {
                   const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
@@ -650,6 +695,18 @@ function Checkout() {
                             Saving ₹{((item.price - itemPrice) * item.quantity).toFixed(2)}
                           </p>
                         )}
+                          {/* Vendor Transparency UI - Razorpay Compliance */}
+                          <div className={`mt-2 p-4 rounded-xl border ${isDark ? 'bg-orange-900/30 border-orange-700' : 'bg-orange-50 border-orange-300'}`}>
+                            <div className={`font-semibold mb-2 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                              <span>🏷️</span> Vendor Information
+                            </div>
+                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                              <div><span className="font-semibold">Sold by:</span> {item.vendorName || 'Not specified'}{item.vendorType ? ` (${item.vendorType})` : ''}</div>
+                              <div><span className="font-semibold">Vendor ID:</span> {item.vendorId || 'Not specified'}</div>
+                              <div><span className="font-semibold">Location:</span> {item.vendorLocation || 'Not specified'}</div>
+                              <div><span className="font-semibold">Type:</span> {item.vendorType || 'Not specified'}</div>
+                            </div>
+                          </div>
                       </div>
                       <p className="font-bold text-white">₹{(itemPrice * item.quantity).toFixed(2)}</p>
                     </div>
@@ -659,8 +716,8 @@ function Checkout() {
             </div>
 
             {/* Payment Methods */}
-            <div className="bg-slate-800 rounded-lg shadow-lg p-6 border border-slate-700">
-              <h2 className="text-2xl font-bold text-white mb-4">💳 Payment Method</h2>
+            <div className={`rounded-lg shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+              <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>💳 Payment Method</h2>
               <div className="space-y-3">
                 {/* Cash on Delivery */}
                 <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition"
@@ -701,8 +758,8 @@ function Checkout() {
             </div>
 
             {/* Address selection & form - Enhanced with Map */}
-            <div className="bg-slate-800 rounded-lg shadow-lg p-6 border border-slate-700">
-              <h2 className="text-2xl font-bold text-white mb-4">📍 Delivery Address</h2>
+            <div className={`rounded-lg shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+              <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>📍 Delivery Address</h2>
 
               {/* Existing addresses dropdown */}
               {addresses.length > 0 && !showAddressForm && (
@@ -761,34 +818,13 @@ function Checkout() {
                   <><span>➕</span> Add New Address</>
                 )}
               </button>
-
-              {/* LocationPicker component */}
-              {showAddressForm && (
-                <div className="mt-4">
-                  <LocationPicker
-                    onAddressSubmit={async (addressData) => {
-                      try {
-                        const response = await apiClient.post('/addresses', addressData)
-                        showToast('Address added successfully!', 'success')
-                        setShowAddressForm(false)
-                        fetchAddresses()
-                        // Auto-select the new address
-                        if (response.data && response.data.id) {
-                          setSelectedAddress(response.data.id)
-                        }
-                      } catch (error) {
-                        showToast('Failed to add address: ' + (error.response?.data?.message || error.message), 'error')
-                      }
-                    }}
-                  />
-                </div>
-              )}
+            {/* ...existing code... */}
             </div>
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className="bg-slate-800 rounded-lg shadow-lg p-6 h-fit sticky top-20 border border-slate-700">
-            <h2 className="text-2xl font-bold text-white mb-6">Price Breakdown</h2>
+          <div className={`rounded-lg shadow-lg p-6 h-fit sticky top-20 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+            <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Price Breakdown</h2>
 
 
             <div className="space-y-3 border-b border-slate-600 pb-4 mb-4">

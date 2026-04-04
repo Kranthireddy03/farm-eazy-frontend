@@ -1,154 +1,148 @@
-import React, { useState } from 'react';
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
+import apiClient from '../services/apiClient'
 
 export default function Contact() {
+  const { isDark } = useTheme()
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     subject: '',
-    message: ''
-  });
-  const [submitted, setSubmitted] = useState(false);
+    message: '',
+  })
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+  }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // In a real app, this would send to an API
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setFormData({ name: '', email: '', subject: '', message: '' });
-  };
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSubmitted(false)
+    setError('')
 
-  const contactInfo = [
-    { icon: '📧', label: 'Email', value: 'support@farm-eazy.com', link: 'mailto:support@farm-eazy.com' },
-    { icon: '📞', label: 'Phone', value: '+91 1800-FARM-EAZY', link: 'tel:+911800327639' },
-    { icon: '📍', label: 'Address', value: 'Hyderabad, Telangana, India', link: null },
-    { icon: '🕐', label: 'Hours', value: 'Mon-Sat: 9AM - 6PM IST', link: null }
-  ];
+    try {
+      await apiClient.post('/public/support-message', formData)
+
+      setSubmitted(true)
+      setFormData({ name: '', email: '', subject: '', message: '' })
+      setTimeout(() => setSubmitted(false), 3000)
+    } catch (err) {
+      setError(err?.response?.data?.message || 'Failed to send message. Please try again.')
+    }
+  }
+
+  const channels = [
+    { label: 'Email', value: 'support@farm-eazy.com', href: 'mailto:support@farm-eazy.com', icon: '📧' },
+    { label: 'Phone', value: '+91 6301630368', href: 'tel:+916301630368', icon: '📞' },
+    { label: 'Hours', value: 'Mon-Sat, 9 AM - 6 PM IST', href: '', icon: '🕐' },
+    { label: 'Location', value: 'Ananthapur, Andhra Pradesh, India', href: '', icon: '📍' },
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-12 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-4xl font-bold mb-4">Contact Us</h1>
-          <p className="text-xl text-blue-100">
-            Have questions? We'd love to hear from you.
+    <div className="px-4 md:px-6 py-12 md:py-16">
+      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-7">
+        <section className={`rounded-2xl border p-6 md:p-8 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-lg'}`}>
+          <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>Contact</p>
+          <h1 className={`mt-2 text-3xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>Talk to the FarmEazy team</h1>
+          <p className={`mt-3 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            Share your query, feedback, or partnership request. We respond with practical guidance for public and user workflows.
           </p>
-        </div>
-      </div>
 
-      <div className="max-w-6xl mx-auto py-12 px-4">
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Contact Form */}
-          <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold text-white mb-6">Send us a Message</h2>
-            
-            {submitted && (
-              <div className="mb-6 p-4 bg-green-900/30 border border-green-700 text-green-400 rounded-lg">
-                ✅ Thank you! Your message has been sent successfully.
-              </div>
-            )}
+          {submitted && (
+            <div className={`mt-5 rounded-lg border px-4 py-3 text-sm ${isDark ? 'bg-emerald-900/30 border-emerald-700 text-emerald-200' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+              Message sent successfully. We will get back to you shortly.
+            </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="Your name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Email</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="your@email.com"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Subject</label>
-                <input
-                  type="text"
-                  name="subject"
-                  value={formData.subject}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                  placeholder="How can we help?"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1">Message</label>
-                <textarea
-                  name="message"
-                  value={formData.message}
-                  onChange={handleChange}
-                  required
-                  rows={5}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition resize-none"
-                  placeholder="Tell us more..."
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg"
-              >
-                Send Message
-              </button>
-            </form>
-          </div>
+          {error && (
+            <div className={`mt-5 rounded-lg border px-4 py-3 text-sm ${isDark ? 'bg-red-900/30 border-red-700 text-red-200' : 'bg-red-50 border-red-200 text-red-700'}`}>
+              {error}
+            </div>
+          )}
 
-          {/* Contact Info */}
-          <div>
-            <div className="bg-slate-800 border border-slate-700 rounded-2xl shadow-lg p-8 mb-6">
-              <h2 className="text-2xl font-bold text-white mb-6">Get in Touch</h2>
-              <div className="space-y-6">
-                {contactInfo.map((item, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <span className="text-3xl">{item.icon}</span>
-                    <div>
-                      <p className="text-sm text-slate-400">{item.label}</p>
-                      {item.link ? (
-                        <a href={item.link} className="text-blue-400 hover:text-blue-300 font-medium">
-                          {item.value}
-                        </a>
-                      ) : (
-                        <p className="text-white font-medium">{item.value}</p>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                placeholder="Your name"
+                className={`w-full px-4 py-3 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+              />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                placeholder="Email address"
+                className={`w-full px-4 py-3 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+              />
             </div>
 
-            {/* FAQ Card */}
-            <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl shadow-lg p-8 text-white">
-              <h3 className="text-xl font-bold mb-3">Need Quick Help?</h3>
-              <p className="text-green-100 mb-4">
-                Check out our FAQ section for answers to common questions.
-              </p>
-              <a
-                href="/support"
-                className="inline-block px-6 py-2 bg-slate-800 text-green-400 rounded-lg font-semibold hover:bg-slate-700 transition-colors"
-              >
-                Visit Support
-              </a>
+            <input
+              name="subject"
+              value={formData.subject}
+              onChange={handleChange}
+              required
+              placeholder="Subject"
+              className={`w-full px-4 py-3 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+            />
+
+            <textarea
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              required
+              rows={6}
+              placeholder="Tell us about your request"
+              className={`w-full px-4 py-3 rounded-lg border resize-none ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+            />
+
+            <button type="submit" className="w-full sm:w-auto px-5 py-3 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
+              Send Message
+            </button>
+          </form>
+        </section>
+
+        <section className="space-y-5">
+          <article className={`rounded-2xl border p-6 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Support Channels</h2>
+            <div className="mt-4 space-y-3">
+              {channels.map((item) => (
+                <div key={item.label} className={`rounded-lg border p-3 ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
+                  <p className="text-sm">{item.icon} <span className="font-semibold">{item.label}</span></p>
+                  {item.href ? (
+                    <a href={item.href} className={`text-sm ${isDark ? 'text-cyan-300 hover:text-cyan-200' : 'text-cyan-700 hover:text-cyan-800'} underline`}>
+                      {item.value}
+                    </a>
+                  ) : (
+                    <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.value}</p>
+                  )}
+                </div>
+              ))}
             </div>
-          </div>
-        </div>
+          </article>
+
+          <article className={`rounded-2xl border p-6 ${isDark ? 'bg-gradient-to-r from-slate-900 to-slate-800 border-slate-700' : 'bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-100'}`}>
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>Need an immediate answer?</h2>
+            <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              Browse FAQ entries or raise a guided query through the support flow.
+            </p>
+            <div className="mt-4 flex flex-col sm:flex-row gap-3">
+              <Link to="/faq" className="w-full sm:w-auto text-center px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">Open FAQ</Link>
+              <Link to="/support" className={`w-full sm:w-auto text-center px-4 py-2 rounded-lg border font-semibold transition ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-700' : 'border-emerald-200 text-emerald-800 hover:bg-white'}`}>
+                Support Center
+              </Link>
+            </div>
+          </article>
+        </section>
       </div>
     </div>
-  );
+  )
 }

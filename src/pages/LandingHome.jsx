@@ -1,128 +1,106 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import DarkModeToggle from '../components/DarkModeToggle';
+import { Link } from 'react-router-dom'
+import { useTheme } from '../context/ThemeContext'
 
 export default function LandingHome() {
+  const { isDark } = useTheme()
+
+  const capabilities = [
+    {
+      title: 'Farm Command Center',
+      text: 'Manage crops, irrigation, field activities, and vendor operations from one secure dashboard.',
+      icon: '🧭',
+    },
+    {
+      title: 'Smart Operations',
+      text: 'Plan irrigation and crop lifecycles with guided workflows designed for real-world farm execution.',
+      icon: '🌾',
+    },
+    {
+      title: 'Support That Responds',
+      text: 'Built-in support and FAQ workflows reduce confusion and keep users productive.',
+      icon: '🎫',
+    },
+  ]
+
+  const highlights = [
+    'Secure auth with OTP and password flows',
+    'Dark mode and light mode accessibility',
+    'Knowledge feed and FAQ integration',
+    'Operational visibility across farm lifecycle',
+  ]
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-blue-100 dark:from-slate-900 dark:to-slate-950">
-      {/* NAVBAR */}
-      <header className="w-full py-6 px-8 flex justify-between items-center bg-white dark:bg-slate-900 shadow-md">
-        <div className="flex items-center gap-3">
-          <img src="/farm-eazy.png" alt="FarmEazy Logo" className="h-10 drop-shadow" />
-          <span className="text-2xl font-extrabold tracking-tight text-green-700 dark:text-green-400">FarmEazy</span>
+    <div className="w-full">
+      <section className="relative overflow-hidden px-4 md:px-6 pt-16 pb-14 md:pt-24 md:pb-20">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className={`absolute -top-24 -left-16 w-72 h-72 rounded-full blur-3xl ${isDark ? 'bg-emerald-900/30' : 'bg-emerald-200/70'}`}></div>
+          <div className={`absolute top-32 right-0 w-80 h-80 rounded-full blur-3xl ${isDark ? 'bg-cyan-900/30' : 'bg-cyan-200/70'}`}></div>
         </div>
-        <nav className="flex gap-6">
-          <Link to="/" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">Home</Link>
-          <Link to="/about" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">About</Link>
-          <Link to="/public-services" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">Platform Overview</Link>
-          <Link to="/blog" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">Blog</Link>
-          <Link to="/support" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">FAQ / Support</Link>
-          <Link to="/contact" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">Contact</Link>
-          <Link to="/login" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">Login</Link>
-          <Link to="/register" className="font-semibold text-green-700 dark:text-green-400 hover:underline text-lg">Register</Link>
-        </nav>
-      </header>
-      <DarkModeToggle floating />
 
-      {/* HERO SECTION */}
-      <section className="flex flex-col items-center justify-center py-20 bg-gradient-to-r from-green-100 to-blue-50 dark:from-slate-900 dark:to-slate-950">
-        <h1 className="text-5xl font-extrabold text-green-700 dark:text-green-400 mb-4">FarmEazy</h1>
-        <h2 className="text-2xl font-semibold text-blue-700 dark:text-blue-300 mb-6">Smart Farm Management for Everyone</h2>
-        <p className="text-lg text-gray-700 dark:text-slate-300 mb-8 max-w-xl text-center">
-          FarmEazy empowers farmers and agri-businesses to manage their farms, crops, irrigation, and marketplace with ease. Explore features, connect with the community, and grow your farm smarter.
-        </p>
-        <div className="flex gap-6 mb-8">
-          <Link to="/register" className="px-6 py-3 rounded-lg bg-green-700 text-white font-bold text-lg shadow hover:bg-green-800 transition">Register</Link>
-          <Link to="/login" className="px-6 py-3 rounded-lg bg-blue-500 text-white font-bold text-lg shadow hover:bg-blue-600 transition">Login</Link>
-        </div>
-      </section>
-
-      {/* FEATURES SECTION */}
-      <section className="py-12 px-4 max-w-5xl mx-auto">
-        <h3 className="text-3xl font-bold text-center text-green-700 dark:text-green-400 mb-8">Platform Features</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
-            <span className="text-4xl mb-3">🌱</span>
-            <h4 className="text-xl font-semibold mb-2">Crop Tracking</h4>
-            <p className="text-gray-600 dark:text-slate-300 text-center">Monitor crop growth, health, and yield with smart analytics.</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
-            <span className="text-4xl mb-3">💧</span>
-            <h4 className="text-xl font-semibold mb-2">Irrigation Scheduling</h4>
-            <p className="text-gray-600 dark:text-slate-300 text-center">Automate and optimize irrigation for maximum efficiency.</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
-            <span className="text-4xl mb-3">🛒</span>
-            <h4 className="text-xl font-semibold mb-2">Marketplace</h4>
-            <p className="text-gray-600 dark:text-slate-300 text-center">Buy and sell products, connect with buyers and sellers.</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
-            <span className="text-4xl mb-3">📊</span>
-            <h4 className="text-xl font-semibold mb-2">Farm Analytics Dashboard</h4>
-            <p className="text-gray-600 dark:text-slate-300 text-center">Visualize farm performance and make data-driven decisions.</p>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center hover:shadow-lg transition">
-            <span className="text-4xl mb-3">🤝</span>
-            <h4 className="text-xl font-semibold mb-2">Farmer Support & Community</h4>
-            <p className="text-gray-600 dark:text-slate-300 text-center">Get help, share knowledge, and connect with other farmers.</p>
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS SECTION */}
-      <section className="py-12 px-4 max-w-4xl mx-auto">
-        <h3 className="text-2xl font-bold text-center text-blue-700 dark:text-blue-300 mb-8">How It Works</h3>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-3xl mb-2">📝</span>
-            <h4 className="font-semibold mb-1">Register an account</h4>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-3xl mb-2">🏡</span>
-            <h4 className="font-semibold mb-1">Add your farm and crops</h4>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-3xl mb-2">💧</span>
-            <h4 className="font-semibold mb-1">Manage irrigation and products</h4>
-          </div>
-          <div className="bg-white dark:bg-slate-800 rounded-xl shadow p-6 flex flex-col items-center">
-            <span className="text-3xl mb-2">🌾</span>
-            <h4 className="font-semibold mb-1">Buy, sell, and grow your farm</h4>
-          </div>
-        </div>
-      </section>
-
-      {/* EXPLORE WITHOUT LOGIN SECTION */}
-      <section className="py-12 px-4 max-w-4xl mx-auto">
-        <h3 className="text-xl font-bold text-center text-green-700 dark:text-green-400 mb-6">Explore Without Login</h3>
-        <div className="flex flex-wrap justify-center gap-6">
-          <Link to="/about" className="px-5 py-3 rounded-lg bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 font-semibold shadow hover:bg-green-200 dark:hover:bg-green-800 transition">About</Link>
-          <Link to="/blog" className="px-5 py-3 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 font-semibold shadow hover:bg-blue-200 dark:hover:bg-blue-800 transition">Blog</Link>
-          <Link to="/support" className="px-5 py-3 rounded-lg bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 font-semibold shadow hover:bg-yellow-200 dark:hover:bg-yellow-800 transition">FAQ</Link>
-          <Link to="/contact" className="px-5 py-3 rounded-lg bg-gray-100 dark:bg-gray-900 text-gray-700 dark:text-gray-300 font-semibold shadow hover:bg-gray-200 dark:hover:bg-gray-800 transition">Contact</Link>
-          <Link to="/support" className="px-5 py-3 rounded-lg bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300 font-semibold shadow hover:bg-orange-200 dark:hover:bg-orange-800 transition">Support</Link>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="w-full py-6 px-8 bg-white dark:bg-slate-900 text-center text-gray-500 dark:text-slate-400 border-t border-gray-200 dark:border-slate-700 mt-auto">
-        <div className="flex flex-col md:flex-row justify-between items-center max-w-5xl mx-auto gap-4">
+        <div className="relative max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
           <div>
-            <span>Contact: </span>
-            <a href="mailto:support@farm-eazy.com" className="hover:underline text-green-700 dark:text-green-400">support@farm-eazy.com</a>
-            <span className="mx-2">|</span>
-            <span>+91-9876543210</span>
+            <p className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-emerald-300 border border-slate-700' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
+              <span>Smart Farm Workflows</span>
+            </p>
+            <h1 className={`mt-5 text-4xl md:text-5xl leading-tight font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              Farming workflows that feel simple, reliable, and scalable.
+            </h1>
+            <p className={`mt-5 text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              FarmEazy helps modern farm teams run planning, tracking, and support in one platform with clear UX and secure operations.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link to="/register" className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
+                Create Account
+              </Link>
+              <Link to="/login" className={`px-5 py-3 rounded-xl border font-semibold transition ${isDark ? 'border-slate-700 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-white'}`}>
+                Sign In
+              </Link>
+              <Link to="/public-services" className={`px-5 py-3 rounded-xl font-semibold transition ${isDark ? 'text-emerald-300 hover:text-emerald-200' : 'text-emerald-700 hover:text-emerald-800'}`}>
+                View Platform Overview
+              </Link>
+            </div>
+
+            <ul className="mt-8 grid sm:grid-cols-2 gap-3">
+              {highlights.map((point) => (
+                <li key={point} className={`text-sm rounded-lg px-3 py-2 ${isDark ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-white text-slate-700 border border-slate-100 shadow-sm'}`}>
+                  {point}
+                </li>
+              ))}
+            </ul>
           </div>
-          <div className="flex gap-4">
-            <Link to="/privacy-policy" className="hover:underline">Privacy Policy</Link>
-            <Link to="/terms" className="hover:underline">Terms</Link>
-            <Link to="/refund-policy" className="hover:underline">Refund Policy</Link>
-            <Link to="/shipping-policy" className="hover:underline">Shipping Policy</Link>
-            <Link to="/marketplace-disclosure" className="hover:underline">Marketplace Disclosure</Link>
+
+          <div className={`rounded-2xl p-6 md:p-8 border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-xl'}`}>
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>What Makes FarmEazy Different</h2>
+            <div className="mt-5 space-y-4">
+              {capabilities.map((item) => (
+                <div key={item.title} className={`rounded-xl p-4 border ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
+                  <p className="text-2xl">{item.icon}</p>
+                  <h3 className={`mt-2 font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{item.title}</h3>
+                  <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="mt-4 text-xs">&copy; {new Date().getFullYear()} FarmEazy. All rights reserved.</div>
-      </footer>
+      </section>
+
+      <section className="px-4 md:px-6 pb-16">
+        <div className="max-w-7xl mx-auto">
+          <div className={`rounded-2xl p-6 md:p-8 border ${isDark ? 'border-slate-700 bg-gradient-to-r from-slate-900 to-slate-800' : 'border-emerald-100 bg-gradient-to-r from-emerald-50 to-cyan-50'}`}>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>Ready to modernize your farm operations?</h2>
+                <p className={`mt-1 ${isDark ? 'text-slate-300' : 'text-emerald-800'}`}>Start with a secure account, then scale your workflows confidently.</p>
+              </div>
+              <div className="flex gap-3">
+                <Link to="/register" className="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">Get Started</Link>
+                <Link to="/contact" className={`px-4 py-2.5 rounded-lg border font-semibold transition ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-700' : 'border-emerald-200 text-emerald-800 hover:bg-white'}`}>Talk to Team</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-  );
+  )
 }

@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '../services/apiClient';
-import { useAuth } from './AuthContext';
 
 const CoinContext = createContext();
 
@@ -9,7 +8,6 @@ export function useCoin() {
 }
 
 export function CoinProvider({ children }) {
-  const { isAuthenticated } = useAuth();
   const [coins, setCoins] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -26,14 +24,10 @@ export function CoinProvider({ children }) {
   };
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      setCoins(null);
-      setLoading(false);
-      return;
-    }
-
-    fetchCoins();
-  }, [isAuthenticated]);
+     const token = localStorage.getItem("farmEazy_token");
+     if (!token) return; // STOP here if not logged in
+     fetchCoins();
+  }, []);
 
   return (
     <CoinContext.Provider value={{ coins, loading, refreshCoins: fetchCoins }}>

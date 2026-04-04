@@ -95,6 +95,21 @@ function RefundDetails() {
         setSaving(true)
 
         try {
+            const otpSendResponse = await apiClient.post('/refund-details/reauth/send', {
+                action: 'UPDATE'
+            })
+
+            if (!otpSendResponse?.data?.success) {
+                setError(otpSendResponse?.data?.displayMessage || 'Could not send OTP for secure update')
+                return
+            }
+
+            const otpCode = window.prompt('Enter the OTP sent to your registered email/phone to confirm update:')
+            if (!otpCode || otpCode.trim().length < 4) {
+                setError('OTP is required to update refund details')
+                return
+            }
+
             await apiClient.post('/refund-details/save', {
                 accountHolderName,
                 accountNumber: preferredMethod === 'BANK' ? accountNumber : null,
@@ -103,7 +118,8 @@ function RefundDetails() {
                 bankName: preferredMethod === 'BANK' ? bankName : null,
                 branchName: preferredMethod === 'BANK' ? branchName : null,
                 upiId: preferredMethod === 'UPI' ? upiId : null,
-                preferredMethod
+                preferredMethod,
+                otpCode: otpCode.trim()
             })
 
             setSuccess('Refund details saved successfully!')
@@ -126,7 +142,24 @@ function RefundDetails() {
         if (!window.confirm('Are you sure you want to delete your refund details?')) return
 
         try {
-            await apiClient.delete('/refund-details/delete')
+            const otpSendResponse = await apiClient.post('/refund-details/reauth/send', {
+                action: 'DELETE'
+            })
+
+            if (!otpSendResponse?.data?.success) {
+                setError(otpSendResponse?.data?.displayMessage || 'Could not send OTP for secure deletion')
+                return
+            }
+
+            const otpCode = window.prompt('Enter the OTP sent to your registered email/phone to confirm deletion:')
+            if (!otpCode || otpCode.trim().length < 4) {
+                setError('OTP is required to delete refund details')
+                return
+            }
+
+            await apiClient.delete('/refund-details/delete', {
+                params: { otpCode: otpCode.trim() }
+            })
             setSuccess('Refund details deleted')
             setHasDetails(false)
             setIsEditing(true)

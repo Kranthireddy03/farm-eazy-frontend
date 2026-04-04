@@ -25,6 +25,7 @@
   --color-shadow: rgba(0, 0, 0, 0.1);
 }
 
+
 :root.dark {
   /* Dark Mode Colors */
   --color-bg-primary: #0f172a;
@@ -36,6 +37,32 @@
   --color-text-muted: #94a3b8;
   --color-border: #475569;
   --color-shadow: rgba(0, 0, 0, 0.5);
+}
+
+/* Onboarding Tour Highlight Style */
+.onboarding-highlight {
+  position: relative;
+  z-index: 100;
+  box-shadow: 0 0 0 4px #22d3ee, 0 0 16px 4px #38bdf8;
+  border-radius: 8px;
+  transition: box-shadow 0.3s, outline 0.3s;
+  outline: 2px solid #22d3ee;
+}
+
+@keyframes tour-pointer-float {
+  0% {
+    transform: translateY(0) rotate(45deg);
+  }
+  50% {
+    transform: translateY(-3px) rotate(45deg);
+  }
+  100% {
+    transform: translateY(0) rotate(45deg);
+  }
+}
+
+.tour-pointer {
+  animation: tour-pointer-float 1.2s ease-in-out infinite;
 }
 
 /* Global styles */
@@ -66,6 +93,11 @@ html,
 body,
 #root {
   @apply h-full;
+}
+
+html,
+body {
+  overflow-x: hidden;
 }
 
 /* ================================
@@ -107,6 +139,31 @@ body,
   @apply rounded-lg shadow-md p-6 border transition-colors;
   @apply dark:bg-slate-800 dark:border-slate-700;
   @apply bg-white border-gray-200;
+}
+
+/* Custom scrollbar for dropdowns */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.8) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(148, 163, 184, 0.8);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(148, 163, 184, 1);
 }
 
 .error-message {

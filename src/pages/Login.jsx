@@ -21,6 +21,7 @@ function Login() {
   
   // OTP stage: 'phone' (enter phone) or 'verify' (enter OTP)
   const [otpStage, setOtpStage] = useState('phone')
+  const [otpPreview, setOtpPreview] = useState(null)
   
   // Redirect if already authenticated
   useEffect(() => {
@@ -49,6 +50,7 @@ function Login() {
   const [apiError, setApiError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(true)
   
   // Countdown timer for OTP resend
   const [resendTimer, setResendTimer] = useState(0)
@@ -91,7 +93,7 @@ function Login() {
 
     setLoading(true)
     try {
-      const response = await AuthService.login(formData.identifier, formData.password)
+      const response = await AuthService.login(formData.identifier, formData.password, rememberMe)
       login(response)
       
       const isFirstLogin = localStorage.getItem('firstLogin') !== 'done'
@@ -156,11 +158,35 @@ function Login() {
 
     setLoading(true)
     try {
+      const preview = await AuthService.previewLoginUser(otpFormData.phone)
+      if (preview?.exists) {
+        setOtpPreview(preview)
+        setOtpStage('confirm')
+      } else {
+        setApiError(preview?.message || 'This phone number is not registered. Please sign up first.')
+      }
+    } catch (error) {
+      const errorMsg = error.message || ''
+      if (errorMsg.includes('not registered') || errorMsg.includes('not found')) {
+        setApiError('This phone number is not registered. Please sign up first.')
+      } else {
+        setApiError(errorMsg || 'Failed to validate phone number. Please try again.')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleConfirmAndSendOtp = async () => {
+    setApiError('')
+    setOtpMessage('')
+    setLoading(true)
+    try {
       const response = await AuthService.requestLoginOtp(otpFormData.phone)
       if (response.success) {
         setOtpMessage(response.displayMessage || 'OTP sent to your phone!')
         setOtpStage('verify')
-        setResendTimer(60) // 60 second cooldown
+        setResendTimer(60)
       } else {
         setApiError(response.displayMessage || response.message || 'Failed to send OTP')
       }
@@ -233,6 +259,7 @@ function Login() {
   
   const handleBackToPhone = () => {
     setOtpStage('phone')
+    setOtpPreview(null)
     setOtpFormData(prev => ({ ...prev, otpCode: '' }))
     setOtpMessage('')
     setApiError('')
@@ -243,6 +270,7 @@ function Login() {
   const switchLoginMode = (mode) => {
     setLoginMode(mode)
     setOtpStage('phone')
+    setOtpPreview(null)
     setErrors({})
     setApiError('')
     setOtpMessage('')
@@ -288,7 +316,7 @@ function Login() {
           </div>
           
           {/* Login Mode Tabs */}
-          <div className="flex mb-6 rounded-xl overflow-hidden border ${isDark ? 'border-slate-600' : 'border-emerald-200'}">
+          <div className={`flex mb-6 rounded-xl overflow-hidden border ${isDark ? 'border-slate-600' : 'border-emerald-200'}`}>
             <button
               type="button"
               onClick={() => switchLoginMode('password')}
@@ -385,7 +413,16 @@ function Login() {
               </div>
 
               {/* Forgot Password */}
-              <div className="text-right">
+              <div className="flex items-center justify-between">
+                <label className={`${isDark ? 'text-slate-300' : 'text-emerald-700'} text-sm font-medium inline-flex items-center gap-2`}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="rounded border-slate-400"
+                  />
+                  Remember me
+                </label>
                 <Link to="/forgot-password" className={`${isDark ? 'text-emerald-300 hover:text-white' : 'text-emerald-600 hover:text-emerald-800'} text-sm font-medium transition-colors`}>
                   Forgot password? →
                 </Link>
@@ -462,6 +499,55 @@ function Login() {
                     )}
                   </button>
                 </form>
+              )}
+
+              {otpStage === 'confirm' && (
+                <div className="space-y-5">
+                  <div className={`${isDark ? 'bg-slate-700/50 border-slate-600' : 'bg-emerald-50 border-emerald-200'} border rounded-xl p-4`}>
+                    <p className={`${isDark ? 'text-slate-300' : 'text-emerald-700'} text-sm mb-2`}>
+                      Is this your account?
+                    </p>
+                    <p className={`${isDark ? 'text-white' : 'text-emerald-900'} font-bold text-lg`}>
+                      {otpPreview?.username || 'Unknown user'}
+                    </p>
+                    <p className={`${isDark ? 'text-slate-400' : 'text-emerald-600'} text-sm mt-1`}>
+                      {otpPreview?.maskedPhone ? `Mobile: ${otpPreview.maskedPhone}` : `+91 ${otpFormData.phone}`}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleConfirmAndSendOtp}
+                    disabled={loading}
+                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Sending OTP...
+                      </>
+                    ) : (
+                      <>
+                        <span>✅</span> Yes, Send OTP
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleBackToPhone}
+                    className={`w-full py-3 rounded-xl border transition ${
+                      isDark
+                        ? 'border-slate-600 text-slate-300 hover:bg-slate-700'
+                        : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                    }`}
+                  >
+                    No, change mobile number
+                  </button>
+                </div>
               )}
 
               {/* Stage 2: Enter OTP */}

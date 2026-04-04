@@ -25,6 +25,32 @@ export const createTicket = async (ticket) => {
 };
 
 /**
+ * Create a new support ticket with an attachment
+ * @param {Object} ticket - Ticket data
+ * @param {File} file - Optional attachment
+ * @returns {Promise} Created ticket
+ */
+export const createTicketWithAttachment = async (ticket, file) => {
+  const formData = new FormData();
+  formData.append('subject', ticket.subject || 'Support Request');
+  formData.append('description', ticket.description || '');
+  formData.append('contactEmail', ticket.contactEmail || '');
+  if (ticket.contactPhone) formData.append('contactPhone', ticket.contactPhone);
+  if (ticket.category) formData.append('category', ticket.category);
+  if (ticket.priority) formData.append('priority', ticket.priority);
+  if (ticket.orderId) formData.append('orderId', ticket.orderId);
+  if (ticket.serviceId) formData.append('serviceId', ticket.serviceId);
+  if (ticket.source) formData.append('source', ticket.source);
+  if (ticket.roleRequest) formData.append('roleRequest', ticket.roleRequest);
+  if (file) formData.append('file', file);
+
+  const response = await apiClient.post(ENDPOINT, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+/**
  * Get all tickets for current user
  * @returns {Promise} List of tickets
  */
@@ -41,6 +67,11 @@ export const getTickets = async () => {
 export const getTicket = async (displayId) => {
   const response = await apiClient.get(`${ENDPOINT}/${displayId}`);
   return response.data;
+};
+
+export const getTicketMessages = async (displayId) => {
+  const response = await apiClient.get(`${ENDPOINT}/${displayId}/messages`);
+  return response.data?.messages || [];
 };
 
 /**
@@ -72,6 +103,16 @@ export const addResponse = async (displayId, responseText) => {
  */
 export const getActiveCount = async () => {
   const response = await apiClient.get(`${ENDPOINT}/count/active`);
+  return response.data;
+};
+
+export const getUserChatStats = async () => {
+  const response = await apiClient.get(`${ENDPOINT}/stats/chat`);
+  return response.data;
+};
+
+export const getAdminChatStats = async () => {
+  const response = await apiClient.get('/admin/tickets/stats/chat');
   return response.data;
 };
 
@@ -114,11 +155,15 @@ export const TICKET_STATUSES = {
 
 export default {
   createTicket,
+  createTicketWithAttachment,
   getTickets,
   getTicket,
+  getTicketMessages,
   cancelTicket,
   addResponse,
   getActiveCount,
+  getUserChatStats,
+  getAdminChatStats,
   TICKET_CATEGORIES,
   TICKET_PRIORITIES,
   TICKET_STATUSES,

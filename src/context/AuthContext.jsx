@@ -127,6 +127,7 @@ export function AuthProvider({ children }) {
         id: localStorage.getItem(STORAGE_KEYS.USER_ID),
         email: localStorage.getItem(STORAGE_KEYS.USER_EMAIL),
         username: localStorage.getItem(STORAGE_KEYS.USER_USERNAME),
+        phone: localStorage.getItem(STORAGE_KEYS.USER_PHONE),
         token: token,
       };
 
@@ -156,6 +157,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEYS.USER_EMAIL);
     localStorage.removeItem(STORAGE_KEYS.USER_ID);
     localStorage.removeItem(STORAGE_KEYS.USER_USERNAME);
+    localStorage.removeItem(STORAGE_KEYS.USER_PHONE);
+    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+    localStorage.removeItem('farmEazy_roles');
     
     // Clear session tracking
     localStorage.removeItem(SESSION_KEYS.LAST_ACTIVITY);
@@ -196,6 +200,9 @@ export function AuthProvider({ children }) {
     if (userData.token) {
       localStorage.setItem(STORAGE_KEYS.USER_TOKEN, userData.token);
     }
+    if (userData.refreshToken) {
+      localStorage.setItem(STORAGE_KEYS.USER_REFRESH_TOKEN, userData.refreshToken);
+    }
     if (userData.email) {
       localStorage.setItem(STORAGE_KEYS.USER_EMAIL, userData.email);
     }
@@ -204,6 +211,9 @@ export function AuthProvider({ children }) {
     }
     if (userData.username) {
       localStorage.setItem(STORAGE_KEYS.USER_USERNAME, userData.username);
+    }
+    if (userData.phone) {
+      localStorage.setItem(STORAGE_KEYS.USER_PHONE, userData.phone);
     }
 
     // Set session tracking
@@ -338,10 +348,9 @@ export function AuthProvider({ children }) {
     
     if (!newAuthState && isAuthenticated) {
       clearSession();
-      if (reason) {
-        setLogoutReason(reason);
+      if (reason && window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
-      // Do not force navigation; let the router show the public landing or login page as appropriate.
     }
   }, [isAuthenticated, clearSession]);
 
@@ -439,7 +448,37 @@ export function AuthProvider({ children }) {
     getUserEmail: () => user?.email || localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || '',
     getUserId: () => user?.id || localStorage.getItem(STORAGE_KEYS.USER_ID) || '',
     getUserName: () => user?.username || localStorage.getItem(STORAGE_KEYS.USER_USERNAME) || '',
+    getUserPhone: () => user?.phone || localStorage.getItem(STORAGE_KEYS.USER_PHONE) || '',
     getToken: () => user?.token || localStorage.getItem(STORAGE_KEYS.USER_TOKEN) || '',
+    
+    // Role helpers for admin features
+    getUserRoles: () => {
+      try {
+        const roles = localStorage.getItem('farmEazy_roles');
+        return roles ? JSON.parse(roles) : ['USER'];
+      } catch {
+        return ['USER'];
+      }
+    },
+    hasRole: (role) => {
+      try {
+        const roles = localStorage.getItem('farmEazy_roles');
+        return roles ? JSON.parse(roles).includes(role) : false;
+      } catch {
+        return false;
+      }
+    },
+    isAdmin: () => {
+      try {
+        const roles = localStorage.getItem('farmEazy_roles');
+        if (!roles) return false;
+        const parsedRoles = JSON.parse(roles);
+        if (!Array.isArray(parsedRoles)) return false;
+        return parsedRoles.some((role) => ['ADMIN', 'ROLE_ADMIN', 'SUPERADMIN', 'ROLE_SUPERADMIN'].includes(role));
+      } catch {
+        return false;
+      }
+    },
   };
 
   return (

@@ -9,7 +9,7 @@
  * - View farm details
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useLoader } from '../context/LoaderContext'
 import { useTheme } from '../context/ThemeContext'
 import { useToast } from '../hooks/useToast';
@@ -41,6 +41,20 @@ function Farms() {
     areaSize: '',
   })
   const { show: showLoader, hide: hideLoader } = useLoader();
+
+  const farmMetrics = useMemo(() => {
+    const totalFarms = farms.length
+    const totalArea = farms.reduce((sum, farm) => sum + (Number(farm.areaSize) || 0), 0)
+    const averageArea = totalFarms > 0 ? totalArea / totalFarms : 0
+    const largeFarms = farms.filter((farm) => (Number(farm.areaSize) || 0) >= 10).length
+
+    return {
+      totalFarms,
+      totalArea,
+      averageArea,
+      largeFarms,
+    }
+  }, [farms])
 
   /**
    * Fetch farms on component mount
@@ -229,6 +243,40 @@ function Farms() {
         >
           {showAddForm ? 'Cancel' : '+ Add Farm'}
         </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Farms</p>
+          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.totalFarms}</p>
+        </div>
+        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Area</p>
+          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.totalArea.toFixed(1)} ha</p>
+        </div>
+        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Average Size</p>
+          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.averageArea.toFixed(1)} ha</p>
+        </div>
+        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Large Farms</p>
+          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.largeFarms}</p>
+          <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>10+ hectares</p>
+        </div>
+      </div>
+
+      <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-slate-100 bg-white shadow-sm'}`}>
+        <div className="flex flex-wrap gap-3 items-center justify-between">
+          <div>
+            <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Farm Operations Quick Actions</p>
+            <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Jump to high-frequency tasks for faster daily operations.</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/crops" className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Manage Crops</Link>
+            <Link to="/irrigation" className={`px-3 py-2 rounded-lg border text-sm font-semibold ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>Irrigation Planner</Link>
+            <Link to="/service-requests" className={`px-3 py-2 rounded-lg border text-sm font-semibold ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>Service Requests</Link>
+          </div>
+        </div>
       </div>
 
       {/* Error Message */}

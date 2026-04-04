@@ -251,6 +251,13 @@ function IrrigationSchedules() {
           </div>
         </div>
 
+        <div className={`rounded-xl border px-4 py-3 ${isDark ? 'bg-amber-900/20 border-amber-700 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+          <p className="font-semibold">Smart Irrigation Pilot Scope</p>
+          <p className="text-sm mt-1">
+            Currently enabled only for Ananthapur, Andhra Pradesh and the crops: Groundnut, Sunflower, Maize, Cotton, Paddy, Millet.
+          </p>
+        </div>
+
       {error && (
         <div className={`px-4 py-3 rounded-lg ${isDark ? 'bg-red-900/30 border border-red-700 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
           {error}

@@ -10,9 +10,12 @@
  * - Professional session management
  */
 
-import { Outlet, Link, useNavigate } from 'react-router-dom'
+import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useRef, useState, useEffect } from 'react';
+import NotificationBell from './NotificationBell';
 import NotificationCenter, { sendNotification } from './NotificationCenter';
+import DarkModeToggle from './DarkModeToggle';
+import ChatSupport from './ChatSupport';
 // Add prop for triggering onboarding tour
 // ...existing code...
 import AuthService from '../services/AuthService'
@@ -24,21 +27,26 @@ import Toast from './Toast'
 import { useCoin } from '../context/CoinContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal'
 
-function Layout({ onShowTour }) {
+function Layout({ onShowTour, children }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const { isDark } = useTheme()
-  const { logout: authLogout, getUserEmail, getUserName } = useAuth()
+  const { logout: authLogout, getUserEmail, getUserName, isAdmin, hasRole, isAuthenticated } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
-  const notifBellRef = useRef(null)
   const { coins, refreshCoins } = useCoin()
   const [coinsLoading, setCoinsLoading] = useState(false)
   const [sessionCoinsEarned, setSessionCoinsEarned] = useState(0)
   const [showSessionCoinBonus, setShowSessionCoinBonus] = useState(false)
   const [cartCount, setCartCount] = useState(0)
+  const [vendorUnlocked, setVendorUnlocked] = useState(false)
+  const [showNavLeftFade, setShowNavLeftFade] = useState(false)
+  const [showNavRightFade, setShowNavRightFade] = useState(false)
   const hasFetchedCoinsRef = useRef(false)
   const hasRedirectedRef = useRef(false)
+  const userMenuWrapperRef = useRef(null)
+  const navScrollRef = useRef(null)
   // Use AuthContext for user info instead of direct localStorage
   const userEmail = getUserEmail()
   const userUsername = localStorage.getItem('farmEazy_username') || getUserName()
@@ -76,6 +84,20 @@ function Layout({ onShowTour }) {
       navigate('/login', { replace: true })
     }
   }, [navigate])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    if (!showUserMenu) return
+
+    const handleClickOutside = (event) => {
+      if (userMenuWrapperRef.current && !userMenuWrapperRef.current.contains(event.target)) {
+        setShowUserMenu(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showUserMenu])
   
   // Session timeout hook
   // Total session: 15 minutes (900 seconds) with MM:SS countdown display
@@ -137,6 +159,21 @@ function Layout({ onShowTour }) {
     fetchCoinsAndLoginBonus()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  useEffect(() => {
+    const detectVendorAccess = async () => {
+      try {
+        const eligibilityResp = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT')
+        setVendorUnlocked(Boolean(eligibilityResp?.data?.eligible))
+      } catch (_error) {
+        setVendorUnlocked(false)
+      }
+    }
+
+    if (isAuthenticated) {
+      detectVendorAccess()
+    }
+  }, [isAuthenticated])
 
   // Listen for 2-minute warning event
   useEffect(() => {
@@ -203,6 +240,71 @@ function Layout({ onShowTour }) {
     { name: 'Shopping', path: '/buying' },
     { name: 'Support', path: '/support' },
   ]
+
+  if (isAuthenticated) {
+    menuItems.splice(7, 0, { name: 'Vendor', path: '/vendor-dashboard' })
+  }
+
+  const isActivePath = (path) => {
+    if (path === '/') return location.pathname === '/'
+    return location.pathname === path || location.pathname.startsWith(`${path}/`)
+  }
+
+  const hasAdminAccess =
+    (typeof isAdmin === 'function' && isAdmin()) ||
+    (typeof hasRole === 'function' && (hasRole('ADMIN') || hasRole('ROLE_ADMIN') || hasRole('SUPERADMIN') || hasRole('ROLE_SUPERADMIN')))
+
+  const openSupportPortal = (portalPath, modeOverride) => {
+    const adminContext = location.pathname.startsWith('/admin/')
+    const preferredMode = modeOverride || (adminContext ? 'admin' : 'user')
+    const mode = preferredMode === 'admin' && hasAdminAccess ? 'admin' : 'user'
+    const targetPath = portalPath || (mode === 'admin' ? '/dashboard' : '/user/dashboard')
+
+    const handoffReady = prepareSupportPortalHandoff({ mode, redirect: targetPath, theme: isDark ? 'dark' : 'light' })
+    if (!handoffReady) {
+      navigate('/login')
+      return
+    }
+    const url = buildSupportPortalUrl({ portalPath: targetPath, mode, redirect: targetPath, theme: isDark ? 'dark' : 'light' })
+    if (url) {
+      window.location.assign(url)
+      return
+    }
+    navigate('/login')
+  }
+
+  useEffect(() => {
+    const updateNavFade = () => {
+      const node = navScrollRef.current
+      if (!node) return
+
+      const { scrollLeft, scrollWidth, clientWidth } = node
+      const hasOverflow = scrollWidth > clientWidth + 2
+      if (!hasOverflow) {
+        setShowNavLeftFade(false)
+        setShowNavRightFade(false)
+        return
+      }
+
+      setShowNavLeftFade(scrollLeft > 4)
+      setShowNavRightFade(scrollLeft + clientWidth < scrollWidth - 4)
+    }
+
+    updateNavFade()
+
+    const node = navScrollRef.current
+    if (node) {
+      node.addEventListener('scroll', updateNavFade, { passive: true })
+    }
+    window.addEventListener('resize', updateNavFade)
+
+    return () => {
+      if (node) {
+        node.removeEventListener('scroll', updateNavFade)
+      }
+      window.removeEventListener('resize', updateNavFade)
+    }
+  }, [menuItems.length, location.pathname])
   
   // Irrigation sub-menu items (for future dropdown)
   const irrigationSubItems = [
@@ -214,7 +316,7 @@ function Layout({ onShowTour }) {
     <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 to-teal-50'}`}>
       {/* Toast Notification - Fixed bottom-right positioning */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-[100]">
+        <div className="fixed bottom-6 left-2 right-2 sm:left-auto sm:right-6 z-[100] flex justify-end">
           <Toast
             message={toast.message}
             type={toast.type}
@@ -231,16 +333,16 @@ function Layout({ onShowTour }) {
       />
       
       {/* Modern Header with Gradient */}
-      <header className="relative z-50">
+      <header className="sticky top-0 z-50">
         {/* Gradient Background */}
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600"></div>
         {/* Animated Shimmer Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
         
         <div className="relative container-main">
-          <div className="flex justify-between items-center py-3">
+          <div className="flex justify-between items-center py-3 gap-3">
             {/* Logo Section */}
-            <Link to="/" className="flex items-center space-x-3 group">
+            <Link to="/" className="flex items-center space-x-3 group shrink-0">
               <div className="relative">
                 <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center border border-white/30 group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <span className="text-2xl">🌾</span>
@@ -254,22 +356,37 @@ function Layout({ onShowTour }) {
             </Link>
 
             {/* Center Navigation - Glass Morphism Pills */}
-            <nav className="hidden lg:flex items-center bg-white/10 backdrop-blur-md rounded-full px-2 py-1 border border-white/20">
-              {menuItems.map((item, index) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className="relative px-4 py-2 text-white/90 hover:text-white font-medium text-sm transition-all duration-300 rounded-full hover:bg-white/20"
-                >
-                  {item.name}
-                </Link>
-              ))}
-            </nav>
+            <div className="hidden lg:block flex-1 min-w-0 relative">
+              <nav
+                ref={navScrollRef}
+                className="flex items-center justify-start min-w-0 bg-white/10 backdrop-blur-md rounded-full px-2 py-1 border border-white/20 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {menuItems.map((item, index) => (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    data-tour={`nav-${item.name.toLowerCase()}`}
+                    aria-current={isActivePath(item.path) ? 'page' : undefined}
+                    className={`relative shrink-0 px-3 py-2 font-medium text-sm transition-all duration-300 rounded-full whitespace-nowrap ${isActivePath(item.path) ? 'text-white bg-white/30 shadow-inner ring-1 ring-white/40' : 'text-white/90 hover:text-white hover:bg-white/20'}`}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+              </nav>
+
+              {showNavLeftFade && (
+                <div className="pointer-events-none absolute left-1 top-1 bottom-1 w-8 rounded-l-full bg-gradient-to-r from-emerald-700/95 to-transparent" />
+              )}
+              {showNavRightFade && (
+                <div className="pointer-events-none absolute right-1 top-1 bottom-1 w-8 rounded-r-full bg-gradient-to-l from-cyan-700/95 to-transparent" />
+              )}
+            </div>
 
             {/* Right Section - Actions */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 shrink-0">
               {/* Tour Button - Compact */}
               <button
+                data-tour="tour-button"
                 className="hidden sm:flex items-center gap-1 px-3 py-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full text-white text-sm font-medium transition-all border border-white/20"
                 onClick={onShowTour}
                 aria-label="Show onboarding tour"
@@ -280,28 +397,12 @@ function Layout({ onShowTour }) {
                 <span>Tour</span>
               </button>
 
-              {/* Notification Bell - Modern */}
-              <div className="relative">
-                <button 
-                  ref={notifBellRef} 
-                  onClick={() => setShowNotifications((v) => !v)} 
-                  className="relative w-10 h-10 flex items-center justify-center bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all border border-white/20" 
-                  aria-label="Notifications"
-                >
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  {!showNotifications && (
-                    <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-teal-600 animate-pulse"></span>
-                  )}
-                </button>
-                {showNotifications && (
-                  <NotificationCenter anchorRef={notifBellRef} onClose={() => setShowNotifications(false)} />
-                )}
-              </div>
+              {/* Notification Bell - API-based */}
+              <NotificationBell />
 
               {/* Shopping Cart - Floating Badge */}
               <button
+                data-tour="cart-button"
                 onClick={() => navigate('/cart')}
                 className="relative w-10 h-10 flex items-center justify-center bg-orange-500 hover:bg-orange-600 rounded-full transition-all shadow-lg shadow-orange-500/30"
               >
@@ -345,8 +446,9 @@ function Layout({ onShowTour }) {
               </div>
 
               {/* User Profile - Avatar Style */}
-              <div className="relative">
+              <div ref={userMenuWrapperRef} className="relative">
                 <button
+                  data-tour="profile-menu"
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all border border-white/20"
                 >
@@ -361,7 +463,7 @@ function Layout({ onShowTour }) {
 
                 {/* Modern User Dropdown */}
                 {showUserMenu && (
-                  <div className={`absolute right-0 mt-3 w-72 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} border backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] overflow-hidden`} style={{top: '100%'}}>
+                  <div className={`absolute right-0 mt-3 w-[min(18rem,calc(100vw-1rem))] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} border backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] max-h-[80vh] overflow-y-auto custom-scrollbar`} style={{ top: '100%' }}>
                     {/* User Info Header */}
                     <div className="px-4 py-4 bg-gradient-to-r from-emerald-500 to-teal-500">
                       <div className="flex items-center gap-3">
@@ -420,7 +522,7 @@ function Layout({ onShowTour }) {
                       <button
                         onClick={() => {
                           setShowUserMenu(false)
-                          navigate('/support')
+                          openSupportPortal()
                         }}
                         className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
                       >
@@ -469,6 +571,67 @@ function Layout({ onShowTour }) {
                           <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Email & SMS preferences</span>
                         </div>
                       </button>
+                      {isAuthenticated && (
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            navigate('/vendor-dashboard')
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        >
+                          <span className={`w-9 h-9 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🏪</span>
+                          <div>
+                            <span className="font-medium block">Vendor Dashboard</span>
+                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Manage sales and services</span>
+                          </div>
+                        </button>
+                      )}
+                      {/* Admin Menu - Only visible for ADMIN role */}
+                      {isAdmin() && (
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            navigate('/admin/notifications')
+                          }}
+                          className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        >
+                          <span className={`w-9 h-9 ${isDark ? 'bg-rose-900/50' : 'bg-rose-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🔔</span>
+                          <div>
+                            <span className="font-medium block">Admin Notifications</span>
+                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Send broadcasts & alerts</span>
+                          </div>
+                        </button>
+                      )}
+                      {isAdmin() && (
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            openSupportPortal('/access-control', 'admin')
+                          }}
+                          className={`w-full text-left mt-2 px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        >
+                          <span className={`w-9 h-9 ${isDark ? 'bg-indigo-900/50' : 'bg-indigo-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🛠️</span>
+                          <div>
+                            <span className="font-medium block">Access Control</span>
+                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Manage roles in Support Portal</span>
+                          </div>
+                        </button>
+                      )}
+                      {isAdmin() && (
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false)
+                            navigate('/admin/blog-posts')
+                          }}
+                          className={`w-full text-left mt-2 px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        >
+                          <span className={`w-9 h-9 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📝</span>
+                          <div>
+                            <span className="font-medium block">Blog Management</span>
+                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Create and publish posts</span>
+                          </div>
+                        </button>
+                      )}
                     </div>
                     
                     {/* Logout Button */}
@@ -485,7 +648,7 @@ function Layout({ onShowTour }) {
                       </button>
                     </div>
                   </div>
-                )}
+              )}
               </div>
             </div>
           </div>
@@ -495,14 +658,16 @@ function Layout({ onShowTour }) {
       {/* Inactivity Warning Modal - Remove from here */}
 
       {/* Mobile Navigation - Slide Down */}
-      <div className="lg:hidden bg-gradient-to-r from-emerald-700 to-teal-700 border-b border-white/10">
+      <div className="xl:hidden bg-gradient-to-r from-emerald-700 to-teal-700 border-b border-white/10">
         <div className="container-main py-2">
-          <nav className="flex flex-wrap gap-2">
+          <nav className="flex flex-wrap gap-2 pb-1">
             {menuItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className="px-4 py-2 text-white/90 hover:text-white hover:bg-white/20 rounded-full text-sm font-medium transition-all"
+                data-tour={`nav-${item.name.toLowerCase()}`}
+                aria-current={isActivePath(item.path) ? 'page' : undefined}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActivePath(item.path) ? 'text-white bg-white/30 ring-1 ring-white/40' : 'text-white/90 hover:text-white hover:bg-white/20'}`}
               >
                 {item.name}
               </Link>
@@ -514,7 +679,7 @@ function Layout({ onShowTour }) {
       {/* Main Content */}
       <main className="container-main py-8">
         <div className={`rounded-2xl shadow-xl ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border p-6 md:p-10 min-h-[60vh]`}>
-          <Outlet />
+          {children || <Outlet />}
         </div>
       </main>
 
@@ -522,22 +687,24 @@ function Layout({ onShowTour }) {
       <footer className={`${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border-t mt-12 shadow-inner backdrop-blur-md`}>
         <div className="container-main py-8">
           <div className="flex justify-between items-center">
-            <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
-              © 2024 FarmEazy. Smart Farm Management.
-            </p>
-            <div className="flex items-center gap-4">
               <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
-                Contact: support@farmeazy.com
+                © 2026 FarmEazy. Smart Farm Management.
               </p>
-              <a href="https://instagram.com/kranthireddy0309" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className={`${isDark ? 'text-slate-400 hover:text-pink-400' : 'text-gray-400 hover:text-pink-500'}`}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5zm4.25 3.25a5.25 5.25 0 1 1 0 10.5a5.25 5.25 0 0 1 0-10.5zm0 1.5a3.75 3.75 0 1 0 0 7.5a3.75 3.75 0 0 0 0-7.5zm5.25.75a1 1 0 1 1-2 0a1 1 0 0 1 2 0z" />
-                </svg>
-              </a>
-            </div>
+              <div className="flex flex-wrap items-center gap-4">
+                <a href="/about" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>About</a>
+                <a href="/privacy-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Privacy Policy</a>
+                <a href="/terms" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Terms & Conditions</a>
+                <a href="/refund-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Refund Policy</a>
+                <a href="/shipping-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Shipping Policy</a>
+                <a href="/marketplace-disclosure" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</a>
+                <a href="/contact" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Contact Us</a>
+              </div>
           </div>
         </div>
       </footer>
+
+      <ChatSupport />
+      <DarkModeToggle floating className="right-6" />
     </div>
   )
 }

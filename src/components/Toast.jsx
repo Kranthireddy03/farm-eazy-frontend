@@ -48,7 +48,7 @@ function Toast({ message, type = 'success', onClose, duration = 4000 }) {
 
   return (
     <div
-      className={`${style.bg} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 animate-slide-in border-l-4 ${style.border} min-w-[280px] max-w-[400px]`}
+      className={`${style.bg} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3 animate-slide-in border-l-4 ${style.border} w-full max-w-[min(25rem,calc(100vw-1rem))]`}
       role="alert"
     >
       <span className="text-xl font-bold flex-shrink-0">{style.icon}</span>

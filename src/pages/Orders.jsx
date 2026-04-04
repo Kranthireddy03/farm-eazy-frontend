@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import ProductMediaCarousel from '../components/ProductMediaCarousel'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useTheme } from '../context/ThemeContext'
@@ -205,18 +206,23 @@ function Orders() {
               {order.items && order.items.length > 0 && (
                 <div className={`mt-4 border-t ${isDark ? 'border-slate-600' : 'border-gray-200'} pt-4 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
                   {order.items.map(item => (
-                    <div key={`${order.id}-${item.productId}`} className="flex justify-between py-1 items-center">
-                      <div>
-                        <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.productName}</span> × {item.quantity}
-                        {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
-                          <>
-                            <span className="ml-2 text-orange-400 font-bold">₹{item.discountedPrice.toFixed(2)}</span>
-                            <span className={`ml-2 line-through ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{item.price.toFixed(2)}</span>
-                            <span className="ml-2 text-green-400 font-semibold">Saved ₹{((item.price - item.discountedPrice) * item.quantity).toFixed(2)}</span>
-                          </>
-                        ) : (
-                          <span className="ml-2 text-orange-400 font-bold">₹{item.price.toFixed(2)}</span>
-                        )}
+                    <div key={`${order.id}-${item.productId}`} className="flex flex-col md:flex-row justify-between py-1 items-center gap-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-32 h-32">
+                          <ProductMediaCarousel mediaUrls={item.mediaUrls || (item.imageUrls ? item.imageUrls.split(',') : [])} />
+                        </div>
+                        <div>
+                          <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.productName}</span> × {item.quantity}
+                          {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
+                            <>
+                              <span className="ml-2 text-orange-400 font-bold">₹{item.discountedPrice.toFixed(2)}</span>
+                              <span className={`ml-2 line-through ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{item.price.toFixed(2)}</span>
+                              <span className="ml-2 text-green-400 font-semibold">Saved ₹{((item.price - item.discountedPrice) * item.quantity).toFixed(2)}</span>
+                            </>
+                          ) : (
+                            <span className="ml-2 text-orange-400 font-bold">₹{item.price.toFixed(2)}</span>
+                          )}
+                        </div>
                       </div>
                       <span className={isDark ? 'text-white' : 'text-gray-800'}>{formatCurrency(item.totalPrice)}</span>
                     </div>

@@ -56,7 +56,14 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
         sellerFullName: product.sellerFullName,
         availableQuantity: product.quantity,
         quantity: quantity,
-        addedAt: new Date().toISOString()
+        addedAt: new Date().toISOString(),
+        // Vendor Transparency Fields
+        vendorName: product.vendorName || product.sellerFullName || '',
+        vendorId: product.vendorId || product.userId || '',
+        vendorLocation: product.vendorLocation || '',
+        vendorType: product.vendorType || '',
+        sellerEmail: product.sellerEmail || '',
+        sellerPhone: product.sellerPhone || ''
       }
 
       // Call parent function to add to cart
@@ -110,11 +117,41 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
           </button>
         </div>
 
+        {/* Media Gallery */}
+        {(product.mediaUrls || product.imageUrls || product.videoUrls) && (
+          <div className="mb-8">
+            <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Product Media</h3>
+            <div className="flex flex-wrap gap-4">
+              {/* Render images */}
+              {(product.mediaUrls || product.imageUrls)?.filter(url => url.match(/\.(jpg|jpeg|png|gif|webp)$/i)).map((url, idx) => (
+                <img
+                  key={`img-${idx}`}
+                  src={url}
+                  alt={`Product Image ${idx + 1}`}
+                  className="w-40 h-40 object-cover rounded-lg border border-gray-300"
+                />
+              ))}
+              {/* Render videos */}
+              {(product.mediaUrls || product.videoUrls)?.filter(url => url.match(/\.(mp4|webm|ogg)$/i)).map((url, idx) => (
+                <video
+                  key={`vid-${idx}`}
+                  src={url}
+                  controls
+                  className="w-40 h-40 rounded-lg border border-gray-300"
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Content */}
         <div className="p-8">
           {/* Product Title */}
           <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.productName}</h2>
-          
+          {/* Sold by label for Razorpay compliance */}
+          <div className={`mb-2 text-sm font-semibold ${isDark ? 'text-orange-200' : 'text-orange-700'}`}>
+            Sold by: {product.vendorName || product.sellerFullName || 'Not specified'}{product.vendorType ? ` (${product.vendorType})` : ''}
+          </div>
           {/* Seller Info */}
           <div className={`flex items-center gap-3 mb-6 pb-6 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
             <span className="text-2xl">👨‍🌾</span>

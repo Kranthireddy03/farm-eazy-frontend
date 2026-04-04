@@ -33,6 +33,7 @@ function Register() {
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
     phone: '',
   })
   const [errors, setErrors] = useState({})
@@ -73,6 +74,11 @@ function Register() {
       newErrors.password = 'Password is required'
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters'
+    }
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Confirm password is required'
+    } else if (formData.password !== formData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match'
     }
     if (!formData.phone) {
       newErrors.phone = 'Phone number is required'
@@ -180,6 +186,25 @@ function Register() {
     e.preventDefault()
     setApiError('')
     if (!validateForm()) return
+
+    try {
+      setLoading(true)
+      const availability = await AuthService.checkRegistrationAvailability(
+        formData.username,
+        formData.email,
+        formData.phone
+      )
+
+      if (!availability?.available) {
+        setApiError(availability?.message || 'Some registration fields are already in use.')
+        return
+      }
+    } catch (error) {
+      setApiError(error.message || 'Could not validate registration details. Please try again.')
+      return
+    } finally {
+      setLoading(false)
+    }
     
     // Send OTP instead of direct registration
     await handleSendOtp()
@@ -467,6 +492,22 @@ function Register() {
                 </button>
               </div>
               {errors.password && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-xs flex items-center gap-1`}><span>❌</span> {errors.password}</p>}
+            </div>
+
+            {/* Confirm Password */}
+            <div className="space-y-1">
+              <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+                <span>🔒</span> Confirm Password
+              </label>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+                placeholder="••••••••"
+              />
+              {errors.confirmPassword && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-xs flex items-center gap-1`}><span>❌</span> {errors.confirmPassword}</p>}
             </div>
 
             {/* Submit Button */}

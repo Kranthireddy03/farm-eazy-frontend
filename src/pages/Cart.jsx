@@ -10,6 +10,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import ProductMediaCarousel from '../components/ProductMediaCarousel'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import { useTheme } from '../context/ThemeContext'
@@ -208,7 +209,7 @@ function Cart() {
                   <div className="flex gap-4 mb-4">
                     {/* Product Image */}
                     <div className={`flex-shrink-0 w-24 h-24 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-gray-100'}`}>
-                      <span className="text-3xl">{item.categoryIcon || '📦'}</span>
+                      <ProductMediaCarousel mediaUrls={item.mediaUrls || (item.imageUrls ? item.imageUrls.split(',') : [])} />
                     </div>
 
                     {/* Product Details */}

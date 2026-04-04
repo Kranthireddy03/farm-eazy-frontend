@@ -6,10 +6,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import AuthService from '../services/AuthService'
+import { useTheme } from '../context/ThemeContext'
 
 function ResetPassword() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const { isDark } = useTheme()
   
   const [formData, setFormData] = useState({
     password: '',
@@ -76,19 +78,19 @@ function ResetPassword() {
   if (invalidToken) {
     return (
       <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-red-900 via-rose-800 to-pink-900">
+        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-red-900 via-rose-800 to-pink-900' : 'bg-gradient-to-br from-rose-100 via-red-50 to-pink-100'}`}>
           <div className="absolute inset-0 opacity-30">
-            <div className="absolute top-0 -left-4 w-72 h-72 bg-red-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-red-400' : 'bg-rose-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
           </div>
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <div className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8 text-center">
+          <div className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-rose-200'}`}>
             <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-4xl">⚠️</span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white mb-4">Invalid Link</h1>
-            <p className="text-rose-200 mb-6">
+            <h1 className={`text-3xl font-extrabold mb-4 ${isDark ? 'text-white' : 'text-rose-800'}`}>Invalid Link</h1>
+            <p className={`mb-6 ${isDark ? 'text-rose-200' : 'text-rose-700'}`}>
               This password reset link is invalid or has expired. Please request a new one.
             </p>
             <Link
@@ -107,22 +109,22 @@ function ResetPassword() {
   if (success) {
     return (
       <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900">
+        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900' : 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100'}`}>
           <div className="absolute inset-0 opacity-30">
-            <div className="absolute top-0 -left-4 w-72 h-72 bg-emerald-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-emerald-400' : 'bg-emerald-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
           </div>
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <div className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8 text-center">
+          <div className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-emerald-200'}`}>
             <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
               <span className="text-5xl">✅</span>
             </div>
-            <h1 className="text-3xl font-extrabold text-white mb-4">Password Reset!</h1>
-            <p className="text-emerald-200 mb-6">
+            <h1 className={`text-3xl font-extrabold mb-4 ${isDark ? 'text-white' : 'text-emerald-800'}`}>Password Reset!</h1>
+            <p className={`mb-6 ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>
               Your password has been successfully reset. You can now login with your new password.
             </p>
-            <div className="flex items-center justify-center gap-2 text-white/60">
+            <div className={`flex items-center justify-center gap-2 ${isDark ? 'text-white/60' : 'text-emerald-700/70'}`}>
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -138,14 +140,14 @@ function ResetPassword() {
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
       {/* Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900 via-blue-800 to-indigo-900">
+      <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-cyan-900 via-blue-800 to-indigo-900' : 'bg-gradient-to-br from-cyan-100 via-blue-50 to-indigo-100'}`}>
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute top-0 -left-4 w-72 h-72 bg-cyan-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{animationDelay: '2s'}}></div>
-          <div className="absolute -bottom-8 left-20 w-72 h-72 bg-indigo-300 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{animationDelay: '4s'}}></div>
+          <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-cyan-400' : 'bg-cyan-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
+          <div className={`absolute top-0 -right-4 w-72 h-72 ${isDark ? 'bg-blue-400' : 'bg-blue-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '2s'}}></div>
+          <div className={`absolute -bottom-8 left-20 w-72 h-72 ${isDark ? 'bg-indigo-300' : 'bg-indigo-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '4s'}}></div>
         </div>
-        <div className="absolute inset-0 opacity-5" style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        <div className={`absolute inset-0 ${isDark ? 'opacity-5' : 'opacity-10'}`} style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? 'ffffff' : '1e3a8a'}' fill-opacity='0.35'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         }}></div>
       </div>
 
@@ -159,7 +161,7 @@ function ResetPassword() {
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">
-        <div className="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl border border-white/20 p-8 transform transition-all duration-500 hover:scale-[1.02]">
+        <div className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.02] ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-blue-200'}`}>
           
           {/* Logo & Header */}
           <div className="text-center mb-8">
@@ -169,15 +171,15 @@ function ResetPassword() {
                 <span className="text-4xl">🔒</span>
               </div>
             </div>
-            <h1 className="text-3xl font-extrabold text-white mt-6 tracking-tight">Reset Password</h1>
-            <p className="text-blue-200 mt-2 text-sm">Create a strong new password</p>
+            <h1 className={`text-3xl font-extrabold mt-6 tracking-tight ${isDark ? 'text-white' : 'text-indigo-800'}`}>Reset Password</h1>
+            <p className={`mt-2 text-sm ${isDark ? 'text-blue-200' : 'text-indigo-600'}`}>Create a strong new password</p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Error Display */}
             {apiError && (
-              <div className="bg-red-500/20 backdrop-blur-sm border border-red-400/30 text-red-100 px-4 py-3 rounded-xl flex items-center gap-3">
+              <div className={`${isDark ? 'bg-red-500/20 border-red-400/30 text-red-100' : 'bg-red-100 border-red-300 text-red-700'} backdrop-blur-sm border px-4 py-3 rounded-xl flex items-center gap-3`}>
                 <span className="text-xl">⚠️</span>
                 <p className="font-medium">{apiError}</p>
               </div>
@@ -185,7 +187,7 @@ function ResetPassword() {
 
             {/* New Password */}
             <div className="space-y-2">
-              <label className="text-white/90 text-sm font-semibold flex items-center gap-2">
+              <label className={`${isDark ? 'text-white/90' : 'text-indigo-700'} text-sm font-semibold flex items-center gap-2`}>
                 <span>🔐</span> New Password
               </label>
               <div className="relative">
@@ -194,23 +196,23 @@ function ResetPassword() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className="w-full px-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12"
+                  className={`w-full px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12 ${isDark ? 'bg-white/10 border border-white/20 text-white placeholder-white/40' : 'bg-white border border-indigo-200 text-indigo-900 placeholder-indigo-400'}`}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-white/60 hover:text-white' : 'text-indigo-500 hover:text-indigo-700'}`}
                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
                 </button>
               </div>
-              {errors.password && <p className="text-red-300 text-sm flex items-center gap-1"><span>❌</span> {errors.password}</p>}
+              {errors.password && <p className={`${isDark ? 'text-red-300' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.password}</p>}
             </div>
 
             {/* Confirm Password */}
             <div className="space-y-2">
-              <label className="text-white/90 text-sm font-semibold flex items-center gap-2">
+              <label className={`${isDark ? 'text-white/90' : 'text-indigo-700'} text-sm font-semibold flex items-center gap-2`}>
                 <span>🔐</span> Confirm Password
               </label>
               <div className="relative">
@@ -219,20 +221,20 @@ function ResetPassword() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full px-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12"
+                  className={`w-full px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12 ${isDark ? 'bg-white/10 border border-white/20 text-white placeholder-white/40' : 'bg-white border border-indigo-200 text-indigo-900 placeholder-indigo-400'}`}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/60 hover:text-white transition-colors"
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-white/60 hover:text-white' : 'text-indigo-500 hover:text-indigo-700'}`}
                 >
                   {showConfirm ? '👁️' : '👁️‍🗨️'}
                 </button>
               </div>
-              {errors.confirmPassword && <p className="text-red-300 text-sm flex items-center gap-1"><span>❌</span> {errors.confirmPassword}</p>}
+              {errors.confirmPassword && <p className={`${isDark ? 'text-red-300' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.confirmPassword}</p>}
               {formData.confirmPassword && formData.password === formData.confirmPassword && !errors.confirmPassword && (
-                <p className="text-emerald-300 text-sm flex items-center gap-1"><span>✅</span> Passwords match!</p>
+                <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} text-sm flex items-center gap-1`}><span>✅</span> Passwords match!</p>
               )}
             </div>
 
@@ -260,14 +262,14 @@ function ResetPassword() {
 
           {/* Back to Login */}
           <div className="text-center mt-6">
-            <Link to="/login" className="text-blue-300 hover:text-white transition-colors text-sm font-medium">
+            <Link to="/login" className={`${isDark ? 'text-blue-300 hover:text-white' : 'text-indigo-600 hover:text-indigo-800'} transition-colors text-sm font-medium`}>
               ← Back to Login
             </Link>
           </div>
         </div>
 
         {/* Bottom Decoration */}
-        <div className="text-center mt-6 text-white/40 text-sm">
+        <div className={`text-center mt-6 text-sm ${isDark ? 'text-white/40' : 'text-indigo-500'}`}>
           <p>🌾 Secure your farm account 🌾</p>
         </div>
       </div>

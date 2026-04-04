@@ -4,12 +4,22 @@ const ProductService = {
   createProduct: async (productData) => {
     // Prepare FormData for multipart/form-data
     const formData = new FormData();
-    // Extract file URLs if present (assume comma-separated URLs in imageUrls/videoUrls)
-    // If you want to support actual file uploads, update Selling.jsx to pass File objects
-    // For now, just send product JSON
-    formData.append('product', JSON.stringify(productData));
-    // If you have files, you can append them as:
-    // productData.files?.forEach(file => formData.append('files', file));
+    // Remove imageUrls and videoUrls from productData before sending
+    const cleanProductData = { ...productData };
+    delete cleanProductData.imageUrls;
+    delete cleanProductData.videoUrls;
+    delete cleanProductData.imageFiles;
+    delete cleanProductData.videoFile;
+    delete cleanProductData.videoFiles;
+    formData.append('product', JSON.stringify(cleanProductData));
+    // Append image files
+    if (productData.imageFiles) {
+      productData.imageFiles.forEach(file => formData.append('files', file));
+    }
+    // Append video files
+    if (productData.videoFiles) {
+      productData.videoFiles.forEach(file => formData.append('files', file));
+    }
     const response = await apiClient.post('/products', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -39,7 +49,27 @@ const ProductService = {
   },
 
   updateProduct: async (id, productData) => {
-    const response = await apiClient.put(`/products/${id}`, productData);
+    // Prepare FormData for multipart/form-data
+    const formData = new FormData();
+    // Remove imageUrls, videoUrls, imageFiles, videoFiles from productData before sending
+    const cleanProductData = { ...productData };
+    delete cleanProductData.imageUrls;
+    delete cleanProductData.videoUrls;
+    delete cleanProductData.imageFiles;
+    delete cleanProductData.videoFile;
+    delete cleanProductData.videoFiles;
+    formData.append('product', JSON.stringify(cleanProductData));
+    if (productData.imageFiles) {
+      productData.imageFiles.forEach(file => formData.append('files', file));
+    }
+    if (productData.videoFiles) {
+      productData.videoFiles.forEach(file => formData.append('files', file));
+    }
+    const response = await apiClient.put(`/products/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
     return response.data;
   },
 

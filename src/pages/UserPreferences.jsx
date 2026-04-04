@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext';
 
 const defaultPrefs = {
   notifications: true,
@@ -10,20 +11,50 @@ const defaultPrefs = {
 };
 
 const UserPreferences = () => {
+  const { setTheme } = useTheme();
+
+  const startGuidedTour = () => {
+    window.dispatchEvent(new Event('start-onboarding-tour'));
+  };
+
+  const applyThemePreference = (themePreference) => {
+    if (themePreference === 'dark') {
+      setTheme('dark');
+      return;
+    }
+    if (themePreference === 'light') {
+      setTheme('light');
+      return;
+    }
+
+    const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(systemDark ? 'dark' : 'light');
+  };
+
   const [prefs, setPrefs] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem('userPrefs')) || defaultPrefs;
+      const savedPrefs = JSON.parse(localStorage.getItem('userPrefs')) || defaultPrefs;
+      return { ...defaultPrefs, ...savedPrefs };
     } catch {
       return defaultPrefs;
     }
   });
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    applyThemePreference(prefs.theme || 'system');
+    // Run once on mount with stored preference.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setPrefs((prev) => {
       const updated = { ...prev, [name]: type === 'checkbox' ? checked : value };
       localStorage.setItem('userPrefs', JSON.stringify(updated));
+      if (name === 'theme') {
+        applyThemePreference(updated.theme);
+      }
       return updated;
     });
     setSaved(true);
@@ -73,6 +104,38 @@ const UserPreferences = () => {
           </div>
         )}
 
+        <div className="mb-6 bg-slate-800 border border-slate-700 rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-white">
+            <h2 className="text-lg font-bold flex items-center gap-2">
+              <span>🧭</span> Quick Help Guide
+            </h2>
+          </div>
+          <div className="p-6 space-y-3 text-slate-200">
+            <p className="text-sm text-slate-300">Choose settings based on your goal:</p>
+            <ul className="text-sm text-slate-300 space-y-2">
+              <li>• Theme: Choose Light, Dark, or System. This preference is also carried to Support Portal redirects.</li>
+              <li>• Notifications: Turn on email and push alerts so you do not miss important farm updates.</li>
+              <li>• Language: Pick your preferred language for easier day-to-day usage.</li>
+              <li>• Dashboard Tips: Keep this on if you are new and want contextual guidance.</li>
+            </ul>
+            <div className="pt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={startGuidedTour}
+                className="px-4 py-2 bg-cyan-600 text-white rounded-lg font-medium hover:bg-cyan-500 transition-colors"
+              >
+                Start Guided Tour
+              </button>
+              <Link
+                to="/dashboard"
+                className="px-4 py-2 bg-slate-700 text-slate-100 rounded-lg font-medium hover:bg-slate-600 transition-colors"
+              >
+                Go to Dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Preference Groups */}
         <div className="space-y-6">
           {preferenceGroups.map((group) => (
@@ -104,16 +167,21 @@ const UserPreferences = () => {
                           <div className="w-11 h-6 bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-slate-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
                         </label>
                       ) : (
-                        <select
-                          name={item.name}
-                          value={prefs[item.name]}
-                          onChange={handleChange}
-                          className="px-4 py-2 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-700 text-white"
-                        >
-                          {item.options?.map((opt) => (
-                            <option key={opt.value} value={opt.value}>{opt.label}</option>
-                          ))}
-                        </select>
+                        <div className="space-y-1">
+                          <select
+                            name={item.name}
+                            value={prefs[item.name]}
+                            onChange={handleChange}
+                            className="px-4 py-2 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-700 text-white"
+                          >
+                            {item.options?.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                          {item.name === 'theme' && (
+                            <p className="text-xs text-slate-400">Tip: Use System to follow your device mode automatically.</p>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -168,6 +236,7 @@ const UserPreferences = () => {
             onClick={() => {
               setPrefs(defaultPrefs);
               localStorage.setItem('userPrefs', JSON.stringify(defaultPrefs));
+              applyThemePreference(defaultPrefs.theme);
               setSaved(true);
               setTimeout(() => setSaved(false), 2000);
             }}

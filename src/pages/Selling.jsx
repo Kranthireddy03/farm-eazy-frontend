@@ -3,6 +3,7 @@ import { formatDate } from '../utils/formatDate';
 import { useNavigate } from 'react-router-dom';
 import OtpService from '../services/OtpService';
 import ProductService from '../services/ProductService';
+import apiClient from '../services/apiClient';
 import { useGlobalToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -11,7 +12,7 @@ function Selling() {
   const navigate = useNavigate();
   const { showToast, showOtpNotification } = useGlobalToast();
   const { isDark } = useTheme();
-  const { getUserEmail, isAuthenticated, updateActivity } = useAuth();
+  const { getUserEmail, getUserId, getUserName, getUserPhone, isAuthenticated, updateActivity } = useAuth();
   const [currentStep, setCurrentStep] = useState(2); // Skip OTP step
   const [otpVerified, setOtpVerified] = useState(true); // Already verified (OTP disabled)
   const [otpSent, setOtpSent] = useState(false);
@@ -21,6 +22,8 @@ function Selling() {
   const [myProducts, setMyProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null); // For edit mode
+  const [eligibilityLoading, setEligibilityLoading] = useState(true);
+  const [eligibility, setEligibility] = useState(null);
   
   // Use AuthContext for user email instead of direct localStorage access
   const userEmail = getUserEmail();
@@ -33,13 +36,21 @@ function Selling() {
     discountPercentage: 0,
     quantity: '',
     unit: '',
+    deliveryDaysMin: 3,
+    deliveryDaysMax: 5,
     weight: '',
     specifications: '',
     warrantyInfo: '',
     imageUrls: '',
     videoUrls: '',
     contactEmail: '',
-    contactPhone: ''
+    contactPhone: '',
+    sellerEmail: getUserEmail() || '',
+    sellerPhone: getUserPhone() || '',
+    vendorId: getUserId() || '',
+    vendorName: getUserName() || '',
+    vendorLocation: '',
+    vendorType: ''
   });
 
   const categories = [
@@ -54,8 +65,34 @@ function Selling() {
   ];
 
   useEffect(() => {
-    fetchMyProducts();
+    loadEligibilityAndProducts();
   }, []);
+
+  const loadEligibilityAndProducts = async () => {
+    try {
+      setEligibilityLoading(true);
+      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT');
+      const eligibilityData = eligibilityResponse?.data || {};
+      setEligibility(eligibilityData);
+
+      if (eligibilityData?.eligible) {
+        fetchMyProducts();
+      } else {
+        setMyProducts([]);
+      }
+    } catch (error) {
+      console.error('Error fetching listing eligibility:', error);
+      setEligibility({
+        eligible: false,
+        verificationInProgress: false,
+        verificationMessage: 'Unable to validate vendor verification right now. Please complete or retry verification.',
+        verificationRedirectPath: '/vendor-verification'
+      });
+      setMyProducts([]);
+    } finally {
+      setEligibilityLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (timer > 0) {
@@ -129,6 +166,11 @@ function Selling() {
   };
 
   const handleEditProduct = (product) => {
+    if (!eligibility?.eligible) {
+      showToast(eligibility?.verificationMessage || 'Complete vendor verification first.', 'warning');
+      navigate('/vendor-dashboard');
+      return;
+    }
     setEditingProduct(product);
     setFormData({
       productName: product.productName || '',
@@ -138,13 +180,21 @@ function Selling() {
       discountPercentage: product.discountPercentage || 0,
       quantity: product.quantity || '',
       unit: product.unit || '',
+      deliveryDaysMin: product.deliveryDaysMin || 3,
+      deliveryDaysMax: product.deliveryDaysMax || 5,
       weight: product.weight || '',
       specifications: product.specifications || '',
       warrantyInfo: product.warrantyInfo || '',
       imageUrls: product.imageUrls || '',
       videoUrls: product.videoUrls || '',
       contactEmail: product.contactEmail || '',
-      contactPhone: product.contactPhone || ''
+      contactPhone: product.contactPhone || '',
+      sellerEmail: getUserEmail() || '',
+      sellerPhone: getUserPhone() || '',
+      vendorId: getUserId() || '',
+      vendorName: getUserName() || '',
+      vendorLocation: product.vendorLocation || '',
+      vendorType: product.vendorType || ''
     });
     setCurrentStep(2); // Start at Basic step
     setShowForm(true);
@@ -179,19 +229,69 @@ function Selling() {
       showToast('Quantity must be greater than zero', 'error');
       return;
     }
+    const minDays = parseInt(formData.deliveryDaysMin, 10);
+    const maxDays = parseInt(formData.deliveryDaysMax, 10);
+    if (!Number.isFinite(minDays) || !Number.isFinite(maxDays) || minDays < 1 || maxDays < 1 || minDays > maxDays) {
+      showToast('Please enter a valid delivery window (min and max days).', 'error');
+      return;
+    }
+
+    if (!formData.vendorName || !formData.vendorLocation || !formData.vendorType) {
+      showToast('Please complete vendor details before publishing.', 'error');
+      setCurrentStep(2);
+      return;
+    }
+
+    if (!formData.contactEmail || !formData.contactPhone) {
+      showToast('Please complete contact details before publishing.', 'error');
+      setCurrentStep(5);
+      return;
+    }
+
+    const publishConsent = window.confirm(
+      `Confirm product listing details:\n\nVendor: ${formData.vendorName}\nVendor Location: ${formData.vendorLocation}\nDelivery Window: ${minDays}-${maxDays} days\n\nProceed to publish?`
+    );
+    if (!publishConsent) {
+      return;
+    }
+
+    try {
+      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT');
+      const eligibility = eligibilityResponse?.data || {};
+      if (!eligibility.eligible) {
+        const firstReason = Array.isArray(eligibility.missingRequirements) && eligibility.missingRequirements.length
+          ? eligibility.missingRequirements[0]
+          : 'Listing eligibility requirements are not complete.';
+        showToast(firstReason, 'warning');
+        navigate('/vendor-dashboard');
+        return;
+      }
+    } catch (eligibilityError) {
+      showToast('Unable to validate listing eligibility right now. Please try again.', 'error');
+      return;
+    }
+
     setLoading(true);
     try {
+      // Remove imageFiles and videoFiles from payload before sending
+      const productPayload = {
+        ...formData,
+        sellerEmail: getUserEmail() || '',
+        sellerPhone: getUserPhone() || '',
+        vendorId: getUserId() || '',
+        vendorName: getUserName() || '',
+      };
+      delete productPayload.imageFiles;
+      delete productPayload.videoFiles;
       if (editingProduct) {
-        // Update existing product
-        await ProductService.updateProduct(editingProduct.id, formData);
+        await ProductService.updateProduct(editingProduct.id, { ...productPayload, imageFiles: formData.imageFiles, videoFiles: formData.videoFiles });
         showToast('Product updated successfully!', 'success');
       } else {
-        // Create new product
-        await ProductService.createProduct(formData);
+        await ProductService.createProduct({ ...productPayload, imageFiles: formData.imageFiles, videoFiles: formData.videoFiles });
         showToast('Product listed successfully!', 'success');
       }
       setShowForm(false);
-      setCurrentStep(2); // Reset to Basic step (OTP removed)
+      setCurrentStep(2);
       setEditingProduct(null);
       setFormData({
         productName: '',
@@ -201,13 +301,21 @@ function Selling() {
         discountPercentage: 0,
         quantity: '',
         unit: '',
+        deliveryDaysMin: 3,
+        deliveryDaysMax: 5,
         weight: '',
         specifications: '',
         warrantyInfo: '',
         imageUrls: '',
         videoUrls: '',
         contactEmail: '',
-        contactPhone: ''
+        contactPhone: '',
+        sellerEmail: getUserEmail() || '',
+        sellerPhone: getUserPhone() || '',
+        vendorId: getUserId() || '',
+        vendorName: getUserName() || '',
+        vendorLocation: '',
+        vendorType: ''
       });
       fetchMyProducts();
     } catch (error) {
@@ -220,6 +328,9 @@ function Selling() {
   const discountedPrice = formData.price && formData.discountPercentage > 0
     ? (formData.price - (formData.price * formData.discountPercentage / 100)).toFixed(2)
     : formData.price;
+
+  const vendorDashboardEligible = Boolean(eligibility?.vendorDashboardEligible)
+  const canSellProducts = Boolean(eligibility?.eligible)
 
   if (showForm) {
     return (
@@ -239,13 +350,21 @@ function Selling() {
                   discountPercentage: 0,
                   quantity: '',
                   unit: '',
+                  deliveryDaysMin: 3,
+                  deliveryDaysMax: 5,
                   weight: '',
                   specifications: '',
                   warrantyInfo: '',
                   imageUrls: '',
                   videoUrls: '',
                   contactEmail: '',
-                  contactPhone: ''
+                  contactPhone: '',
+                  sellerEmail: getUserEmail() || '',
+                  sellerPhone: '',
+                  vendorId: getUserId() || '',
+                  vendorName: getUserName() || '',
+                  vendorLocation: '',
+                  vendorType: ''
                 });
               }}
               className={`flex items-center gap-2 font-medium transition-colors mb-4 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
@@ -367,6 +486,60 @@ function Selling() {
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
                       placeholder="e.g., Organic Tomato Seeds"
                     />
+                  </div>
+
+                  <div>
+                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor Name *</label>
+                    <input
+                      type="text"
+                      name="vendorName"
+                      value={formData.vendorName}
+                      onChange={handleInputChange}
+                      required
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
+                      placeholder="e.g., Seller Name"
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor ID</label>
+                    <input
+                      type="text"
+                      name="vendorId"
+                      value={formData.vendorId}
+                      readOnly
+                      className={`w-full px-4 py-3 border-2 rounded-xl cursor-not-allowed focus:outline-none ${isDark ? 'bg-slate-700 text-slate-400' : 'bg-gray-200 text-gray-500'}`}
+                      placeholder="Vendor ID (auto-filled)"
+                    />
+                  </div>
+                  {/* Seller email and phone are not shown in the form, auto-filled from registration */}
+                  <div>
+                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor Location *</label>
+                    <input
+                      type="text"
+                      name="vendorLocation"
+                      value={formData.vendorLocation}
+                      onChange={handleInputChange}
+                      required
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
+                      placeholder="e.g., District, State"
+                    />
+                  </div>
+                  <div>
+                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor Type *</label>
+                    <select
+                      name="vendorType"
+                      value={formData.vendorType}
+                      onChange={handleInputChange}
+                      required
+                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                    >
+                      <option value="">Select type...</option>
+                      <option value="FARMER">Farmer</option>
+                      <option value="DISTRIBUTOR">Distributor</option>
+                      <option value="RETAILER">Retailer</option>
+                      <option value="COOPERATIVE">Cooperative</option>
+                      <option value="OTHER">Other</option>
+                    </select>
                   </div>
                   
                   <div>
@@ -534,6 +707,37 @@ function Selling() {
                       </select>
                     </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Delivery Min Days *</label>
+                      <input
+                        type="number"
+                        name="deliveryDaysMin"
+                        value={formData.deliveryDaysMin}
+                        onChange={handleInputChange}
+                        min="1"
+                        required
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
+                      />
+                    </div>
+                    <div>
+                      <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Delivery Max Days *</label>
+                      <input
+                        type="number"
+                        name="deliveryDaysMax"
+                        value={formData.deliveryDaysMax}
+                        onChange={handleInputChange}
+                        min="1"
+                        required
+                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className={`rounded-xl p-4 border ${isDark ? 'bg-slate-700 border-slate-600 text-slate-200' : 'bg-emerald-50 border-emerald-200 text-slate-700'}`}>
+                    Estimated delivery shown to buyers: <span className="font-semibold">{formData.deliveryDaysMin || 3}-{formData.deliveryDaysMax || 5} days</span>
+                  </div>
                   
                   <div>
                     <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Weight/Size (optional)</label>
@@ -644,35 +848,73 @@ function Selling() {
             {/* Step 6: Media */}
             {currentStep === 6 && (
               <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>📸 Media</h2>
-                
+                <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>📸 Upload Product Media</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Image URLs (comma-separated)</label>
-                    <textarea
-                      name="imageUrls"
-                      value={formData.imageUrls}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
+                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Upload Images (Max 5, jpg/jpeg/png/webp, ≤5MB each)</label>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/jpg"
+                      multiple
+                      onChange={e => {
+                        const newFiles = Array.from(e.target.files);
+                        setFormData(prev => {
+                          const combined = [...(prev.imageFiles || []), ...newFiles];
+                          if (combined.length > 5) {
+                            showToast('Only 5 images are allowed per product.', 'error');
+                            return { ...prev, imageFiles: combined.slice(0, 5) };
+                          }
+                          return { ...prev, imageFiles: combined };
+                        });
+                        e.target.value = "";
+                      }}
+                      className="w-full"
                     />
-                    <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Separate multiple URLs with commas</p>
+                    {formData.imageFiles && formData.imageFiles.length > 0 && (
+                      <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {formData.imageFiles.map((file, idx) => (
+                          <div key={idx} className="relative">
+                            <img src={URL.createObjectURL(file)} alt="preview" className="rounded-xl w-full h-32 object-cover" />
+                            <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, imageFiles: prev.imageFiles.filter((_, i) => i !== idx) }))}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  
                   <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Video URLs (comma-separated)</label>
-                    <textarea
-                      name="videoUrls"
-                      value={formData.videoUrls}
-                      onChange={handleInputChange}
-                      rows="2"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="https://youtube.com/watch?v=..."
+                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Upload Videos (mp4/webm, ≤50MB each, optional, multiple)</label>
+                    <input
+                      type="file"
+                      accept="video/mp4,video/webm"
+                      multiple
+                      onChange={e => {
+                        const newFiles = Array.from(e.target.files);
+                        setFormData(prev => {
+                          const combined = [...(prev.videoFiles || []), ...newFiles];
+                          if (combined.length > 3) {
+                            showToast('Only 3 videos are allowed per product.', 'error');
+                            return { ...prev, videoFiles: combined.slice(0, 3) };
+                          }
+                          return { ...prev, videoFiles: combined };
+                        });
+                        e.target.value = "";
+                      }}
+                      className="w-full"
                     />
+                    {formData.videoFiles && formData.videoFiles.length > 0 && (
+                      <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {formData.videoFiles.map((file, idx) => (
+                          <div key={idx} className="relative">
+                            <video controls className="rounded-xl w-full h-40 object-cover">
+                              <source src={URL.createObjectURL(file)} type={file.type} />
+                            </video>
+                            <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, videoFiles: prev.videoFiles.filter((_, i) => i !== idx) }))}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
-                
                 <div className="flex gap-4 mt-6">
                   <button
                     type="button"
@@ -692,6 +934,61 @@ function Selling() {
               </div>
             )}
           </form>
+        </div>
+      </div>
+    );
+  }
+
+  const vendorLocked = !vendorDashboardEligible
+
+  if (eligibilityLoading) {
+    return (
+      <div className="flex items-center justify-center h-72">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
+      </div>
+    );
+  }
+
+  if (vendorLocked) {
+    return (
+      <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <div className={`border-b shadow-md ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className={`flex items-center gap-2 font-medium transition-colors ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
+            >
+              ← Back to Home
+            </button>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-10">
+          <div className={`rounded-2xl p-8 border shadow-lg ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+            <h1 className={`text-3xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>Vendor verification required</h1>
+            <p className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+              {eligibility?.verificationMessage || 'To access product listing, complete vendor verification first.'}
+            </p>
+            {eligibility?.verificationInProgress && (
+              <p className={`mt-3 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
+                Your verification is in progress. After successful verification, vendor dashboard and product/service listings will unlock automatically.
+              </p>
+            )}
+            <div className="mt-6 flex gap-3">
+              <button
+                onClick={() => navigate('/vendor-dashboard')}
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
+              >
+                Open Vendor Dashboard
+              </button>
+              <button
+                onClick={loadEligibilityAndProducts}
+                className={`px-6 py-3 rounded-xl font-semibold transition-all ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                Refresh Status
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -717,6 +1014,27 @@ function Selling() {
         </div>
       </div>
 
+      {vendorDashboardEligible && !canSellProducts && (
+        <div className="max-w-7xl mx-auto px-4 pt-6">
+          <div className={`rounded-2xl p-5 border shadow-sm ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Vendor dashboard is active</h2>
+            <p className={`mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+              {eligibility?.verificationMessage || 'Your vendor profile is active. Complete the remaining listing requirements to publish products.'}
+            </p>
+            {Array.isArray(eligibility?.missingRequirements) && eligibility.missingRequirements.length > 0 && (
+              <div className={`mt-4 rounded-xl border p-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
+                <p className={`font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>Remaining listing steps:</p>
+                <ul className="mt-2 space-y-2 text-sm">
+                  {eligibility.missingRequirements.map((item, index) => (
+                    <li key={`${item}-${index}`} className={`${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
         <h1 className={`text-3xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>My Products</h1>
@@ -738,7 +1056,15 @@ function Selling() {
             {myProducts.map(product => (
               <div key={product.id} className={`rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
                 <div className={`h-48 flex items-center justify-center ${isDark ? 'bg-gradient-to-r from-slate-700 to-slate-600' : 'bg-gradient-to-r from-emerald-100 to-teal-100'}`}>
-                  <span className="text-6xl">📦</span>
+                  {product.imageUrls && product.imageUrls.split(',')[0] ? (
+                    <img
+                      src={product.imageUrls.split(',')[0]}
+                      alt={product.productName}
+                      className="rounded-xl w-full h-48 object-cover"
+                    />
+                  ) : (
+                    <span className="text-6xl">📦</span>
+                  )}
                 </div>
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-2">
@@ -766,11 +1092,10 @@ function Selling() {
                   <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
                     Stock: <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{product.quantity} {product.unit}</span>
                   </p>
-                  <div className={`text-xs mb-4 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
-                    Listed {formatDate(product.createdAt)}
-                  </div>
-                  {/* Edit & Delete Actions */}
-                  <div className={`flex gap-2 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                    Delivery: <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{product.deliveryDaysMin || 3}-{product.deliveryDaysMax || 5} days</span>
+                  </p>
+                  <div className="flex gap-2 mt-4">
                     <button
                       onClick={() => handleEditProduct(product)}
                       className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-1 ${

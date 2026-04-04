@@ -54,17 +54,31 @@ class AuthService {
     }
   }
 
+  async checkRegistrationAvailability(username, email, phone) {
+    try {
+      const response = await axios.post(API_ENDPOINTS.REGISTER_AVAILABILITY, {
+        username,
+        email,
+        phone,
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   /**
    * Login user
    * @param {string} identifier - User's email, username, or user ID
    * @param {string} password - User's password
    * @returns {Promise} Response with JWT token
    */
-  async login(identifier, password) {
+  async login(identifier, password, rememberMe = true) {
     try {
       const response = await axios.post(API_ENDPOINTS.LOGIN, {
         identifier,
         password,
+        rememberMe,
       });
 
       // Store token and user info in local storage
@@ -92,6 +106,17 @@ class AuthService {
     localStorage.setItem(STORAGE_KEYS.USER_USERNAME, userData.username || '');
     // Note: fullName is no longer used - username is the display name
     localStorage.setItem(STORAGE_KEYS.USER_FULLNAME, userData.username || '');
+    if (userData.refreshToken) {
+      localStorage.setItem(STORAGE_KEYS.USER_REFRESH_TOKEN, userData.refreshToken);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+    }
+    // Store user roles for admin features
+    if (userData.roles && userData.roles.length > 0) {
+      localStorage.setItem(STORAGE_KEYS.USER_ROLES, JSON.stringify(userData.roles));
+    } else {
+      localStorage.setItem(STORAGE_KEYS.USER_ROLES, JSON.stringify(['USER']));
+    }
     
     // Store session tracking
     localStorage.setItem(SESSION_KEYS.SESSION_START, now.toString());
@@ -216,6 +241,7 @@ class AuthService {
     localStorage.removeItem(STORAGE_KEYS.USER_ID);
     localStorage.removeItem(STORAGE_KEYS.USER_USERNAME);
     localStorage.removeItem(STORAGE_KEYS.USER_FULLNAME);
+    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
     
     // Clear session tracking
     localStorage.removeItem(SESSION_KEYS.LAST_ACTIVITY);
@@ -322,6 +348,17 @@ class AuthService {
   async requestLoginOtp(phone) {
     try {
       const response = await axios.post(API_ENDPOINTS.LOGIN_REQUEST_OTP, {
+        phone,
+      });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async previewLoginUser(phone) {
+    try {
+      const response = await axios.post(API_ENDPOINTS.LOGIN_PREVIEW_USER, {
         phone,
       });
       return response.data;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import ProductMediaCarousel from '../components/ProductMediaCarousel'
 import { useParams, useNavigate } from 'react-router-dom'
 import ProductService from '../services/ProductService'
 import { useToast } from '../hooks/useToast'
@@ -17,12 +18,24 @@ function ProductDetail() {
   const [revealedContact, setRevealedContact] = useState({ phone: false, email: false })
   const [addingToCart, setAddingToCart] = useState(false)
 
+  const sellerPhone = product?.sellerPhone || product?.contactPhone || ''
+  const sellerEmail = product?.sellerEmail || product?.contactEmail || ''
+  const productMediaUrls = Array.from(new Set([
+    ...(Array.isArray(product?.mediaUrls) ? product.mediaUrls : []),
+    ...(product?.imageUrls || '').split(',').map((url) => url.trim()).filter(Boolean),
+    ...(product?.videoUrls || '').split(',').map((url) => url.trim()).filter(Boolean),
+  ]))
+  const productVideoUrls = (product?.videoUrls || '')
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean)
+
   useEffect(() => {
     const fetchProduct = async () => {
       try {
         setLoading(true)
-        const response = await ProductService.getProduct(id)
-        setProduct(response.data)
+        const productData = await ProductService.getProductById(id)
+        setProduct(productData)
       } catch (error) {
         console.error('Failed to fetch product:', error)
         showToast('Failed to load product details', 'error')
@@ -142,27 +155,14 @@ function ProductDetail() {
         
         <div className={`rounded-lg shadow-xl overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
       <div className="grid md:grid-cols-2 gap-0">
-        {/* Product Image */}
+        {/* Product Media Carousel */}
         <div className={`relative h-96 md:h-full ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-600' : 'bg-gradient-to-br from-gray-100 to-gray-200'}`}>
-                      {product.imageUrls ? (
-                        <img
-                          src={product.imageUrls.split(',')[0]}
-                          alt={product.productName}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        <div className="flex items-center justify-center h-full">
-                          <div className="text-9xl">{getCategoryIcon(product.category)}</div>
-                        </div>
-                      )}
-                      {/* Category Badge */}
-                      <div className={`absolute top-4 right-4 px-4 py-2 rounded-full font-semibold shadow-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white/90 text-gray-800'}`}>
-                        {getCategoryIcon(product.category)} {product.category}
-                      </div>
-                    </div>
+          <ProductMediaCarousel mediaUrls={productMediaUrls} videoUrls={productVideoUrls} />
+          {/* Category Badge */}
+          <div className={`absolute top-4 right-4 px-4 py-2 rounded-full font-semibold shadow-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white/90 text-gray-800'}`}>
+            {getCategoryIcon(product.category)} {product.category}
+          </div>
+        </div>
                     {/* Product Details */}
                     <div className="p-8">
                       <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.productName}</h1>
@@ -180,6 +180,17 @@ function ProductDetail() {
                           </div>
                         )}
                       </div>
+                        {/* Vendor Transparency UI */}
+                        <div className={`mt-4 p-4 rounded-lg border ${isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+                          <h4 className="font-semibold text-lg mb-2">Vendor Information</h4>
+                          <div>Vendor Name: {product.vendorName}</div>
+                          <div>Vendor ID: {product.vendorId}</div>
+                          <div>Vendor Location: {product.vendorLocation}</div>
+                          <div>Vendor Type: {product.vendorType}</div>
+                          <div className="mt-2 font-semibold text-emerald-500">
+                            Estimated Delivery: {product.deliveryDaysMin || 3}-{product.deliveryDaysMax || 5} days
+                          </div>
+                        </div>
                       {/* Description */}
                       <div className="mb-6">
                         <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Description</h3>
@@ -236,7 +247,7 @@ function ProductDetail() {
                             <span className="text-2xl">📞</span>
                             <div>
                               <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Phone</p>
-                              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.sellerPhone}</p>
+                              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{sellerPhone || 'Not available'}</p>
                             </div>
                           </div>
                           {product.sellerLocation && (
@@ -254,28 +265,28 @@ function ProductDetail() {
                       <div className="grid grid-cols-2 gap-4">
                         <button
                           onClick={() => {
-                            if (!Boolean(product.sellerPhone)) {
+                            if (!Boolean(sellerPhone)) {
                               showToast('Seller phone not available', 'warning');
                               return;
                             }
                             setRevealedContact(prev => ({ ...prev, phone: true }));
                           }}
-                          disabled={!Boolean(product.sellerPhone)}
-                          className={`px-6 py-4 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${Boolean(product.sellerPhone) ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                          disabled={!Boolean(sellerPhone)}
+                          className={`px-6 py-4 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${Boolean(sellerPhone) ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                         >
                           <span className="text-2xl">📞</span>
                           Call Seller
                         </button>
                         <button
                           onClick={() => {
-                            if (!Boolean(product.sellerEmail)) {
+                            if (!Boolean(sellerEmail)) {
                               showToast('Seller email not available', 'warning');
                               return;
                             }
                             setRevealedContact(prev => ({ ...prev, email: true }));
                           }}
-                          disabled={!Boolean(product.sellerEmail)}
-                          className={`px-6 py-4 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${Boolean(product.sellerEmail) ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
+                          disabled={!Boolean(sellerEmail)}
+                          className={`px-6 py-4 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${Boolean(sellerEmail) ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
                         >
                           <span className="text-2xl">✉️</span>
                           Email Seller
@@ -283,47 +294,33 @@ function ProductDetail() {
                       </div>
                       {(revealedContact.phone || revealedContact.email) && (
                         <div className={`mt-4 rounded-lg p-4 space-y-2 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'}`}>
-                          {revealedContact.phone && Boolean(product.sellerPhone) && (
+                          {revealedContact.phone && Boolean(sellerPhone) && (
                             <div className="flex items-center gap-2">
                               <span className="text-green-500">📞</span>
                               <a
-                                href={`tel:${product.sellerPhone}`}
+                                href={`tel:${sellerPhone}`}
                                 className="text-green-500 font-semibold hover:underline"
                               >
-                                {product.sellerPhone}
+                                {sellerPhone}
                               </a>
                             </div>
                           )}
-                          {revealedContact.email && Boolean(product.sellerEmail) && (
+                          {revealedContact.email && Boolean(sellerEmail) && (
                             <div className="flex items-center gap-2">
                               <span className="text-orange-500">✉️</span>
                               <a
-                                href={`mailto:${product.sellerEmail}?subject=Inquiry about ${product.productName}`}
+                                href={`mailto:${sellerEmail}?subject=Inquiry about ${product.productName}`}
                                 className="text-orange-500 font-semibold hover:underline"
                               >
-                                {product.sellerEmail}
+                                {sellerEmail}
                               </a>
                             </div>
                           )}
                         </div>
                       )}
-                      {/* Video Links */}
-                      {product.videoUrls && (
-                        <div className="mt-6">
-                          <h3 className={`text-lg font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>Product Video</h3>
-                          {product.videoUrls.split(',').map((url, idx) => (
-                            <a
-                              key={idx}
-                              href={url.trim()}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`block px-4 py-3 rounded-lg font-semibold transition-colors mb-2 ${isDark ? 'bg-blue-900/40 text-blue-400 hover:bg-blue-900/60' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'}`}
-                            >
-                              🎥 Watch Product Video {idx + 1}
-                            </a>
-                          ))}
-                        </div>
-                      )}
+                      <div className={`mt-6 p-3 rounded-lg border text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-slate-300' : 'bg-blue-50 border-blue-100 text-slate-700'}`}>
+                        Media gallery supports swipe/drag and inline video playback for a smoother product preview.
+                      </div>
                       {/* Add to Cart Button */}
                       <button
                         className={`mt-6 w-full px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
