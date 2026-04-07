@@ -1,13 +1,25 @@
 export const getSupportPortalBaseUrl = () => {
-  const configuredBase = import.meta.env.VITE_SUPPORT_DASHBOARD_URL
-  if (configuredBase) return configuredBase
+  const configuredBase = import.meta.env.VITE_SUPPORT_DASHBOARD_URL || import.meta.env.VITE_SUPPORT_BASE_URL
+  if (configuredBase && configuredBase.trim()) return configuredBase
+  
   if (typeof window !== 'undefined' && window.location?.origin) {
     const { protocol, hostname, port, origin } = window.location
-    // Main user app is running on 3000; support portal should open on 5173.
-    if (port === '3000') return `${protocol}//${hostname}:5173`
-    return origin
+    
+    // Map domain to support portal
+    if (hostname.includes('farm-eazy.com') || hostname === 'localhost') {
+      // For farm-eazy.com and localhost, use support.farm-eazy.com
+      if (hostname === 'localhost' && port === '3000') {
+        // Local development: support runs on 5173
+        return `${protocol}//${hostname}:5173`
+      }
+      // Production/UAT: use support.farm-eazy.com
+      return `${protocol}//support.farm-eazy.com`
+    }
+
+    // Hosted frontend/backend (Render/Vercel/etc): default to support portal deployment
+    return 'https://admin-support-portal.vercel.app'
   }
-  return 'http://localhost:5173'
+  return 'https://admin-support-portal.vercel.app'
 }
 
 const normalizePortalPath = (path) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { formatDate } from '../utils/formatDate';
 import { useNavigate } from 'react-router-dom';
 import OtpService from '../services/OtpService';
@@ -328,6 +328,28 @@ function Selling() {
   const discountedPrice = formData.price && formData.discountPercentage > 0
     ? (formData.price - (formData.price * formData.discountPercentage / 100)).toFixed(2)
     : formData.price;
+
+  const imagePreviewUrls = useMemo(
+    () => (formData.imageFiles || []).map((file) => URL.createObjectURL(file)),
+    [formData.imageFiles]
+  );
+
+  const videoPreviewUrls = useMemo(
+    () => (formData.videoFiles || []).map((file) => URL.createObjectURL(file)),
+    [formData.videoFiles]
+  );
+
+  useEffect(() => {
+    return () => {
+      imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [imagePreviewUrls]);
+
+  useEffect(() => {
+    return () => {
+      videoPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [videoPreviewUrls]);
 
   const vendorDashboardEligible = Boolean(eligibility?.vendorDashboardEligible)
   const canSellProducts = Boolean(eligibility?.eligible)
@@ -874,7 +896,7 @@ function Selling() {
                       <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
                         {formData.imageFiles.map((file, idx) => (
                           <div key={idx} className="relative">
-                            <img src={URL.createObjectURL(file)} alt="preview" className="rounded-xl w-full h-32 object-cover" />
+                            <img src={imagePreviewUrls[idx]} alt="preview" className="rounded-xl w-full h-32 object-cover" />
                             <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, imageFiles: prev.imageFiles.filter((_, i) => i !== idx) }))}>✕</button>
                           </div>
                         ))}
@@ -905,8 +927,9 @@ function Selling() {
                       <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                         {formData.videoFiles.map((file, idx) => (
                           <div key={idx} className="relative">
-                            <video controls className="rounded-xl w-full h-40 object-cover">
-                              <source src={URL.createObjectURL(file)} type={file.type} />
+                            <video controls playsInline preload="metadata" className="rounded-xl w-full h-40 object-cover bg-black">
+                              <source src={videoPreviewUrls[idx]} type={file.type || 'video/mp4'} />
+                              Your browser cannot preview this video file.
                             </video>
                             <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, videoFiles: prev.videoFiles.filter((_, i) => i !== idx) }))}>✕</button>
                           </div>

@@ -115,6 +115,7 @@ const AdminBlogManagement = lazy(() => import('./pages/admin/AdminBlogManagement
  * Uses AuthContext for consistent session management
  */
 function ProtectedRoute({ children }) {
+  const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
@@ -125,7 +126,7 @@ function ProtectedRoute({ children }) {
     );
   }
   
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  return isAuthenticated ? children : <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
 }
 
 function SupportPortalRedirect({

@@ -6,15 +6,17 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { isDark } = useTheme()
   const { login, isAuthenticated } = useAuth()
+  const redirectTo = location.state?.from || '/'
   
   // Login mode: 'password' or 'otp'
   const [loginMode, setLoginMode] = useState('password')
@@ -26,9 +28,9 @@ function Login() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, redirectTo]);
   
   // Show logout reason message if present
   useEffect(() => {
@@ -99,9 +101,9 @@ function Login() {
       const isFirstLogin = localStorage.getItem('firstLogin') !== 'done'
       if (isFirstLogin) {
         localStorage.setItem('firstLogin', 'done')
-        navigate('/', { state: { welcome: true } })
+        navigate(redirectTo, { state: { welcome: true } })
       } else {
-        navigate('/', { state: { welcomeBack: true } })
+        navigate(redirectTo, { state: { welcomeBack: true } })
       }
     } catch (error) {
       const errorMsg = error.message || ''
@@ -215,9 +217,9 @@ function Login() {
       const isFirstLogin = localStorage.getItem('firstLogin') !== 'done'
       if (isFirstLogin) {
         localStorage.setItem('firstLogin', 'done')
-        navigate('/', { state: { welcome: true } })
+        navigate(redirectTo, { state: { welcome: true } })
       } else {
-        navigate('/', { state: { welcomeBack: true } })
+        navigate(redirectTo, { state: { welcomeBack: true } })
       }
     } catch (error) {
       const errorMsg = error.message || ''
