@@ -212,36 +212,44 @@ function Crops() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        {/* Page Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Crops</h1>
-            <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Track all your crops and their status</p>
+      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <section className="page-hero interactive-card">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-300">Crop lifecycle</p>
+              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Crops</h1>
+              <p className={`mt-2 max-w-2xl ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Track planting, growth, readiness, and harvest in a cleaner, more tactile control surface.</p>
+            </div>
+            <button
+              onClick={() => {
+                setShowAddForm(!showAddForm)
+                setEditingCrop(null)
+                setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
+              }}
+              className="premium-button"
+            >
+              {showAddForm ? 'Close Form' : '+ Add Crop'}
+            </button>
           </div>
-          <button
-            onClick={() => {
-              setShowAddForm(!showAddForm)
-              setEditingCrop(null)
-              setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
-            }}
-            className="btn-primary"
-          >
-            {showAddForm ? 'Cancel' : '+ Add Crop'}
-          </button>
-        </div>
+        </section>
 
         {/* Error Message */}
         {error && (
-          <div className={`px-4 py-3 rounded-lg border ${isDark ? 'bg-red-900/30 border-red-700 text-red-400' : 'bg-red-50 border-red-200 text-red-700'}`}>
+          <div className={`glass-card px-4 py-3 border ${isDark ? 'border-red-700/40 bg-red-950/40 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
             {error}
           </div>
         )}
 
         {/* Add Crop Form */}
         {showAddForm && (
-          <div className="card">
-            <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New Crop</h2>
+          <div className="glass-card interactive-card p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Add New Crop</h2>
+                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Capture farm, season, and harvest targets in one pass.</p>
+              </div>
+              <span className="text-3xl">🌱</span>
+            </div>
             <form onSubmit={handleAddCrop} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -341,8 +349,14 @@ function Crops() {
 
         {/* Edit Crop Form */}
         {editingCrop && (
-          <div className="card">
-            <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Crop</h2>
+          <div className="glass-card interactive-card p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Edit Crop</h2>
+                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Refine the crop timeline without leaving the page.</p>
+              </div>
+              <span className="text-3xl">✏️</span>
+            </div>
             <form onSubmit={handleUpdateCrop} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -447,17 +461,18 @@ function Crops() {
 
         {/* Crops Grid */}
         {crops.length === 0 ? (
-          <div className="card text-center py-12">
-            <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No crops yet. Add your first crop!</p>
+          <div className="glass-card interactive-card text-center py-12">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-500/10 text-3xl">🌿</div>
+            <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>No crops yet. Add your first crop!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {crops.map((crop) => (
-              <div key={crop.id} className="card hover:shadow-lg transition-shadow">
+              <div key={crop.id} className="glass-card interactive-card">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{crop.cropName}</h3>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>📍 {getFarmName(crop.farmId)}</p>
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{crop.cropName}</h3>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>📍 {getFarmName(crop.farmId)}</p>
                   </div>
                   <span className="text-2xl">🌱</span>
                 </div>

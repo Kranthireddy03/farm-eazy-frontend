@@ -1,15 +1,22 @@
 /**
  * Login Page Component - Modern FarmEazy Design
  * Features elegant glass morphism, animated backgrounds, and farming theme
- * Supports both Password login and OTP login (phone-based)
+ * Supports Password login, OTP login, and Google sign-in
  * Uses AuthContext for professional session management
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+
+const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
+const GOOGLE_ALLOWED_ORIGINS = (import.meta.env.VITE_GOOGLE_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
+  .split(',')
+  .map((origin) => origin.trim())
+  .filter(Boolean)
+const GOOGLE_ORIGIN_LIST_EXPLICIT = Boolean(import.meta.env.VITE_GOOGLE_ALLOWED_ORIGINS)
 
 function Login() {
   const navigate = useNavigate()
@@ -24,22 +31,27 @@ function Login() {
   // OTP stage: 'phone' (enter phone) or 'verify' (enter OTP)
   const [otpStage, setOtpStage] = useState('phone')
   const [otpPreview, setOtpPreview] = useState(null)
+  const [suppressAuthRedirect, setSuppressAuthRedirect] = useState(false)
   
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !suppressAuthRedirect) {
       navigate(redirectTo, { replace: true });
     }
-  }, [isAuthenticated, navigate, redirectTo]);
+  }, [isAuthenticated, navigate, redirectTo, suppressAuthRedirect]);
   
   // Show logout reason message if present
   useEffect(() => {
+    if (location.state?.loginPrompt) {
+      setApiError(location.state.loginPrompt)
+    }
+
     const logoutReason = sessionStorage.getItem('logoutReason');
     if (logoutReason) {
       setApiError(logoutReason);
       sessionStorage.removeItem('logoutReason');
     }
-  }, []);
+  }, [location.state]);
 
   // Password login form
   const [formData, setFormData] = useState({ identifier: '', password: '' })
@@ -50,9 +62,34 @@ function Login() {
   
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
+  const [googleStatus, setGoogleStatus] = useState('')
+  const [googleStatusTone, setGoogleStatusTone] = useState('info')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
+  const googleButtonRef = useRef(null)
+  const googleRenderedRef = useRef(false)
+  const googleMode = 'login'
+  const currentOrigin = window.location.origin
+  const isGoogleOriginAllowed = GOOGLE_ALLOWED_ORIGINS.includes(currentOrigin)
+
+  const decodeGoogleProfile = (credential) => {
+    try {
+      const payloadPart = credential.split('.')[1]
+      if (!payloadPart) {
+        return null
+      }
+      const base64 = payloadPart.replace(/-/g, '+').replace(/_/g, '/')
+      const normalized = `${base64}${'='.repeat((4 - (base64.length % 4)) % 4)}`
+      const payload = JSON.parse(atob(normalized))
+      return {
+        email: payload.email || '',
+        name: payload.name || payload.given_name || '',
+      }
+    } catch {
+      return null
+    }
+  }
   
   // Countdown timer for OTP resend
   const [resendTimer, setResendTimer] = useState(0)
@@ -63,6 +100,137 @@ function Login() {
       return () => clearTimeout(timer)
     }
   }, [resendTimer])
+
+  useEffect(() => {
+    let cancelled = false
+    setGoogleStatus('')
+    setGoogleStatusTone('info')
+
+    const renderGoogleButton = () => {
+      if (cancelled || !window.google?.accounts?.id || !googleButtonRef.current || googleRenderedRef.current) {
+        return
+      }
+
+      if (window.__farmeazyGoogleInitMode !== googleMode) {
+        window.google.accounts.id.cancel()
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          auto_select: false,
+          use_fedcm_for_prompt: false,
+          callback: async (response) => {
+            if (!response?.credential) {
+              setApiError('Google sign-in did not return a credential.')
+              return
+            }
+
+            setApiError('')
+            setLoading(true)
+            const googleProfile = decodeGoogleProfile(response.credential)
+            try {
+              const authResponse = await AuthService.loginWithGoogle(response.credential)
+              if (authResponse?.requiresProfileCompletion) {
+                setSuppressAuthRedirect(true)
+              }
+              login(authResponse)
+              if (authResponse?.requiresProfileCompletion) {
+                navigate('/complete-google-profile', {
+                  replace: true,
+                  state: {
+                    socialSignupSource: 'google',
+                    prefillEmail: authResponse.email || googleProfile?.email || '',
+                    prefillUsername: authResponse.username || googleProfile?.name || '',
+                    requiresProfileCompletion: true,
+                  },
+                })
+              } else {
+                navigate(redirectTo, { state: { welcomeBack: true, socialLogin: 'google' }, replace: true })
+              }
+            } catch (error) {
+              const errorMessage = error.response?.data?.message || error.message || 'Google sign-in failed. Please try again.'
+              if (errorMessage.toLowerCase().includes('sign up first') || errorMessage.toLowerCase().includes('not registered')) {
+                navigate('/register', {
+                  state: {
+                    socialSignupSource: 'google',
+                    prefillEmail: googleProfile?.email || '',
+                    prefillUsername: googleProfile?.name || '',
+                    signupPrompt: errorMessage,
+                    registerWithGoogle: true,
+                  },
+                })
+                return
+              }
+              setApiError(errorMessage)
+            } finally {
+              setLoading(false)
+            }
+          },
+        })
+        window.__farmeazyGoogleInitMode = googleMode
+      }
+
+      googleButtonRef.current.innerHTML = ''
+
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: isDark ? 'filled_black' : 'outline',
+        size: 'large',
+        shape: 'pill',
+        text: 'signin_with',
+        logo_alignment: 'left',
+        width: 320,
+      })
+
+      googleRenderedRef.current = true
+    }
+
+    if (!GOOGLE_CLIENT_ID) {
+      setGoogleStatus('Google sign-in is currently unavailable in this environment. You can still use password or OTP login.')
+      setGoogleStatusTone('info')
+      return undefined
+    }
+
+    if (!GOOGLE_ORIGIN_LIST_EXPLICIT) {
+      setGoogleStatus('Using default localhost origins for Google sign-in. Set VITE_GOOGLE_ALLOWED_ORIGINS to customize environments.')
+      setGoogleStatusTone('info')
+    }
+
+    if (!isGoogleOriginAllowed) {
+      setGoogleStatus(`Google sign-in is unavailable for this origin (${currentOrigin}). Please update allowed origins in environment and Google OAuth settings.`)
+      setGoogleStatusTone('warning')
+      return undefined
+    }
+
+    if (window.google?.accounts?.id) {
+      renderGoogleButton()
+      return undefined
+    }
+
+    const scriptId = 'google-identity-services-sdk'
+    let script = document.getElementById(scriptId)
+    const handleScriptLoad = () => renderGoogleButton()
+
+    if (!script) {
+      script = document.createElement('script')
+      script.id = scriptId
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      script.onload = handleScriptLoad
+      document.body.appendChild(script)
+    } else {
+      if (window.google?.accounts?.id) {
+        renderGoogleButton()
+      } else {
+        script.addEventListener('load', handleScriptLoad)
+      }
+    }
+
+    return () => {
+      cancelled = true
+      if (script) {
+        script.removeEventListener('load', handleScriptLoad)
+      }
+    }
+  }, [isDark, login, navigate, redirectTo, isGoogleOriginAllowed, currentOrigin, googleMode])
 
   // ===== PASSWORD LOGIN =====
   const validatePasswordForm = () => {
@@ -279,7 +447,7 @@ function Login() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
+    <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
       {/* Animated Background */}
       <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900' : 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100'}`}>
         <div className="absolute inset-0 opacity-30">
@@ -301,9 +469,68 @@ function Login() {
         <div className="absolute bottom-20 right-1/3 text-5xl opacity-20 animate-bounce" style={{animationDuration: '3.5s'}}>🚜</div>
       </div>
 
-      {/* Login Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className={`backdrop-blur-xl ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-emerald-200'} rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.02]`}>
+      {/* Login Experience Grid */}
+      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6 items-stretch">
+        <div className={`hidden lg:flex flex-col justify-between rounded-[2rem] border p-8 interactive-card ${isDark ? 'bg-slate-900/75 border-slate-700 text-slate-100' : 'bg-white/90 border-emerald-200 text-slate-900'}`}>
+          <div className="space-y-6">
+            <div>
+              <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Smart Farming Access</p>
+              <h2 className="mt-3 text-4xl font-black leading-tight">Operate your farms with less friction.</h2>
+              <p className={`mt-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                Sign in quickly and keep field operations, support, and marketplace tools within reach.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className={`rounded-3xl border p-5 ${isDark ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/95'}`}>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Field-friendly</p>
+                <p className="mt-2 text-3xl font-black">Mobile ready</p>
+                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Login from the farm without losing progress.
+                </p>
+              </div>
+              <div className={`rounded-3xl border p-5 ${isDark ? 'border-cyan-700/50 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/90'}`}>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Secure</p>
+                <p className="mt-2 text-3xl font-black">OTP + password</p>
+                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Choose the login flow that fits your routine.
+                </p>
+              </div>
+              <div className={`rounded-3xl border p-5 ${isDark ? 'border-slate-600 bg-slate-800/75' : 'border-slate-200 bg-white/95'}`}>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Trusted</p>
+                <p className="mt-2 text-3xl font-black">Fast recovery</p>
+                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Secure reset options keep your account available.
+                </p>
+              </div>
+              <div className={`rounded-3xl border p-5 ${isDark ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/95'}`}>
+                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Connected</p>
+                <p className="mt-2 text-3xl font-black">Dashboard ready</p>
+                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  Your account gives access to farms, crops, and support tools.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className={`rounded-[2rem] border p-5 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-white/95'}`}>
+            <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Member Benefits</p>
+            <p className={`mt-3 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              One account gives you farm tracking, support access, crop alerts, and marketplace actions in one place.
+            </p>
+            <div className="mt-4 grid gap-3">
+              <div className={`rounded-2xl p-3 ${isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-emerald-50 border-emerald-200'}`}>
+                <p className="text-sm font-semibold">📱 OTP login for field access</p>
+              </div>
+              <div className={`rounded-2xl p-3 ${isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-white border-slate-200'}`}>
+                <p className="text-sm font-semibold">🔐 Password login for secure admin work</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative w-full">
+        <div className={`glass-card interactive-card p-8 rounded-[2rem] transform transition-all duration-500 hover:scale-[1.02] ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-emerald-200'}`}>
           
           {/* Logo & Header */}
           <div className="text-center mb-6">
@@ -314,11 +541,11 @@ function Login() {
               </div>
             </div>
             <h1 className={`text-4xl font-extrabold ${isDark ? 'text-slate-100' : 'text-emerald-800'} mt-6 tracking-tight`}>FarmEazy</h1>
-            <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} mt-2 font-medium`}>Welcome back, farmer!</p>
+            <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} mt-2 font-medium`}>Sign in to your FarmEazy account</p>
           </div>
           
           {/* Login Mode Tabs */}
-          <div className={`flex mb-6 rounded-xl overflow-hidden border ${isDark ? 'border-slate-600' : 'border-emerald-200'}`}>
+          <div className={`flex mb-6 rounded-2xl overflow-hidden border ${isDark ? 'border-slate-600' : 'border-emerald-200'}`}>
             <button
               type="button"
               onClick={() => switchLoginMode('password')}
@@ -347,9 +574,41 @@ function Login() {
             </button>
           </div>
 
+          <div className={`grid grid-cols-2 gap-3 mb-6 text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-emerald-700'}`}>
+            <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
+              <p className="uppercase tracking-[0.2em]">Quick access</p>
+              <p className="mt-2 text-lg font-black">Field-ready</p>
+            </div>
+            <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-white'}`}>
+              <p className="uppercase tracking-[0.2em]">Secure session</p>
+              <p className="mt-2 text-lg font-black">2FA built in</p>
+            </div>
+          </div>
+
+          <div className={`glass-card mb-5 rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/40' : 'border-emerald-100 bg-emerald-50/70'}`}>
+            <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-emerald-800'}`}>Continue sign in with Google</p>
+            <div ref={googleButtonRef} className="flex justify-center min-h-[44px]" />
+            <p className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-emerald-600'}`}>
+              Google sign-in is for existing FarmEazy accounts only. If this email is new, use Register so FarmEazy can create your account and send the usual welcome email, SMS, and notification after setup.
+            </p>
+            {googleStatus && (
+              <div
+                className={`mt-3 rounded-xl px-3 py-2 text-xs border ${googleStatusTone === 'warning'
+                  ? isDark
+                    ? 'border-amber-700/60 bg-amber-900/30 text-amber-200'
+                    : 'border-amber-200 bg-amber-50 text-amber-700'
+                  : isDark
+                    ? 'border-slate-600 bg-slate-800/80 text-slate-300'
+                    : 'border-slate-200 bg-white text-slate-600'}`}
+              >
+                {googleStatus}
+              </div>
+            )}
+          </div>
+
           {/* Error Display */}
           {apiError && (
-            <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} backdrop-blur-sm border px-4 py-3 rounded-xl flex items-start gap-3 mb-5`}>
+            <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} glass-card border px-4 py-3 rounded-xl flex items-start gap-3 mb-5`}>
               <span className="text-xl">⚠️</span>
               <div>
                 <p className="font-medium">{apiError}</p>
@@ -364,7 +623,7 @@ function Login() {
           
           {/* Success Message (for OTP) */}
           {otpMessage && (
-            <div className={`${isDark ? 'bg-emerald-900/50 border-emerald-700 text-emerald-200' : 'bg-emerald-100 border-emerald-300 text-emerald-700'} backdrop-blur-sm border px-4 py-3 rounded-xl flex items-center gap-3 mb-5`}>
+            <div className={`${isDark ? 'bg-emerald-900/50 border-emerald-700 text-emerald-200' : 'bg-emerald-100 border-emerald-300 text-emerald-700'} glass-card border px-4 py-3 rounded-xl flex items-center gap-3 mb-5`}>
               <span className="text-xl">✅</span>
               <p className="font-medium">{otpMessage}</p>
             </div>
@@ -383,7 +642,7 @@ function Login() {
                   name="identifier"
                   value={formData.identifier}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3.5 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+                  className={`form-input w-full px-4 py-3.5 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'}`}
                   placeholder="email@example.com or username or 10001"
                 />
                 {errors.identifier && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.identifier}</p>}
@@ -400,7 +659,7 @@ function Login() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3.5 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12`}
+                    className={`form-input w-full px-4 py-3.5 pr-12 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'}`}
                     placeholder="••••••••"
                   />
                   <button
@@ -434,7 +693,7 @@ function Login() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                className="premium-button w-full py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {loading ? (
                   <>
@@ -446,7 +705,7 @@ function Login() {
                   </>
                 ) : (
                   <>
-                    <span>🔑</span> Login
+                    <span>🔑</span> Sign in
                   </>
                 )}
               </button>
@@ -484,7 +743,7 @@ function Login() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                    className="premium-button w-full py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {loading ? (
                       <>
@@ -620,7 +879,7 @@ function Login() {
                       </>
                     ) : (
                       <>
-                        <span>✅</span> Verify & Login
+                        <span>✅</span> Verify & Sign in
                       </>
                     )}
                   </button>
@@ -641,15 +900,31 @@ function Login() {
             <p className={`${isDark ? 'text-slate-300' : 'text-emerald-600'}`}>
               New to FarmEazy?{' '}
               <Link to="/register" className={`${isDark ? 'text-yellow-400 hover:text-yellow-300' : 'text-orange-500 hover:text-orange-600'} font-bold transition-colors`}>
-                Join the farm! 🌱
+                Sign up here 🌱
               </Link>
             </p>
+          </div>
+
+          <div className={`mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
+              <p className="text-xs uppercase tracking-[0.2em]">Ready in seconds</p>
+              <p className="mt-3 font-bold text-lg">Instant account unlock</p>
+            </div>
+            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-white'}`}>
+              <p className="text-xs uppercase tracking-[0.2em]">Smart routing</p>
+              <p className="mt-3 font-bold text-lg">Dashboard or field tools</p>
+            </div>
+            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
+              <p className="text-xs uppercase tracking-[0.2em]">Modern security</p>
+              <p className="mt-3 font-bold text-lg">OTP + password options</p>
+            </div>
           </div>
         </div>
 
         {/* Bottom Decoration */}
-        <div className={`text-center mt-6 ${isDark ? 'text-slate-400' : 'text-emerald-500'} text-sm`}>
+        <div className={`text-center mt-5 ${isDark ? 'text-slate-400' : 'text-emerald-500'} text-sm`}>
           <p>🌾 Growing success together 🌾</p>
+        </div>
         </div>
       </div>
     </div>

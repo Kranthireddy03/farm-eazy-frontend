@@ -179,28 +179,28 @@ function RefundDetails() {
 
     if (loading) {
         return (
-            <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+            <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
                 <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading...</p>
             </div>
         )
     }
 
     return (
-        <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
             <div className="max-w-2xl mx-auto">
                 {/* Header */}
-                <div className="flex items-center gap-4 mb-6">
+                <div className="page-hero interactive-card flex items-center gap-4 mb-6">
                     <button
                         onClick={() => navigate(-1)}
-                        className={`p-2 rounded-lg ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-white hover:bg-gray-100'} transition`}
+                        className={`p-2 rounded-lg ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'} transition`}
                     >
                         ←
                     </button>
                     <div>
-                        <h1 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        <h1 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
                             💳 Refund Details
                         </h1>
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                             Manage your bank/UPI details for receiving refunds
                         </p>
                     </div>
@@ -218,7 +218,7 @@ function RefundDetails() {
                     </div>
                 )}
 
-                <div className={`rounded-xl shadow-lg p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+                <div className={`glass-card interactive-card rounded-xl shadow-lg p-6 border ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
                     {/* View mode */}
                     {hasDetails && !isEditing && (
                         <div className="space-y-4">
@@ -233,7 +233,7 @@ function RefundDetails() {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg text-sm transition"
+                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-sm transition"
                                     >
                                         Edit
                                     </button>
@@ -300,7 +300,7 @@ function RefundDetails() {
                                         onClick={() => setPreferredMethod('UPI')}
                                         className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
                                             preferredMethod === 'UPI'
-                                                ? 'bg-orange-500 text-white'
+                                                ? 'bg-emerald-600 text-white'
                                                 : isDark ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-gray-700'
                                         }`}
                                     >
@@ -311,7 +311,7 @@ function RefundDetails() {
                                         onClick={() => setPreferredMethod('BANK')}
                                         className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
                                             preferredMethod === 'BANK'
-                                                ? 'bg-orange-500 text-white'
+                                                ? 'bg-emerald-600 text-white'
                                                 : isDark ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-gray-700'
                                         }`}
                                     >
@@ -463,7 +463,7 @@ function RefundDetails() {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className={`${hasDetails ? 'flex-1' : 'w-full'} py-3 bg-orange-500 hover:bg-orange-600 text-white font-bold rounded-lg transition disabled:opacity-50`}
+                                    className={`${hasDetails ? 'flex-1' : 'w-full'} py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition disabled:opacity-50`}
                                 >
                                     {saving ? 'Saving...' : hasDetails ? 'Update Details' : 'Save Details'}
                                 </button>

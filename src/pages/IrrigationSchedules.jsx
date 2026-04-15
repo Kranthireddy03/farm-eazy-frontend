@@ -209,6 +209,13 @@ function IrrigationSchedules() {
     })
   }
 
+  const todayKey = new Date().toISOString().split('T')[0]
+  const todaySchedules = schedules.filter((schedule) => {
+    const dateValue = (schedule.scheduleDate || schedule.irrigationDate || '').split('T')[0]
+    return dateValue === todayKey
+  }).length
+  const plannedWater = schedules.reduce((sum, schedule) => sum + (Number(schedule.waterAmount) || 0), 0)
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
@@ -218,15 +225,15 @@ function IrrigationSchedules() {
   }
 
   return (
-    <div className={`min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       <div className="space-y-8">
         {/* Header Section */}
-        <div className="bg-gradient-to-r from-blue-500 to-cyan-500 rounded-xl shadow-lg p-6 text-white">
-          <div className="flex justify-between items-center">
+        <div className="page-hero interactive-card text-white bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500">
+          <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center">
             <div className="flex items-center gap-4">
               <span className="text-5xl">💧</span>
               <div>
-                <h1 className="text-3xl font-bold">Irrigation Schedules</h1>
+                <h1 className="text-3xl font-black">Irrigation Schedules</h1>
                 <p className="text-blue-100 mt-1">Plan and track irrigation for your crops</p>
               </div>
             </div>
@@ -244,14 +251,33 @@ function IrrigationSchedules() {
                   notes: '',
                 })
               }}
-              className={`px-6 py-3 rounded-lg font-semibold transition-colors shadow-md border ${isDark ? 'bg-slate-800 text-cyan-400 hover:bg-slate-700 border-slate-600' : 'bg-white text-blue-600 hover:bg-gray-50 border-gray-200'}`}
+              className={`px-5 py-2.5 rounded-xl font-semibold transition ${isDark ? 'bg-slate-900/60 text-white hover:bg-slate-900/80' : 'bg-white text-cyan-700 hover:bg-cyan-50'}`}
             >
               {showAddForm ? 'Cancel' : '+ New Schedule'}
             </button>
           </div>
         </div>
 
-        <div className={`rounded-xl border px-4 py-3 ${isDark ? 'bg-amber-900/20 border-amber-700 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Schedules</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{schedules.length}</p>
+          </div>
+          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Today</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{todaySchedules}</p>
+          </div>
+          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Planned Water</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{plannedWater.toFixed(0)} L</p>
+          </div>
+          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Crops Linked</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{crops.length}</p>
+          </div>
+        </div>
+
+        <div className={`glass-card rounded-2xl border px-4 py-3 ${isDark ? 'bg-amber-900/20 border-amber-700 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
           <p className="font-semibold">Smart Irrigation Pilot Scope</p>
           <p className="text-sm mt-1">
             Currently enabled only for Ananthapur, Andhra Pradesh and the crops: Groundnut, Sunflower, Maize, Cotton, Paddy, Millet.
@@ -259,14 +285,14 @@ function IrrigationSchedules() {
         </div>
 
       {error && (
-        <div className={`px-4 py-3 rounded-lg ${isDark ? 'bg-red-900/30 border border-red-700 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+        <div className={`glass-card px-4 py-3 rounded-2xl ${isDark ? 'bg-red-900/30 border border-red-700 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
           {error}
         </div>
       )}
 
       {showAddForm && (
-        <div className={`rounded-xl shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Create New Schedule</h2>
+        <div className="glass-card interactive-card p-6 border">
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Create New Schedule</h2>
           <form onSubmit={handleAddSchedule} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -361,7 +387,7 @@ function IrrigationSchedules() {
                 rows="3"
               ></textarea>
             </div>
-            <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+            <button type="submit" disabled={submitting} className="premium-button disabled:opacity-50 disabled:cursor-not-allowed">
               {submitting ? (
                 <span className="flex items-center justify-center">
                   <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -379,8 +405,8 @@ function IrrigationSchedules() {
       )}
 
       {editingSchedule && (
-        <div className={`rounded-xl shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Irrigation Schedule</h2>
+        <div className="glass-card interactive-card p-6 border">
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Edit Irrigation Schedule</h2>
           <form onSubmit={handleUpdateSchedule} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -476,7 +502,7 @@ function IrrigationSchedules() {
               ></textarea>
             </div>
             <div className="flex space-x-2">
-              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
+              <button type="submit" disabled={submitting} className="premium-button disabled:opacity-50 disabled:cursor-not-allowed">
                 {submitting ? (
                   <span className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -498,14 +524,14 @@ function IrrigationSchedules() {
       )}
 
       {schedules.length === 0 ? (
-        <div className={`rounded-xl shadow-lg text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className="glass-card interactive-card rounded-2xl text-center py-12 border">
           <span className="text-5xl mb-4 block">🌱</span>
           <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No schedules yet. Create your first irrigation schedule!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {schedules.map((schedule) => (
-            <div key={schedule.id} className={`rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+            <div key={schedule.id} className="glass-card interactive-card rounded-2xl hover:shadow-xl transition-all duration-300 overflow-hidden border">
               <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white">
                 <div className="flex items-start justify-between">
                   <div>
@@ -545,7 +571,7 @@ function IrrigationSchedules() {
               <div className="p-4 pt-0 flex space-x-2">
                 <button
                   onClick={() => handleEditClick(schedule)}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-500 transition-colors text-sm"
+                  className="flex-1 premium-button py-2 text-sm"
                 >
                   Edit
                 </button>

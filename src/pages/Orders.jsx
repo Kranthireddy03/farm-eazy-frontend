@@ -105,20 +105,20 @@ function Orders() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading your orders...</p>
+      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+        <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Loading your orders...</p>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className={`rounded-lg shadow-lg p-8 text-center border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+        <div className="glass-card interactive-card p-8 text-center">
           <p className="text-red-400 mb-4">{error}</p>
           <button
             onClick={() => navigate('/buying')}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition"
+            className="premium-button"
           >
             Back to shop
           </button>
@@ -129,15 +129,15 @@ function Orders() {
 
   if (orders.length === 0) {
     return (
-      <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
         <div className="max-w-4xl mx-auto">
-          <div className={`rounded-lg shadow-lg p-8 text-center border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className="glass-card interactive-card p-8 text-center">
             <div className="text-6xl mb-4">📦</div>
-            <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>My Orders</h1>
-            <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Your order history will appear here.</p>
+            <h1 className={`text-3xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>My Orders</h1>
+            <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Your order history will appear here.</p>
             <button
               onClick={() => navigate('/buying')}
-              className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition"
+              className="premium-button"
             >
               Start Shopping
             </button>
@@ -148,16 +148,16 @@ function Orders() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="page-hero interactive-card flex items-center justify-between gap-4">
           <div>
-            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Order history</p>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>My Orders</h1>
+            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Order history</p>
+            <h1 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>My Orders</h1>
           </div>
           <button
             onClick={() => navigate('/buying')}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition"
+            className="premium-button"
           >
             Continue shopping
           </button>
@@ -165,25 +165,25 @@ function Orders() {
 
         {/* Success message */}
         {successMessage && (
-          <div className={`p-4 rounded-lg ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-green-50 text-green-700 border border-green-200'}`}>
+          <div className={`glass-card p-4 rounded-2xl ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-green-50 text-green-700 border border-green-200'}`}>
             ✓ {successMessage}
           </div>
         )}
 
         <div className="space-y-4">
           {orders.map(order => (
-            <div key={order.id} className={`rounded-lg shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+            <div key={order.id} className="glass-card interactive-card p-6 border">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Order ID</p>
-                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>#FZ{order.id}</p>
+                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Order ID</p>
+                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>#FZ{order.id}</p>
                 </div>
                 <div>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Placed on</p>
-                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{order.createdAt?.split('T')[0] || '—'}</p>
+                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Placed on</p>
+                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{order.createdAt?.split('T')[0] || '—'}</p>
                 </div>
                 <div>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Total</p>
+                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total</p>
                   <p className="text-lg font-semibold text-orange-400">{formatCurrency(order.finalAmount)}</p>
                 </div>
                 <div className="text-right">
@@ -195,7 +195,7 @@ function Orders() {
                   }`}>
                     {order.orderStatus || 'PENDING'}
                   </span>
-                  <div className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Payment: {order.paymentStatus}</div>
+                  <div className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Payment: {order.paymentStatus}</div>
                   {/* Refund status badge */}
                   {getRefundStatusBadge(order) && (
                     <div className="mt-2">{getRefundStatusBadge(order)}</div>

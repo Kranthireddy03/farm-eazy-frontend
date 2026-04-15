@@ -162,9 +162,18 @@ function Layout({ onShowTour, children }) {
 
   useEffect(() => {
     const detectVendorAccess = async () => {
+      const token = localStorage.getItem('farmEazy_token')
+      const email = localStorage.getItem('farmEazy_email')
+      if (!token || !email) {
+        setVendorUnlocked(false)
+        return
+      }
+
       try {
-        const eligibilityResp = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT')
-        setVendorUnlocked(Boolean(eligibilityResp?.data?.eligible))
+          const eligibilityResp = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT', {
+            validateStatus: (status) => status < 500,
+          })
+          setVendorUnlocked(Boolean(eligibilityResp?.data?.eligible) && eligibilityResp.status === 200)
       } catch (_error) {
         setVendorUnlocked(false)
       }
@@ -312,8 +321,30 @@ function Layout({ onShowTour, children }) {
     { name: 'Sensors', path: '/irrigation-sensors' },
   ]
 
+  const getLayoutVariant = (pathname) => {
+    if (pathname.startsWith('/admin')) return 'theme-command'
+    if (pathname.startsWith('/dashboard')) return 'theme-analytics'
+    if (pathname.startsWith('/irrigation')) return 'theme-cyber'
+    if (pathname.startsWith('/buying') || pathname.startsWith('/cart') || pathname.startsWith('/checkout') || pathname.startsWith('/product')) return 'theme-glass'
+    if (pathname.startsWith('/selling') || pathname.startsWith('/vendor')) return 'theme-neumorph'
+    if (pathname.startsWith('/farms') || pathname.startsWith('/crops')) return 'theme-bento'
+    if (pathname.startsWith('/orders') || pathname.startsWith('/activities') || pathname.startsWith('/notifications')) return 'theme-table'
+    if (pathname.startsWith('/services') || pathname.startsWith('/blog')) return 'theme-immersive'
+    return 'theme-motion'
+  }
+
+  const layoutVariant = getLayoutVariant(location.pathname)
+
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 to-teal-50'}`}>
+    <div className={`premium-shell layout-variant ${layoutVariant} min-h-screen relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50'}`}>
+      <div className={`pointer-events-none absolute -top-24 -left-20 h-80 w-80 rounded-full blur-3xl ${isDark ? 'bg-emerald-700/25' : 'bg-emerald-300/45'}`} />
+      <div className={`pointer-events-none absolute top-16 -right-20 h-96 w-96 rounded-full blur-3xl ${isDark ? 'bg-cyan-700/20' : 'bg-cyan-200/55'}`} />
+      <div className={`pointer-events-none absolute inset-0 ${isDark ? 'opacity-10' : 'opacity-[0.06]'}`} style={{
+        backgroundImage: "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+        backgroundSize: '30px 30px',
+      }} />
+
+      <div className="relative z-10 min-h-screen flex flex-col">
       {/* Toast Notification - Fixed bottom-right positioning */}
       {toast && (
         <div className="fixed bottom-6 left-2 right-2 sm:left-auto sm:right-6 z-[100] flex justify-end">
@@ -677,14 +708,14 @@ function Layout({ onShowTour, children }) {
       </div>
 
       {/* Main Content */}
-      <main className="container-main py-8">
-        <div className={`rounded-2xl shadow-xl ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border p-6 md:p-10 min-h-[60vh]`}>
+      <main className="flex-1 container-main py-4 md:py-5">
+        <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border p-4 md:p-6 lg:p-7 min-h-[calc(100vh-13rem)] animate-[fadeIn_.45s_ease-out]`}>
           {children || <Outlet />}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className={`${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border-t mt-12 shadow-inner backdrop-blur-md`}>
+      <footer className={`${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border-t mt-4 shadow-inner backdrop-blur-md`}>
         <div className="container-main py-8">
           <div className="flex justify-between items-center">
               <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
@@ -705,6 +736,7 @@ function Layout({ onShowTour, children }) {
 
       <ChatSupport />
       <DarkModeToggle floating className="right-6" />
+      </div>
     </div>
   )
 }

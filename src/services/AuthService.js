@@ -92,6 +92,82 @@ class AuthService {
     }
   }
 
+  async loginWithGoogle(credential) {
+    try {
+      const response = await axios.post(API_ENDPOINTS.GOOGLE_LOGIN, {
+        credential,
+      });
+
+      if (response.data.token) {
+        this.setSession(response.data);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async registerWithGoogle(credential) {
+    try {
+      const response = await axios.post(API_ENDPOINTS.GOOGLE_REGISTER, {
+        credential,
+      });
+
+      if (response.data.token) {
+        this.setSession(response.data);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async completeGoogleProfile(profileData, explicitToken = null) {
+    try {
+      const token = explicitToken || this.getToken();
+      const response = await axios.post(
+        API_ENDPOINTS.COMPLETE_GOOGLE_PROFILE,
+        profileData,
+        token
+          ? {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          : undefined
+      );
+
+      if (response.data.token) {
+        this.setSession(response.data);
+      }
+
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async deferGoogleProfileCompletion(explicitToken = null) {
+    try {
+      const token = explicitToken || this.getToken();
+      await axios.post(
+        API_ENDPOINTS.DEFER_GOOGLE_PROFILE,
+        {},
+        token
+          ? {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          : undefined
+      );
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   /**
    * Set session data after successful login/register
    * @param {Object} userData - User data from API response
@@ -117,6 +193,7 @@ class AuthService {
     } else {
       localStorage.setItem(STORAGE_KEYS.USER_ROLES, JSON.stringify(['USER']));
     }
+    localStorage.setItem(STORAGE_KEYS.USER_PROFILE_COMPLETION_REQUIRED, userData.requiresProfileCompletion ? 'true' : 'false');
     
     // Store session tracking
     localStorage.setItem(SESSION_KEYS.SESSION_START, now.toString());
@@ -242,6 +319,7 @@ class AuthService {
     localStorage.removeItem(STORAGE_KEYS.USER_USERNAME);
     localStorage.removeItem(STORAGE_KEYS.USER_FULLNAME);
     localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.USER_PROFILE_COMPLETION_REQUIRED);
     
     // Clear session tracking
     localStorage.removeItem(SESSION_KEYS.LAST_ACTIVITY);
@@ -289,10 +367,13 @@ class AuthService {
    */
   async requestOtp(email, phone, purpose) {
     try {
+      const locationHeader = await this.getUserLocationHeader();
       const response = await axios.post(API_ENDPOINTS.REQUEST_OTP, {
         email,
         phone,
         purpose,
+      }, {
+        headers: locationHeader ? { 'X-User-Location': locationHeader } : undefined,
       });
       return response.data;
     } catch (error) {
@@ -347,8 +428,11 @@ class AuthService {
    */
   async requestLoginOtp(phone) {
     try {
+      const locationHeader = await this.getUserLocationHeader();
       const response = await axios.post(API_ENDPOINTS.LOGIN_REQUEST_OTP, {
         phone,
+      }, {
+        headers: locationHeader ? { 'X-User-Location': locationHeader } : undefined,
       });
       return response.data;
     } catch (error) {
@@ -389,6 +473,28 @@ class AuthService {
     } catch (error) {
       throw this.handleError(error);
     }
+  }
+
+  async getUserLocationHeader() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      return null;
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const latitude = Number(position.coords.latitude).toFixed(3);
+          const longitude = Number(position.coords.longitude).toFixed(3);
+          resolve(`Lat ${latitude}, Lon ${longitude}`);
+        },
+        () => resolve(null),
+        {
+          enableHighAccuracy: false,
+          timeout: 3000,
+          maximumAge: 300000,
+        }
+      );
+    });
   }
 
   /**

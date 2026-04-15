@@ -17,6 +17,7 @@ function ProductDetail() {
   const [showCartPrompt, setShowCartPrompt] = useState(false)
   const [revealedContact, setRevealedContact] = useState({ phone: false, email: false })
   const [addingToCart, setAddingToCart] = useState(false)
+  const isNotDeliverable = product?.deliverable === false
 
   const sellerPhone = product?.sellerPhone || product?.contactPhone || ''
   const sellerEmail = product?.sellerEmail || product?.contactEmail || ''
@@ -63,6 +64,10 @@ function ProductDetail() {
 
   const handleAddToCart = () => {
     if (!product) return
+    if (isNotDeliverable) {
+      showToast(product.deliveryMessage || 'This product is not deliverable to your current location', 'warning')
+      return
+    }
     setAddingToCart(true)
     
     try {
@@ -90,7 +95,9 @@ function ProductDetail() {
           imageUrl: product.imageUrls ? product.imageUrls.split(',')[0] : null,
           category: product.category,
           sellerName: product.sellerFullName,
-          maxQuantity: product.quantity
+          maxQuantity: product.quantity,
+          deliverable: product.deliverable !== false,
+          deliveryMessage: product.deliveryMessage || ''
         }
         existingCart.push(cartItem)
         showToast(`${product.productName} added to cart`, 'success')
@@ -116,24 +123,24 @@ function ProductDetail() {
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`premium-shell flex items-center justify-center min-h-screen ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-orange-400"></div>
-          <p className={`mt-4 text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading product details...</p>
+          <p className={`mt-4 text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Loading product details...</p>
         </div>
       </div>
     );
   }
   if (!product) {
     return (
-      <div className={`flex items-center justify-center min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className={`rounded-lg shadow-md p-12 text-center max-w-md border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+      <div className={`premium-shell flex items-center justify-center min-h-screen ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+        <div className={`glass-card interactive-card p-12 text-center max-w-md border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <div className="text-6xl mb-4">❌</div>
-          <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Product Not Found</h2>
-          <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>The product you're looking for doesn't exist.</p>
+          <h2 className={`text-2xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Product Not Found</h2>
+          <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>The product you're looking for doesn't exist.</p>
           <button
             onClick={() => navigate('/buying')}
-            className="px-6 py-3 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition-colors"
+            className="premium-button"
           >
             ← Back to Marketplace
           </button>
@@ -143,7 +150,7 @@ function ProductDetail() {
   }
   // ...existing main product JSX...
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
       <div className="max-w-6xl mx-auto">
         {/* Back Button */}
         <button
@@ -153,24 +160,24 @@ function ProductDetail() {
           ← Back to Marketplace
         </button>
         
-        <div className={`rounded-lg shadow-xl overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`glass-card interactive-card overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
       <div className="grid md:grid-cols-2 gap-0">
         {/* Product Media Carousel */}
-        <div className={`relative h-96 md:h-full ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-600' : 'bg-gradient-to-br from-gray-100 to-gray-200'}`}>
+          <div className={`relative h-96 md:h-full ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-600' : 'bg-gradient-to-br from-gray-100 to-gray-200'}`}>
           <ProductMediaCarousel mediaUrls={productMediaUrls} videoUrls={productVideoUrls} />
           {/* Category Badge */}
-          <div className={`absolute top-4 right-4 px-4 py-2 rounded-full font-semibold shadow-lg ${isDark ? 'bg-slate-700 text-white' : 'bg-white/90 text-gray-800'}`}>
+          <div className={`absolute top-4 right-4 px-4 py-2 rounded-full font-semibold shadow-lg backdrop-blur ${isDark ? 'bg-slate-700 text-white' : 'bg-white/90 text-gray-800'}`}>
             {getCategoryIcon(product.category)} {product.category}
           </div>
         </div>
                     {/* Product Details */}
                     <div className="p-8">
-                      <h1 className={`text-4xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.productName}</h1>
+                      <h1 className={`text-4xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{product.productName}</h1>
                       {/* Price */}
                       <div className="mb-6">
                         <div className="flex items-baseline gap-3">
                           <span className="text-4xl font-bold text-orange-500">₹{product.price}</span>
-                          <span className={`text-xl ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>/ {product.unit}</span>
+                          <span className={`text-xl ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>/ {product.unit}</span>
                         </div>
                         {product.discountPercentage > 0 && (
                           <div className="mt-2">
@@ -181,7 +188,7 @@ function ProductDetail() {
                         )}
                       </div>
                         {/* Vendor Transparency UI */}
-                        <div className={`mt-4 p-4 rounded-lg border ${isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+                        <div className={`glass-card mt-4 p-4 rounded-2xl border ${isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
                           <h4 className="font-semibold text-lg mb-2">Vendor Information</h4>
                           <div>Vendor Name: {product.vendorName}</div>
                           <div>Vendor ID: {product.vendorId}</div>
@@ -189,6 +196,9 @@ function ProductDetail() {
                           <div>Vendor Type: {product.vendorType}</div>
                           <div className="mt-2 font-semibold text-emerald-500">
                             Estimated Delivery: {product.deliveryDaysMin || 3}-{product.deliveryDaysMax || 5} days
+                          </div>
+                          <div className={`mt-2 text-sm font-semibold ${isNotDeliverable ? 'text-red-500' : 'text-emerald-500'}`}>
+                            {isNotDeliverable ? (product.deliveryMessage || 'Not deliverable to your location') : 'Deliverable to your location'}
                           </div>
                         </div>
                       {/* Description */}
@@ -324,20 +334,22 @@ function ProductDetail() {
                       {/* Add to Cart Button */}
                       <button
                         className={`mt-6 w-full px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
-                          product.status === 'OUT_OF_STOCK' || product.status === 'DISCONTINUED' || product.quantity <= 0
+                          product.status === 'OUT_OF_STOCK' || product.status === 'DISCONTINUED' || product.quantity <= 0 || isNotDeliverable
                             ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
                             : addingToCart
                             ? 'bg-green-600 text-white cursor-wait'
                             : 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02] shadow-lg hover:shadow-xl'
                         }`}
                         onClick={handleAddToCart}
-                        disabled={product.status === 'OUT_OF_STOCK' || product.status === 'DISCONTINUED' || product.quantity <= 0 || addingToCart}
+                        disabled={product.status === 'OUT_OF_STOCK' || product.status === 'DISCONTINUED' || product.quantity <= 0 || isNotDeliverable || addingToCart}
                       >
                         {addingToCart ? (
                           <>
                             <span className="animate-spin">⏳</span>
                             Adding...
                           </>
+                        ) : isNotDeliverable ? (
+                          <>🚫 Not Deliverable</>
                         ) : product.status === 'OUT_OF_STOCK' || product.quantity <= 0 ? (
                           <>❌ Out of Stock</>
                         ) : product.status === 'DISCONTINUED' ? (

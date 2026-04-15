@@ -99,7 +99,7 @@ function SessionExpired() {
   const colors = colorClasses[color];
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-4 ${
+    <div className={`premium-shell min-h-screen flex items-center justify-center px-4 ${
       isDark 
         ? `bg-gradient-to-br ${colors.bg} to-slate-900` 
         : `bg-gradient-to-br ${colors.bg} to-white`
@@ -112,7 +112,7 @@ function SessionExpired() {
 
       <div className="relative z-10 w-full max-w-lg">
         {/* Card */}
-        <div className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 ${
+        <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 ${
           isDark 
             ? `bg-slate-800/90 ${colors.border}` 
             : `bg-white/90 ${colors.border}`

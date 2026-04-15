@@ -74,9 +74,9 @@ function Profile() {
   };
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <div className={`w-full max-w-md rounded-xl shadow-lg p-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-        <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Profile</h2>
+    <div className={`premium-shell min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+      <div className={`glass-card interactive-card w-full max-w-md p-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <h2 className={`text-2xl font-black mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>Profile</h2>
         <div className="flex flex-col items-center mb-6">
           <label htmlFor="avatar-upload" className="cursor-pointer">
             <img
@@ -117,7 +117,7 @@ function Profile() {
               id="username"
               value={user.username}
               onChange={handleChange}
-              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
               disabled={!editMode}
               aria-label="Username"
             />
@@ -130,7 +130,7 @@ function Profile() {
               id="email"
               value={user.email}
               onChange={handleChange}
-              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
               disabled={!editMode}
               aria-label="Email"
             />
@@ -143,7 +143,7 @@ function Profile() {
               id="phone"
               value={user.phone}
               onChange={handleChange}
-              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
               disabled={!editMode}
               aria-label="Phone"
             />
@@ -156,15 +156,15 @@ function Profile() {
               id="username"
               value={user.username}
               onChange={handleChange}
-              className={`w-full px-4 py-2 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:opacity-60 border ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
               disabled={!editMode}
               aria-label="Username"
             />
           </div>
           {editMode ? (
-            <button type="button" className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition" onClick={handleSave} aria-label="Save profile">Save</button>
+            <button type="button" className="premium-button w-full py-3 px-4" onClick={handleSave} aria-label="Save profile">Save</button>
           ) : (
-            <button type="button" className={`w-full font-bold py-3 px-4 rounded-lg transition ${isDark ? 'bg-slate-600 hover:bg-slate-500 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`} onClick={() => setEditMode(true)} aria-label="Edit profile">Edit</button>
+            <button type="button" className={`premium-button-secondary w-full py-3 px-4 ${isDark ? 'text-white' : 'text-slate-800'}`} onClick={() => setEditMode(true)} aria-label="Edit profile">Edit</button>
           )}
         </form>
       </div>

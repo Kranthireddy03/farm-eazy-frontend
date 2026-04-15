@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { getPublicBlogPosts } from '../services/BlogService'
+import { GlassPanel, HeroFrame, PillButton, ScrollRail, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 
 export default function Blog() {
   const { isDark } = useTheme()
@@ -54,62 +55,75 @@ export default function Blog() {
     ? posts
     : posts.filter(post => post.category === selectedCategory)
 
+  const stats = [
+    { label: 'Articles', value: posts.length || '0' },
+    { label: 'Categories', value: categories.length || '1' },
+    { label: 'Published', value: visiblePosts.length || '0' },
+  ]
+
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-slate-900 text-white' : 'bg-gradient-to-br from-emerald-50 to-cyan-50 text-gray-900'}`}>
+    <div className={`min-h-screen ${isDark ? 'text-white' : 'text-gray-900'}`}>
       <section className="px-4 py-10 md:py-12">
-        <div className="max-w-5xl mx-auto text-center">
-          <h1 className={`text-3xl md:text-5xl font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>FarmEazy Knowledge Feed</h1>
-          <p className={`mt-3 md:mt-4 text-base md:text-lg ${isDark ? 'text-slate-300' : 'text-emerald-700'}`}>
-            This page shows only admin-approved posts for farmers and end users.
-          </p>
-        </div>
+        <HeroFrame
+          eyebrow="Knowledge Feed"
+          title="FarmEazy Knowledge Feed"
+          description="This page shows only admin-approved posts for farmers and end users."
+          actions={(
+            <>
+              <PillButton to={isAuthenticated ? '/blog/submit' : '/login'} active>
+                {isAuthenticated ? 'Write a Blog' : 'Login to Write a Blog'}
+              </PillButton>
+              {isAuthenticated && <PillButton to="/blog/my-submissions">My Submissions</PillButton>}
+            </>
+          )}
+          side={(
+            <GlassPanel className="p-5 md:p-6">
+              <div className="grid grid-cols-3 gap-3">
+                {stats.map((stat) => (
+                  <div key={stat.label} className={`rounded-2xl px-4 py-4 text-center ${isDark ? 'bg-white/5' : 'bg-white/75'}`}>
+                    <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>{stat.value}</div>
+                    <div className={`mt-1 text-[11px] uppercase tracking-[0.22em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+              <div className={`mt-5 rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-900 text-white'}`}>
+                <p className="text-xs uppercase tracking-[0.26em] text-emerald-300">Publishing flow</p>
+                <p className="mt-2 text-sm text-slate-200">Drafts are reviewed, curated, and then surfaced here for public reading.</p>
+              </div>
+            </GlassPanel>
+          )}
+        />
       </section>
 
-      <section className="max-w-6xl mx-auto px-4 pb-14">
-        <div className={`mb-6 rounded-2xl border p-4 md:p-5 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-emerald-100 shadow-sm'}`}>
-          <h2 className={`text-lg md:text-xl font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>How Blog Publishing Works</h2>
-          <ol className={`mt-2 text-sm md:text-base space-y-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+      <section className="max-w-6xl mx-auto px-4 pb-14 space-y-6">
+        <StrongPanel className="p-5 md:p-6">
+          <SectionTitle eyebrow="How it works" title="A controlled publishing surface with clear permissions" />
+          <ol className={`mt-3 text-sm md:text-base space-y-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
             <li>1. Users or admins can draft blog posts.</li>
             <li>2. Admin reviews and can edit before publishing.</li>
             <li>3. If no article is published yet, this page will show a data-unavailable message.</li>
           </ol>
-          <div className="mt-4">
-            <div className="flex flex-wrap gap-2">
-              <Link
-                to={isAuthenticated ? '/blog/submit' : '/login'}
-                className="inline-flex px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"
-              >
-                {isAuthenticated ? 'Write a Blog' : 'Login to Write a Blog'}
-              </Link>
-              {isAuthenticated && (
-                <Link
-                  to="/blog/my-submissions"
-                  className={`inline-flex px-4 py-2 rounded-lg text-sm font-semibold border ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-700' : 'border-emerald-300 text-emerald-800 hover:bg-emerald-50'}`}
-                >
-                  My Submissions
-                </Link>
-              )}
-            </div>
-          </div>
-        </div>
+        </StrongPanel>
 
-        <div className="flex flex-wrap gap-2 mb-6">
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold border transition ${
-                selectedCategory === cat
-                  ? 'bg-emerald-600 border-emerald-600 text-white'
-                  : isDark
-                    ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
-                    : 'bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50'
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+        <GlassPanel className="p-4 md:p-5">
+          <ScrollRail className="flex flex-wrap gap-2">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`px-4 py-2 rounded-full text-sm font-semibold border transition ${
+                  selectedCategory === cat
+                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                    : isDark
+                      ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
+                      : 'bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </ScrollRail>
+        </GlassPanel>
 
         {loading ? (
           <div className="flex justify-center py-20">

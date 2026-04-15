@@ -29,6 +29,11 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
   if (!isOpen || !product) return null
 
   const handleAddToCart = async () => {
+    if (product.deliverable === false) {
+      showToast(product.deliveryMessage || 'This product is not deliverable to your location', 'warning')
+      return
+    }
+
     if (quantity <= 0) {
       showToast('Please select a valid quantity', 'warning')
       return
@@ -63,7 +68,9 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
         vendorLocation: product.vendorLocation || '',
         vendorType: product.vendorType || '',
         sellerEmail: product.sellerEmail || '',
-        sellerPhone: product.sellerPhone || ''
+        sellerPhone: product.sellerPhone || '',
+        deliverable: product.deliverable !== false,
+        deliveryMessage: product.deliveryMessage || ''
       }
 
       // Call parent function to add to cart
@@ -101,6 +108,7 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
   }
 
   const isOutOfStock = product.quantity <= 0
+  const isNotDeliverable = product.deliverable === false
   const inStockPercentage = (product.quantity / (product.quantity + 10)) * 100 // Rough calculation
 
   return (
@@ -180,6 +188,13 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
               <p className="text-4xl font-bold text-orange-600">₹{product.price.toFixed(2)}</p>
             )}
           </div>
+
+          {isNotDeliverable && (
+            <div className={`mb-6 rounded-lg border p-4 ${isDark ? 'bg-red-900/20 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+              <p className="font-semibold">Not deliverable to your current location</p>
+              <p className="text-sm mt-1">{product.deliveryMessage || 'This product is outside the current service area.'}</p>
+            </div>
+          )}
 
           {/* Description */}
           {product.description && (
@@ -275,7 +290,7 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
             </button>
             <button
               onClick={handleAddToCart}
-              disabled={isOutOfStock || adding}
+              disabled={isOutOfStock || adding || isNotDeliverable}
               className="flex-1 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-3 px-6 rounded-lg transition text-lg flex items-center justify-center gap-2"
             >
               {adding ? (
@@ -284,7 +299,7 @@ function ProductModal({ product, isOpen, onClose, onAddToCart }) {
                 </>
               ) : (
                 <>
-                  🛒 Add to Cart
+                  {isNotDeliverable ? 'Not Deliverable' : '🛒 Add to Cart'}
                 </>
               )}
             </button>

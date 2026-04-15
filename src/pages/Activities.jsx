@@ -127,9 +127,10 @@ const Activities = () => {
             {toast && (
                 <Toast message={toast.message} type={toast.type} onClose={closeToast} />
             )}
-            <div className="space-y-6">
+            <div className={`premium-shell min-h-screen p-4 md:p-6 space-y-6 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+                <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
                 {/* Page Header */}
-                <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-xl shadow-lg p-8 text-white">
+                <div className="page-hero interactive-card bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl shadow-xl p-8 text-white">
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
@@ -146,7 +147,7 @@ const Activities = () => {
                 </div>
 
                 {/* Filter Tabs */}
-                <div className={`rounded-xl shadow-md p-2 overflow-x-auto border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                <div className={`interactive-card rounded-2xl shadow-md p-2 overflow-x-auto border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
                     <div className="flex gap-2">
                         {['all', 'coins', 'farm', 'crop', 'product', 'service', 'order'].map((filterType) => (
                             <button
@@ -181,7 +182,7 @@ const Activities = () => {
                         {filteredActivities.length > 0 ? (
                             <>
                                 {/* Desktop Table View */}
-                                <div className={`hidden lg:block rounded-xl shadow-lg overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                                <div className={`interactive-card hidden lg:block rounded-2xl shadow-lg overflow-hidden border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
                                     <div className="overflow-x-auto">
                                         <table className={`min-w-full divide-y ${isDark ? 'divide-slate-700' : 'divide-gray-200'}`}>
                                             <thead className={isDark ? 'bg-gradient-to-r from-slate-700 to-slate-600' : 'bg-gradient-to-r from-gray-100 to-gray-50'}>
@@ -270,7 +271,7 @@ const Activities = () => {
                                         const dateTime = formatDateTime(activity.createdAt);
 
                                         return (
-                                                            <div key={activity.id} className={`rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                                                            <div key={activity.id} className={`interactive-card rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
                                                 <div className="p-5 space-y-4">
                                                     {/* Header */}
                                                     <div className="flex items-start justify-between">
@@ -321,7 +322,7 @@ const Activities = () => {
                                 </div>
 
                                 {/* Pagination */}
-                                <div className={`rounded-xl shadow-md p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                                <div className={`interactive-card rounded-2xl shadow-md p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
                                     <div className="flex justify-between items-center">
                                         <button
                                             className={`px-6 py-3 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
@@ -347,7 +348,7 @@ const Activities = () => {
                                 </div>
                             </>
                         ) : (
-                            <div className={`rounded-xl shadow-lg p-12 text-center border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                            <div className={`interactive-card rounded-2xl shadow-lg p-12 text-center border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
                                 <div className="text-8xl mb-6">📭</div>
                                 <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No Activities Found</h3>
                                 <p className={`mb-1 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>

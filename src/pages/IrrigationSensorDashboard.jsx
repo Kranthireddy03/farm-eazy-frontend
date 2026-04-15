@@ -167,7 +167,7 @@ function IrrigationSensorDashboard() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto"></div>
           <p className={`mt-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Loading sensor data...</p>
@@ -178,7 +178,7 @@ function IrrigationSensorDashboard() {
 
   if (farms.length === 0) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
         <div className="text-center">
           <div className="text-6xl mb-4">🌾</div>
           <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -193,10 +193,10 @@ function IrrigationSensorDashboard() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div className="page-hero interactive-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
             <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
               Irrigation Sensors
@@ -234,7 +234,7 @@ function IrrigationSensorDashboard() {
         {/* Sensor Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {sensors.length === 0 ? (
-            <div className={`col-span-full rounded-xl shadow-lg border p-12 text-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+            <div className={`col-span-full glass-card interactive-card rounded-xl shadow-lg border p-12 text-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
               <div className="text-6xl mb-4">📡</div>
               <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                 No Sensor Data Available
@@ -251,7 +251,7 @@ function IrrigationSensorDashboard() {
               return (
                 <div
                   key={index}
-                  className={`rounded-xl shadow-lg border p-6 transition hover:shadow-xl ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}
+                  className={`glass-card interactive-card rounded-xl shadow-lg border p-6 transition hover:shadow-xl ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -312,7 +312,7 @@ function IrrigationSensorDashboard() {
         </div>
 
         {/* Automation Rules Section */}
-        <div className={`rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`glass-card interactive-card rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
             <div>
               <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
@@ -463,7 +463,7 @@ function IrrigationSensorDashboard() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={fetchSensorData}
-            className={`p-4 rounded-xl border flex items-center gap-3 transition ${
+            className={`glass-card interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
               isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-200 hover:bg-gray-50'
             }`}
           >
@@ -475,7 +475,7 @@ function IrrigationSensorDashboard() {
           </button>
 
           <button
-            className={`p-4 rounded-xl border flex items-center gap-3 transition ${
+            className={`glass-card interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
               isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-200 hover:bg-gray-50'
             }`}
           >
@@ -487,7 +487,7 @@ function IrrigationSensorDashboard() {
           </button>
 
           <button
-            className={`p-4 rounded-xl border flex items-center gap-3 transition ${
+            className={`glass-card interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
               isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-200 hover:bg-gray-50'
             }`}
           >

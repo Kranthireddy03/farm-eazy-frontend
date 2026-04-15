@@ -71,11 +71,14 @@ function Selling() {
   const loadEligibilityAndProducts = async () => {
     try {
       setEligibilityLoading(true);
-      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT');
+      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT', {
+        validateStatus: (status) => status < 500,
+      });
       const eligibilityData = eligibilityResponse?.data || {};
+      const isEligible = Boolean(eligibilityData?.eligible) && eligibilityResponse.status === 200;
       setEligibility(eligibilityData);
 
-      if (eligibilityData?.eligible) {
+      if (isEligible) {
         fetchMyProducts();
       } else {
         setMyProducts([]);
@@ -168,7 +171,7 @@ function Selling() {
   const handleEditProduct = (product) => {
     if (!eligibility?.eligible) {
       showToast(eligibility?.verificationMessage || 'Complete vendor verification first.', 'warning');
-      navigate('/vendor-dashboard');
+      navigate(eligibility?.verificationRedirectPath || '/vendor-dashboard');
       return;
     }
     setEditingProduct(product);
@@ -256,14 +259,16 @@ function Selling() {
     }
 
     try {
-      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT');
+      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT', {
+        validateStatus: (status) => status < 500,
+      });
       const eligibility = eligibilityResponse?.data || {};
       if (!eligibility.eligible) {
         const firstReason = Array.isArray(eligibility.missingRequirements) && eligibility.missingRequirements.length
           ? eligibility.missingRequirements[0]
           : 'Listing eligibility requirements are not complete.';
         showToast(firstReason, 'warning');
-        navigate('/vendor-dashboard');
+        navigate(eligibility?.verificationRedirectPath || '/vendor-dashboard');
         return;
       }
     } catch (eligibilityError) {
@@ -353,6 +358,14 @@ function Selling() {
 
   const vendorDashboardEligible = Boolean(eligibility?.vendorDashboardEligible)
   const canSellProducts = Boolean(eligibility?.eligible)
+  const sellingStats = useMemo(() => {
+    const totalListings = myProducts.length
+    const activeListings = myProducts.filter((product) => product.status === 'ACTIVE').length
+    const outOfStockListings = myProducts.filter((product) => product.status === 'OUT_OF_STOCK').length
+    const listedUnits = myProducts.reduce((sum, product) => sum + (Number(product.quantity) || 0), 0)
+
+    return { totalListings, activeListings, outOfStockListings, listedUnits }
+  }, [myProducts])
 
   if (showForm) {
     return (
@@ -974,7 +987,8 @@ function Selling() {
 
   if (vendorLocked) {
     return (
-      <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`premium-shell min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
         <div className={`border-b shadow-md ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
             <button
@@ -1018,7 +1032,8 @@ function Selling() {
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
       {/* Header */}
       <div className={`border-b shadow-md ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
         <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
@@ -1060,10 +1075,40 @@ function Selling() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
+        <section className="page-hero interactive-card mb-6">
+          <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-sky-500 dark:text-sky-300">Vendor Cockpit</p>
+              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Selling Control Deck</h1>
+              <p className={`mt-3 max-w-2xl ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                Publish, optimize, and manage your entire product inventory from one high-clarity workspace.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/55' : 'border-slate-200 bg-white/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Listings</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{sellingStats.totalListings}</p>
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-emerald-500/30 bg-emerald-900/25' : 'border-emerald-200 bg-emerald-50/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Active</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{sellingStats.activeListings}</p>
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-amber-500/30 bg-amber-900/20' : 'border-amber-200 bg-amber-50/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Out Of Stock</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>{sellingStats.outOfStockListings}</p>
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-cyan-500/30 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>Listed Units</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{sellingStats.listedUnits}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         <h1 className={`text-3xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>My Products</h1>
         
         {myProducts.length === 0 ? (
-          <div className={`rounded-2xl p-12 text-center shadow-lg border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className={`interactive-card rounded-2xl p-12 text-center shadow-lg border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
             <div className="text-6xl mb-4">📦</div>
             <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No products yet</h2>
             <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Start listing your products to reach buyers</p>
@@ -1077,7 +1122,7 @@ function Selling() {
         ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myProducts.map(product => (
-              <div key={product.id} className={`rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+              <div key={product.id} className={`interactive-card rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
                 <div className={`h-48 flex items-center justify-center ${isDark ? 'bg-gradient-to-r from-slate-700 to-slate-600' : 'bg-gradient-to-r from-emerald-100 to-teal-100'}`}>
                   {product.imageUrls && product.imageUrls.split(',')[0] ? (
                     <img
@@ -1105,7 +1150,7 @@ function Selling() {
                     {product.discountPercentage > 0 && (
                       <span className={`text-lg line-through ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{product.price}</span>
                     )}
-                    <span className="text-2xl font-bold text-green-400">₹{product.discountedPrice}</span>
+                    <span className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>₹{product.discountedPrice}</span>
                     {product.discountPercentage > 0 && (
                       <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
                         {product.discountPercentage}% OFF

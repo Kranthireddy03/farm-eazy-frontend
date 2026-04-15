@@ -19,7 +19,12 @@ const NotificationService = {
    * Get all notifications for current user
    */
   getAll: async () => {
-    const response = await apiClient.get('/notifications');
+    const response = await apiClient.get('/notifications', {
+      validateStatus: (status) => status < 500,
+    });
+    if (response.status !== 200) {
+      return [];
+    }
     return response.data;
   },
 
@@ -27,7 +32,12 @@ const NotificationService = {
    * Get unread notification count (for bell badge)
    */
   getUnreadCount: async () => {
-    const response = await apiClient.get('/notifications/count');
+    const response = await apiClient.get('/notifications/count', {
+      validateStatus: (status) => status < 500,
+    });
+    if (response.status !== 200) {
+      return { unreadCount: 0, count: 0 };
+    }
     return response.data;
   },
 
@@ -35,7 +45,12 @@ const NotificationService = {
    * Get recent notifications (for dropdown)
    */
   getRecent: async (limit = 10) => {
-    const response = await apiClient.get(`/notifications/recent?limit=${limit}`);
+    const response = await apiClient.get(`/notifications/recent?limit=${limit}`, {
+      validateStatus: (status) => status < 500,
+    });
+    if (response.status !== 200) {
+      return [];
+    }
     return response.data;
   },
 

@@ -1,40 +1,95 @@
 import React from 'react';
+import { useTheme } from '../context/ThemeContext'
+import { GlassPanel, HeroFrame, PillButton, ScrollRail, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 
 export default function PublicHome() {
+  const { isDark } = useTheme()
+  const steps = [
+    'Create an account with secure validation',
+    'Explore services and policy pages in a premium experience',
+    'Open support or ask a question without leaving the flow',
+  ]
+
+  const focusAreas = [
+    {
+      title: 'Accounts & Sign In',
+      text: 'Clean paths for registration, login, password reset, and OTP flows.',
+    },
+    {
+      title: 'Support & FAQ',
+      text: 'Direct access to support, question submission, and public help content.',
+    },
+    {
+      title: 'Learning & Guidance',
+      text: 'Explore public service content and support information before you commit to an account.',
+    },
+  ]
+
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-slate-900 dark:to-slate-950">
-      {/* HEADER */}
-      <header className="w-full py-6 px-8 flex justify-between items-center bg-white dark:bg-slate-900 shadow-md">
-        <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="FarmEazy Logo" className="h-12 drop-shadow" />
-          <span className="text-3xl font-extrabold tracking-tight text-blue-700 dark:text-green-400">FarmEazy</span>
-        </div>
-        <nav className="flex gap-8">
-          <a href="/support" className="font-semibold text-blue-700 dark:text-green-400 hover:underline text-lg">FAQ & Support</a>
-          <a href="/ask-question" className="font-semibold text-blue-700 dark:text-green-400 hover:underline text-lg">Ask a Question</a>
-          <a href="/register" className="font-semibold text-blue-700 dark:text-green-400 hover:underline text-lg">Register</a>
-          <a href="/login" className="font-semibold text-blue-700 dark:text-green-400 hover:underline text-lg">Login</a>
-          <a href="/about" className="font-semibold text-blue-700 dark:text-green-400 hover:underline text-lg">About</a>
-          <a href="/contact" className="font-semibold text-blue-700 dark:text-green-400 hover:underline text-lg">Contact</a>
-        </nav>
-      </header>
+    <main className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16">
+      <HeroFrame
+        eyebrow="Public Experience"
+        title="A calm, clear starting point for every visitor."
+        description="FarmEazy public pages explain the platform, guide onboarding, and connect users to support with a streamlined and secure interface."
+        actions={(
+          <>
+            <PillButton to="/register" active>Create account</PillButton>
+            <PillButton to="/contact">Contact support</PillButton>
+          </>
+        )}
+        side={(
+          <GlassPanel className="p-5 md:p-6">
+            <SectionTitle eyebrow="How it flows" title="The public journey is deliberately short" />
+            <ol className="mt-5 space-y-3">
+              {steps.map((step, index) => (
+                <li key={step} className={`flex gap-3 rounded-2xl px-4 py-3 border text-sm ${index === 0 ? 'bg-emerald-500/10 border-emerald-400/30' : isDark ? 'bg-white/5 border-white/10' : 'bg-white/80 border-slate-200'}`}>
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white text-xs font-bold">{index + 1}</span>
+                  <span className={isDark ? 'text-slate-200' : 'text-slate-700'}>{step}</span>
+                </li>
+              ))}
+            </ol>
+          </GlassPanel>
+        )}
+      />
 
-      {/* HERO SECTION */}
-      <section className="flex-1 flex flex-col items-center justify-center py-20 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-950">
-        <h1 className="text-4xl font-extrabold text-blue-700 dark:text-green-400 mb-6">Welcome to FarmEazy</h1>
-        <p className="text-lg text-gray-700 dark:text-slate-300 mb-8 max-w-xl text-center">
-          Manage your farm, crops, and irrigation with ease. Register or login to access full features. Explore our FAQ, ask questions, or contact us for support.
-        </p>
-        <div className="flex gap-6">
-          <a href="/register" className="px-6 py-3 rounded-lg bg-blue-700 text-white font-bold text-lg shadow hover:bg-blue-800 transition">Register</a>
-          <a href="/login" className="px-6 py-3 rounded-lg bg-green-500 text-white font-bold text-lg shadow hover:bg-green-600 transition">Login</a>
-        </div>
+      <section className="mt-8 grid lg:grid-cols-[0.95fr_1.05fr] gap-6 items-start">
+        <StrongPanel className="p-6 md:p-7">
+          <SectionTitle
+            eyebrow="Public entry points"
+            title="Designed to answer questions before they become support tickets"
+            text="The public surface keeps the experience lightweight while preserving clear calls to action and predictable navigation."
+          />
+          <div className="mt-6 grid gap-3">
+            {focusAreas.map((item) => (
+              <div key={item.title} className={`rounded-2xl border px-4 py-4 ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white/80'}`}>
+                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.title}</h3>
+                <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </StrongPanel>
+
+        <GlassPanel className="p-6 md:p-7">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className={`text-xs uppercase tracking-[0.26em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Quick access</p>
+              <h2 className={`mt-2 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>The essentials at a glance</h2>
+            </div>
+            <div className="text-4xl float-slow">🧪</div>
+          </div>
+          <ScrollRail className="mt-5 grid gap-4 md:grid-cols-3 md:overflow-visible">
+            {[
+              'Secure onboarding',
+              'Fast support entry points',
+              'Policy and disclosure pages',
+            ].map((item) => (
+              <div key={item} className={`rounded-2xl border p-5 font-medium ${isDark ? 'border-white/10 bg-slate-950/40 text-slate-100' : 'border-slate-200 bg-white/80 text-slate-700'}`}>
+                {item}
+              </div>
+            ))}
+          </ScrollRail>
+        </GlassPanel>
       </section>
-
-      {/* FOOTER */}
-      <footer className="w-full py-4 px-8 bg-white dark:bg-slate-900 text-center text-gray-500 dark:text-slate-400 border-t border-gray-200 dark:border-slate-700">
-        &copy; {new Date().getFullYear()} FarmEazy. All rights reserved.
-      </footer>
-    </div>
+    </main>
   );
 }

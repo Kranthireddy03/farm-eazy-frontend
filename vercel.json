@@ -5,7 +5,7 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "env": {
-    "VITE_API_URL": "https://farm-eazy-backend.onrender.com"
+    "VITE_API_URL": "https://your-backend-domain.com"
   },
   "rewrites": [
     {

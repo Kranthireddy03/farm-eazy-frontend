@@ -123,10 +123,10 @@ function ServiceRequests() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div className="page-hero interactive-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
               Service Requests
@@ -156,7 +156,7 @@ function ServiceRequests() {
 
         {/* Create Form */}
         {showForm && (
-          <div className={`mb-8 rounded-xl shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className={`mb-8 glass-card interactive-card rounded-xl shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
             <h2 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
               Create New Service Request
             </h2>
@@ -288,7 +288,7 @@ function ServiceRequests() {
         )}
 
         {/* Requests List */}
-        <div className={`rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`glass-card interactive-card rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           {loading ? (
             <div className="p-12 text-center">
               <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto"></div>
@@ -395,7 +395,7 @@ function ServiceRequests() {
         </div>
 
         {/* Quick Help */}
-        <div className={`mt-8 p-6 rounded-xl border ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
+        <div className={`mt-8 glass-card interactive-card p-6 rounded-xl border ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
           <h3 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>
             Need immediate help?
           </h3>

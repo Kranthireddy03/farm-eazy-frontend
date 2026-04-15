@@ -120,14 +120,14 @@ function CommunicationPreferences() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gray-50'} flex items-center justify-center`}>
+      <div className={`premium-shell min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'} flex items-center justify-center`}>
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-slate-900' : 'bg-gradient-to-br from-blue-50 to-indigo-50'} py-8 px-4`}>
+    <div className={`premium-shell min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'} py-8 px-4`}>
       {/* Toast Notification */}
       {toast && (
         <div className="fixed bottom-6 right-6 z-[100]">
@@ -141,15 +141,15 @@ function CommunicationPreferences() {
       
       <div className="max-w-3xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <section className="page-hero interactive-card text-center mb-8">
           <span className="text-5xl mb-4 block">📬</span>
-          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'} mb-2`}>
+          <h1 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'} mb-2`}>
             Communication Preferences
           </h1>
-          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>
             Choose how you want to receive notifications
           </p>
-        </div>
+        </section>
 
 
 
@@ -161,7 +161,7 @@ function CommunicationPreferences() {
         )}
 
         {/* SMS Consent Section */}
-        <div className={`mb-6 p-6 rounded-xl ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'} shadow-lg`}>
+        <div className={`mb-6 p-6 rounded-xl glass-card interactive-card ${isDark ? 'border border-slate-700' : 'border border-amber-100'}`}>
           <div className="flex items-start gap-4">
             <div className={`p-3 rounded-full ${isDark ? 'bg-amber-900/30' : 'bg-amber-100'}`}>
               <span className="text-2xl">📱</span>
@@ -170,7 +170,7 @@ function CommunicationPreferences() {
               <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                 SMS Notifications
               </h3>
-              <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+              <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                 Enable SMS to receive instant alerts on your phone.
               </p>
               
@@ -192,7 +192,7 @@ function CommunicationPreferences() {
                     }`}></div>
                   </div>
                 </div>
-                <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                <span className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
                   I consent to receive SMS notifications (charges apply)
                 </span>
               </label>
@@ -207,8 +207,8 @@ function CommunicationPreferences() {
               key={type.key}
               className={`p-6 rounded-xl transition-all ${
                 isDark 
-                  ? 'bg-slate-800 border border-slate-700 hover:border-slate-600' 
-                  : 'bg-white border border-gray-200 hover:border-gray-300'
+                  ? 'glass-card border border-slate-700 hover:border-slate-600' 
+                  : 'glass-card border border-indigo-100 hover:border-indigo-200'
               } shadow-lg`}
             >
               <div className="flex items-start gap-4">
@@ -222,7 +222,7 @@ function CommunicationPreferences() {
                 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       {type.title}
                     </h3>
                     {type.critical && (
@@ -231,7 +231,7 @@ function CommunicationPreferences() {
                       </span>
                     )}
                   </div>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                     {type.description}
                   </p>
                   
@@ -255,7 +255,7 @@ function CommunicationPreferences() {
                                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                 : isDark
                                   ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                           }`}
                         >
                           <span className="mr-2">{option.icon}</span>
@@ -300,8 +300,8 @@ function CommunicationPreferences() {
         </div>
 
         {/* Info Note */}
-        <div className={`mt-8 p-4 rounded-xl ${isDark ? 'bg-slate-800/50 border border-slate-700' : 'bg-gray-100 border border-gray-200'}`}>
-          <p className={`text-sm text-center ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+        <div className={`mt-8 p-4 rounded-xl ${isDark ? 'bg-slate-800/50 border border-slate-700' : 'bg-slate-100 border border-slate-200'}`}>
+          <p className={`text-sm text-center ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             <span className="mr-2">ℹ️</span>
             Your preferences are synced across all devices. Critical security notifications may still be sent via multiple channels for your protection.
           </p>

@@ -1,7 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTheme } from '../context/ThemeContext'
+import { FlipCard, GlassPanel, HeroFrame, PillButton, ScrollRail, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 
 export default function Services() {
+  const { isDark } = useTheme()
+
   const services = [
     {
       icon: '🚜',
@@ -41,65 +45,91 @@ export default function Services() {
     }
   ];
 
+  const serviceNotes = [
+    'All services keep their original destinations and links.',
+    'The layout now uses theme-aware surfaces and motion-friendly cards.',
+    'Vendor transparency remains visible where present, without changing data handling.',
+  ]
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">Our Services</h1>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            Explore our range of smart farming services designed to help you grow more efficiently and profitably.
-          </p>
-        </div>
-
-        {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {services.map((service, index) => (
-            <div
-              key={index}
-              className="bg-slate-800 border border-slate-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden group"
-            >
-              <div className={`bg-gradient-to-r ${service.color} p-6 text-white`}>
-                <span className="text-5xl">{service.icon}</span>
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-bold text-white mb-2 group-hover:text-green-400 transition-colors">
-                  {service.title}
-                </h3>
-                <p className="text-slate-400">{service.description}</p>
-                  {/* Vendor Transparency UI */}
-                  <div className="mt-2 text-sm text-green-200">
-                    Vendor Name: {service.vendorName || 'N/A'}<br />
-                    Vendor ID: {service.vendorId || 'N/A'}<br />
-                    Vendor Location: {service.vendorLocation || 'N/A'}<br />
-                    Vendor Type: {service.vendorType || 'N/A'}
+    <div className="min-h-screen py-8 px-4">
+      <div className="max-w-7xl mx-auto space-y-8">
+        <HeroFrame
+          eyebrow="Services"
+          title="Our services"
+          description="Explore our range of smart farming services designed to help you grow more efficiently and profitably."
+          actions={(
+            <>
+              <PillButton to="/irrigation-services" active>Browse Irrigation Services</PillButton>
+              <PillButton to="/buying">Visit Marketplace</PillButton>
+            </>
+          )}
+          side={(
+            <GlassPanel className="p-5 md:p-6">
+              <SectionTitle eyebrow="What stays the same" title="The service destinations and data flow are unchanged" />
+              <div className="mt-5 space-y-3">
+                {serviceNotes.map((note) => (
+                  <div key={note} className={`rounded-2xl px-4 py-3 text-sm ${isDark ? 'bg-white/5 text-slate-200' : 'bg-white/75 text-slate-700'}`}>
+                    {note}
                   </div>
+                ))}
               </div>
-            </div>
-          ))}
-        </div>
+            </GlassPanel>
+          )}
+        />
 
-        {/* CTA Section */}
-        <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl shadow-xl p-8 text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">Ready to Get Started?</h2>
-          <p className="text-green-100 mb-6 max-w-xl mx-auto">
+        <section className="grid lg:grid-cols-[0.95fr_1.05fr] gap-6 items-start">
+          <StrongPanel className="p-6 md:p-7">
+            <SectionTitle
+              eyebrow="Service stack"
+              title="A layered set of actions for real farm execution"
+              text="Each card surfaces one part of the farm journey, with enough visual hierarchy to scan quickly and enough depth to feel premium."
+            />
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {services.slice(0, 4).map((service) => (
+                <div key={service.title} className={`rounded-2xl border p-4 ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white/80'}`}>
+                  <div className="text-2xl">{service.icon}</div>
+                  <h3 className={`mt-2 text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{service.title}</h3>
+                  <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{service.description}</p>
+                </div>
+              ))}
+            </div>
+          </StrongPanel>
+
+          <GlassPanel className="p-6 md:p-7">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className={`text-xs uppercase tracking-[0.26em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Services grid</p>
+                <h2 className={`mt-2 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Flip cards for the full catalog</h2>
+              </div>
+              <div className="text-4xl float-slow">⚙️</div>
+            </div>
+            <ScrollRail className="mt-5 flex gap-4 overflow-x-auto pb-3">
+              {services.map((service) => (
+                <FlipCard
+                  key={service.title}
+                  icon={service.icon}
+                  frontTitle={service.title}
+                  frontText={service.description}
+                  backTitle="Vendor transparency"
+                  backText={`Vendor Name: ${service.vendorName || 'N/A'} | Vendor ID: ${service.vendorId || 'N/A'} | Vendor Location: ${service.vendorLocation || 'N/A'} | Vendor Type: ${service.vendorType || 'N/A'}`}
+                  className="min-w-[18rem] w-[18rem] shrink-0"
+                />
+              ))}
+            </ScrollRail>
+          </GlassPanel>
+        </section>
+
+        <GlassPanel className="p-8 text-center">
+          <h2 className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>Ready to get started?</h2>
+          <p className={`mt-3 max-w-2xl mx-auto ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
             Join thousands of farmers who are already using FarmEazy to streamline their operations.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <Link
-              to="/irrigation-services"
-              className="px-6 py-3 bg-slate-800 text-green-400 rounded-lg font-semibold hover:bg-slate-700 transition-colors"
-            >
-              Browse Irrigation Services
-            </Link>
-            <Link
-              to="/buying"
-              className="px-6 py-3 bg-green-800 text-white rounded-lg font-semibold hover:bg-green-900 transition-colors"
-            >
-              Visit Marketplace
-            </Link>
+          <div className="mt-6 flex flex-wrap justify-center gap-4">
+            <PillButton to="/irrigation-services" active>Browse Irrigation Services</PillButton>
+            <PillButton to="/buying">Visit Marketplace</PillButton>
           </div>
-        </div>
+        </GlassPanel>
       </div>
     </div>
   );

@@ -73,7 +73,7 @@ function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
+    <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-indigo-50 via-white to-violet-50'}`}>
       {/* Animated Background */}
       <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900' : 'bg-gradient-to-br from-indigo-100 via-purple-50 to-violet-100'}`}>
         <div className="absolute inset-0 opacity-30">
@@ -95,8 +95,37 @@ function ForgotPassword() {
       </div>
 
       {/* Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className={`backdrop-blur-xl ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-indigo-200'} rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.02]`}>
+      <div className="relative z-10 w-full max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-6 items-start">
+          <div className={`glass-card p-6 rounded-[2rem] border ${isDark ? 'bg-slate-900/80 border-slate-700' : 'bg-white/90 border-indigo-200'} shadow-2xl`}> 
+            <div className="space-y-5">
+              <div>
+                <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-indigo-700'}`}>Fast recovery</p>
+                <h2 className={`mt-3 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>Get back into your account quickly.</h2>
+                <p className={`mt-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                  Forgot your password? We will send a secure link to the email on file and guide you through a safe reset flow.
+                </p>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-indigo-200 bg-indigo-50'}`}>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">What you need</p>
+                  <p className="mt-2 font-semibold">Your registered email</p>
+                </div>
+                <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-indigo-200 bg-white'}`}>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">What to expect</p>
+                  <p className="mt-2 font-semibold">Instant reset link</p>
+                </div>
+              </div>
+
+              <div className={`rounded-3xl border p-5 ${isDark ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/95'}`}>
+                <p className={`text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>If you don't see the reset email, check spam and then use the contact page to request help.</p>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className={`glass-card interactive-card ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-indigo-200'} rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.02]`}>
           
           {/* Logo & Header */}
           <div className="text-center mb-8">
@@ -194,10 +223,12 @@ function ForgotPassword() {
             <p className={`${isDark ? 'text-slate-300' : 'text-indigo-600'}`}>
               Remember your password?{' '}
               <Link to="/login" className={`${isDark ? 'text-yellow-400 hover:text-yellow-300' : 'text-orange-500 hover:text-orange-600'} font-bold transition-colors`}>
-                Login here 🔑
+                Sign in here 🔑
               </Link>
             </p>
           </div>
+          </div>
+        </div>
         </div>
 
         {/* Bottom Decoration */}

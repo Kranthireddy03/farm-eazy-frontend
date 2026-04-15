@@ -26,9 +26,15 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-red-50">
-          <h1 className="text-3xl font-bold text-red-700 mb-4">Something went wrong</h1>
-          <p className="text-red-600 mb-2">An unexpected error occurred. Please try refreshing the page.</p>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-emerald-950 text-slate-100 px-6">
+          <h1 className="text-3xl font-black text-lime-300 mb-4">Unexpected UI error</h1>
+          <p className="text-slate-200 mb-4 text-center max-w-xl">We preserved your session. Move to Resilience Mode to keep using the app while recovery checks continue.</p>
+          <button
+            onClick={() => window.location.assign('/fallback')}
+            className="mb-4 rounded-xl px-4 py-2 bg-lime-400 text-slate-900 font-bold hover:bg-lime-300"
+          >
+            Open Resilience Mode
+          </button>
           <details className="text-xs text-gray-500 whitespace-pre-wrap max-w-xl mx-auto">
             {this.state.error && this.state.error.toString()}
           </details>
@@ -49,14 +55,16 @@ class ErrorBoundary extends React.Component {
  * - Professional session management with AuthContext
  */
 
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, Suspense, lazy } from 'react'
 import AuthService from './services/AuthService'
+import apiClient from './services/apiClient'
 import { CoinProvider } from './context/CoinContext';
 import { LoaderProvider } from './context/LoaderContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { STORAGE_KEYS } from './config/api';
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from './utils/supportPortal';
 import SessionWarningModal from './components/SessionWarningModal';
 import './i18n';
@@ -71,6 +79,7 @@ const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const RedirectReset = lazy(() => import('./pages/RedirectReset'));
 const EmailError = lazy(() => import('./pages/EmailError'));
+const CompleteGoogleProfile = lazy(() => import('./pages/CompleteGoogleProfile'));
 const Home = lazy(() => import('./pages/Home'));
 const DashboardEnhanced = lazy(() => import('./pages/DashboardEnhanced'));
 const Farms = lazy(() => import('./pages/Farms'));
@@ -100,9 +109,12 @@ const MyBlogSubmissions = lazy(() => import('./pages/MyBlogSubmissions'));
 const ServiceRequests = lazy(() => import('./pages/ServiceRequests'));
 const ServiceRequestDetail = lazy(() => import('./pages/ServiceRequestDetail'));
 const BankVerification = lazy(() => import('./pages/BankVerification'));
+const VendorOnboarding = lazy(() => import('./pages/VendorOnboarding'));
 const IrrigationSensorDashboard = lazy(() => import('./pages/IrrigationSensorDashboard'));
 const VendorDashboard = lazy(() => import('./pages/VendorDashboard'));
 const SessionExpired = lazy(() => import('./pages/SessionExpired'));
+const PremiumFallback = lazy(() => import('./pages/PremiumFallback'));
+const ServiceUnavailableLocation = lazy(() => import('./pages/ServiceUnavailableLocation'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const AdminNotifications = lazy(() => import('./pages/AdminNotifications'));
 // Admin support UI has been moved to a standalone admin-support portal.
@@ -117,6 +129,7 @@ const AdminBlogManagement = lazy(() => import('./pages/admin/AdminBlogManagement
 function ProtectedRoute({ children }) {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
+  const profileCompletionRequired = localStorage.getItem(STORAGE_KEYS.USER_PROFILE_COMPLETION_REQUIRED) === 'true';
   
   if (isLoading) {
     return (
@@ -124,6 +137,10 @@ function ProtectedRoute({ children }) {
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
       </div>
     );
+  }
+
+  if (isAuthenticated && profileCompletionRequired && location.pathname !== '/complete-google-profile') {
+    return <Navigate to="/complete-google-profile" replace />;
   }
   
   return isAuthenticated ? children : <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
@@ -171,11 +188,60 @@ function SupportPortalRedirect({
   );
 }
 
+function LocationAccessRoute({ children }) {
+  const [checking, setChecking] = useState(true)
+  const [allowed, setAllowed] = useState(true)
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    let active = true
+
+    const runCheck = async () => {
+      try {
+        const response = await apiClient.get('/location-access/status', { _skipFallback: true })
+        if (!active) return
+        const isAllowed = Boolean(response?.data?.allowed)
+        setAllowed(isAllowed)
+        setMessage(response?.data?.message || '')
+      } catch (_err) {
+        if (!active) return
+        setAllowed(false)
+        setMessage('Unable to verify location access at the moment.')
+      } finally {
+        if (active) {
+          setChecking(false)
+        }
+      }
+    }
+
+    runCheck()
+    return () => {
+      active = false
+    }
+  }, [])
+
+  if (checking) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-slate-900">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+      </div>
+    )
+  }
+
+  if (!allowed) {
+    return <Navigate to="/service-unavailable" replace state={{ message }} />
+  }
+
+  return children
+}
+
 /**
  * AppContent Component
  * Main app content that uses auth context
  */
 function AppContent() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, isLoading, getUserId, getUserEmail } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -206,16 +272,28 @@ function AppContent() {
 
   // Check for onboarding on auth state change
   useEffect(() => {
-    if (isAuthenticated && !localStorage.getItem(getOnboardingStorageKey())) {
+    if (isAuthenticated && location.pathname !== '/complete-google-profile' && !localStorage.getItem(getOnboardingStorageKey())) {
       setShowOnboarding(true);
     }
-  }, [isAuthenticated, getUserEmail, getUserId]);
+  }, [isAuthenticated, getUserEmail, getUserId, location.pathname]);
 
   useEffect(() => {
     const openTour = () => setShowOnboarding(true);
     window.addEventListener('start-onboarding-tour', openTour);
     return () => window.removeEventListener('start-onboarding-tour', openTour);
   }, []);
+
+  useEffect(() => {
+    const handleFallback = (event) => {
+      if (location.pathname === '/fallback') {
+        return;
+      }
+      navigate('/fallback', { state: event.detail || {}, replace: false });
+    };
+
+    window.addEventListener('farmeazy:fallback', handleFallback);
+    return () => window.removeEventListener('farmeazy:fallback', handleFallback);
+  }, [location.pathname, navigate]);
 
   const handleOnboardingFinish = () => {
     localStorage.setItem(getOnboardingStorageKey(), 'true');
@@ -251,19 +329,30 @@ function AppContent() {
               </ProtectedRoute>
             ) : (
               <PublicLayout>
-                <LandingHome />
+                <PublicHome />
               </PublicLayout>
             )
+          }
+        />
+        <Route
+          path="/landing"
+          element={
+            <PublicLayout>
+              <LandingHome />
+            </PublicLayout>
           }
         />
         <Route element={<PublicLayout />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/complete-google-profile" element={<ProtectedRoute><CompleteGoogleProfile /></ProtectedRoute>} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/r/:shortCode" element={<RedirectReset />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/email-error" element={<EmailError />} />
           <Route path="/session-expired" element={<SessionExpired />} />
+          <Route path="/fallback" element={<PremiumFallback />} />
+          <Route path="/service-unavailable" element={<ServiceUnavailableLocation />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
@@ -326,13 +415,13 @@ function AppContent() {
           <Route path="/irrigation" element={<IrrigationSchedules />} />
           <Route path="/irrigation-services" element={<IrrigationServices />} />
           <Route path="/selling" element={<Selling />} />
-          <Route path="/buying" element={<Buying />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/buying" element={<LocationAccessRoute><Buying /></LocationAccessRoute>} />
+          <Route path="/cart" element={<LocationAccessRoute><Cart /></LocationAccessRoute>} />
+          <Route path="/checkout" element={<LocationAccessRoute><Checkout /></LocationAccessRoute>} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/product/:id" element={<LocationAccessRoute><ProductDetail /></LocationAccessRoute>} />
           <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="/orders" element={<Orders />} />
+          <Route path="/orders" element={<LocationAccessRoute><Orders /></LocationAccessRoute>} />
           <Route path="/refund-details" element={<RefundDetails />} />
           <Route path="/address-book" element={<AddressBook />} />
           <Route path="/activities" element={<Activities />} />
@@ -343,6 +432,7 @@ function AppContent() {
           <Route path="/service-requests/:requestNumber" element={<ServiceRequestDetail />} />
           <Route path="/bank-verification" element={<BankVerification />} />
           <Route path="/vendor-verification" element={<BankVerification />} />
+          <Route path="/vendor-onboarding" element={<VendorOnboarding />} />
           <Route path="/irrigation-sensors" element={<IrrigationSensorDashboard />} />
           <Route path="/vendor-dashboard" element={<VendorDashboard />} />
           <Route path="/notifications" element={<Notifications />} />
@@ -354,7 +444,7 @@ function AppContent() {
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      {showOnboarding && (
+      {showOnboarding && location.pathname !== '/complete-google-profile' && (
         <OnboardingTour onFinish={handleOnboardingFinish} />
       )}
       </>

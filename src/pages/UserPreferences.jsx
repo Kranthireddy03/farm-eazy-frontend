@@ -88,14 +88,14 @@ const UserPreferences = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 py-8 px-4">
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'}`}>
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <section className="page-hero interactive-card text-center mb-8">
           <span className="text-5xl mb-4 block">⚙️</span>
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">User Preferences</h1>
-          <p className="text-gray-600">Customize your FarmEazy experience</p>
-        </div>
+          <h1 className={`text-3xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>User Preferences</h1>
+          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Customize your FarmEazy experience</p>
+        </section>
 
         {/* Saved Toast */}
         {saved && (
@@ -104,15 +104,15 @@ const UserPreferences = () => {
           </div>
         )}
 
-        <div className="mb-6 bg-slate-800 border border-slate-700 rounded-xl shadow-lg overflow-hidden">
+        <div className={`mb-6 glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-cyan-100'}`}>
           <div className="bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-white">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <span>🧭</span> Quick Help Guide
             </h2>
           </div>
-          <div className="p-6 space-y-3 text-slate-200">
-            <p className="text-sm text-slate-300">Choose settings based on your goal:</p>
-            <ul className="text-sm text-slate-300 space-y-2">
+          <div className="p-6 space-y-3">
+            <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Choose settings based on your goal:</p>
+            <ul className={`text-sm space-y-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
               <li>• Theme: Choose Light, Dark, or System. This preference is also carried to Support Portal redirects.</li>
               <li>• Notifications: Turn on email and push alerts so you do not miss important farm updates.</li>
               <li>• Language: Pick your preferred language for easier day-to-day usage.</li>
@@ -128,7 +128,7 @@ const UserPreferences = () => {
               </button>
               <Link
                 to="/dashboard"
-                className="px-4 py-2 bg-slate-700 text-slate-100 rounded-lg font-medium hover:bg-slate-600 transition-colors"
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'}`}
               >
                 Go to Dashboard
               </Link>
@@ -139,7 +139,7 @@ const UserPreferences = () => {
         {/* Preference Groups */}
         <div className="space-y-6">
           {preferenceGroups.map((group) => (
-            <div key={group.title} className="bg-slate-800 border border-slate-700 rounded-xl shadow-lg overflow-hidden">
+            <div key={group.title} className={`glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-indigo-100'}`}>
               <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-4 text-white">
                 <h2 className="text-lg font-bold flex items-center gap-2">
                   <span>{group.icon}</span> {group.title}
@@ -147,11 +147,11 @@ const UserPreferences = () => {
               </div>
               <div className="p-6 space-y-4">
                 {group.items.map((item) => (
-                  <div key={item.name} className="flex items-center justify-between py-3 border-b border-slate-700 last:border-0">
+                  <div key={item.name} className={`flex items-center justify-between py-3 border-b last:border-0 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                     <div className="flex-1">
-                      <label className="font-medium text-white">{item.label}</label>
+                      <label className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.label}</label>
                       {item.description && (
-                        <p className="text-sm text-slate-400 mt-1">{item.description}</p>
+                        <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{item.description}</p>
                       )}
                     </div>
                     <div className="ml-4">
@@ -164,7 +164,7 @@ const UserPreferences = () => {
                             onChange={handleChange}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-slate-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-slate-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-slate-300 after:border-slate-500 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                          <div className={`w-11 h-6 peer-focus:outline-none peer-focus:ring-4 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 ${isDark ? 'bg-slate-600 peer-focus:ring-indigo-700 peer-checked:after:border-slate-600 after:bg-slate-300 after:border-slate-500' : 'bg-slate-300 peer-focus:ring-indigo-300 peer-checked:after:border-white after:bg-white after:border-slate-200'}`}></div>
                         </label>
                       ) : (
                         <div className="space-y-1">
@@ -172,14 +172,14 @@ const UserPreferences = () => {
                             name={item.name}
                             value={prefs[item.name]}
                             onChange={handleChange}
-                            className="px-4 py-2 border border-slate-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-slate-700 text-white"
+                            className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'border-slate-600 bg-slate-700 text-white' : 'border-slate-300 bg-white text-slate-900'}`}
                           >
                             {item.options?.map((opt) => (
                               <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                           </select>
                           {item.name === 'theme' && (
-                            <p className="text-xs text-slate-400">Tip: Use System to follow your device mode automatically.</p>
+                            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tip: Use System to follow your device mode automatically.</p>
                           )}
                         </div>
                       )}
@@ -191,17 +191,17 @@ const UserPreferences = () => {
           ))}
 
           {/* Payment & Refund Section */}
-          <div className="bg-slate-800 border border-slate-700 rounded-xl shadow-lg overflow-hidden">
+          <div className={`glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-emerald-100'}`}>
             <div className="bg-gradient-to-r from-green-500 to-teal-500 px-6 py-4 text-white">
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <span>💳</span> Payment & Refunds
               </h2>
             </div>
             <div className="p-6 space-y-4">
-              <div className="flex items-center justify-between py-3 border-b border-slate-700">
+              <div className={`flex items-center justify-between py-3 border-b ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
                 <div className="flex-1">
-                  <span className="font-medium text-white">Refund Details</span>
-                  <p className="text-sm text-slate-400 mt-1">Manage your bank/UPI details for refunds</p>
+                  <span className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>Refund Details</span>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Manage your bank/UPI details for refunds</p>
                 </div>
                 <div className="ml-4">
                   <Link 
@@ -214,8 +214,8 @@ const UserPreferences = () => {
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex-1">
-                  <span className="font-medium text-white">My Orders</span>
-                  <p className="text-sm text-slate-400 mt-1">View orders, cancellations and refund status</p>
+                  <span className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>My Orders</span>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>View orders, cancellations and refund status</p>
                 </div>
                 <div className="ml-4">
                   <Link 
@@ -240,7 +240,7 @@ const UserPreferences = () => {
               setSaved(true);
               setTimeout(() => setSaved(false), 2000);
             }}
-            className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-medium hover:bg-gray-300 transition-colors"
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
           >
             Reset to Defaults
           </button>

@@ -16,23 +16,23 @@ function PublicHeader() {
   ]
 
   return (
-    <header className="sticky top-0 z-40">
-      <div className={`${isDark ? 'bg-slate-950/90 border-slate-800' : 'bg-white/90 border-emerald-100'} backdrop-blur-xl border-b shadow-sm`}>
+    <header className="sticky top-0 z-40 px-4 md:px-6 pt-4">
+      <div className={`${isDark ? 'bg-slate-950/78 border-slate-800/70' : 'bg-white/78 border-white/70'} premium-panel shadow-[0_12px_50px_rgba(15,23,42,0.16)]`}>
         <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
-            <span className="text-2xl">🌾</span>
+            <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white flex items-center justify-center shadow-lg text-xl">🌾</div>
             <div className="leading-tight">
-              <p className={`font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-emerald-900'}`}>FarmEazy</p>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-emerald-700'}`}>Smart Farming Platform</p>
+              <p className={`font-black tracking-tight text-lg ${isDark ? 'text-white' : 'text-slate-950'}`}>FarmEazy</p>
+              <p className={`text-[11px] uppercase tracking-[0.3em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Smart Farm Platform</p>
             </div>
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium">
+          <nav className="hidden xl:flex items-center gap-2 text-sm font-medium">
             {navItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
-                className={`${isDark ? 'text-slate-300 hover:text-emerald-300' : 'text-slate-700 hover:text-emerald-800'} transition`}
+                className={`px-3 py-2 rounded-full transition ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/80'}`}
               >
                 {item.label}
               </Link>
@@ -42,22 +42,22 @@ function PublicHeader() {
           <div className="hidden md:flex items-center gap-2">
             <Link
               to="/login"
-              className={`${isDark ? 'text-slate-300 hover:text-white border-slate-700 hover:border-slate-500' : 'text-slate-700 hover:text-slate-900 border-slate-200 hover:border-slate-300'} border px-3 py-1.5 rounded-lg text-sm transition`}
+              className={`premium-button-secondary ${isDark ? 'border-slate-700 bg-white/5 text-slate-100 hover:border-emerald-400/40 hover:bg-white/10' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-emerald-300 hover:bg-white'}`}
             >
-              Login
+              Sign in
             </Link>
             <Link
               to="/register"
-              className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 text-sm transition"
+              className="premium-button bg-emerald-600 text-white"
             >
-              Register
+              Sign up
             </Link>
           </div>
 
           <button
             type="button"
             onClick={() => setMenuOpen(prev => !prev)}
-            className={`md:hidden p-2 rounded-lg border ${isDark ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-700'}`}
+            className={`md:hidden h-11 w-11 rounded-2xl border ${isDark ? 'border-slate-700 text-slate-100 bg-white/5' : 'border-slate-200 text-slate-700 bg-white/80'}`}
             aria-label="Toggle menu"
           >
             {menuOpen ? '✕' : '☰'}
@@ -65,32 +65,32 @@ function PublicHeader() {
         </div>
 
         {menuOpen && (
-          <div className={`md:hidden border-t ${isDark ? 'border-slate-800 bg-slate-950' : 'border-emerald-100 bg-white'}`}>
-            <div className="max-w-7xl mx-auto px-4 py-3 flex flex-col gap-2">
+          <div className={`md:hidden border-t ${isDark ? 'border-slate-800 bg-slate-950/95' : 'border-slate-100 bg-white/95'} backdrop-blur-xl`}>
+            <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col gap-2">
               {navItems.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
                   onClick={() => setMenuOpen(false)}
-                  className={`${isDark ? 'text-slate-300 hover:text-emerald-300 hover:bg-slate-900' : 'text-slate-700 hover:text-emerald-800 hover:bg-emerald-50'} px-3 py-2 rounded-lg transition`}
+                  className={`px-4 py-3 rounded-2xl transition ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'}`}
                 >
                   {item.label}
                 </Link>
               ))}
-              <div className="flex gap-2 pt-2">
+              <div className="grid grid-cols-2 gap-3 pt-2">
                 <Link
                   to="/login"
                   onClick={() => setMenuOpen(false)}
-                  className={`${isDark ? 'text-slate-200 border-slate-700' : 'text-slate-700 border-slate-200'} border px-3 py-2 rounded-lg text-sm flex-1 text-center`}
+                  className={`premium-button-secondary text-center ${isDark ? 'border-slate-700 bg-white/5 text-slate-100' : 'border-slate-200 bg-white text-slate-700'}`}
                 >
-                  Login
+                  Sign in
                 </Link>
                 <Link
                   to="/register"
                   onClick={() => setMenuOpen(false)}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm flex-1 text-center"
+                  className="premium-button bg-emerald-600 text-white text-center"
                 >
-                  Register
+                  Sign up
                 </Link>
               </div>
             </div>

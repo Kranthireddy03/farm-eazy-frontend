@@ -25,6 +25,13 @@ function NotificationBell() {
 
   // Fetch unread count
   const fetchUnreadCount = useCallback(async () => {
+    const token = localStorage.getItem('farmEazy_token');
+    const email = localStorage.getItem('farmEazy_email');
+    if (!token || !email) {
+      setUnreadCount(0);
+      return;
+    }
+
     try {
       const data = await NotificationService.getUnreadCount();
       const nextCount = Number(data?.unreadCount ?? data?.count ?? 0);
@@ -36,6 +43,13 @@ function NotificationBell() {
 
   // Fetch recent notifications
   const fetchNotifications = useCallback(async () => {
+    const token = localStorage.getItem('farmEazy_token');
+    const email = localStorage.getItem('farmEazy_email');
+    if (!token || !email) {
+      setNotifications([]);
+      return;
+    }
+
     setLoading(true);
     try {
       const data = await NotificationService.getRecent(10);

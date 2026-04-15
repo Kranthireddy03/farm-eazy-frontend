@@ -57,6 +57,7 @@ function Home() {
   const [statsLoading, setStatsLoading] = useState(true)
   const [coinsLoading, setCoinsLoading] = useState(false)
   const [showSupport, setShowSupport] = useState(false)
+  const [currentInsight, setCurrentInsight] = useState(0)
 
   useEffect(() => {
     const username = localStorage.getItem('farmEazy_username')
@@ -79,8 +80,10 @@ function Home() {
 
         let vendorEligible = false
         try {
-          const eligibilityRes = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT')
-          vendorEligible = Boolean(eligibilityRes?.data?.eligible)
+          const eligibilityRes = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT', {
+            validateStatus: (status) => status < 500,
+          })
+          vendorEligible = Boolean(eligibilityRes?.data?.eligible) && eligibilityRes.status === 200
         } catch (_eligibilityError) {
           vendorEligible = false
         }
@@ -144,184 +147,191 @@ function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showLoader, hideLoader])
 
+    useEffect(() => {
+      const timer = setInterval(() => {
+        setCurrentInsight((prev) => (prev + 1) % 3)
+      }, 4500)
+      return () => clearInterval(timer)
+    }, [])
+
   const farmsCount = useAnimatedCount(Number(stats.totalFarms) || 0)
   const productsCount = useAnimatedCount(Number(stats.totalProducts) || 0)
   const servicesCount = useAnimatedCount(Number(stats.totalServices) || 0)
   const availableProductsCount = useAnimatedCount(Number(stats.availableProducts) || 0)
 
+  const insightSlides = [
+    {
+      title: 'Smart Growth Pulse',
+      text: stats.totalFarms > 0
+        ? `${stats.totalFarms} farm${stats.totalFarms > 1 ? 's are' : ' is'} active. Keep crop and irrigation logs updated for better yield visibility.`
+        : 'Start your first farm profile to unlock analytics, crop logs, and irrigation planning.',
+      accent: isDark ? 'from-emerald-500/30 to-teal-500/20' : 'from-emerald-200 to-teal-100',
+    },
+    {
+      title: 'Market Opportunity',
+      text: availableProductsCount > 0
+        ? `${availableProductsCount} product listings are available in the marketplace. Compare pricing and demand trends before listing.`
+        : 'Marketplace is waiting for fresh listings. Add your first product and test buyer demand quickly.',
+      accent: isDark ? 'from-blue-500/30 to-cyan-500/20' : 'from-blue-200 to-cyan-100',
+    },
+    {
+      title: 'Service Momentum',
+      text: servicesCount > 0
+        ? `${servicesCount} service listing${servicesCount > 1 ? 's are' : ' is'} active. Keep slots updated to improve booking conversion.`
+        : 'No service listing yet. Publish irrigation and equipment support offers to create recurring revenue.',
+      accent: isDark ? 'from-fuchsia-500/30 to-violet-500/20' : 'from-fuchsia-200 to-violet-100',
+    },
+  ]
+
   return (
-    <div className={`min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <main className="container-main mx-auto px-4 py-8">
-        <div className={`rounded-3xl p-6 shadow-2xl ${isDark ? 'bg-slate-900/60 border border-slate-700' : 'bg-white/80 border border-emerald-100'} backdrop-blur-sm`}>
+    <div className={`min-h-screen overflow-hidden relative ${isDark ? 'bg-slate-950' : 'bg-[#f2f8f1]'}`}>
+      <div className={`pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl ${isDark ? 'bg-emerald-700/30' : 'bg-emerald-300/50'}`} />
+      <div className={`pointer-events-none absolute top-20 -right-28 h-96 w-96 rounded-full blur-3xl ${isDark ? 'bg-cyan-700/25' : 'bg-cyan-200/60'}`} />
 
-          <div className="mb-8">
-            <h2 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>
-              Quick Overview
-            </h2>
-            <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>
-              Your farm at a glance. Click on any card to manage that section, or view detailed analytics on the Dashboard.
-            </p>
-          </div>
-
-          <div className={`mb-10 rounded-3xl p-8 md:p-14 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 animate-fade-in border ${isDark ? 'bg-gradient-to-r from-green-900 via-blue-900 to-slate-800 border-slate-700' : 'bg-gradient-to-r from-emerald-100 via-teal-100 to-blue-100 border-emerald-200'}`}>
-            <div>
-              <h1 className={`text-4xl md:text-5xl font-extrabold mb-3 drop-shadow-lg ${isDark ? 'text-green-300' : 'text-emerald-700'}`}>
-                Welcome, {userUsername || 'Farmer'}!
-              </h1>
-              <p className={`text-lg md:text-2xl mb-4 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                Manage your smart farm with ease and efficiency.
-              </p>
-              <button
-                className="mt-2 px-6 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold text-lg shadow-lg transition-all"
-                onClick={() => navigate('/dashboard')}
-              >
-                📊 View Analytics Dashboard
-              </button>
-            </div>
-            <div className="hidden md:block animate-fade-in-slow">
-              <img
-                src="/farm-hero.svg"
-                alt="FarmEazy Hero"
-                className="w-64 h-64 object-contain drop-shadow-2xl"
-                onError={(e) => { e.target.style.display = 'none' }}
-              />
-              <div className="w-64 h-64 flex items-center justify-center text-6xl text-green-300 dark:text-green-900" style={{ display: 'none' }}>
-                🌾
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-            <div className={`rounded-lg shadow-lg p-6 border-l-4 border-green-500 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
-              <div className={`text-3xl font-bold mb-2 ${isDark ? 'text-green-400' : 'text-green-600'}`}>
-                {statsLoading ? '...' : farmsCount}
-              </div>
-              <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Active Farms</p>
-              <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                {statsLoading ? 'Loading...' : (stats.totalFarms === 0 ? 'Add your first farm' : 'Farms active')}
-              </p>
-            </div>
-            <div className={`rounded-lg shadow-lg p-6 border-l-4 border-blue-500 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
-              <div className={`text-3xl font-bold mb-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
-                {statsLoading ? '...' : productsCount}
-              </div>
-              <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Products Listed</p>
-              <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                {statsLoading ? 'Loading...' : (stats.totalProducts === 0 ? 'List your first product' : 'Products available')}
-              </p>
-            </div>
-            <div className={`rounded-lg shadow-lg p-6 border-l-4 border-purple-500 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
-              <div className={`text-3xl font-bold mb-2 flex items-center gap-2 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-                {statsLoading ? '...' : (
-                  <>
-                    <span>🚜</span>
-                    <span>{servicesCount}</span>
-                  </>
-                )}
-              </div>
-              <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Service Listings</p>
-              <p className={`text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
-                {statsLoading ? 'Loading...' : (stats.totalServices === 0 ? 'List equipment/workers' : 'Services available')}
-              </p>
-            </div>
-            <div className={`rounded-lg shadow-lg p-6 border-l-4 border-orange-500 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
-              <div className={`text-3xl font-bold mb-2 flex items-center gap-2 ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>
-                {coinsLoading ? '...' : (
-                  <>
-                    <span>🪙</span>
-                    <span>{coins?.totalCoins || 0}</span>
-                  </>
-                )}
-              </div>
-              <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Coins Balance</p>
-              {!coinsLoading && coins?.dailyLoginCoinsAvailable > 0 && (
-                <p className={`text-xs mt-1 ${isDark ? 'text-orange-400' : 'text-orange-600'}`}>+{coins.dailyLoginCoinsAvailable * 5} more today</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className={`rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all cursor-pointer border group animate-slide-up ${isDark ? 'bg-slate-800 border-green-900' : 'bg-white border-emerald-200'}`} onClick={() => navigate('/farms')}>
-              <span className="text-5xl mb-3 group-hover:scale-110 transition-transform">🏡</span>
-              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-green-400' : 'text-emerald-600'}`}>Farms Management</h2>
-              <p className={`mb-3 text-center ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Manage your farms and crops efficiently.</p>
-              <span className={`text-base font-bold ${isDark ? 'text-green-400' : 'text-emerald-600'}`}>{farmsCount} Farms</span>
-            </div>
-            <div className={`rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all cursor-pointer border group animate-slide-up delay-100 ${isDark ? 'bg-slate-800 border-blue-900' : 'bg-white border-blue-200'}`} onClick={() => navigate('/selling')}>
-              <span className="text-5xl mb-3 group-hover:scale-110 transition-transform">🛒</span>
-              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>Sell Products</h2>
-              <p className={`mb-3 text-center ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>List your products for sale to other farmers.</p>
-              <span className={`text-base font-bold ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>{productsCount} Products</span>
-            </div>
-            <div className={`rounded-2xl shadow-xl p-8 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all cursor-pointer border group animate-slide-up delay-200 ${isDark ? 'bg-slate-800 border-purple-900' : 'bg-white border-purple-200'}`} onClick={() => navigate('/buying')}>
-              <span className="text-5xl mb-3 group-hover:scale-110 transition-transform">🛍️</span>
-              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>Buy Products</h2>
-              <p className={`mb-3 text-center ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Browse and purchase products for your farm.</p>
-              <span className={`text-base font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>{availableProductsCount} Available</span>
-            </div>
-          </div>
-
-          <div className="mt-12 flex flex-col md:flex-row gap-8">
-            <div className={`rounded-2xl shadow-xl p-8 flex-1 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all cursor-pointer border group animate-slide-up ${isDark ? 'bg-slate-800 border-cyan-900' : 'bg-white border-cyan-200'}`} onClick={() => navigate('/irrigation-services')}>
-              <span className="text-5xl mb-3 group-hover:scale-110 transition-transform">💧</span>
-              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>Irrigation Services</h2>
-              <p className={`mb-3 text-center ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Schedule and manage irrigation for your crops.</p>
-              <span className={`text-base font-bold ${isDark ? 'text-cyan-400' : 'text-cyan-600'}`}>{servicesCount} Services</span>
-            </div>
-            <div className={`rounded-2xl shadow-xl p-8 flex-1 flex flex-col items-center hover:scale-105 hover:shadow-2xl transition-all cursor-pointer border group animate-slide-up delay-100 ${isDark ? 'bg-slate-800 border-pink-900' : 'bg-white border-pink-200'}`} onClick={() => setShowSupport(true)}>
-              <span className="text-5xl mb-3 group-hover:scale-110 transition-transform">💬</span>
-              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-pink-400' : 'text-pink-600'}`}>Support</h2>
-              <p className={`mb-3 text-center ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Get help and chat with our support team.</p>
-              <span className={`text-base font-bold ${isDark ? 'text-pink-400' : 'text-pink-600'}`}>24/7 Chat</span>
-            </div>
-          </div>
-
-          <div className={`mt-12 rounded-lg p-8 border ${isDark ? 'bg-blue-900/30 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
-            <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>
-              💡 How FarmEazy Works
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="flex gap-4">
-                <div className="text-3xl">🌱</div>
-                <div>
-                  <h4 className={`font-semibold mb-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>Farms</h4>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Manage your farming operations efficiently with real-time monitoring of crops and irrigation.
-                  </p>
+      <main className="container-main mx-auto px-4 py-8 relative z-10">
+        <div className={`rounded-[2rem] p-6 md:p-8 shadow-2xl border ${isDark ? 'bg-slate-900/75 border-slate-700' : 'bg-white/85 border-emerald-100'} backdrop-blur-sm`}>
+          <section className={`rounded-3xl p-6 md:p-10 border shadow-xl mb-8 ${isDark ? 'bg-gradient-to-r from-emerald-900/70 via-cyan-900/60 to-slate-900 border-slate-700' : 'bg-gradient-to-r from-[#dff6d4] via-[#d8f3ff] to-[#f0f7ff] border-emerald-200'}`}>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+              <div className="lg:col-span-2">
+                <p className={`text-xs md:text-sm tracking-[0.18em] uppercase font-semibold mb-3 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>
+                  FarmEazy Control Deck
+                </p>
+                <h1 className={`text-3xl md:text-5xl font-extrabold leading-tight mb-4 ${isDark ? 'text-white' : 'text-slate-800'}`}>
+                  Welcome back, {userUsername || 'Farmer'}
+                </h1>
+                <p className={`text-sm md:text-lg max-w-2xl ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                  Run your farm like an operations studio. Track production, activate listings, and move from planning to profit in one flow.
+                </p>
+                <div className="mt-6 flex flex-wrap gap-3">
+                  <button
+                    onClick={() => navigate('/dashboard')}
+                    className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${isDark ? 'bg-emerald-500 text-white hover:bg-emerald-400' : 'bg-emerald-700 text-white hover:bg-emerald-800'}`}
+                  >
+                    Open Analytics
+                  </button>
+                  <button
+                    onClick={() => navigate('/selling')}
+                    className={`px-6 py-3 rounded-xl font-semibold transition-all duration-300 border ${isDark ? 'border-slate-500 text-slate-100 hover:bg-slate-800' : 'border-slate-300 text-slate-700 hover:bg-slate-100'}`}
+                  >
+                    Manage Listings
+                  </button>
                 </div>
               </div>
-              <div className="flex gap-4">
-                <div className="text-3xl">🎯</div>
-                <div>
-                  <h4 className={`font-semibold mb-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>Sell Smart</h4>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    List your products and reach customers directly. Build your brand and grow your business.
-                  </p>
+
+              <div className={`rounded-2xl border p-4 md:p-5 ${isDark ? 'bg-slate-900/60 border-slate-600' : 'bg-white/80 border-white'}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <p className={`text-sm font-semibold ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>Insight Board</p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setCurrentInsight((prev) => (prev === 0 ? insightSlides.length - 1 : prev - 1))}
+                      className={`h-8 w-8 rounded-full text-sm ${isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+                    >
+                      {'<'}
+                    </button>
+                    <button
+                      onClick={() => setCurrentInsight((prev) => (prev + 1) % insightSlides.length)}
+                      className={`h-8 w-8 rounded-full text-sm ${isDark ? 'bg-slate-700 text-white hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+                    >
+                      {'>'}
+                    </button>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="text-3xl">🪙</div>
-                <div>
-                  <h4 className={`font-semibold mb-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>Earn Coins</h4>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                    Every purchase earns coins! Use them for discounts, free shipping, or special offers.
-                  </p>
+                <div className={`rounded-xl p-4 bg-gradient-to-br transition-all duration-500 ${insightSlides[currentInsight].accent}`}>
+                  <h3 className={`font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{insightSlides[currentInsight].title}</h3>
+                  <p className={`text-sm leading-relaxed ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{insightSlides[currentInsight].text}</p>
+                </div>
+                <div className="mt-3 flex gap-2">
+                  {insightSlides.map((_, index) => (
+                    <span
+                      key={`insight-dot-${index}`}
+                      className={`h-1.5 rounded-full transition-all ${currentInsight === index ? 'w-7 bg-emerald-500' : isDark ? 'w-4 bg-slate-600' : 'w-4 bg-slate-300'}`}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          <div className={`mt-8 text-center text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-            <p>
-              Need help?{' '}
-              <button
-                className={`font-semibold ${isDark ? 'text-green-400 hover:text-green-300' : 'text-emerald-600 hover:text-emerald-500'}`}
-                onClick={() => setShowSupport(true)}
-              >
-                Contact Support
-              </button>
-            </p>
-          </div>
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+            <article className={`rounded-2xl p-5 border shadow-lg ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-emerald-100'}`}>
+              <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Active Farms</p>
+              <h3 className={`text-4xl font-extrabold mt-2 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{statsLoading ? '...' : farmsCount}</h3>
+              <p className={`text-xs mt-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{statsLoading ? 'Loading...' : (stats.totalFarms ? 'Operational inventory is healthy' : 'Create your first farm profile')}</p>
+            </article>
+
+            <article className={`rounded-2xl p-5 border shadow-lg ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-blue-100'}`}>
+              <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Products Listed</p>
+              <h3 className={`text-4xl font-extrabold mt-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>{statsLoading ? '...' : productsCount}</h3>
+              <p className={`text-xs mt-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{statsLoading ? 'Loading...' : (stats.totalProducts ? 'Listings are live in your vendor profile' : 'Publish your first product')}</p>
+            </article>
+
+            <article className={`rounded-2xl p-5 border shadow-lg ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-fuchsia-100'}`}>
+              <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Service Listings</p>
+              <h3 className={`text-4xl font-extrabold mt-2 ${isDark ? 'text-fuchsia-300' : 'text-fuchsia-700'}`}>{statsLoading ? '...' : servicesCount}</h3>
+              <p className={`text-xs mt-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{statsLoading ? 'Loading...' : (stats.totalServices ? 'Service catalog is visible to buyers' : 'Add irrigation and labor services')}</p>
+            </article>
+
+            <article className={`rounded-2xl p-5 border shadow-lg ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-amber-100'}`}>
+              <p className={`text-xs uppercase tracking-wider ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Coins Balance</p>
+              <h3 className={`text-4xl font-extrabold mt-2 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>{coinsLoading ? '...' : (coins?.totalCoins || 0)}</h3>
+              <p className={`text-xs mt-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{!coinsLoading && coins?.dailyLoginCoinsAvailable > 0 ? `+${coins.dailyLoginCoinsAvailable * 5} coins still available today` : 'Use coins for future rewards'}</p>
+            </article>
+          </section>
+
+          <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+            <button onClick={() => navigate('/farms')} className={`text-left rounded-2xl p-6 border shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${isDark ? 'bg-slate-800 border-emerald-900' : 'bg-white border-emerald-200'}`}>
+              <p className="text-3xl mb-3">Field Operations</p>
+              <h4 className={`text-xl font-bold mb-2 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Farms & Crops</h4>
+              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>Manage plots, crops, and irrigation schedules with status visibility by season.</p>
+              <p className={`mt-4 font-semibold ${isDark ? 'text-emerald-400' : 'text-emerald-700'}`}>{farmsCount} active unit(s)</p>
+            </button>
+
+            <button onClick={() => navigate('/selling')} className={`text-left rounded-2xl p-6 border shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${isDark ? 'bg-slate-800 border-blue-900' : 'bg-white border-blue-200'}`}>
+              <p className="text-3xl mb-3">Commerce Engine</p>
+              <h4 className={`text-xl font-bold mb-2 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>Sell Products</h4>
+              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>Publish listings, optimize pricing, and monitor inventory performance from one hub.</p>
+              <p className={`mt-4 font-semibold ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>{productsCount} listing(s) live</p>
+            </button>
+
+            <button onClick={() => navigate('/buying')} className={`text-left rounded-2xl p-6 border shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${isDark ? 'bg-slate-800 border-violet-900' : 'bg-white border-violet-200'}`}>
+              <p className="text-3xl mb-3">Supply Channel</p>
+              <h4 className={`text-xl font-bold mb-2 ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>Buy Products</h4>
+              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>Discover verified marketplace inventory and secure better sourcing decisions.</p>
+              <p className={`mt-4 font-semibold ${isDark ? 'text-violet-400' : 'text-violet-700'}`}>{availableProductsCount} available</p>
+            </button>
+          </section>
+
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <button onClick={() => navigate('/irrigation-services')} className={`text-left rounded-2xl p-6 border shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${isDark ? 'bg-slate-800 border-cyan-900' : 'bg-white border-cyan-200'}`}>
+              <h4 className={`text-2xl font-bold mb-2 ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>Irrigation Services</h4>
+              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>Coordinate irrigation tasks and keep service slots synchronized with crop stages.</p>
+              <p className={`mt-4 font-semibold ${isDark ? 'text-cyan-400' : 'text-cyan-700'}`}>{servicesCount} service channel(s)</p>
+            </button>
+
+            <button onClick={() => setShowSupport(true)} className={`text-left rounded-2xl p-6 border shadow-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-2xl ${isDark ? 'bg-slate-800 border-rose-900' : 'bg-white border-rose-200'}`}>
+              <h4 className={`text-2xl font-bold mb-2 ${isDark ? 'text-rose-300' : 'text-rose-700'}`}>Priority Support</h4>
+              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>Reach support quickly for account, listing, payment, and operational assistance.</p>
+              <p className={`mt-4 font-semibold ${isDark ? 'text-rose-400' : 'text-rose-700'}`}>Response window: 9 AM - 6 PM IST</p>
+            </button>
+          </section>
+
+          <section className={`rounded-2xl p-6 border ${isDark ? 'bg-slate-800/70 border-slate-700' : 'bg-white border-slate-200'}`}>
+            <h3 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-800'}`}>How This Control Deck Works</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div>
+                <h4 className={`font-semibold mb-1 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>1. Build Farm Data</h4>
+                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Keep farms and crop records current to power accurate planning and activity history.</p>
+              </div>
+              <div>
+                <h4 className={`font-semibold mb-1 ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>2. Activate Commerce</h4>
+                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>List products and services strategically to grow demand and improve visibility.</p>
+              </div>
+              <div>
+                <h4 className={`font-semibold mb-1 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>3. Optimize Returns</h4>
+                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Use analytics and coin incentives to compound growth and customer retention.</p>
+              </div>
+            </div>
+          </section>
 
           {showSupport && (
             <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center px-4">

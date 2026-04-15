@@ -120,6 +120,7 @@ function Checkout() {
   const TAX_RATE = 0.18
   const COIN_VALUE = 1
   const paymentSimulationEnabled = String(import.meta.env.VITE_PAYMENT_SIMULATION_ENABLED || 'false').toLowerCase() === 'true'
+  const hasOutOfAreaItems = cartItems.some((item) => item.deliverable === false)
 
   useEffect(() => {
     loadCheckoutData()
@@ -315,6 +316,10 @@ function Checkout() {
 
   const handleCheckout = async () => {
     console.log('[DEBUG] Checkout triggered. Cart:', cartItems, 'Coins:', coins, 'UseCoins:', useCoins, 'CoinsToUse:', coinsToUse, 'CoinsApplied:', coinsApplied, 'FinalAmount:', finalAmount, 'SelectedPayment:', selectedPayment);
+    if (hasOutOfAreaItems) {
+      showToast('One or more items in your cart are not deliverable to this location.', 'error')
+      return
+    }
     try {
       setCheckingOut(true)
 
@@ -657,16 +662,23 @@ function Checkout() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}> 
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}> 
+      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
       <div className="max-w-6xl mx-auto">
         <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>🛍️ Checkout</h1>
         <p className={`${isDark ? 'text-slate-400' : 'text-gray-600'} mb-8`}>Complete your order securely</p>
+
+        {hasOutOfAreaItems && (
+          <div className={`mb-6 rounded-2xl border p-4 ${isDark ? 'border-red-800 bg-red-950/20 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
+            One or more items in this cart cannot be delivered to your selected location. Remove them before placing the order.
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Checkout */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order Items Review */}
-            <div className={`rounded-lg shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+            <div className={`interactive-card rounded-2xl shadow-lg p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
               <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Order Summary</h2>
               <div className="space-y-4">
                 {cartItems.map(item => {
@@ -674,20 +686,20 @@ function Checkout() {
                   const hasDiscount = item.discountPercentage && item.discountPercentage > 0
 
                   return (
-                    <div key={item.id} className="flex justify-between items-start pb-4 border-b border-slate-700">
+                    <div key={item.id} className={`flex justify-between items-start pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
                       <div className="flex-1">
-                        <p className="font-semibold text-white">{item.productName}</p>
+                        <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.productName}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {hasDiscount ? (
                             <>
-                              <p className="text-sm text-slate-400">Qty: {item.quantity} × ₹{itemPrice.toFixed(2)}</p>
-                              <span className="line-through text-slate-500 text-xs">₹{item.price.toFixed(2)}</span>
+                              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Qty: {item.quantity} × ₹{itemPrice.toFixed(2)}</p>
+                              <span className={`line-through text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{item.price.toFixed(2)}</span>
                               <span className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">
                                 {item.discountPercentage}% OFF
                               </span>
                             </>
                           ) : (
-                            <p className="text-sm text-slate-400">Qty: {item.quantity} × ₹{item.price.toFixed(2)}</p>
+                            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Qty: {item.quantity} × ₹{item.price.toFixed(2)}</p>
                           )}
                         </div>
                         {hasDiscount && (
@@ -708,7 +720,7 @@ function Checkout() {
                             </div>
                           </div>
                       </div>
-                      <p className="font-bold text-white">₹{(itemPrice * item.quantity).toFixed(2)}</p>
+                      <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>₹{(itemPrice * item.quantity).toFixed(2)}</p>
                     </div>
                   )
                 })}
@@ -716,7 +728,7 @@ function Checkout() {
             </div>
 
             {/* Payment Methods */}
-            <div className={`rounded-lg shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+            <div className={`interactive-card rounded-2xl shadow-lg p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
               <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>💳 Payment Method</h2>
               <div className="space-y-3">
                 {/* Cash on Delivery */}
@@ -732,8 +744,8 @@ function Checkout() {
                     className="w-4 h-4 cursor-pointer"
                   />
                   <div className="ml-4">
-                    <p className="font-semibold text-white">💵 Cash on Delivery</p>
-                    <p className="text-sm text-slate-400">Pay when your order arrives</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>💵 Cash on Delivery</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Pay when your order arrives</p>
                     <p className="text-xs text-green-400 mt-1">✓ Free | Delivery in 3-5 days</p>
                   </div>
                 </label>
@@ -750,21 +762,21 @@ function Checkout() {
                     className="w-4 h-4 cursor-pointer"
                   />
                   <div className="ml-4 flex-1">
-                    <p className="font-semibold text-white">🪙 Razorpay (UPI/Card/Netbanking)</p>
-                    <p className="text-sm text-slate-400">Pay securely online with Razorpay</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>🪙 Razorpay (UPI/Card/Netbanking)</p>
+                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Pay securely online with Razorpay</p>
                   </div>
                 </label>
               </div>
             </div>
 
             {/* Address selection & form - Enhanced with Map */}
-            <div className={`rounded-lg shadow-lg p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+            <div className={`interactive-card rounded-2xl shadow-lg p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
               <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>📍 Delivery Address</h2>
 
               {/* Existing addresses dropdown */}
               {addresses.length > 0 && !showAddressForm && (
                 <div className="mb-4 space-y-3">
-                  <p className="text-sm text-slate-400">Select from saved addresses:</p>
+                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Select from saved addresses:</p>
                   <div className="space-y-2">
                     {addresses.map(addr => (
                       <label 
@@ -788,13 +800,13 @@ function Checkout() {
                             <span className="text-lg">
                               {addr.addressType === 'Home' ? '🏠' : addr.addressType === 'Work' ? '🏢' : '📍'}
                             </span>
-                            <span className="font-semibold text-white">{addr.fullName}</span>
-                            <span className="text-xs bg-slate-600 text-slate-300 px-2 py-0.5 rounded">{addr.addressType}</span>
+                            <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{addr.fullName}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded ${isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-100 text-gray-700'}`}>{addr.addressType}</span>
                           </div>
-                          <p className="text-sm text-slate-300 mt-1">{addr.addressLine1}</p>
-                          {addr.addressLine2 && <p className="text-sm text-slate-400">{addr.addressLine2}</p>}
-                          <p className="text-sm text-slate-400">{addr.city}, {addr.state} - {addr.postalCode}</p>
-                          <p className="text-sm text-slate-500 mt-1">📱 {addr.phoneNumber}</p>
+                          <p className={`text-sm mt-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{addr.addressLine1}</p>
+                          {addr.addressLine2 && <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{addr.addressLine2}</p>}
+                          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{addr.city}, {addr.state} - {addr.postalCode}</p>
+                          <p className={`text-sm mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>📱 {addr.phoneNumber}</p>
                         </div>
                       </label>
                     ))}
@@ -818,19 +830,40 @@ function Checkout() {
                   <><span>➕</span> Add New Address</>
                 )}
               </button>
-            {/* ...existing code... */}
+
+              {/* LocationPicker component */}
+              {showAddressForm && (
+                <div className="mt-4">
+                  <LocationPicker
+                    onAddressSubmit={async (addressData) => {
+                      try {
+                        const response = await apiClient.post('/addresses', addressData)
+                        showToast('Address added successfully!', 'success')
+                        setShowAddressForm(false)
+                        fetchAddresses()
+                        // Auto-select the new address
+                        if (response.data && response.data.id) {
+                          setSelectedAddress(response.data.id)
+                        }
+                      } catch (error) {
+                        showToast('Failed to add address: ' + (error.response?.data?.message || error.message), 'error')
+                      }
+                    }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className={`rounded-lg shadow-lg p-6 h-fit sticky top-20 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}> 
+          <div className={`interactive-card rounded-2xl shadow-lg p-6 h-fit sticky top-20 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
             <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Price Breakdown</h2>
 
 
             <div className="space-y-3 border-b border-slate-600 pb-4 mb-4">
-              <div className="flex justify-between text-slate-300">
+              <div className={`flex justify-between ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
                 <span>Subtotal:</span>
-                <span className="font-semibold text-white">₹{subtotal.toFixed(2)}</span>
+                <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>₹{subtotal.toFixed(2)}</span>
               </div>
 
               {/* Coin discount UI - Improved with slider and minimum payment info */}
@@ -948,7 +981,7 @@ function Checkout() {
 
             <button
               onClick={handleCheckout}
-              disabled={checkingOut || (selectedPayment === 'CASH_ON_DELIVERY' && !selectedAddress)}
+              disabled={checkingOut || hasOutOfAreaItems || (selectedPayment === 'CASH_ON_DELIVERY' && !selectedAddress)}
               className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition text-lg"
             >
               {checkingOut ? (

@@ -118,7 +118,7 @@ function ServiceRequestDetail() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
         <div className="text-center">
           <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto"></div>
           <p className={`mt-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Loading request details...</p>
@@ -129,7 +129,7 @@ function ServiceRequestDetail() {
 
   if (error) {
     return (
-      <div className={`min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-900' : 'bg-gray-50'}`}>
+      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
         <div className="text-center">
           <div className="text-6xl mb-4">❌</div>
           <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{error}</h2>
@@ -145,7 +145,7 @@ function ServiceRequestDetail() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
       <div className="max-w-7xl mx-auto">
         {/* Back Button */}
         <button
@@ -156,7 +156,7 @@ function ServiceRequestDetail() {
         </button>
 
         {/* Header Card */}
-        <div className={`rounded-xl shadow-lg border p-6 mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`glass-card interactive-card rounded-xl shadow-lg border p-6 mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -207,7 +207,7 @@ function ServiceRequestDetail() {
         </div>
 
         {/* Description */}
-        <div className={`rounded-xl shadow-lg border p-6 mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`glass-card interactive-card rounded-xl shadow-lg border p-6 mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <h2 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
             Description
           </h2>
@@ -240,7 +240,7 @@ function ServiceRequestDetail() {
         </div>
 
         {/* Attachments */}
-        <div className={`rounded-xl shadow-lg border p-6 mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`glass-card interactive-card rounded-xl shadow-lg border p-6 mb-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <div className="flex items-center justify-between mb-4">
             <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
               Attachments ({attachments.length})
@@ -301,7 +301,7 @@ function ServiceRequestDetail() {
         </div>
 
         {/* Comments */}
-        <div className={`rounded-xl shadow-lg border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className={`glass-card interactive-card rounded-xl shadow-lg border p-6 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
           <h2 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>
             Comments ({comments.length})
           </h2>
@@ -361,7 +361,7 @@ function ServiceRequestDetail() {
 
         {/* Resolution Info */}
         {(request.status === 'RESOLVED' || request.status === 'CLOSED') && request.resolution && (
-          <div className={`mt-6 rounded-xl shadow-lg border p-6 ${isDark ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'}`}>
+          <div className={`mt-6 glass-card interactive-card rounded-xl shadow-lg border p-6 ${isDark ? 'bg-green-900/20 border-green-800' : 'bg-green-50 border-green-200'}`}>
             <h2 className={`text-lg font-bold mb-2 ${isDark ? 'text-green-400' : 'text-green-800'}`}>
               ✅ Resolution
             </h2>

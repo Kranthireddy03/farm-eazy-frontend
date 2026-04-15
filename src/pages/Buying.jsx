@@ -96,6 +96,8 @@ function Buying() {
       )
     }
 
+    filtered = filtered.filter(product => product.deliverable !== false)
+
     setFilteredProducts(filtered)
   }
 
@@ -169,19 +171,47 @@ function Buying() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <div className="text-5xl mb-3">🛒</div>
-          <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Buying Center</h1>
-          <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-            Browse quality agricultural products from verified sellers
-          </p>
-        </div>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
+      <div className="max-w-7xl mx-auto space-y-8">
+        <section className="page-hero interactive-card">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <p className="text-xs uppercase tracking-[0.22em] text-orange-500 dark:text-orange-300">Marketplace</p>
+              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Buying Center</h1>
+              <p className={`mt-2 max-w-2xl text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                Browse quality agricultural products from verified sellers and move from discovery to checkout faster.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/cart')}
+              className="premium-button"
+            >
+              View Cart
+            </button>
+          </div>
+          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className={`rounded-2xl border p-3 ${isDark ? 'border-slate-600 bg-slate-900/55' : 'border-slate-200 bg-white/80'}`}>
+              <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Live Products</p>
+              <p className={`mt-1 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{products.length}</p>
+            </div>
+            <div className={`rounded-2xl border p-3 ${isDark ? 'border-cyan-500/30 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/80'}`}>
+              <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>Filtered</p>
+              <p className={`mt-1 text-2xl font-black ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{filteredProducts.length}</p>
+            </div>
+            <div className={`rounded-2xl border p-3 ${isDark ? 'border-violet-500/30 bg-violet-900/20' : 'border-violet-200 bg-violet-50/80'}`}>
+              <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>Category</p>
+              <p className={`mt-1 text-sm font-bold ${isDark ? 'text-violet-200' : 'text-violet-700'}`}>{selectedCategory}</p>
+            </div>
+            <div className={`rounded-2xl border p-3 ${isDark ? 'border-emerald-500/30 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/80'}`}>
+              <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Search</p>
+              <p className={`mt-1 text-sm font-bold truncate ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{searchTerm || 'All products'}</p>
+            </div>
+          </div>
+        </section>
 
         {/* Search and Filter */}
-        <div className={`rounded-lg shadow-lg p-6 mb-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+        <div className="glass-card interactive-card p-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search Bar */}
             <div className="flex-1">
@@ -191,7 +221,7 @@ function Buying() {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search products, sellers..."
-                  className={`w-full pl-10 pr-4 py-3 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent border ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-slate-800 placeholder-gray-400'}`}
+                  className="form-input w-full pl-10 pr-4 py-3"
                 />
                 <span className="absolute left-3 top-3.5 text-slate-400">🔍</span>
               </div>
@@ -202,7 +232,7 @@ function Buying() {
               <select
                 value={selectedCategory}
                 onChange={(e) => setSelectedCategory(e.target.value)}
-                className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 focus:border-transparent ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
+                className="form-input w-full px-4 py-3"
               >
                 {categories.map(cat => (
                   <option key={cat.value} value={cat.value}>
@@ -214,8 +244,20 @@ function Buying() {
           </div>
 
           {/* Results Count */}
-          <div className={`mt-4 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+          <div className={`mt-4 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
             Showing {filteredProducts.length} of {products.length} products
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {['Seeds', 'Fertilizers', 'Tools', 'Irrigation'].map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                onClick={() => setSearchTerm(chip)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-700' : 'border-slate-200 text-slate-700 hover:bg-slate-100'}`}
+              >
+                Explore {chip}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -229,18 +271,18 @@ function Buying() {
 
         {/* Empty State */}
         {!loading && filteredProducts.length === 0 && (
-          <div className={`rounded-lg shadow-lg p-12 text-center border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className="glass-card interactive-card p-12 text-center">
             <div className="text-6xl mb-4">📦</div>
-            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No Products Found</h2>
-            <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>No Products Found</h2>
+            <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
               {products.length === 0
                 ? 'No products are available yet. Be the first to list a product!'
-                : 'Try adjusting your search or filters'}
+                : 'No deliverable products are available for your current location.'}
             </p>
             {products.length === 0 && (
               <button
                 onClick={() => navigate('/selling')}
-                className="px-6 py-3 bg-orange-500 text-white rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+                className="premium-button"
               >
                 List a Product
               </button>
@@ -255,7 +297,7 @@ function Buying() {
               {filteredProducts.map(product => (
                 <div 
                   key={product.id} 
-                  className={`rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}
+                  className="glass-card interactive-card overflow-hidden p-0"
                 >
                   {/* Product Image */}
                   <div
@@ -277,9 +319,14 @@ function Buying() {
                       </div>
                     )}
                     {/* Category Badge */}
-                    <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-semibold ${isDark ? 'bg-slate-900/80 text-white' : 'bg-white/90 text-gray-800'}`}>
+                    <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-sm font-semibold backdrop-blur ${isDark ? 'bg-slate-900/80 text-white' : 'bg-white/90 text-gray-800'}`}>
                       {getCategoryIcon(product.category)} {product.category}
                     </div>
+                    {product.deliverable === false && (
+                      <div className="absolute bottom-3 left-3 bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-lg">
+                        Not deliverable here
+                      </div>
+                    )}
                     {/* Discount Badge */}
                     {product.discountPercentage && product.discountPercentage > 0 && (
                       <div className="absolute top-3 left-3 bg-gradient-to-r from-green-500 to-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-bold shadow-lg">
@@ -289,12 +336,12 @@ function Buying() {
                   </div>
 
                   {/* Product Details */}
-                  <div className="p-5">
+                    <div className="p-5">
                     <button
                       onClick={() => handleViewDetails(product.id)}
                       className="text-left"
                     >
-                      <h3 className={`text-xl font-bold mb-2 hover:text-orange-400 transition ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                      <h3 className={`text-xl font-bold mb-2 hover:text-orange-400 transition ${isDark ? 'text-white' : 'text-slate-900'}`}>
                         {product.productName}
                       </h3>
                     </button>
@@ -304,16 +351,20 @@ function Buying() {
                     </p>
 
                     {/* Seller Info */}
-                    <div className={`flex items-center gap-2 mb-3 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      <div className={`flex items-center gap-2 mb-3 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                       <span>👤</span>
                       <span>{product.sellerFullName}</span>
                     </div>
 
                     {/* Location */}
-                    <div className={`flex items-center gap-2 mb-3 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                      <div className={`flex items-center gap-2 mb-3 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                       <span>📍</span>
                       <span>{product.sellerLocation || 'Location not specified'}</span>
                     </div>
+
+                      <div className={`mb-3 text-xs font-semibold ${product.deliverable === false ? 'text-red-500' : 'text-emerald-500'}`}>
+                        {product.deliverable === false ? (product.deliveryMessage || 'Not deliverable to your current location') : 'Deliverable to your current location'}
+                      </div>
 
                     {/* Quantity and Price */}
                     <div className="flex justify-between items-center mb-4">
@@ -354,9 +405,14 @@ function Buying() {
                           e.stopPropagation()
                           handleProductClick(product)
                         }}
-                        className="flex-1 px-4 py-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg font-semibold hover:from-orange-600 hover:to-orange-700 transition-all flex items-center justify-center gap-2"
+                        disabled={product.deliverable === false}
+                        className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-all flex items-center justify-center gap-2 ${
+                          product.deliverable === false
+                            ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700'
+                        }`}
                       >
-                        🛒 Add to Cart
+                        {product.deliverable === false ? 'Not Deliverable' : '🛒 Add to Cart'}
                       </button>
                       <button
                         onClick={(e) => {
@@ -433,21 +489,21 @@ function Buying() {
         {/* Cart Prompt Modal */}
         {showCartPrompt && lastAddedProduct && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
-            <div className={`border-2 border-green-500/50 rounded-2xl shadow-2xl p-8 max-w-md w-full mx-4 text-center ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <div className={`glass-card interactive-card border-2 border-green-500/50 p-8 max-w-md w-full mx-4 text-center ${isDark ? '' : ''}`}>
               <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-5xl">✅</span>
               </div>
-              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Added to Cart!</h2>
+              <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Added to Cart!</h2>
               <div className={`rounded-lg p-4 mb-6 ${isDark ? 'bg-slate-700/50' : 'bg-gray-100'}`}>
                 <p className="text-orange-500 font-semibold text-lg">{lastAddedProduct.productName}</p>
-                <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                   Quantity: {lastAddedProduct.quantity} × ₹{lastAddedProduct.discountedPrice !== undefined ? lastAddedProduct.discountedPrice.toFixed(2) : lastAddedProduct.price.toFixed(2)}
                 </p>
               </div>
-              <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>What would you like to do next?</p>
+              <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>What would you like to do next?</p>
               <div className="flex flex-col gap-3">
                 <button
-                  className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
+                  className="premium-button flex items-center justify-center gap-2"
                   onClick={() => {
                     setShowCartPrompt(false)
                     navigate('/cart')
@@ -456,7 +512,7 @@ function Buying() {
                   <span>🛒</span> View Cart & Checkout
                 </button>
                 <button
-                  className={`font-bold py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+                  className={`premium-button-secondary flex items-center justify-center gap-2 ${isDark ? 'text-white' : 'text-slate-800'}`}
                   onClick={() => setShowCartPrompt(false)}
                 >
                   <span>🛍️</span> Continue Shopping

@@ -76,8 +76,8 @@ function ChangePassword() {
   // Success Screen
   if (success) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        <div className="bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl shadow-2xl p-8 text-center">
+      <div className={`premium-shell min-h-screen px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <div className="max-w-2xl mx-auto bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl shadow-2xl p-8 text-center">
           <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <span className="text-5xl">✅</span>
           </div>
@@ -97,9 +97,10 @@ function ChangePassword() {
   }
 
   return (
-    <div className={`max-w-2xl mx-auto px-4 py-8 ${isDark ? '' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 min-h-screen'}`}>
+    <div className={`premium-shell min-h-screen px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className="max-w-2xl mx-auto">
       {/* Header Card */}
-      <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-t-3xl p-6 shadow-lg">
+      <div className="page-hero interactive-card bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-t-3xl p-6 shadow-lg">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
             <span className="text-3xl">🔐</span>
@@ -112,7 +113,7 @@ function ChangePassword() {
       </div>
 
       {/* Form Card */}
-      <div className={`rounded-b-3xl shadow-2xl p-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+      <div className={`glass-card interactive-card rounded-b-3xl shadow-2xl p-8 border ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error Display */}
           {apiError && (
@@ -251,6 +252,7 @@ function ChangePassword() {
       {/* Footer Note */}
       <div className={`text-center mt-6 text-sm ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
         <p>🔒 Your password is encrypted and secure</p>
+      </div>
       </div>
     </div>
   )

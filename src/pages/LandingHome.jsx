@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import { FlipCard, GlassPanel, HeroFrame, PillButton, ScrollRail, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 
 export default function LandingHome() {
   const { isDark } = useTheme()
@@ -9,16 +10,19 @@ export default function LandingHome() {
       title: 'Farm Command Center',
       text: 'Manage crops, irrigation, field activities, and vendor operations from one secure dashboard.',
       icon: '🧭',
+      accent: 'from-emerald-400 to-teal-500',
     },
     {
       title: 'Smart Operations',
       text: 'Plan irrigation and crop lifecycles with guided workflows designed for real-world farm execution.',
       icon: '🌾',
+      accent: 'from-cyan-400 to-sky-500',
     },
     {
       title: 'Support That Responds',
       text: 'Built-in support and FAQ workflows reduce confusion and keep users productive.',
       icon: '🎫',
+      accent: 'from-amber-400 to-orange-500',
     },
   ]
 
@@ -29,76 +33,101 @@ export default function LandingHome() {
     'Operational visibility across farm lifecycle',
   ]
 
+  const metrics = [
+    { value: '24/7', label: 'Support visibility' },
+    { value: '3', label: 'Core workflows' },
+    { value: '1', label: 'Unified experience' },
+  ]
+
   return (
     <div className="w-full">
-      <section className="relative overflow-hidden px-4 md:px-6 pt-16 pb-14 md:pt-24 md:pb-20">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className={`absolute -top-24 -left-16 w-72 h-72 rounded-full blur-3xl ${isDark ? 'bg-emerald-900/30' : 'bg-emerald-200/70'}`}></div>
-          <div className={`absolute top-32 right-0 w-80 h-80 rounded-full blur-3xl ${isDark ? 'bg-cyan-900/30' : 'bg-cyan-200/70'}`}></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto grid lg:grid-cols-2 gap-10 items-center">
-          <div>
-            <p className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${isDark ? 'bg-slate-800 text-emerald-300 border border-slate-700' : 'bg-emerald-50 text-emerald-700 border border-emerald-100'}`}>
-              <span>Smart Farm Workflows</span>
-            </p>
-            <h1 className={`mt-5 text-4xl md:text-5xl leading-tight font-extrabold tracking-tight ${isDark ? 'text-white' : 'text-slate-900'}`}>
-              Farming workflows that feel simple, reliable, and scalable.
-            </h1>
-            <p className={`mt-5 text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-              FarmEazy helps modern farm teams run planning, tracking, and support in one platform with clear UX and secure operations.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/register" className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
-                Create Account
-              </Link>
-              <Link to="/login" className={`px-5 py-3 rounded-xl border font-semibold transition ${isDark ? 'border-slate-700 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-white'}`}>
-                Sign In
-              </Link>
-              <Link to="/public-services" className={`px-5 py-3 rounded-xl font-semibold transition ${isDark ? 'text-emerald-300 hover:text-emerald-200' : 'text-emerald-700 hover:text-emerald-800'}`}>
-                View Platform Overview
-              </Link>
+      <HeroFrame
+        eyebrow="Smart Farm Workflows"
+        title={<>Farming workflows that feel <span className="text-emerald-500">simple</span>, reliable, and scalable.</>}
+        description="FarmEazy helps modern farm teams run planning, tracking, and support in one platform with clear UX, immersive motion, and secure operations."
+        actions={(
+          <>
+            <PillButton to="/register" active>Sign up</PillButton>
+            <PillButton to="/login">Sign in</PillButton>
+            <PillButton to="/public-services">View Platform Overview</PillButton>
+          </>
+        )}
+        side={(
+          <GlassPanel className="p-5 md:p-6">
+            <div className="grid grid-cols-3 gap-3">
+              {metrics.map((metric) => (
+                <div key={metric.label} className={`rounded-2xl px-4 py-4 text-center ${isDark ? 'bg-white/5' : 'bg-white/75'}`}>
+                  <div className={`text-2xl md:text-3xl font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>{metric.value}</div>
+                  <div className={`mt-1 text-[11px] uppercase tracking-[0.22em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{metric.label}</div>
+                </div>
+              ))}
             </div>
+            <div className={`mt-5 rounded-[1.4rem] p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-900 text-white'}`}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-emerald-300">Live preview</p>
+                  <p className="mt-2 text-sm text-slate-200">Command center, support, and marketplace in one polished flow.</p>
+                </div>
+                <div className="text-3xl float-medium">🛰️</div>
+              </div>
+            </div>
+          </GlassPanel>
+        )}
+      />
 
-            <ul className="mt-8 grid sm:grid-cols-2 gap-3">
+      <section className="px-4 md:px-6 pb-12">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-[0.92fr_1.08fr] gap-6 items-start">
+          <StrongPanel className="p-6 md:p-7">
+            <SectionTitle
+              eyebrow="Why it stands out"
+              title="A premium surface for real farm operations"
+              text="The UI is built to guide action fast: fewer dead ends, clearer states, and richer visual feedback when a task matters."
+            />
+            <ul className="mt-6 space-y-3">
               {highlights.map((point) => (
-                <li key={point} className={`text-sm rounded-lg px-3 py-2 ${isDark ? 'bg-slate-800 text-slate-300 border border-slate-700' : 'bg-white text-slate-700 border border-slate-100 shadow-sm'}`}>
+                <li key={point} className={`rounded-2xl px-4 py-3 text-sm border ${isDark ? 'border-white/8 bg-white/5 text-slate-200' : 'border-slate-200 bg-white/75 text-slate-700'}`}>
                   {point}
                 </li>
               ))}
             </ul>
-          </div>
+          </StrongPanel>
 
-          <div className={`rounded-2xl p-6 md:p-8 border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-xl'}`}>
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>What Makes FarmEazy Different</h2>
-            <div className="mt-5 space-y-4">
-              {capabilities.map((item) => (
-                <div key={item.title} className={`rounded-xl p-4 border ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-100 bg-slate-50'}`}>
-                  <p className="text-2xl">{item.icon}</p>
-                  <h3 className={`mt-2 font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{item.title}</h3>
-                  <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.text}</p>
-                </div>
-              ))}
+          <div>
+            <div className="flex items-end justify-between mb-4">
+              <SectionTitle eyebrow="Capabilities" title="Interactive cards built for scanning" />
+              <span className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Hover to reveal</span>
             </div>
+            <ScrollRail className="flex gap-4 overflow-x-auto pb-4">
+              {capabilities.map((item) => (
+                <FlipCard
+                  key={item.title}
+                  icon={item.icon}
+                  frontTitle={item.title}
+                  frontText={item.text}
+                  backTitle={`${item.title} in action`}
+                  backText="This area can expand into richer workflows later without altering the underlying navigation or API behavior."
+                  className="min-w-[18rem] w-[18rem] shrink-0"
+                />
+              ))}
+            </ScrollRail>
           </div>
         </div>
       </section>
 
       <section className="px-4 md:px-6 pb-16">
         <div className="max-w-7xl mx-auto">
-          <div className={`rounded-2xl p-6 md:p-8 border ${isDark ? 'border-slate-700 bg-gradient-to-r from-slate-900 to-slate-800' : 'border-emerald-100 bg-gradient-to-r from-emerald-50 to-cyan-50'}`}>
+          <GlassPanel className="p-6 md:p-8">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
-                <h2 className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>Ready to modernize your farm operations?</h2>
-                <p className={`mt-1 ${isDark ? 'text-slate-300' : 'text-emerald-800'}`}>Start with a secure account, then scale your workflows confidently.</p>
+                <h2 className={`text-2xl md:text-3xl font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>Ready to modernize your farm operations?</h2>
+                <p className={`mt-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Start with a secure account, then scale your workflows confidently.</p>
               </div>
-              <div className="flex gap-3">
-                <Link to="/register" className="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">Get Started</Link>
-                <Link to="/contact" className={`px-4 py-2.5 rounded-lg border font-semibold transition ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-700' : 'border-emerald-200 text-emerald-800 hover:bg-white'}`}>Talk to Team</Link>
+              <div className="flex flex-wrap gap-3">
+                <PillButton to="/register" active>Sign up</PillButton>
+                <PillButton to="/contact">Talk to Team</PillButton>
               </div>
             </div>
-          </div>
+          </GlassPanel>
         </div>
       </section>
     </div>

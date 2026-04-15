@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE_URL } from '../config/api';
+import { api } from '../config/api';
 
 export default function RedirectReset() {
   const { shortCode } = useParams();
@@ -10,7 +9,7 @@ export default function RedirectReset() {
   useEffect(() => {
     const fetchFullToken = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/auth/r/${shortCode}`);
+        const response = await api.get(`/auth/r/${shortCode}`);
         const fullToken = response.data.token;
         
         // Redirect to reset password page with full token

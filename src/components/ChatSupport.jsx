@@ -1,6 +1,6 @@
 // FarmEazy In-App Chat Support Component
 import { useEffect, useMemo, useState } from 'react';
-import { createTicket, createTicketWithAttachment, getTicket, getTicketMessages } from '../services/SupportTicketService';
+import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets } from '../services/SupportTicketService';
 import apiClient from '../services/apiClient';
 import { STORAGE_KEYS } from '../config/api';
 
@@ -74,9 +74,23 @@ function normalizeIncomingMessage(message) {
   };
 }
 
+function mergeMessages(existingMessages, incomingMessages) {
+  const existing = new Set(existingMessages.map((msg) => `${msg.sender}:${msg.text}:${msg.createdAt || ''}`));
+  const merged = [...existingMessages];
+  incomingMessages.forEach((msg) => {
+    const key = `${msg.sender}:${msg.text}:${msg.createdAt || ''}`;
+    if (!existing.has(key)) {
+      merged.push(msg);
+      existing.add(key);
+    }
+  });
+  return merged;
+}
+
 export default function ChatSupport({ className = '' }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem(STORAGE_KEYS.USER_TOKEN)));
   const [open, setOpen] = useState(false);
+  const [isTabVisible, setIsTabVisible] = useState(() => !document.hidden);
   const [messages, setMessages] = useState([{ sender: 'support', text: DEFAULT_GREETING }]);
   const [input, setInput] = useState('');
   const [ticketId, setTicketId] = useState(null);
@@ -85,6 +99,8 @@ export default function ChatSupport({ className = '' }) {
   const [faqs, setFaqs] = useState([]);
   const [faqLoading, setFaqLoading] = useState(false);
   const [liveStatus, setLiveStatus] = useState('unknown');
+  const [ticketHistory, setTicketHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.USER_ID) || 'anonymous';
   const storageKey = `farmEazy_chat_history_${currentUserId}`;
@@ -138,6 +154,81 @@ export default function ChatSupport({ className = '' }) {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    let cancelled = false;
+
+    const bootstrapTicketHistory = async () => {
+      try {
+        const tickets = await getTickets();
+        if (cancelled) return;
+        const normalizedTickets = Array.isArray(tickets) ? tickets : [];
+        setTicketHistory(normalizedTickets);
+
+        if (ticketId) {
+          const syncedMessages = await getTicketMessages(ticketId);
+          if (cancelled) return;
+          const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
+          if (normalized.length > 0) {
+            setMessages((prev) => mergeMessages(prev, normalized));
+          }
+          return;
+        }
+
+        if (normalizedTickets.length === 0) return;
+
+        const latestTicketId = normalizedTickets[0]?.displayId;
+        if (!latestTicketId) return;
+
+        setTicketId(latestTicketId);
+        const syncedMessages = await getTicketMessages(latestTicketId);
+        if (cancelled) return;
+        const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
+        if (normalized.length > 0) {
+          setMessages((prev) => mergeMessages(prev, normalized));
+        }
+      } catch {
+        // Keep the widget usable even if bootstrap history fails.
+      }
+    };
+
+    bootstrapTicketHistory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, ticketId]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !open) return;
+
+    let cancelled = false;
+
+    const loadTicketHistory = async () => {
+      try {
+        setHistoryLoading(true);
+        const tickets = await getTickets();
+        if (cancelled) return;
+        setTicketHistory(Array.isArray(tickets) ? tickets : []);
+      } catch {
+        if (!cancelled) {
+          setTicketHistory([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setHistoryLoading(false);
+        }
+      }
+    };
+
+    loadTicketHistory();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, open, ticketId]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     const loadFaqs = async () => {
       try {
         setFaqLoading(true);
@@ -161,7 +252,16 @@ export default function ChatSupport({ className = '' }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!ticketId) return undefined;
+    const handleVisibilityChange = () => {
+      setIsTabVisible(!document.hidden);
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  useEffect(() => {
+    if (!ticketId || !open || !isTabVisible) return undefined;
 
     const interval = setInterval(async () => {
       try {
@@ -178,26 +278,15 @@ export default function ChatSupport({ className = '' }) {
         const syncedMessages = await getTicketMessages(ticketId);
         const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
         if (normalized.length > 0) {
-          setMessages((prev) => {
-            const existing = new Set(prev.map((msg) => `${msg.sender}:${msg.text}:${msg.createdAt || ''}`));
-            const merged = [...prev];
-            normalized.forEach((msg) => {
-              const key = `${msg.sender}:${msg.text}:${msg.createdAt || ''}`;
-              if (!existing.has(key)) {
-                merged.push(msg);
-                existing.add(key);
-              }
-            });
-            return merged;
-          });
+          setMessages((prev) => mergeMessages(prev, normalized));
         }
       } catch {
         // Keep polling silently; the user already has the ticket link.
       }
-    }, 5000);
+    }, 15000);
 
     return () => clearInterval(interval);
-  }, [ticketId]);
+  }, [ticketId, open, isTabVisible]);
 
   const quickSuggestions = useMemo(() => ([
     { label: 'Payment help', text: 'My payment or checkout is not working.' },
@@ -240,6 +329,28 @@ export default function ChatSupport({ className = '' }) {
 
     appendUserMessage(text);
 
+    if (ticketId) {
+      setLoading(true);
+      try {
+        if (attachment) {
+          await addResponseWithAttachment(ticketId, text, attachment);
+          setAttachment(null);
+        } else {
+          await addResponse(ticketId, text);
+        }
+
+        const syncedMessages = await getTicketMessages(ticketId);
+        const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
+        if (normalized.length > 0) {
+          setMessages((prev) => mergeMessages(prev, normalized));
+        }
+      } catch {
+        appendSupportMessage('I could not sync your latest message to the support thread right now. Please retry in a moment.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
     const faqAnswer = buildQuickReply(text, faqs);
     if (isGreeting(text)) {
       appendSupportMessage('Hello. I can answer common questions, attach screenshots to a ticket, or connect you to support. If you want a human, say "talk to support".');
@@ -253,6 +364,11 @@ export default function ChatSupport({ className = '' }) {
     }
 
     if (isHumanRequest(text) || /create ticket|raise ticket|open ticket|report issue|issue|problem|bug/.test(clean)) {
+      if (ticketId) {
+        appendSupportMessage(`I have added your update to ticket ${ticketId}. A support executive will continue from this thread.`);
+        return;
+      }
+
       setLoading(true);
       try {
         const ticket = await createSupportTicket({
@@ -291,6 +407,26 @@ export default function ChatSupport({ className = '' }) {
     if (loading) return;
     setInput('');
     await routeMessage(question);
+  };
+
+  const handleSelectTicket = async (displayId) => {
+    if (!displayId || displayId === ticketId || loading) return;
+
+    setLoading(true);
+    try {
+      setTicketId(displayId);
+      const syncedMessages = await getTicketMessages(displayId);
+      const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
+      if (normalized.length > 0) {
+        setMessages(normalized);
+      } else {
+        setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
+      }
+    } catch {
+      appendSupportMessage('Unable to load that ticket conversation right now. Please retry.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileUpload = (event) => {
@@ -341,6 +477,36 @@ export default function ChatSupport({ className = '' }) {
           <div className="px-4 pt-3 text-xs text-slate-300 flex items-center justify-between gap-2">
             <span>{liveStatus === 'available' ? 'Support executives are available now.' : 'Support executives are offline right now.'}</span>
             {ticketId && <span className="text-cyan-300">Ticket polling on</span>}
+          </div>
+
+          <div className="px-3 pt-2">
+            <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-2">
+              <div className="text-[11px] font-semibold text-slate-300 mb-2">Recent Tickets</div>
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                {historyLoading && (
+                  <span className="text-[11px] text-slate-400">Loading...</span>
+                )}
+                {!historyLoading && ticketHistory.length === 0 && (
+                  <span className="text-[11px] text-slate-400">No previous tickets</span>
+                )}
+                {!historyLoading && ticketHistory.map((ticket) => {
+                  const id = ticket?.displayId;
+                  if (!id) return null;
+                  const isActive = id === ticketId;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => handleSelectTicket(id)}
+                      className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] border ${isActive ? 'bg-cyan-600/25 text-cyan-200 border-cyan-500/50' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'}`}
+                      disabled={loading}
+                    >
+                      {id}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="flex-1 p-3 overflow-y-auto space-y-2" style={{ maxHeight: 360 }}>

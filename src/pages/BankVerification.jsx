@@ -342,7 +342,8 @@ function BankVerification() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -377,7 +378,7 @@ function BankVerification() {
           </div>
         </div>
 
-        <div className={`mb-6 p-4 rounded-xl border ${isDark ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50 border-blue-200'}`}>
+        <div className={`interactive-card mb-6 p-4 rounded-2xl border ${isDark ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50/95 border-blue-200'}`}>
           <p className={`text-sm font-semibold ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>Manual Penny Drop Security</p>
           <p className={`text-sm mt-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
             FarmEazy uses a controlled INR 1 verification flow with audit logs and masked account details. Verification is finalized only after successful transfer confirmation.
@@ -444,7 +445,7 @@ function BankVerification() {
 
         {/* Verification Type Selection */}
         {!verificationType && (
-          <div className={`rounded-xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className={`interactive-card rounded-2xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
             <h2 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
               Select Verification Type
             </h2>
@@ -477,7 +478,7 @@ function BankVerification() {
 
         {/* Bank Account Form */}
         {verificationType === 'BANK_ACCOUNT' && (
-          <div className={`rounded-xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className={`interactive-card rounded-2xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
             <div className="flex items-center justify-between mb-6">
               <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
                 🏦 Bank Account Verification

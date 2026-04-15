@@ -226,46 +226,48 @@ function Farms() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      {/* Page Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Farms</h1>
-          <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Manage all your farms in one place</p>
+      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <section className="page-hero interactive-card">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-300">Farm workspace</p>
+            <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Farms</h1>
+            <p className={`mt-2 max-w-2xl ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Manage your land parcels with a richer workflow, better visual hierarchy, and faster action access.</p>
+          </div>
+          <button
+            onClick={() => {
+              setShowAddForm(!showAddForm)
+              setEditingFarm(null)
+              setFormData({ farmName: '', location: '', areaSize: '' })
+            }}
+            className="premium-button"
+          >
+            {showAddForm ? 'Close Form' : '+ Add Farm'}
+          </button>
         </div>
-        <button
-          onClick={() => {
-            setShowAddForm(!showAddForm)
-            setEditingFarm(null)
-            setFormData({ farmName: '', location: '', areaSize: '' })
-          }}
-          className="btn-primary"
-        >
-          {showAddForm ? 'Cancel' : '+ Add Farm'}
-        </button>
-      </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
           <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Farms</p>
           <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.totalFarms}</p>
         </div>
-        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
           <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Area</p>
           <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.totalArea.toFixed(1)} ha</p>
         </div>
-        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
           <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Average Size</p>
           <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.averageArea.toFixed(1)} ha</p>
         </div>
-        <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-emerald-100 bg-white/90 shadow-sm'}`}>
+        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
           <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Large Farms</p>
           <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.largeFarms}</p>
           <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>10+ hectares</p>
         </div>
       </div>
 
-      <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/80' : 'border-slate-100 bg-white shadow-sm'}`}>
+      <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
         <div className="flex flex-wrap gap-3 items-center justify-between">
           <div>
             <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Farm Operations Quick Actions</p>
@@ -288,8 +290,11 @@ function Farms() {
 
       {/* Add Farm Form */}
       {showAddForm && (
-        <div className="card">
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New Farm</h2>
+        <div className={`glass-card interactive-card rounded-3xl border p-6 ${isDark ? 'border-slate-700 bg-slate-900/65' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New Farm</h2>
+            <span className={`text-xs px-3 py-1 rounded-full border ${isDark ? 'border-emerald-600/60 text-emerald-300 bg-emerald-900/20' : 'border-emerald-200 text-emerald-700 bg-emerald-50'}`}>Interactive Form</span>
+          </div>
           <form onSubmit={handleAddFarm} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -330,6 +335,9 @@ function Farms() {
                 />
               </div>
             </div>
+            <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-slate-700 bg-slate-800/80 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+              Tip: Use specific names and location tags so your crops and irrigation schedules are easier to filter later.
+            </div>
             <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
               {submitting ? (
                 <span className="flex items-center justify-center">
@@ -349,8 +357,11 @@ function Farms() {
 
       {/* Edit Farm Form */}
       {editingFarm && (
-        <div className="card">
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Farm</h2>
+        <div className={`glass-card interactive-card rounded-3xl border p-6 ${isDark ? 'border-slate-700 bg-slate-900/65' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Farm</h2>
+            <span className={`text-xs px-3 py-1 rounded-full border ${isDark ? 'border-cyan-600/60 text-cyan-300 bg-cyan-900/20' : 'border-cyan-200 text-cyan-700 bg-cyan-50'}`}>Live Update</span>
+          </div>
           <form onSubmit={handleUpdateFarm} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
@@ -415,13 +426,13 @@ function Farms() {
 
       {/* Farms List */}
       {farms.length === 0 ? (
-        <div className="card text-center py-12">
+        <div className={`glass-card interactive-card text-center py-12 rounded-3xl border ${isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
           <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No farms yet. Create your first farm to get started!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {farms.map((farm) => (
-            <div key={farm.id} className="card hover:shadow-lg transition-shadow">
+            <div key={farm.id} className={`glass-card interactive-card rounded-2xl border p-5 hover:shadow-lg transition-shadow ${isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-100 bg-white/95 shadow-sm'}`}>
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{farm.farmName}</h3>

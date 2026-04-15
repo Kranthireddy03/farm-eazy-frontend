@@ -56,29 +56,31 @@ function IrrigationServices() {
 
   useEffect(() => {
     const loadInitialData = async () => {
-      const eligibility = await fetchListingEligibility();
-      fetchFarms();
-      fetchCrops();
-      fetchBookings();
-      fetchAllListings();
+      const eligibility = await fetchListingEligibility()
+      fetchFarms()
+      fetchCrops()
+      fetchBookings()
+      fetchAllListings()
 
       if (eligibility?.eligible) {
-        fetchListings();
-        fetchProviderRequests();
+        fetchListings()
+        fetchProviderRequests()
       } else {
-        setListings([]);
-        setProviderRequests([]);
-        setMyListingIds(new Set());
+        setListings([])
+        setProviderRequests([])
+        setMyListingIds(new Set())
       }
-    };
+    }
 
-    loadInitialData();
-  }, []);
+    loadInitialData()
+  }, [])
 
   const fetchListingEligibility = async () => {
     try {
       setEligibilityLoading(true)
-      const response = await apiClient.get('/vendors/listing-eligibility?listingType=SERVICE')
+      const response = await apiClient.get('/vendors/listing-eligibility?listingType=SERVICE', {
+        validateStatus: (status) => status < 500,
+      })
       const eligibility = response?.data || null
       setListingEligibility(eligibility)
       return eligibility
@@ -100,7 +102,7 @@ function IrrigationServices() {
   const handleOpenPostService = () => {
     if (!listingEligibility?.eligible) {
       showToast(listingEligibility?.verificationMessage || 'Complete vendor verification first.', 'warning')
-      navigate('/vendor-dashboard')
+      navigate(listingEligibility?.verificationRedirectPath || '/vendor-dashboard')
       return
     }
     setShowPostForm(!showPostForm)
@@ -253,19 +255,21 @@ function IrrigationServices() {
     }
 
     try {
-      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=SERVICE');
-      const eligibility = eligibilityResponse?.data || {};
+      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=SERVICE', {
+        validateStatus: (status) => status < 500,
+      })
+      const eligibility = eligibilityResponse?.data || {}
       if (!eligibility.eligible) {
         const firstReason = Array.isArray(eligibility.missingRequirements) && eligibility.missingRequirements.length
           ? eligibility.missingRequirements[0]
-          : 'Listing eligibility requirements are not complete.';
-        showToast(firstReason, 'warning');
-        navigate('/vendor-dashboard');
-        return;
+          : 'Listing eligibility requirements are not complete.'
+        showToast(firstReason, 'warning')
+        navigate(eligibility?.verificationRedirectPath || '/vendor-dashboard')
+        return
       }
     } catch (eligibilityError) {
-      showToast('Unable to validate listing eligibility right now. Please try again.', 'error');
-      return;
+      showToast('Unable to validate listing eligibility right now. Please try again.', 'error')
+      return
     }
 
     try {
@@ -542,53 +546,77 @@ function IrrigationServices() {
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className={`space-y-8 min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`premium-shell space-y-8 min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
         {/* Page Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Irrigation Services</h1>
-            <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Equipment & workers marketplace for your farm needs</p>
+        <section className="page-hero interactive-card">
+          <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
+            <div>
+              <p className="text-xs uppercase tracking-[0.24em] text-cyan-500 dark:text-cyan-300">Service Exchange</p>
+              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Irrigation Operations Hub</h1>
+              <p className={`mt-3 max-w-2xl ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+                Post services, accept requests, and book farm operations from one advanced service command center.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-cyan-500/30 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>My Listings</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{listings.length}</p>
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-emerald-500/30 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Browse Pool</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{allListings.length}</p>
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-violet-500/30 bg-violet-900/20' : 'border-violet-200 bg-violet-50/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>My Bookings</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-violet-200' : 'text-violet-700'}`}>{bookings.length}</p>
+              </div>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-amber-500/30 bg-amber-900/20' : 'border-amber-200 bg-amber-50/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Provider Queue</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>{providerRequests.length}</p>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
 
         {/* Tab Navigation */}
-        <div className={`flex flex-wrap gap-2 border-b pb-2 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+        <div className={`glass-card interactive-card flex flex-wrap gap-2 border p-2 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
           <button
             onClick={() => setActiveTab('listings')}
-            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'listings'
-                ? 'text-green-400 border-b-2 border-green-400'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
+                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
             }`}
           >
             My Service Listings
           </button>
           <button
             onClick={() => setActiveTab('browse')}
-            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'browse'
-                ? 'text-green-400 border-b-2 border-green-400'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
+                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
             }`}
           >
             Browse & Book Services
           </button>
           <button
             onClick={() => setActiveTab('bookings')}
-            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'bookings'
-                ? 'text-green-400 border-b-2 border-green-400'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
+                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
             }`}
           >
             My Booking Requests
           </button>
           <button
             onClick={() => setActiveTab('provider-requests')}
-            className={`px-6 py-3 font-semibold transition whitespace-nowrap ${
+            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'provider-requests'
-                ? 'text-green-400 border-b-2 border-green-400'
-                : isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'
+                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
             }`}
           >
             Provider Requests

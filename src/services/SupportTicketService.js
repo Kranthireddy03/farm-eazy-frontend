@@ -55,7 +55,12 @@ export const createTicketWithAttachment = async (ticket, file) => {
  * @returns {Promise} List of tickets
  */
 export const getTickets = async () => {
-  const response = await apiClient.get(ENDPOINT);
+  const response = await apiClient.get(ENDPOINT, {
+    validateStatus: (status) => status < 500,
+  });
+  if (response.status !== 200) {
+    return [];
+  }
   return response.data;
 };
 
@@ -70,7 +75,12 @@ export const getTicket = async (displayId) => {
 };
 
 export const getTicketMessages = async (displayId) => {
-  const response = await apiClient.get(`${ENDPOINT}/${displayId}/messages`);
+  const response = await apiClient.get(`${ENDPOINT}/${displayId}/messages`, {
+    validateStatus: (status) => status < 500,
+  });
+  if (response.status !== 200) {
+    return [];
+  }
   return response.data?.messages || [];
 };
 
@@ -93,6 +103,17 @@ export const cancelTicket = async (displayId) => {
 export const addResponse = async (displayId, responseText) => {
   const response = await apiClient.post(`${ENDPOINT}/${displayId}/respond`, {
     response: responseText,
+  });
+  return response.data;
+};
+
+export const addResponseWithAttachment = async (displayId, responseText, file) => {
+  const formData = new FormData();
+  if (responseText) formData.append('response', responseText);
+  if (file) formData.append('file', file);
+
+  const response = await apiClient.post(`${ENDPOINT}/${displayId}/respond`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;
 };
@@ -161,6 +182,7 @@ export default {
   getTicketMessages,
   cancelTicket,
   addResponse,
+  addResponseWithAttachment,
   getActiveCount,
   getUserChatStats,
   getAdminChatStats,

@@ -167,12 +167,18 @@ function Cart() {
 
   if (cartItems.length === 0) {
     return (
-      <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
         <div className="max-w-4xl mx-auto">
-          <div className="text-center py-16">
+          <div className={`interactive-card text-center py-16 rounded-3xl border ${isDark ? 'border-slate-700 bg-slate-800/80' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
             <div className="text-6xl mb-4">🛒</div>
             <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Your Cart is Empty</h1>
             <p className={`mb-8 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Start adding products to your cart to place an order</p>
+            <div className="max-w-xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6 px-6">
+              <div className={`rounded-2xl p-3 text-sm ${isDark ? 'bg-slate-700/70 text-slate-300' : 'bg-slate-50 text-slate-700'}`}>Discover products</div>
+              <div className={`rounded-2xl p-3 text-sm ${isDark ? 'bg-slate-700/70 text-slate-300' : 'bg-slate-50 text-slate-700'}`}>Compare sellers</div>
+              <div className={`rounded-2xl p-3 text-sm ${isDark ? 'bg-slate-700/70 text-slate-300' : 'bg-slate-50 text-slate-700'}`}>Checkout securely</div>
+            </div>
             <button
               onClick={() => navigate('/buying')}
               className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition"
@@ -186,36 +192,58 @@ function Cart() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/buying')}
-            className="text-orange-400 hover:text-orange-300 font-semibold mb-4 flex items-center gap-2"
-          >
-            ← Back to Shopping
-          </button>
-          <div className={`text-4xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Shopping Cart</div>
-          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>{cartItems.length} item(s) in your cart</p>
-        </div>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
+      <div className="max-w-6xl mx-auto space-y-8">
+        <section className="page-hero interactive-card">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+              <button
+                onClick={() => navigate('/buying')}
+                className="text-orange-500 hover:text-orange-400 font-semibold mb-4 flex items-center gap-2"
+              >
+                ← Back to Shopping
+              </button>
+              <h1 className={`text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Shopping Cart</h1>
+              <p className={`mt-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{cartItems.length} item(s) in your cart</p>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+              <div className="glass-card p-3 text-center">
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Subtotal</p>
+                <p className={`mt-1 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{subtotal.toFixed(2)}</p>
+              </div>
+              <div className="glass-card p-3 text-center">
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tax</p>
+                <p className={`mt-1 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{tax.toFixed(2)}</p>
+              </div>
+              <div className="glass-card p-3 text-center">
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Coins</p>
+                <p className={`mt-1 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{coins}</p>
+              </div>
+              <div className="glass-card p-3 text-center">
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Savings</p>
+                <p className={`mt-1 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{savings.toFixed(2)}</p>
+              </div>
+            </div>
+          </div>
+        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2">
-            <div className={`rounded-lg shadow-lg overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+            <div className="glass-card interactive-card overflow-hidden p-0">
               {cartItems.map((item) => (
                 <div key={item.id} className={`border-b last:border-b-0 p-6 transition ${isDark ? 'border-slate-700 hover:bg-slate-700/50' : 'border-gray-200 hover:bg-gray-50'}`}>
                   <div className="flex gap-4 mb-4">
                     {/* Product Image */}
-                    <div className={`flex-shrink-0 w-24 h-24 rounded-lg flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-gray-100'}`}>
+                    <div className={`flex-shrink-0 w-24 h-24 rounded-2xl flex items-center justify-center ${isDark ? 'bg-slate-700' : 'bg-gray-100'}`}>
                       <ProductMediaCarousel mediaUrls={item.mediaUrls || (item.imageUrls ? item.imageUrls.split(',') : [])} />
                     </div>
 
                     {/* Product Details */}
                     <div className="flex-1">
-                      <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.productName}</h3>
-                      <p className={`text-sm mb-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Seller: {item.sellerFullName}</p>
+                      <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.productName}</h3>
+                      <p className={`text-sm mb-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Seller: {item.sellerFullName}</p>
                       {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
                         <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -268,7 +296,7 @@ function Cart() {
                       </button>
                     </div>
 
-                    <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                    <div className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
                       {item.availableQuantity > 0 ? (
                         <span className="text-green-400 font-semibold">{item.availableQuantity} in stock</span>
                       ) : (
@@ -276,7 +304,7 @@ function Cart() {
                       )}
                     </div>
 
-                    <div className={`ml-auto font-bold text-lg ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                    <div className={`ml-auto font-bold text-lg ${isDark ? 'text-white' : 'text-slate-900'}`}>
                       ₹{((item.discountedPrice !== undefined ? item.discountedPrice : item.price) * item.quantity).toFixed(2)}
                     </div>
                   </div>
@@ -287,18 +315,18 @@ function Cart() {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className={`rounded-lg shadow-lg p-6 sticky top-20 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-              <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Order Summary</h2>
+            <div className="glass-card interactive-card p-6 sticky top-20">
+              <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>Order Summary</h2>
 
               {/* Price Breakdown */}
               <div className={`space-y-4 mb-6 border-b pb-6 ${isDark ? 'border-slate-600' : 'border-gray-200'}`}>
-                <div className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                <div className={isDark ? 'text-slate-400' : 'text-slate-600'}>
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
                     <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>₹{subtotal.toFixed(2)}</span>
                   </div>
                 </div>
-                <div className={isDark ? 'text-slate-400' : 'text-gray-600'}>
+                <div className={isDark ? 'text-slate-400' : 'text-slate-600'}>
                   <div className="flex justify-between">
                     <span>Tax (18% GST):</span>
                     <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>₹{tax.toFixed(2)}</span>
@@ -317,7 +345,7 @@ function Cart() {
               </div>
 
               {/* Coins Section */}
-              <div className={`rounded-lg p-4 mb-6 border ${isDark ? 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-amber-700/50' : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300'}`}>
+              <div className={`rounded-2xl p-4 mb-6 border ${isDark ? 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 border-amber-700/50' : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-300'}`}>
                 <div className="flex items-center gap-2 mb-4">
                   <input
                     type="checkbox"
@@ -352,9 +380,9 @@ function Cart() {
               </div>
 
               {/* Final Amount */}
-              <div className={`rounded-lg p-4 mb-6 border ${isDark ? 'bg-orange-900/40 border-orange-700/50' : 'bg-orange-50 border-orange-300'}`}>
+              <div className={`rounded-2xl p-4 mb-6 border ${isDark ? 'bg-orange-900/40 border-orange-700/50' : 'bg-orange-50 border-orange-300'}`}>
                 <div className="flex justify-between items-center">
-                  <span className={isDark ? 'text-white' : 'text-gray-800'}>Final Amount:</span>
+                  <span className={isDark ? 'text-white' : 'text-slate-900'}>Final Amount:</span>
                   <span className="text-3xl font-bold text-orange-500">₹{finalAmount.toFixed(2)}</span>
                 </div>
                 {coinsToUse > 0 && (
@@ -379,7 +407,7 @@ function Cart() {
 
               <button
                 onClick={() => navigate('/buying')}
-                className={`w-full mt-3 font-bold py-3 px-6 rounded-lg transition ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
+                className="premium-button-secondary w-full mt-3"
               >
                 Continue Shopping
               </button>

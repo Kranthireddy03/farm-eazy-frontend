@@ -209,7 +209,7 @@ function DashboardEnhanced() {
 
   if (loading) {
     return (
-      <div className={`min-h-screen py-8 px-4 flex items-center justify-center ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+      <div className={`premium-shell min-h-screen py-8 px-4 flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
           <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Loading dashboard...</p>
@@ -219,22 +219,22 @@ function DashboardEnhanced() {
   }
 
   return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
       {/* Toast Notification */}
       {toast && (
         <Toast message={toast.message} type={toast.type} onClose={closeToast} />
       )}
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto space-y-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Welcome Back! 👋</h1>
+        <section className="page-hero interactive-card mb-0">
+          <h1 className={`text-4xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Welcome Back! 👋</h1>
           <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Here's your farming dashboard overview</p>
-        </div>
+        </section>
 
         {/* Analytics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {/* Farms Card */}
-          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-green-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-green-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Active Farms</p>
@@ -254,7 +254,7 @@ function DashboardEnhanced() {
           </div>
 
           {/* Crops Card */}
-          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-blue-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-blue-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Growing Crops</p>
@@ -274,7 +274,7 @@ function DashboardEnhanced() {
           </div>
 
           {/* Products Card */}
-          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-orange-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-orange-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Listed Products</p>
@@ -294,7 +294,7 @@ function DashboardEnhanced() {
           </div>
 
           {/* Orders Card */}
-          <div className={`rounded-lg shadow-lg p-6 hover:shadow-xl transition-shadow border-l-4 border-l-purple-500 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-purple-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
             <div className="flex items-center justify-between">
               <div>
                 <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Orders Placed</p>
@@ -317,7 +317,7 @@ function DashboardEnhanced() {
         {/* Coins, Irrigation & Services Row */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {/* Coins Card */}
-          <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-lg shadow-lg p-6 text-white">
+          <div className="glass-card interactive-card bg-gradient-to-r from-yellow-400 to-yellow-500 p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-yellow-100 text-sm font-medium">Available Coins</p>
@@ -329,7 +329,7 @@ function DashboardEnhanced() {
           </div>
 
           {/* Irrigation Card */}
-          <div className="bg-gradient-to-r from-blue-400 to-blue-500 rounded-lg shadow-lg p-6 text-white">
+          <div className="glass-card interactive-card bg-gradient-to-r from-blue-400 to-blue-500 p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100 text-sm font-medium">Irrigation Schedules</p>
@@ -343,7 +343,7 @@ function DashboardEnhanced() {
           </div>
 
           {/* Services Card */}
-          <div className="bg-gradient-to-r from-indigo-400 to-indigo-500 rounded-lg shadow-lg p-6 text-white">
+          <div className="glass-card interactive-card bg-gradient-to-r from-indigo-400 to-indigo-500 p-6 text-white">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-indigo-100 text-sm font-medium">Service Listings</p>
@@ -364,8 +364,8 @@ function DashboardEnhanced() {
         </div>
 
         {/* Service Listings Section */}
-        <div className={`rounded-lg shadow-lg p-6 mt-8 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
-          <h2 className={`text-2xl font-bold mb-4 flex items-center ${isDark ? 'text-white' : 'text-slate-800'}`}>
+        <div className={`glass-card interactive-card p-6 mt-8 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
+          <h2 className={`text-2xl font-bold mb-4 flex items-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
             <span className="mr-2">🚜</span> My Service Listings
           </h2>
           {/* Filter and Sort Controls */}
@@ -473,7 +473,7 @@ function DashboardEnhanced() {
         </div>
 
         {/* Activity Feed Section */}
-        <div className={`rounded-lg shadow-lg overflow-hidden ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
+          <div className={`glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
           <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
             <h2 className="text-2xl font-bold text-white">📊 Your Activity Feed</h2>
             <p className="text-indigo-100 text-sm mt-1">Track all your actions and interactions</p>
@@ -588,7 +588,7 @@ function DashboardEnhanced() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={() => navigate('/farms')}
-            className={`rounded-lg shadow-md p-4 hover:shadow-lg transition text-left border-l-4 border-l-green-500 ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
+            className={`glass-card interactive-card p-4 hover:shadow-lg transition text-left border-l-4 border-l-green-500 ${isDark ? 'border border-slate-700 hover:bg-slate-700' : 'border border-gray-200 hover:bg-gray-50'}`}
           >
             <p className="text-2xl">🌾</p>
             <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Add Farm</p>
@@ -597,7 +597,7 @@ function DashboardEnhanced() {
           
           <button
             onClick={() => navigate('/crops')}
-            className={`rounded-lg shadow-md p-4 hover:shadow-lg transition text-left border-l-4 border-l-blue-500 ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
+            className={`glass-card interactive-card p-4 hover:shadow-lg transition text-left border-l-4 border-l-blue-500 ${isDark ? 'border border-slate-700 hover:bg-slate-700' : 'border border-gray-200 hover:bg-gray-50'}`}
           >
             <p className="text-2xl">🌱</p>
             <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Plant Crop</p>
@@ -606,7 +606,7 @@ function DashboardEnhanced() {
 
           <button
             onClick={() => navigate('/buying')}
-            className={`rounded-lg shadow-md p-4 hover:shadow-lg transition text-left border-l-4 border-l-orange-500 ${isDark ? 'bg-slate-800 border border-slate-700 hover:bg-slate-700' : 'bg-white border border-gray-200 hover:bg-gray-50'}`}
+            className={`glass-card interactive-card p-4 hover:shadow-lg transition text-left border-l-4 border-l-orange-500 ${isDark ? 'border border-slate-700 hover:bg-slate-700' : 'border border-gray-200 hover:bg-gray-50'}`}
           >
             <p className="text-2xl">🛒</p>
             <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Shop</p>

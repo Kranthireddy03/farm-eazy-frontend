@@ -130,14 +130,32 @@ function AddressBook() {
     }
   }
 
+  const defaultCount = addresses.filter((address) => address.isDefault).length
+  const uniqueCities = new Set(addresses.map((address) => address.city).filter(Boolean)).size
+
   return (
-    <div className="space-y-6">
-      <div className={`rounded-2xl border p-6 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+    <div className={`premium-shell min-h-screen -m-6 p-6 space-y-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
+      <section className="page-hero interactive-card">
         <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Profile Location</p>
-        <h1 className={`text-2xl font-extrabold mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Manage Address</h1>
+        <h1 className={`text-3xl font-black mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Manage Address</h1>
         <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
           Save your address with city and state so vendor profile location requirements can be completed.
         </p>
+      </section>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={`glass-card interactive-card rounded-xl border p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
+          <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Saved</p>
+          <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{addresses.length}</p>
+        </div>
+        <div className={`glass-card interactive-card rounded-xl border p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
+          <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Default</p>
+          <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{defaultCount}</p>
+        </div>
+        <div className={`glass-card interactive-card rounded-xl border p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
+          <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Cities</p>
+          <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{uniqueCities}</p>
+        </div>
       </div>
 
       {message.text && (
@@ -148,7 +166,7 @@ function AddressBook() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className={`rounded-2xl border p-5 grid grid-cols-1 md:grid-cols-2 gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+      <form onSubmit={handleSubmit} className={`glass-card interactive-card rounded-2xl border p-5 grid grid-cols-1 md:grid-cols-2 gap-4 ${isDark ? 'border-slate-700' : 'border-slate-100 shadow-sm'}`}>
         <input name="fullName" value={form.fullName} onChange={handleChange} placeholder="Full Name" required className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
         <input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} placeholder="Phone Number" required className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
         <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="Email" required className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
@@ -175,7 +193,7 @@ function AddressBook() {
         </div>
       </form>
 
-      <div className={`rounded-2xl border p-5 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-sm'}`}>
+      <div className={`glass-card interactive-card rounded-2xl border p-5 ${isDark ? 'border-slate-700' : 'border-slate-100 shadow-sm'}`}>
         <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Saved Addresses</h2>
 
         {loading ? (

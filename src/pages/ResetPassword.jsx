@@ -77,7 +77,7 @@ function ResetPassword() {
   // Invalid Token Screen
   if (invalidToken) {
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
+      <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-rose-50 via-white to-pink-50'}`}>
         <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-red-900 via-rose-800 to-pink-900' : 'bg-gradient-to-br from-rose-100 via-red-50 to-pink-100'}`}>
           <div className="absolute inset-0 opacity-30">
             <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-red-400' : 'bg-rose-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
@@ -85,7 +85,7 @@ function ResetPassword() {
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <div className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-rose-200'}`}>
+          <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-rose-200'}`}>
             <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <span className="text-4xl">⚠️</span>
             </div>
@@ -108,7 +108,7 @@ function ResetPassword() {
   // Success Screen
   if (success) {
     return (
-      <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
+      <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
         <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900' : 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100'}`}>
           <div className="absolute inset-0 opacity-30">
             <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-emerald-400' : 'bg-emerald-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
@@ -116,7 +116,7 @@ function ResetPassword() {
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <div className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-emerald-200'}`}>
+          <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-emerald-200'}`}>
             <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
               <span className="text-5xl">✅</span>
             </div>
@@ -138,7 +138,7 @@ function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
+    <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'}`}>
       {/* Animated Background */}
       <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-cyan-900 via-blue-800 to-indigo-900' : 'bg-gradient-to-br from-cyan-100 via-blue-50 to-indigo-100'}`}>
         <div className="absolute inset-0 opacity-30">
@@ -161,7 +161,7 @@ function ResetPassword() {
 
       {/* Card */}
       <div className="relative z-10 w-full max-w-md">
-        <div className={`backdrop-blur-xl rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.02] ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-blue-200'}`}>
+        <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.02] ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-blue-200'}`}>
           
           {/* Logo & Header */}
           <div className="text-center mb-8">
