@@ -1,8 +1,10 @@
 import axios from 'axios';
 
-const GATEWAY_ENABLED = (import.meta.env.VITE_API_GATEWAY_ENABLED || 'true') !== 'false';
+const DEFAULT_BROWSER_SECURITY_FLAG = import.meta.env.PROD ? 'false' : 'true';
+// Gateway in browser now only sends public client id + nonce/timestamp.
+// Do NOT rely on browser-side secrets. Backend validates nonces in Redis.
+const GATEWAY_ENABLED = (import.meta.env.VITE_API_GATEWAY_ENABLED || DEFAULT_BROWSER_SECURITY_FLAG) !== 'false';
 const GATEWAY_CLIENT = import.meta.env.VITE_API_GATEWAY_CLIENT || '';
-const GATEWAY_SECRET = import.meta.env.VITE_API_GATEWAY_SECRET || '';
 
 function getNextGatewayTimestamp() {
     const now = Date.now();
@@ -39,55 +41,22 @@ api.interceptors.request.use(
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
-
+        // Add public gateway headers for backend nonce-based validation.
         if (GATEWAY_ENABLED) {
             if (!GATEWAY_CLIENT) {
                 throw new Error('VITE_API_GATEWAY_CLIENT is required when gateway security is enabled');
             }
-            if (!GATEWAY_SECRET) {
-                throw new Error('VITE_API_GATEWAY_SECRET is required when gateway security is enabled');
-            }
-
-            const requestUrl = String(config.url || '');
-            let requestPath = '/';
-
-            if (/^https?:\/\//i.test(requestUrl)) {
-                requestPath = new URL(requestUrl).pathname;
-            } else {
-                const base = new URL(String(config.baseURL || API_BASE_URL), 'http://localhost');
-                const basePath = base.pathname.endsWith('/') ? base.pathname.slice(0, -1) : base.pathname;
-                if (!requestUrl || requestUrl === '/') {
-                    requestPath = basePath || '/';
-                } else if (requestUrl.startsWith(`${basePath}/`) || requestUrl === basePath) {
-                    requestPath = requestUrl;
-                } else {
-                    const normalized = requestUrl.startsWith('/') ? requestUrl.slice(1) : requestUrl;
-                    requestPath = `${basePath}/${normalized}`.replace(/\/+/g, '/');
-                    if (!requestPath.startsWith('/')) requestPath = `/${requestPath}`;
-                }
-            }
-
-            requestPath = requestPath.split('?')[0].split('#')[0];
-
-            const ts = getNextGatewayTimestamp();
-            const message = `${GATEWAY_CLIENT}:${ts}:${(config.method || 'GET').toUpperCase()}:${requestPath}`;
-            const key = await crypto.subtle.importKey(
-                'raw',
-                new TextEncoder().encode(GATEWAY_SECRET),
-                { name: 'HMAC', hash: 'SHA-256' },
-                false,
-                ['sign']
-            );
-            const signatureBytes = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
-            const bytes = new Uint8Array(signatureBytes);
-            let binary = '';
-            for (let i = 0; i < bytes.length; i += 1) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-
+            // Non-mutating requests don't need nonce, but include client id and timestamp for logging.
+            const ts = String(Date.now());
             config.headers['X-Gateway-Client'] = GATEWAY_CLIENT;
             config.headers['X-Gateway-Timestamp'] = ts;
-            config.headers['X-Gateway-Signature'] = btoa(binary);
+            // For mutating requests, attach a random nonce to be validated by backend via Redis.
+            const method = String(config.method || '').toUpperCase();
+            if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+                // Use crypto.randomUUID() when available, fallback to timestamp+random
+                const nonce = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `nonce-${ts}-${Math.random().toString(36).slice(2)}`;
+                config.headers['X-Request-Nonce'] = nonce;
+            }
         }
 
         return config;

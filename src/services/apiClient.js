@@ -13,11 +13,12 @@
 import axios from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '../config/api';
 
-const API_ENCRYPTION_ENABLED = (import.meta.env.VITE_API_ENCRYPTION_ENABLED || 'true') !== 'false';
-const GATEWAY_ENABLED = (import.meta.env.VITE_API_GATEWAY_ENABLED || 'true') !== 'false';
+const DEFAULT_BROWSER_SECURITY_FLAG = import.meta.env.PROD ? 'false' : 'true';
+const API_ENCRYPTION_ENABLED = (import.meta.env.VITE_API_ENCRYPTION_ENABLED || DEFAULT_BROWSER_SECURITY_FLAG) !== 'false';
+const GATEWAY_ENABLED = (import.meta.env.VITE_API_GATEWAY_ENABLED || DEFAULT_BROWSER_SECURITY_FLAG) !== 'false';
+// IMPORTANT: Do not store cryptographic secrets in VITE_* for production.
 const ENCRYPTION_SECRET = import.meta.env.VITE_API_ENCRYPTION_SECRET || '';
 const GATEWAY_CLIENT = import.meta.env.VITE_API_GATEWAY_CLIENT || '';
-const GATEWAY_SECRET = import.meta.env.VITE_API_GATEWAY_SECRET || '';
 
 function getNextGatewayTimestamp() {
   const now = Date.now();
@@ -209,19 +210,13 @@ async function decryptPayload(encryptedPayload) {
 }
 
 async function importHmacKey() {
-  return crypto.subtle.importKey(
-    'raw',
-    textEncoder.encode(GATEWAY_SECRET || ''),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
+  // Browser HMAC is disabled for Option B (no secrets in browser). Calls should not reach here.
+  throw new Error('Browser HMAC import is disabled under the Option B security model');
 }
 
 async function createGatewaySignature(message) {
-  const key = await importHmacKey();
-  const signature = await crypto.subtle.sign('HMAC', key, textEncoder.encode(message));
-  return toBase64(signature);
+  // Browser gateway signature creation is disabled for Option B.
+  throw new Error('Browser gateway signature creation disabled under Option B security model');
 }
 
 function getRequestPathForSignature(config) {
@@ -416,11 +411,13 @@ apiClient.interceptors.request.use(
 
     if (shouldEncryptBody && config.data && typeof config.data === 'object' && !('payload' in config.data)) {
       if (!ENCRYPTION_SECRET) {
-        throw new Error('VITE_API_ENCRYPTION_SECRET is required when API encryption is enabled');
+        // In Option B we do not keep secrets in the browser; skip client-side encryption.
+        console.warn('Skipping client-side request encryption: no ENCRYPTION_SECRET present');
+      } else {
+        const encryptedPayload = await encryptPayload(config.data);
+        config.data = { payload: encryptedPayload };
+        config.headers['Content-Type'] = 'application/json';
       }
-      const encryptedPayload = await encryptPayload(config.data);
-      config.data = { payload: encryptedPayload };
-      config.headers['Content-Type'] = 'application/json';
     }
 
     if (shouldAttachLocationHeader(config.url)) {
@@ -434,15 +431,14 @@ apiClient.interceptors.request.use(
       if (!GATEWAY_CLIENT) {
         throw new Error('VITE_API_GATEWAY_CLIENT is required when gateway security is enabled');
       }
-      if (!GATEWAY_SECRET) {
-        throw new Error('VITE_API_GATEWAY_SECRET is required when gateway security is enabled');
-      }
-      const timestamp = getNextGatewayTimestamp();
-      const message = `${GATEWAY_CLIENT}:${timestamp}:${(config.method || 'GET').toUpperCase()}:${requestPath}`;
-      const signature = await createGatewaySignature(message);
+      const timestamp = String(Date.now());
       config.headers['X-Gateway-Client'] = GATEWAY_CLIENT;
       config.headers['X-Gateway-Timestamp'] = timestamp;
-      config.headers['X-Gateway-Signature'] = signature;
+      const methodUpper = String(config.method || '').toUpperCase();
+      if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(methodUpper)) {
+        const nonce = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `nonce-${timestamp}-${Math.random().toString(36).slice(2)}`;
+        config.headers['X-Request-Nonce'] = nonce;
+      }
     }
 
     if (import.meta.env.DEV) {
@@ -463,7 +459,7 @@ apiClient.interceptors.response.use(
       localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
     }
 
-    if (API_ENCRYPTION_ENABLED && response?.data && typeof response.data === 'object' && response.data.payload) {
+    if (API_ENCRYPTION_ENABLED && ENCRYPTION_SECRET && response?.data && typeof response.data === 'object' && response.data.payload) {
       response.data = await decryptPayload(response.data.payload);
     }
     // Development logging

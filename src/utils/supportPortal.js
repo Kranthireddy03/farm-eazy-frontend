@@ -17,9 +17,9 @@ export const getSupportPortalBaseUrl = () => {
     }
 
     // Hosted frontend/backend (Render/Vercel/etc): default to support portal deployment
-    return 'https://admin-support-portal.vercel.app'
+    return 'https://support.farm-eazy.com'
   }
-  return 'https://admin-support-portal.vercel.app'
+  return 'https://support.farm-eazy.com'
 }
 
 const normalizePortalPath = (path) => {
