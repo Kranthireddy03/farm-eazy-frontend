@@ -81,9 +81,13 @@ api.interceptors.response.use(
 
         // Handle common errors like 401 Unauthorized
         if (status === 401) {
-            // For example, redirect to login or refresh token
-            console.error('Unauthorized request. Redirecting to login.');
-            // window.location.href = '/login'; 
+            const requestUrl = String(originalRequest?.url || '');
+            if (requestUrl.includes('/auth/r/') || requestUrl.includes('/auth/reset-password')) {
+                console.warn('Unauthorized auth endpoint response received; frontend flow will handle navigation.');
+            } else {
+                console.error('Unauthorized request. Redirecting to login.');
+                // window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

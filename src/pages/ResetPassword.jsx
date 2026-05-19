@@ -68,7 +68,8 @@ function ResetPassword() {
       setSuccess(true)
       setTimeout(() => navigate('/login'), 3000)
     } catch (err) {
-      setApiError('Failed to reset password. The link may have expired.')
+      const message = err.response?.data?.message || 'Failed to reset password. The link may have expired.'
+      setApiError(message)
     } finally {
       setLoading(false)
     }
