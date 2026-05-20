@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import CaptchaService from './CaptchaService';
 
 /**
  * OTP Service
@@ -11,8 +12,9 @@ const OtpService = {
    * Send OTP (legacy - simple response)
    * @returns {Promise<{message: string}>}
    */
-  sendOtp: async (email, purpose) => {
-    const response = await apiClient.post('/otp/send', { email, purpose });
+  sendOtp: async (email, purpose, captchaToken = null) => {
+    const token = captchaToken || await CaptchaService.getToken('otp');
+    const response = await apiClient.post('/otp/send', { email, purpose, captchaToken: token });
     return response.data;
   },
 
@@ -33,8 +35,9 @@ const OtpService = {
    *   smsResponse: object
    * }>}
    */
-  sendOtpDetailed: async (email, purpose, phone = null) => {
-    const payload = { email, purpose };
+  sendOtpDetailed: async (email, purpose, phone = null, captchaToken = null) => {
+    const token = captchaToken || await CaptchaService.getToken('otp');
+    const payload = { email, purpose, captchaToken: token };
     if (phone) {
       payload.phone = phone;
     }

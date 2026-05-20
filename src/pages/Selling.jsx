@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { formatDate } from '../utils/formatDate';
 import { useNavigate } from 'react-router-dom';
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import OtpService from '../services/OtpService';
 import ProductService from '../services/ProductService';
 import apiClient from '../services/apiClient';
@@ -24,6 +25,17 @@ function Selling() {
   const [editingProduct, setEditingProduct] = useState(null); // For edit mode
   const [eligibilityLoading, setEligibilityLoading] = useState(true);
   const [eligibility, setEligibility] = useState(null);
+  const { executeRecaptcha } = useGoogleReCaptcha();
+
+  const getCaptchaToken = async (action) => {
+    if (typeof executeRecaptcha !== 'function') return null;
+    try {
+      return await executeRecaptcha(action);
+    } catch (error) {
+      console.warn('reCAPTCHA execution failed:', error);
+      return null;
+    }
+  }
   
   // Use AuthContext for user email instead of direct localStorage access
   const userEmail = getUserEmail();
@@ -116,8 +128,9 @@ function Selling() {
   const handleSendOtp = async () => {
     setLoading(true);
     try {
+      const captchaToken = await getCaptchaToken('selling_otp');
       // Use detailed OTP endpoint for SMS notification support
-      const response = await OtpService.sendOtpDetailed(userEmail, 'SELLING');
+      const response = await OtpService.sendOtpDetailed(userEmail, 'SELLING', null, captchaToken);
       setOtpSent(true);
       setTimer(600); // 10 minutes
       // Show notification with SMS status

@@ -5,13 +5,25 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
 
 function ForgotPassword() {
   const navigate = useNavigate()
   const { isDark } = useTheme()
+  const { executeRecaptcha } = useGoogleReCaptcha()
   const [email, setEmail] = useState('')
+
+  const getCaptchaToken = async (action) => {
+    if (typeof executeRecaptcha !== 'function') return null
+    try {
+      return await executeRecaptcha(action)
+    } catch (error) {
+      console.warn('reCAPTCHA execution failed:', error)
+      return null
+    }
+  }
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -50,7 +62,8 @@ function ForgotPassword() {
 
     setLoading(true)
     try {
-      await AuthService.forgotPassword(email)
+      const captchaToken = await getCaptchaToken('forgot_password')
+      await AuthService.forgotPassword(email, captchaToken)
       setSubmitted(true)
       setCountdown(30)
       setTimeout(() => navigate('/login'), 33000)

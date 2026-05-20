@@ -14,6 +14,7 @@
  */
 
 import axios from 'axios';
+import CaptchaService from './CaptchaService';
 import { API_ENDPOINTS, STORAGE_KEYS } from '../config/api';
 
 // Session tracking keys
@@ -32,13 +33,15 @@ class AuthService {
    * @param {string} phone - User's phone number
    * @returns {Promise} Response with user data and JWT token
    */
-  async register(username, email, password, phone) {
+  async register(username, email, password, phone, captchaToken = null) {
     try {
+      const token = captchaToken || await CaptchaService.getToken('register');
       const payload = {
         username,
         email,
         password,
         phone,
+        captchaToken: token,
       };
 
       const response = await axios.post(API_ENDPOINTS.REGISTER, payload);
@@ -73,12 +76,14 @@ class AuthService {
    * @param {string} password - User's password
    * @returns {Promise} Response with JWT token
    */
-  async login(identifier, password, rememberMe = true) {
+  async login(identifier, password, rememberMe = true, captchaToken = null) {
     try {
+      const token = captchaToken || await CaptchaService.getToken('login');
       const response = await axios.post(API_ENDPOINTS.LOGIN, {
         identifier,
         password,
         rememberMe,
+        captchaToken: token,
       });
 
       // Store token and user info in local storage
@@ -347,10 +352,12 @@ class AuthService {
    * @param {string} email - User's email
    * @returns {Promise} Response with message
    */
-  async forgotPassword(email) {
+  async forgotPassword(email, captchaToken = null) {
     try {
+      const token = captchaToken || await CaptchaService.getToken('forgot_password');
       const response = await axios.post(API_ENDPOINTS.FORGOT_PASSWORD, {
         email,
+        captchaToken: token,
       });
       return response.data;
     } catch (error) {
@@ -426,11 +433,13 @@ class AuthService {
    * @param {string} phone - 10-digit phone number
    * @returns {Promise} Response with OTP send status
    */
-  async requestLoginOtp(phone) {
+  async requestLoginOtp(phone, captchaToken = null) {
     try {
+      const token = captchaToken || await CaptchaService.getToken('login_otp');
       const locationHeader = await this.getUserLocationHeader();
       const response = await axios.post(API_ENDPOINTS.LOGIN_REQUEST_OTP, {
         phone,
+        captchaToken: token,
       }, {
         headers: locationHeader ? { 'X-User-Location': locationHeader } : undefined,
       });

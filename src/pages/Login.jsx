@@ -7,6 +7,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -22,8 +23,19 @@ function Login() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDark } = useTheme()
+  const { executeRecaptcha } = useGoogleReCaptcha()
   const { login, isAuthenticated } = useAuth()
   const redirectTo = location.state?.from || '/'
+  
+  const getCaptchaToken = async (action) => {
+    if (typeof executeRecaptcha !== 'function') return null
+    try {
+      return await executeRecaptcha(action)
+    } catch (error) {
+      console.warn('reCAPTCHA execution failed:', error)
+      return null
+    }
+  }
   
   // Login mode: 'password' or 'otp'
   const [loginMode, setLoginMode] = useState('password')
@@ -263,7 +275,8 @@ function Login() {
 
     setLoading(true)
     try {
-      const response = await AuthService.login(formData.identifier, formData.password, rememberMe)
+      const captchaToken = await getCaptchaToken('login')
+      const response = await AuthService.login(formData.identifier, formData.password, rememberMe, captchaToken)
       login(response)
       
       const isFirstLogin = localStorage.getItem('firstLogin') !== 'done'
@@ -352,7 +365,8 @@ function Login() {
     setOtpMessage('')
     setLoading(true)
     try {
-      const response = await AuthService.requestLoginOtp(otpFormData.phone)
+      const captchaToken = await getCaptchaToken('login_otp')
+      const response = await AuthService.requestLoginOtp(otpFormData.phone, captchaToken)
       if (response.success) {
         setOtpMessage(response.displayMessage || 'OTP sent to your phone!')
         setOtpStage('verify')
@@ -412,7 +426,8 @@ function Login() {
     
     setLoading(true)
     try {
-      const response = await AuthService.requestLoginOtp(otpFormData.phone)
+      const captchaToken = await getCaptchaToken('login_otp')
+      const response = await AuthService.requestLoginOtp(otpFormData.phone, captchaToken)
       if (response.success) {
         setOtpMessage('New OTP sent to your phone!')
         setResendTimer(60)

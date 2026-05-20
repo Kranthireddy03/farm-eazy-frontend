@@ -8,6 +8,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import AuthService from '../services/AuthService'
 import OtpService from '../services/OtpService'
 import { useTheme } from '../context/ThemeContext'
@@ -25,10 +26,21 @@ function Register() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDark } = useTheme()
+  const { executeRecaptcha } = useGoogleReCaptcha()
   const { login, isAuthenticated } = useAuth()
   const { showOtpNotification, success: toastSuccess, error: toastError } = useGlobalToast()
   const [showSuccess, setShowSuccess] = useState(false)
   const [registeredUserId, setRegisteredUserId] = useState(null)
+
+  const getCaptchaToken = async (action) => {
+    if (typeof executeRecaptcha !== 'function') return null
+    try {
+      return await executeRecaptcha(action)
+    } catch (error) {
+      console.warn('reCAPTCHA execution failed:', error)
+      return null
+    }
+  }
   const [suppressAuthRedirect, setSuppressAuthRedirect] = useState(false)
   
   // Redirect if already authenticated
@@ -305,7 +317,8 @@ function Register() {
     setApiError('')
     try {
       // Use detailed OTP sending to get SMS/Email status
-      const response = await OtpService.sendOtpDetailed(formData.email, 'REGISTRATION', formData.phone)
+      const captchaToken = await getCaptchaToken('registration_otp')
+      const response = await OtpService.sendOtpDetailed(formData.email, 'REGISTRATION', formData.phone, captchaToken)
       
       // Show toast notification with sending status
       if (response && (response.sentVia || response.displayMessage)) {
@@ -341,11 +354,13 @@ function Register() {
       await OtpService.verifyOtp(formData.email, otpString, 'REGISTRATION')
       
       // OTP verified, now register the user
+      const captchaToken = await getCaptchaToken('register')
       const response = await AuthService.register(
         formData.username,
         formData.email,
         formData.password,
-        formData.phone
+        formData.phone,
+        captchaToken
       )
       // Store the user ID for display on success screen
       setRegisteredUserId(response?.id || localStorage.getItem('farmEazy_userId'))

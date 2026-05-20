@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import apiClient from '../services/apiClient'
@@ -48,6 +49,17 @@ function BankVerification() {
   const [submitting, setSubmitting] = useState(false)
   const [otpSending, setOtpSending] = useState(false)
   const [otpVerifying, setOtpVerifying] = useState(false)
+  const { executeRecaptcha } = useGoogleReCaptcha()
+
+  const getCaptchaToken = async (action) => {
+    if (typeof executeRecaptcha !== 'function') return null
+    try {
+      return await executeRecaptcha(action)
+    } catch (error) {
+      console.warn('reCAPTCHA execution failed:', error)
+      return null
+    }
+  }
   const [otpCode, setOtpCode] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otpVerified, setOtpVerified] = useState(false)
@@ -274,7 +286,8 @@ function BankVerification() {
 
     try {
       setOtpSending(true)
-      const response = await OtpService.sendOtpDetailed(email, 'BANK_VERIFICATION', phone || null)
+      const captchaToken = await getCaptchaToken('bank_verification_otp')
+      const response = await OtpService.sendOtpDetailed(email, 'BANK_VERIFICATION', phone || null, captchaToken)
       setOtpSent(true)
       setOtpVerified(false)
       setOtpChannelMessage(response?.displayMessage || response?.message || 'OTP sent successfully.')
