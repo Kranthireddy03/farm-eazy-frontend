@@ -1,0 +1,2 @@
+import{a}from"./index-C3G04Top.js";async function r(s){const t={},o=await a.get("/public/blog-posts",{params:t});return Array.isArray(o.data)?o.data:[]}async function e(s){return(await a.get(`/public/blog-posts/${s}`)).data}async function i(s){return(await a.post("/blog-posts/submissions",s)).data}async function c(){const s=await a.get("/blog-posts/submissions/my");return Array.isArray(s.data)?s.data:[]}async function g(s,t){return(await a.post(`/blog-posts/${s}/ratings`,{rating:t})).data}export{e as a,i as b,c,r as g,g as s};
+//# sourceMappingURL=BlogService-CKKToIoL.js.map
