@@ -36,6 +36,7 @@ function PublicLayout({ children }) {
           </div>
         </main>
         <PublicFooter />
+        <DarkModeToggle floating />
         </div>
       </div>
     </PageCanvas>

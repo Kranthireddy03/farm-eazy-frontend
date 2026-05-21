@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
-import DarkModeToggle from './DarkModeToggle'
 
 function PublicHeader() {
   const { isDark } = useTheme()
@@ -41,7 +40,6 @@ function PublicHeader() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
-            <DarkModeToggle className="hidden md:inline-flex" />
             <Link
               to="/login"
               className={`premium-button-secondary ${isDark ? 'border-slate-700 bg-white/5 text-slate-100 hover:border-emerald-400/40 hover:bg-white/10' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-emerald-300 hover:bg-white'}`}

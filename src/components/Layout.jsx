@@ -415,9 +415,6 @@ function Layout({ onShowTour, children }) {
 
             {/* Right Section - Actions */}
             <div className="flex items-center space-x-2 shrink-0">
-              {/* Dark mode toggle inside header */}
-              <DarkModeToggle className="hidden sm:flex" />
-
               {/* Tour Button - Compact */}
               <button
                 data-tour="tour-button"
@@ -737,6 +734,7 @@ function Layout({ onShowTour, children }) {
         </div>
       </footer>
 
+      <DarkModeToggle floating />
       <ChatSupport />
       </div>
     </div>

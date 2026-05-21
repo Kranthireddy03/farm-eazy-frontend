@@ -49,9 +49,9 @@
 }
 
 .grecaptcha-badge {
-  right: 24px !important;
-  bottom: 96px !important;
-  z-index: 999 !important;
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
 }
 
 /* Onboarding Tour Highlight Style */
