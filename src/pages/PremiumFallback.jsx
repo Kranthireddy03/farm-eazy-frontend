@@ -125,7 +125,7 @@ export default function PremiumFallback() {
 
   const loadSystemStatus = async () => {
     try {
-      const response = await apiClient.get('/system/full-status', { _skipFallback: true });
+      const response = await apiClient.get('/system/full-status', { _skipFallback: true, _skipAuth: true });
       const services = response?.data?.services;
       if (services && typeof services === 'object') {
         setServiceStatus(services);

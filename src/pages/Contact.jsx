@@ -126,6 +126,7 @@ export default function Contact() {
               value={formData.subject}
               onChange={handleChange}
               required
+              maxLength={200}
               placeholder="Subject"
               className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800/90' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
             />
@@ -136,6 +137,7 @@ export default function Contact() {
               onChange={handleChange}
               required
               rows={6}
+              maxLength={5000}
               placeholder="Tell us about your request"
               className={`w-full px-4 py-3 rounded-xl border resize-none transition-all duration-300 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800/90' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
             />

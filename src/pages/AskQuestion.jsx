@@ -122,6 +122,8 @@ export default function AskQuestion() {
                 value={question}
                 onChange={e => setQuestion(e.target.value)}
                 rows={5}
+                minLength={10}
+                maxLength={1000}
                 required
               />
               <button type="submit" className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950">Submit Question</button>

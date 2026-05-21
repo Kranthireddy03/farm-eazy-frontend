@@ -1,10 +1,17 @@
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import { useTheme } from '../context/ThemeContext'
 
 function PublicHeader() {
   const { isDark } = useTheme()
   const [menuOpen, setMenuOpen] = useState(false)
+  const location = useLocation()
+
+  useEffect(() => {
+    if (menuOpen) {
+      setMenuOpen(false)
+    }
+  }, [location.pathname])
 
   const navItems = [
     { to: '/', label: 'Home' },

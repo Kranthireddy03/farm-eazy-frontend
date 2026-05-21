@@ -660,7 +660,7 @@ function Register() {
 
           <div className={`glass-card mb-5 rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/40' : 'border-emerald-100 bg-emerald-50/70'}`}>
             <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-emerald-800'}`}>Continue with Google sign-up</p>
-            <div ref={googleButtonRef} className="flex justify-center min-h-[44px]" />
+            <div ref={googleButtonRef} className="flex items-center justify-center min-h-[62px]" />
             <p className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-emerald-600'}`}>
               Google sign-up is for new FarmEazy accounts. If this email already exists, please use the Login page instead. After you complete setup, FarmEazy will send the standard welcome email, SMS, and notification.
             </p>

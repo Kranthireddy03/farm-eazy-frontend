@@ -602,7 +602,7 @@ function Login() {
 
           <div className={`glass-card mb-5 rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/40' : 'border-emerald-100 bg-emerald-50/70'}`}>
             <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-emerald-800'}`}>Continue sign in with Google</p>
-            <div ref={googleButtonRef} className="flex justify-center min-h-[44px]" />
+            <div ref={googleButtonRef} className="flex items-center justify-center min-h-[62px]" />
             <p className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-emerald-600'}`}>
               Google sign-in is for existing FarmEazy accounts only. If this email is new, use Register so FarmEazy can create your account and send the usual welcome email, SMS, and notification after setup.
             </p>

@@ -129,6 +129,39 @@ function shouldAttachLocationHeader(url) {
   return value.startsWith('/products') || value.startsWith('/orders') || value.includes('/checkout') || value.startsWith('/location-access');
 }
 
+function isPublicApiPath(path) {
+  const publicPaths = [
+    '/api/auth/',
+    '/api/otp/',
+    '/api/public/',
+    '/api/faq-question',
+    '/api/faq-questions',
+    '/api/faq/question',
+    '/api/support-tickets/guest',
+    '/api/system/full-status',
+    '/api/location-access/status',
+  ];
+  return publicPaths.some((publicPath) => path.startsWith(publicPath));
+}
+
+async function createGatewaySignature(message) {
+  if (!GATEWAY_CLIENT) {
+    throw new Error('Gateway client is not configured');
+  }
+  if (!import.meta.env.VITE_API_GATEWAY_SECRET) {
+    throw new Error('Gateway signature secret is missing');
+  }
+  const keyData = textEncoder.encode(String(import.meta.env.VITE_API_GATEWAY_SECRET));
+  const cryptoKey = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signatureBuffer = await crypto.subtle.sign('HMAC', cryptoKey, textEncoder.encode(message));
+  return toBase64(signatureBuffer);
+}
 
 function emitGlobalFallback(detail) {
   const now = Date.now();
@@ -212,11 +245,6 @@ async function decryptPayload(encryptedPayload) {
 async function importHmacKey() {
   // Browser HMAC is disabled for Option B (no secrets in browser). Calls should not reach here.
   throw new Error('Browser HMAC import is disabled under the Option B security model');
-}
-
-async function createGatewaySignature(message) {
-  // Browser gateway signature creation is disabled for Option B.
-  throw new Error('Browser gateway signature creation disabled under Option B security model');
 }
 
 function getRequestPathForSignature(config) {

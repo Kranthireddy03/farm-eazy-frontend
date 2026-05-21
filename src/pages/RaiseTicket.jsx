@@ -18,14 +18,15 @@ export default function RaiseTicket() {
     setError('');
     try {
       await apiClient.post('/support-tickets/guest', {
-        subject,
-        description,
-        contactEmail: email,
+        subject: subject.trim(),
+        description: description.trim(),
+        contactEmail: email.trim(),
       });
       setSubmitted(true);
       setSubject('');
       setDescription('');
       setEmail('');
+      setTimeout(() => setSubmitted(false), 5000);
     } catch (err) {
       setError(err?.response?.data?.message || 'Failed to submit ticket.');
     }
