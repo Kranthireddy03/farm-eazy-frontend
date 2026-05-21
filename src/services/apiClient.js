@@ -332,28 +332,19 @@ async function getOrRefreshAccessToken() {
 }
 
 async function refreshAccessToken() {
-  const refreshToken = localStorage.getItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
-  if (!refreshToken) {
-    throw new Error('No refresh token available');
-  }
-
-  const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, { refreshToken }, {
+  const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, null, {
     headers: { 'Content-Type': 'application/json' },
     timeout: 15000,
+    withCredentials: true,
   });
 
   const newAccessToken = refreshResponse?.data?.token || refreshResponse?.data?.accessToken;
-  const nextRefreshToken = refreshResponse?.data?.refreshToken || refreshResponse?.data?.refresh_token;
 
   if (!newAccessToken) {
     throw new Error('Refresh response did not include access token');
   }
 
   localStorage.setItem(STORAGE_KEYS.USER_TOKEN, newAccessToken);
-  if (nextRefreshToken) {
-    localStorage.setItem(STORAGE_KEYS.USER_REFRESH_TOKEN, nextRefreshToken);
-  }
-
   return newAccessToken;
 }
 
@@ -364,6 +355,7 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 30000, // 30 second timeout
+  withCredentials: true,
 });
 
 // --- Request Interceptor ---
@@ -502,14 +494,6 @@ apiClient.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${latestToken}`;
           return apiClient(originalRequest);
         }
-        return Promise.reject(error);
-      }
-
-      const refreshToken = localStorage.getItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
-      if (!refreshToken) {
-        clearSessionData();
-        broadcastAuthEvent(false, 'unauthorized');
-        sessionStorage.setItem('logoutReason', 'Your session has expired. Please log in again.');
         return Promise.reject(error);
       }
 

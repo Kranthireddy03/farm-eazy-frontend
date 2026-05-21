@@ -44,7 +44,7 @@ class AuthService {
         captchaToken: token,
       };
 
-      const response = await axios.post(API_ENDPOINTS.REGISTER, payload);
+      const response = await axios.post(API_ENDPOINTS.REGISTER, payload, { withCredentials: true });
 
       // Store token and user info in local storage
       if (response.data.token) {
@@ -84,7 +84,7 @@ class AuthService {
         password,
         rememberMe,
         captchaToken: token,
-      });
+      }, { withCredentials: true });
 
       // Store token and user info in local storage
       if (response.data.token) {
@@ -101,7 +101,7 @@ class AuthService {
     try {
       const response = await axios.post(API_ENDPOINTS.GOOGLE_LOGIN, {
         credential,
-      });
+      }, { withCredentials: true });
 
       if (response.data.token) {
         this.setSession(response.data);
@@ -117,7 +117,7 @@ class AuthService {
     try {
       const response = await axios.post(API_ENDPOINTS.GOOGLE_REGISTER, {
         credential,
-      });
+      }, { withCredentials: true });
 
       if (response.data.token) {
         this.setSession(response.data);
@@ -132,16 +132,18 @@ class AuthService {
   async completeGoogleProfile(profileData, explicitToken = null) {
     try {
       const token = explicitToken || this.getToken();
+      const config = {
+        withCredentials: true,
+      };
+      if (token) {
+        config.headers = {
+          Authorization: `Bearer ${token}`,
+        };
+      }
       const response = await axios.post(
         API_ENDPOINTS.COMPLETE_GOOGLE_PROFILE,
         profileData,
-        token
-          ? {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          : undefined
+        config
       );
 
       if (response.data.token) {
@@ -187,12 +189,8 @@ class AuthService {
     localStorage.setItem(STORAGE_KEYS.USER_USERNAME, userData.username || '');
     // Note: fullName is no longer used - username is the display name
     localStorage.setItem(STORAGE_KEYS.USER_FULLNAME, userData.username || '');
-    if (userData.refreshToken) {
-      localStorage.setItem(STORAGE_KEYS.USER_REFRESH_TOKEN, userData.refreshToken);
-    } else {
-      localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
-    }
-    // Store user roles for admin features
+    // Refresh tokens are managed by HttpOnly cookies, not client-side storage.
+    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
     if (userData.roles && userData.roles.length > 0) {
       localStorage.setItem(STORAGE_KEYS.USER_ROLES, JSON.stringify(userData.roles));
     } else {

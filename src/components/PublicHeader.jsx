@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import DarkModeToggle from './DarkModeToggle'
 
 function PublicHeader() {
   const { isDark } = useTheme()
@@ -16,9 +17,9 @@ function PublicHeader() {
   ]
 
   return (
-    <header className="sticky top-0 z-40 px-4 md:px-6 pt-4">
-      <div className={`${isDark ? 'bg-slate-950/78 border-slate-800/70' : 'bg-white/78 border-white/70'} premium-panel shadow-[0_12px_50px_rgba(15,23,42,0.16)]`}>
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between gap-3">
+    <header className="sticky top-0 z-40 px-4 md:px-6 pt-2">
+      <div className={`${isDark ? 'bg-slate-950/88 border-slate-800/80 backdrop-blur-xl' : 'bg-white/88 border-white/90 backdrop-blur-xl'} premium-panel shadow-[0_12px_50px_rgba(15,23,42,0.16)]`}>
+        <div className="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center justify-between gap-3">
           <Link to="/" className="flex items-center gap-3" onClick={() => setMenuOpen(false)}>
             <div className="h-11 w-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white flex items-center justify-center shadow-lg text-xl">🌾</div>
             <div className="leading-tight">
@@ -40,6 +41,7 @@ function PublicHeader() {
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
+            <DarkModeToggle className="hidden md:inline-flex" />
             <Link
               to="/login"
               className={`premium-button-secondary ${isDark ? 'border-slate-700 bg-white/5 text-slate-100 hover:border-emerald-400/40 hover:bg-white/10' : 'border-slate-200 bg-white/80 text-slate-700 hover:border-emerald-300 hover:bg-white'}`}

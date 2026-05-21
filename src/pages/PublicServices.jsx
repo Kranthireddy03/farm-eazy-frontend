@@ -45,12 +45,12 @@ export default function PublicServices() {
   ]
 
   return (
-    <div className="px-4 md:px-6 py-12 md:py-16">
+    <div className="px-4 md:px-6 py-10 md:py-14">
       <div className="max-w-7xl mx-auto space-y-8">
         <HeroFrame
           eyebrow="Platform Overview"
-          title="A complete farm-management platform, built for daily execution."
-          description="FarmEazy is designed to support operational decisions, improve process clarity, and reduce workflow bottlenecks across the farm lifecycle."
+          title="A complete farm platform for farms, crops, irrigation, marketplace, and services."
+          description="FarmEazy helps teams move from manual notes and calls to structured farm records, irrigation plans, product listings, and service bookings in one practical platform."
           actions={(
             <>
               <PillButton to="/blog" active>View Blog</PillButton>

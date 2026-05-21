@@ -284,6 +284,10 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [location.pathname]);
+
+  useEffect(() => {
     const handleFallback = (event) => {
       if (location.pathname === '/fallback') {
         return;

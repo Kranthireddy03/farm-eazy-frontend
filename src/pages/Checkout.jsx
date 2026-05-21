@@ -22,7 +22,6 @@ function Checkout() {
     const { isDark } = useTheme();
   // Add missing handleRetryPayment function
   const handleRetryPayment = () => {
-    console.log("Retry payment clicked");
     // Re-invoke Razorpay payment flow for pending order
     // You may want to call the backend to get the pending order details and re-initiate payment
     // For now, just reload the page or re-run handleCheckout
@@ -315,7 +314,6 @@ function Checkout() {
   }
 
   const handleCheckout = async () => {
-    console.log('[DEBUG] Checkout triggered. Cart:', cartItems, 'Coins:', coins, 'UseCoins:', useCoins, 'CoinsToUse:', coinsToUse, 'CoinsApplied:', coinsApplied, 'FinalAmount:', finalAmount, 'SelectedPayment:', selectedPayment);
     if (hasOutOfAreaItems) {
       showToast('One or more items in your cart are not deliverable to this location.', 'error')
       return
@@ -353,7 +351,6 @@ function Checkout() {
           email: addresses.find(a => a.id === selectedAddress)?.email || '',
           phone: addresses.find(a => a.id === selectedAddress)?.phoneNumber || ''
         };
-        console.log('[DEBUG] Creating Razorpay order with:', paymentData, `(Rupees: ₹${finalAmount}, Paise: ${Math.round(finalAmount * 100)})`);
         const orderRes = await apiClient.post('/payment/create-order', paymentData);
         if (orderRes.status !== 200) {
           console.error('Backend order creation failed:', orderRes);
@@ -363,7 +360,6 @@ function Checkout() {
           return;
         }
         const order = orderRes.data;
-        console.log('[DEBUG] Razorpay order response:', order);
 
         if (order?.simulation) {
           if (!paymentSimulationEnabled) {
@@ -434,7 +430,7 @@ function Checkout() {
               throw new Error('Simulated payment verification failed');
             }
           } catch (simError) {
-            console.error('[DEBUG] Simulated payment flow failed:', simError);
+            console.error('Simulated payment flow failed:', simError);
             setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
             showToast('Payment simulation failed. Please try again.', 'error');
           } finally {
@@ -452,7 +448,6 @@ function Checkout() {
           description: 'Order Payment',
           order_id: order.id,
           handler: async function (response) {
-            console.log('[DEBUG] Razorpay handler response:', response);
             
             // Show processing overlay immediately
             setProcessingState({
@@ -471,7 +466,6 @@ function Checkout() {
                 email: paymentData.email,
                 phone: paymentData.phone
               });
-              console.log('[DEBUG] Payment verify result:', verifyResult.data);
               
               // Only after payment is verified, place the order
               if (verifyResult.data.status === 'success') {
@@ -499,9 +493,6 @@ function Checkout() {
                   addressId: selectedAddress,
                   paymentId: response.razorpay_payment_id
                 };
-                console.log('[DEBUG] Placing order after payment success:', orderData);
-                console.log('[DEBUG] addressId type:', typeof orderData.addressId, 'value:', orderData.addressId);
-                console.log('[DEBUG] items[0]:', orderData.items[0]);
                 try {
                   const placedOrder = await apiClient.post('/orders', orderData);
                   
@@ -524,8 +515,7 @@ function Checkout() {
                     navigate(`/order-confirmation/${placedOrder.data.id}`);
                   }, 500);
                 } catch (orderErr) {
-                  console.error('[DEBUG] Order creation failed:', orderErr);
-                  console.error('[DEBUG] Order error response:', orderErr.response?.data);
+                  console.error('Order creation failed:', orderErr?.message || orderErr);
                   setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
                   const errorMsg = orderErr.response?.data?.message || orderErr.response?.data?.error || orderErr.message || 'Unknown error';
                   showToast(`Order failed: ${errorMsg}. Payment was successful - contact support.`, 'error');
@@ -539,7 +529,7 @@ function Checkout() {
                 startRetryWindow();
               }
             } catch (err) {
-              console.error('[DEBUG] Payment verification failed:', err);
+              console.error('Payment verification failed:', err);
               setProcessingState({ active: false, message: '', step: 0, totalSteps: 3 });
               showToast('Payment verification failed. Please retry.', 'error');
               sendNotification('Payment verification failed. Retry payment.', 'error', '❌');

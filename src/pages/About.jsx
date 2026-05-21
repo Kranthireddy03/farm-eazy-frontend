@@ -35,12 +35,12 @@ export default function About() {
   ]
 
   return (
-    <div className="px-4 md:px-6 py-12 md:py-16">
+    <div className="px-4 md:px-6 py-10 md:py-14">
       <div className="max-w-7xl mx-auto space-y-8">
         <HeroFrame
           eyebrow="About FarmEazy"
-          title="A focused platform for modern farming teams."
-          description="FarmEazy combines field operations, irrigation workflows, support systems, and marketplace interactions into one cohesive experience."
+          title="A practical digital platform built for farming operations and support workflows."
+          description="FarmEazy helps growers reduce manual work by bringing farm records, crop plans, irrigation schedules, product listings, and support into one reliable dashboard."
           actions={null}
           side={
             <GlassPanel className="p-5 md:p-6">

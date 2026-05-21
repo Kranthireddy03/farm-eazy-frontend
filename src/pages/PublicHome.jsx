@@ -12,29 +12,33 @@ export default function PublicHome() {
 
   const focusAreas = [
     {
-      title: 'Accounts & Sign In',
-      text: 'Clean paths for registration, login, password reset, and OTP flows.',
+      title: 'Farm Management',
+      text: 'Create and manage farms, track fields, and maintain crop records from one place.',
     },
     {
-      title: 'Support & FAQ',
-      text: 'Direct access to support, question submission, and public help content.',
+      title: 'Irrigation Scheduling',
+      text: 'Plan watering cycles, view schedule status, and keep crop needs on track.',
     },
     {
-      title: 'Learning & Guidance',
-      text: 'Explore public service content and support information before you commit to an account.',
+      title: 'Marketplace Listings',
+      text: 'Publish products, monitor availability, and connect with buyers quickly.',
+    },
+    {
+      title: 'Service Booking',
+      text: 'Offer and request agricultural services such as labor, equipment, and consultancy.',
     },
   ]
 
   return (
-    <main className="max-w-7xl mx-auto px-4 md:px-6 py-12 md:py-16">
+    <main className="max-w-7xl mx-auto px-4 md:px-6 py-10 md:py-14">
       <HeroFrame
-        eyebrow="Public Experience"
-        title="A calm, clear starting point for every visitor."
-        description="FarmEazy public pages explain the platform, guide onboarding, and connect users to support with a streamlined and secure interface."
+        eyebrow="Farm Management Made Simple"
+        title="Manage farms, crops, irrigation, marketplace listings, and service bookings from one platform."
+        description="FarmEazy brings daily farm operations into a single dashboard for growers, sellers, and support teams. Start with a clear onboarding path and move into real workflows fast."
         actions={(
           <>
-            <PillButton to="/register" active>Create account</PillButton>
-            <PillButton to="/contact">Contact support</PillButton>
+            <PillButton to="/register" active>Get Started</PillButton>
+            <PillButton to="/public-services">Explore Platform</PillButton>
           </>
         )}
         side={(

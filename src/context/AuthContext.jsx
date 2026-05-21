@@ -158,7 +158,6 @@ export function AuthProvider({ children }) {
     localStorage.removeItem(STORAGE_KEYS.USER_ID);
     localStorage.removeItem(STORAGE_KEYS.USER_USERNAME);
     localStorage.removeItem(STORAGE_KEYS.USER_PHONE);
-    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
     localStorage.removeItem('farmEazy_roles');
     
     // Clear session tracking
@@ -200,9 +199,7 @@ export function AuthProvider({ children }) {
     if (userData.token) {
       localStorage.setItem(STORAGE_KEYS.USER_TOKEN, userData.token);
     }
-    if (userData.refreshToken) {
-      localStorage.setItem(STORAGE_KEYS.USER_REFRESH_TOKEN, userData.refreshToken);
-    }
+    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
     if (userData.email) {
       localStorage.setItem(STORAGE_KEYS.USER_EMAIL, userData.email);
     }

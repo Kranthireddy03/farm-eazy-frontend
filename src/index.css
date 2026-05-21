@@ -39,6 +39,21 @@
   --color-shadow: rgba(0, 0, 0, 0.5);
 }
 
+:root {
+  --space-xs: 8px;
+  --space-sm: 12px;
+  --space-md: 20px;
+  --space-lg: 32px;
+  --space-xl: 56px;
+  --space-2xl: 80px;
+}
+
+.grecaptcha-badge {
+  right: 24px !important;
+  bottom: 96px !important;
+  z-index: 999 !important;
+}
+
 /* Onboarding Tour Highlight Style */
 .onboarding-highlight {
   position: relative;

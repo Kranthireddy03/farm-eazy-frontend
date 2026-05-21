@@ -415,6 +415,9 @@ function Layout({ onShowTour, children }) {
 
             {/* Right Section - Actions */}
             <div className="flex items-center space-x-2 shrink-0">
+              {/* Dark mode toggle inside header */}
+              <DarkModeToggle className="hidden sm:flex" />
+
               {/* Tour Button - Compact */}
               <button
                 data-tour="tour-button"
@@ -709,7 +712,7 @@ function Layout({ onShowTour, children }) {
 
       {/* Main Content */}
       <main className="flex-1 container-main py-4 md:py-5">
-        <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border p-4 md:p-6 lg:p-7 min-h-[calc(100vh-13rem)] animate-[fadeIn_.45s_ease-out]`}>
+        <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border p-4 md:p-6 lg:p-7 min-h-auto animate-[fadeIn_.45s_ease-out]`}>
           {children || <Outlet />}
         </div>
       </main>
@@ -722,20 +725,19 @@ function Layout({ onShowTour, children }) {
                 © 2026 FarmEazy. Smart Farm Management.
               </p>
               <div className="flex flex-wrap items-center gap-4">
-                <a href="/about" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>About</a>
-                <a href="/privacy-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Privacy Policy</a>
-                <a href="/terms" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Terms & Conditions</a>
-                <a href="/refund-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Refund Policy</a>
-                <a href="/shipping-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Shipping Policy</a>
-                <a href="/marketplace-disclosure" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</a>
-                <a href="/contact" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Contact Us</a>
+                <Link to="/about" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>About</Link>
+                <Link to="/privacy-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Privacy Policy</Link>
+                <Link to="/terms" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Terms & Conditions</Link>
+                <Link to="/refund-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Refund Policy</Link>
+                <Link to="/shipping-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Shipping Policy</Link>
+                <Link to="/marketplace-disclosure" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</Link>
+                <Link to="/contact" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Contact Us</Link>
               </div>
           </div>
         </div>
       </footer>
 
       <ChatSupport />
-      <DarkModeToggle floating className="right-6" />
       </div>
     </div>
   )
