@@ -1,5 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import DarkModeToggle from './DarkModeToggle'
 
 import PublicHeader from './PublicHeader'
 import PublicFooter from './PublicFooter'
