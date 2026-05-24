@@ -6,7 +6,7 @@
  * Shows toast notifications for OTP/SMS sending status
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import AuthService from '../services/AuthService'
@@ -14,6 +14,36 @@ import OtpService from '../services/OtpService'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { useGlobalToast } from '../context/ToastContext'
+
+function HoverQuestionCard({ title, question, options, correctIndex, correctText, wrongText, isDark }) {
+  const [selected, setSelected] = useState(null)
+
+  return (
+    <div className={`group relative overflow-hidden rounded-2xl border ${isDark ? 'border-slate-700 bg-slate-900/85' : 'border-slate-200 bg-white/95'} shadow-sm transition duration-300 ease-[cubic-bezier(0.2,0.85,0.2,1)] hover:shadow-xl hover:-translate-y-0.5`}>
+      <div className={`absolute inset-0 rounded-2xl ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-500/12'} opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none`} />
+      <div className="relative p-5">
+        <p className={`text-xs uppercase tracking-[0.28em] font-semibold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>{title}</p>
+        <h3 className={`mt-3 text-lg font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>{question}</h3>
+        <div className="mt-4 grid gap-3">
+          {options.map((option, index) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setSelected(index)}
+              className={`w-full text-left px-3 py-3 rounded-2xl border transition-all duration-200 ${selected === index ? (isDark ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200' : 'border-emerald-400 bg-emerald-50 text-emerald-900') : (isDark ? 'border-slate-700 bg-slate-900/85 text-slate-300 hover:border-emerald-400 hover:bg-slate-800' : 'border-slate-200 bg-white text-slate-900 hover:border-emerald-400 hover:bg-emerald-50')}`}>
+              {option}
+            </button>
+          ))}
+        </div>
+        {selected !== null && (
+          <p className={`mt-4 text-sm font-medium ${selected === correctIndex ? (isDark ? 'text-emerald-300' : 'text-emerald-700') : (isDark ? 'text-rose-300' : 'text-red-600')}`}>
+            {selected === correctIndex ? correctText : wrongText}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 const GOOGLE_ALLOWED_ORIGINS = (import.meta.env.VITE_GOOGLE_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
@@ -81,6 +111,183 @@ function Register() {
   const [googleStatusTone, setGoogleStatusTone] = useState('info')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [registerQuizSeed, setRegisterQuizSeed] = useState(() => Math.random())
+
+  const registerQuestionCards = [
+    {
+      title: 'Signup hint',
+      question: 'What should you verify before creating a FarmEazy account?',
+      options: ['Phone number', 'Blog content', 'Notification settings'],
+      correctIndex: 0,
+      correctText: 'Great — verifying your phone keeps your account secure and ready for OTP flows.',
+      wrongText: 'Not quite — phone verification is the key step for FarmEazy registration.',
+    },
+    {
+      title: 'Setup tip',
+      question: 'What is the best description of FarmEazy after signup?',
+      options: ['A marketplace only', 'A smart farm dashboard', 'A photography app'],
+      correctIndex: 1,
+      correctText: 'Yes — FarmEazy is a smart farming dashboard for crops, irrigation, and sales.',
+      wrongText: 'Try again — FarmEazy is built for farm management, not just marketplace or photos.',
+    },
+    {
+      title: 'Fresh start',
+      question: 'Which detail makes it easier to connect farms and buyers?',
+      options: ['Phone number', 'Favorite color', 'Emoji choice'],
+      correctIndex: 0,
+      correctText: 'Correct — a phone number helps FarmEazy confirm your identity and support reach you.',
+      wrongText: 'Wrong — FarmEazy needs real contact details like phone number.',
+    },
+    {
+      title: 'Growth tip',
+      question: 'Why does FarmEazy ask for a username during registration?',
+      options: ['For system alerts', 'For identity and profile', 'For blog posts'],
+      correctIndex: 1,
+      correctText: 'Right — the username is used for your FarmEazy profile and identity.',
+      wrongText: 'Not quite — it is for your profile identity, not blog content.',
+    },
+    {
+      title: 'Smart signup',
+      question: 'What happens after you complete registration?',
+      options: ['You can add farms immediately', 'Your account is muted', 'You lose access'],
+      correctIndex: 0,
+      correctText: 'Exactly — after signup, you can immediately start adding farms and tracking crops.',
+      wrongText: 'Nope — FarmEazy opens access after signup, not restricts it.',
+    },
+    {
+      title: 'Next step',
+      question: 'What is the easiest way to finish account setup?',
+      options: ['Complete profile details', 'Change theme', 'Delete account'],
+      correctIndex: 0,
+      correctText: 'Yes — completing profile details is the easiest way to get started.',
+      wrongText: 'Try again — the setup is about profile details, not theme or deletion.',
+    },
+    {
+      title: 'Onboarding',
+      question: 'Which item should you keep handy during signup?',
+      options: ['Phone', 'Laptop charger', 'Coffee cup'],
+      correctIndex: 0,
+      correctText: 'Right — you should keep your phone handy for verification codes.',
+      wrongText: 'Not quite — the important thing is your phone for OTP, not accessories.',
+    },
+    {
+      title: 'Account safety',
+      question: 'Why is password confirmation required?',
+      options: ['To avoid typos', 'To save data', 'To update profile'],
+      correctIndex: 0,
+      correctText: 'Correct — it helps avoid typos and keeps your password entry accurate.',
+      wrongText: 'Wrong — the main reason is to confirm the password you entered.',
+    },
+    {
+      title: 'Farm focus',
+      question: 'After registration, what is the best first action?',
+      options: ['Add a farm', 'Send a message', 'Write a review'],
+      correctIndex: 0,
+      correctText: 'Exactly — adding a farm is the best way to start using FarmEazy.',
+      wrongText: 'No — the first action should be farm setup, not messages or reviews.',
+    },
+    {
+      title: 'Modern signup',
+      question: 'What does FarmEazy give you after sign-up?',
+      options: ['Crop and irrigation tools', 'Music playlists', 'Movie tickets'],
+      correctIndex: 0,
+      correctText: 'Right — it gives access to farm and irrigation management, not entertainment.',
+      wrongText: 'Not that — FarmEazy focuses on farming tools after signup.',
+    },
+    {
+      title: 'Profile tip',
+      question: 'Why should you add a profile photo?',
+      options: ['Better recognition', 'Improve weather', 'Faster login'],
+      correctIndex: 0,
+      correctText: 'Yes — a profile photo makes your account easier to recognize inside the app.',
+      wrongText: 'Not really — profile photos are for recognition, not weather or speed.',
+    },
+    {
+      title: 'Phone check',
+      question: 'Which info does FarmEazy need for OTP?',
+      options: ['Phone number', 'Birthday', 'Favorite farm'],
+      correctIndex: 0,
+      correctText: 'Correct — OTP verification relies on your phone number.',
+      wrongText: 'Wrong — FarmEazy needs phone number for OTP, not birthday or favorites.',
+    },
+    {
+      title: 'Email tip',
+      question: 'What happens if email is invalid?',
+      options: ['No verification code', 'More crops', 'Faster dashboard'],
+      correctIndex: 0,
+      correctText: 'Right — an invalid email means the verification code cannot be delivered.',
+      wrongText: 'Not that — the issue is not related to crops or dashboard speed.',
+    },
+    {
+      title: 'Help readiness',
+      question: 'How can full details help support?',
+      options: ['They resolve issues faster', 'They change theme', 'They delete accounts'],
+      correctIndex: 0,
+      correctText: 'Exactly — complete registration details help support resolve issues faster.',
+      wrongText: 'No — support uses your details to help, not to change themes or delete accounts.',
+    },
+    {
+      title: 'Secure start',
+      question: 'What is a strong registration password?',
+      options: ['Mix letters and numbers', 'Only your name', 'Repeated digits'],
+      correctIndex: 0,
+      correctText: 'Right — strong passwords mix letters, numbers, and symbols.',
+      wrongText: 'Not secure — you should avoid simple names and repeated digits.',
+    },
+    {
+      title: 'Account setup',
+      question: 'Which action comes after sign-up?',
+      options: ['Verify email', 'Share posts', 'Book tours'],
+      correctIndex: 0,
+      correctText: 'Yes — verifying your email is the next required step.',
+      wrongText: 'No — email verification follows signup before optional actions.',
+    },
+    {
+      title: 'Farm planning',
+      question: 'Why add farm details now?',
+      options: ['To see accurate schedules', 'To skip onboarding', 'To enable ads'],
+      correctIndex: 0,
+      correctText: 'Exactly — accurate farm details let FarmEazy tailor schedules and alerts.',
+      wrongText: 'Not right — it is about schedule accuracy, not ads or skipping onboarding.',
+    },
+    {
+      title: 'Confirmation',
+      question: 'Why confirm password twice?',
+      options: ['Reduce entry mistakes', 'Create a second password', 'Send OTP'],
+      correctIndex: 0,
+      correctText: 'Right — confirming twice reduces the chance of a typo.',
+      wrongText: 'Wrong — the goal is preventing mistakes, not creating two passwords.',
+    },
+    {
+      title: 'Signup benefit',
+      question: 'Registering now means you can:',
+      options: ['Track irrigation', 'Play music', 'Watch movies'],
+      correctIndex: 0,
+      correctText: 'Yes — registration unlocks irrigation tracking and farm management tools.',
+      wrongText: 'No — FarmEazy is about farm tools, not entertainment.',
+    },
+    {
+      title: 'Launch tip',
+      question: 'What should you keep ready during sign-up?',
+      options: ['Phone for OTP', 'Travel plans', 'Favorite recipe'],
+      correctIndex: 0,
+      correctText: 'Correct — your phone should be ready for OTP verification.',
+      wrongText: 'Not that — the important item is your phone, not travel or recipes.',
+    },
+  ]
+
+  const pickRandomCards = (cards, count) => {
+    const shuffled = [...cards]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled.slice(0, count)
+  }
+
+  const displayRegisterCards = useMemo(() => pickRandomCards(registerQuestionCards, 2), [registerQuizSeed])
+  const refreshRegisterCards = () => setRegisterQuizSeed(Math.random())
+
   const googleButtonRef = useRef(null)
   const googleRenderedRef = useRef(false)
   const googleMode = 'register'
@@ -193,10 +400,10 @@ function Register() {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: isDark ? 'filled_black' : 'outline',
         size: 'large',
-        shape: 'pill',
-        text: 'signup_with',
+        shape: 'circle',
+        text: 'icon',
         logo_alignment: 'left',
-        width: 320,
+        width: 48,
       })
 
       googleRenderedRef.current = true
@@ -579,72 +786,41 @@ function Register() {
 
   return (
     <div className="premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
-      {/* Animated Background */}
-      <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900' : 'bg-gradient-to-br from-teal-100 via-emerald-50 to-green-100'}`}>
-        <div className="absolute inset-0 opacity-30">
-          <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-cyan-900' : 'bg-cyan-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-          <div className={`absolute top-0 -right-4 w-72 h-72 ${isDark ? 'bg-emerald-800' : 'bg-emerald-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '2s'}}></div>
-          <div className={`absolute -bottom-8 left-20 w-72 h-72 ${isDark ? 'bg-teal-900' : 'bg-yellow-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '4s'}}></div>
-        </div>
-        <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none"></div>
-        {/* Farm Pattern Overlay */}
-        <div className={`absolute inset-0 ${isDark ? 'opacity-5' : 'opacity-10'}`} style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? 'ffffff' : '065f46'}' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}></div>
-      </div>
-
-      {/* Floating Farm Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-16 left-8 text-6xl opacity-20 animate-bounce" style={{animationDuration: '3s'}}>🌽</div>
-        <div className="absolute top-32 right-16 text-5xl opacity-20 animate-bounce" style={{animationDuration: '4s', animationDelay: '1s'}}>🌿</div>
-        <div className="absolute bottom-40 left-1/4 text-4xl opacity-20 animate-bounce" style={{animationDuration: '5s', animationDelay: '2s'}}>🐄</div>
-        <div className="absolute bottom-24 right-1/4 text-5xl opacity-20 animate-bounce" style={{animationDuration: '3.5s'}}>🌻</div>
-      </div>
+      <div className="absolute inset-0 bg-slate-950" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.08),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.08),transparent_26%)]" />
+      <div className="absolute inset-0 opacity-20" style={{ backgroundSize: '24px 24px', backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)' }} />
 
       {/* Register Experience Grid */}
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6 items-stretch">
-        <div className={`hidden lg:flex flex-col justify-between rounded-[2rem] border p-8 interactive-card ${isDark ? 'bg-slate-900/75 border-slate-700 text-slate-100' : 'bg-white/90 border-emerald-200 text-slate-900'}`}>
-          <div className="space-y-6">
-            <div>
-              <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Onboarding Studio</p>
-              <h2 className="mt-3 text-4xl font-black leading-tight">Launch your FarmEazy setup today.</h2>
-              <p className={`mt-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                Create your account, verify your contact, and start using farm workflows and support tools immediately.
+      <div className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6 items-stretch">
+        <div className={`relative overflow-hidden rounded-[2rem] border border-slate-700 shadow-[0_25px_90px_rgba(0,0,0,0.3)] ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
+          <div className="relative h-full min-h-[680px] overflow-hidden rounded-[2rem]">
+            <img src="/auth-register.png" alt="FarmEazy register illustration" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent" />
+            <div className="absolute left-0 bottom-0 w-full p-8 sm:p-10">
+              <span className="text-xs uppercase tracking-[0.24em] text-emerald-300">FARMEAZY signup</span>
+              <h2 className="mt-3 text-4xl font-black leading-tight">Create your smart farming account</h2>
+              <p className="mt-4 text-sm leading-relaxed text-slate-300 max-w-lg">
+                Join FarmEazy to manage farms, irrigation, crop sales, and expert support from one polished dashboard.
               </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/95'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Verified contact</p>
-                <p className="mt-2 text-3xl font-black">OTP first</p>
+              <div className={`mt-6 rounded-3xl border p-5 ${isDark ? 'border-slate-700 bg-slate-900/90' : 'border-slate-200 bg-white/95'} shadow-sm`}>
+                <div className="flex items-center justify-between gap-3 mb-4">
+                  <p className={`text-xs uppercase tracking-[0.28em] font-semibold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>Quick questions</p>
+                  <button type="button" onClick={refreshRegisterCards} className={`text-xs font-semibold transition ${isDark ? 'text-emerald-300 hover:text-emerald-100' : 'text-emerald-700 hover:text-emerald-900'}`}>
+                    Refresh
+                  </button>
+                </div>
+                <div className="space-y-4">
+                  {displayRegisterCards.map((card, index) => (
+                    <HoverQuestionCard key={`${card.question}-${registerQuizSeed}-${index}`} {...card} isDark={isDark} />
+                  ))}
+                </div>
               </div>
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-cyan-700/50 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/90'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Trusted setup</p>
-                <p className="mt-2 text-3xl font-black">Easy profile</p>
-              </div>
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-slate-600 bg-slate-800/75' : 'border-slate-200 bg-white/95'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Quick onboarding</p>
-                <p className="mt-2 text-3xl font-black">3 simple steps</p>
-              </div>
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/95'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">User first</p>
-                <p className="mt-2 text-3xl font-black">Friendly forms</p>
-              </div>
-            </div>
-          </div>
-
-          <div className={`rounded-[2rem] border p-5 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-white/95'}`}>
-            <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>What happens next</p>
-            <div className="mt-4 space-y-3 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}">
-              <p>1. Verify your email and phone.</p>
-              <p>2. Finish your profile with farm details.</p>
-              <p>3. Start using crop, irrigation and order workflows.</p>
             </div>
           </div>
         </div>
 
         <div className="relative w-full">
-        <div className={`backdrop-blur-xl ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-emerald-200'} rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.01]`}>
+          <div className={`backdrop-blur-xl relative overflow-hidden rounded-[2rem] border border-slate-700 shadow-[0_20px_80px_rgba(0,0,0,0.32)] transform transition duration-300 hover:scale-[1.01] p-8 ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
           
           {/* Logo & Header */}
           <div className="text-center mb-6">
@@ -658,9 +834,10 @@ function Register() {
             <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} mt-1 text-sm`}>Create your account to start your smart farming journey</p>
           </div>
 
+
           <div className={`glass-card mb-5 rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/40' : 'border-emerald-100 bg-emerald-50/70'}`}>
             <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-emerald-800'}`}>Continue with Google sign-up</p>
-            <div ref={googleButtonRef} className="flex items-center justify-center min-h-[62px]" />
+            <div ref={googleButtonRef} className="flex items-center justify-center min-h-[48px] min-w-[48px]" />
             <p className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-emerald-600'}`}>
               Google sign-up is for new FarmEazy accounts. If this email already exists, please use the Login page instead. After you complete setup, FarmEazy will send the standard welcome email, SMS, and notification.
             </p>
@@ -771,14 +948,23 @@ function Register() {
               <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
                 <span>🔒</span> Confirm Password
               </label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
-                placeholder="••••••••"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12`}
+                  placeholder="••••••••"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-emerald-500 hover:text-emerald-700'} transition-colors`}
+                >
+                  {showPassword ? '👁️' : '👁️‍🗨️'}
+                </button>
+              </div>
               {errors.confirmPassword && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-xs flex items-center gap-1`}><span>❌</span> {errors.confirmPassword}</p>}
             </div>
 

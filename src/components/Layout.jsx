@@ -33,6 +33,18 @@ function Layout({ onShowTour, children }) {
   const navigate = useNavigate()
   const location = useLocation()
   const { isDark } = useTheme()
+
+  const scrollToTopPage = () => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' })
+      if (document.documentElement) document.documentElement.scrollTop = 0
+      if (document.body) document.body.scrollTop = 0
+    })
+  }
+
+  useEffect(() => {
+    scrollToTopPage()
+  }, [location.pathname])
   const { logout: authLogout, getUserEmail, getUserName, isAdmin, hasRole, isAuthenticated } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { coins, refreshCoins } = useCoin()
@@ -566,6 +578,19 @@ function Layout({ onShowTour, children }) {
                       <button
                         onClick={() => {
                           setShowUserMenu(false)
+                          navigate('/service-requests')
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                      >
+                        <span className={`w-9 h-9 ${isDark ? 'bg-cyan-900/50' : 'bg-cyan-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📝</span>
+                        <div>
+                          <span className="font-medium block">Service Requests</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Manage your requests</span>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false)
                           navigate('/bank-verification')
                         }}
                         className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
@@ -722,13 +747,13 @@ function Layout({ onShowTour, children }) {
                 © 2026 FarmEazy. Smart Farm Management.
               </p>
               <div className="flex flex-wrap items-center gap-4">
-                <Link to="/about" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>About</Link>
-                <Link to="/privacy-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Privacy Policy</Link>
-                <Link to="/terms" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Terms & Conditions</Link>
-                <Link to="/refund-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Refund Policy</Link>
-                <Link to="/shipping-policy" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Shipping Policy</Link>
-                <Link to="/marketplace-disclosure" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</Link>
-                <Link to="/contact" className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Contact Us</Link>
+                <Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>About</Link>
+                <Link to="/privacy-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Privacy Policy</Link>
+                <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Terms & Conditions</Link>
+                <Link to="/refund-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Refund Policy</Link>
+                <Link to="/shipping-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Shipping Policy</Link>
+                <Link to="/marketplace-disclosure" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</Link>
+                <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Contact Us</Link>
               </div>
           </div>
         </div>

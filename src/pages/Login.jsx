@@ -5,12 +5,42 @@
  * Uses AuthContext for professional session management
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+
+function HoverQuestionCard({ title, question, options, correctIndex, correctText, wrongText, isDark }) {
+  const [selected, setSelected] = useState(null)
+
+  return (
+    <div className={`group relative overflow-hidden rounded-2xl border ${isDark ? 'border-slate-700 bg-slate-900/85' : 'border-slate-200 bg-white/95'} shadow-sm transition duration-300 ease-[cubic-bezier(0.2,0.85,0.2,1)] hover:shadow-xl hover:-translate-y-0.5`}>
+      <div className={`absolute inset-0 rounded-2xl ${isDark ? 'bg-emerald-500/10' : 'bg-emerald-500/12'} opacity-0 transition-opacity duration-300 group-hover:opacity-100 pointer-events-none`} />
+      <div className="relative p-5">
+        <p className={`text-xs uppercase tracking-[0.28em] font-semibold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>{title}</p>
+        <h3 className={`mt-3 text-lg font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>{question}</h3>
+        <div className="mt-4 grid gap-3">
+          {options.map((option, index) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setSelected(index)}
+              className={`w-full text-left px-3 py-3 rounded-2xl border transition-all duration-200 ${selected === index ? (isDark ? 'border-emerald-400 bg-emerald-400/10 text-emerald-200' : 'border-emerald-400 bg-emerald-50 text-emerald-900') : (isDark ? 'border-slate-700 bg-slate-900/85 text-slate-300 hover:border-emerald-400 hover:bg-slate-800' : 'border-slate-200 bg-white text-slate-900 hover:border-emerald-400 hover:bg-emerald-50')}`}>
+              {option}
+            </button>
+          ))}
+        </div>
+        {selected !== null && (
+          <p className={`mt-4 text-sm font-medium ${selected === correctIndex ? (isDark ? 'text-emerald-300' : 'text-emerald-700') : (isDark ? 'text-rose-300' : 'text-red-600')}`}>
+            {selected === correctIndex ? correctText : wrongText}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 const GOOGLE_ALLOWED_ORIGINS = (import.meta.env.VITE_GOOGLE_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
@@ -79,6 +109,183 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [rememberMe, setRememberMe] = useState(true)
+  const [loginQuizSeed, setLoginQuizSeed] = useState(() => Math.random())
+
+  const loginQuestionCards = [
+    {
+      title: 'FarmEazy quiz',
+      question: 'What is the best first action after signing in to FarmEazy?',
+      options: ['Launch a support ticket', 'Add a farm', 'Change your password'],
+      correctIndex: 1,
+      correctText: 'Right — adding a farm starts your smart farm workflow.',
+      wrongText: 'Not quite — FarmEazy is most useful after adding a farm first.',
+    },
+    {
+      title: 'Quick field guide',
+      question: 'Which view helps you monitor crop health in FarmEazy?',
+      options: ['Marketplace', 'Farm dashboard', 'Settings'],
+      correctIndex: 1,
+      correctText: 'Yes — the farm dashboard shows field status, irrigation, and crop progress.',
+      wrongText: 'Try again — the farm dashboard is the central place for crop health data.',
+    },
+    {
+      title: 'Onboarding tip',
+      question: 'What does the green indicator usually mean in FarmEazy panels?',
+      options: ['Action required', 'Healthy status', 'Account expired'],
+      correctIndex: 1,
+      correctText: 'Correct — green typically means a healthy or active status.',
+      wrongText: 'Close — in this UI, green usually indicates a healthy or active state.',
+    },
+    {
+      title: 'Smart farming',
+      question: 'What should you track first to keep irrigation on schedule?',
+      options: ['Crop stage', 'Blog posts', 'Support tickets'],
+      correctIndex: 0,
+      correctText: 'Right — crop stage is the most important signal for scheduling water.',
+      wrongText: 'Not quite — FarmEazy uses crop stage to set irrigation priorities.',
+    },
+    {
+      title: 'FarmEazy insight',
+      question: 'Who should use the marketplace section?',
+      options: ['Farm owners selling produce', 'Developers', 'HR managers'],
+      correctIndex: 0,
+      correctText: 'Exactly — farmers and vendors use it to list and manage products.',
+      wrongText: 'Hint: the marketplace is for selling and buying farm goods.',
+    },
+    {
+      title: 'Help hint',
+      question: 'If an answer is unclear, where can you usually go next?',
+      options: ['FAQ or support', 'Bank verification', 'Payment gateway'],
+      correctIndex: 0,
+      correctText: 'Yes — FAQ and support are the right next steps.',
+      wrongText: 'Try again — FarmEazy has built-in FAQ and support routes for unclear answers.',
+    },
+    {
+      title: 'Secure login',
+      question: 'What does the OTP login mode help protect?',
+      options: ['Only email', 'Phone-based access', 'Inventory data'],
+      correctIndex: 1,
+      correctText: 'Correct — OTP login protects mobile-based access.',
+      wrongText: 'Wrong — OTP mode is about phone-based access verification.',
+    },
+    {
+      title: 'Productivity tip',
+      question: 'Which feature reduces support questions by keeping data clear?',
+      options: ['Crop notes', 'Workflow guidance', 'Color theme'],
+      correctIndex: 1,
+      correctText: 'Right — guided workflows help reduce confusion and support questions.',
+      wrongText: 'Not quite — the feature is about guiding workflows, not just visuals.',
+    },
+    {
+      title: 'Farm view',
+      question: 'What does a successful login unlock first?',
+      options: ['Field maps and schedules', 'Theme settings', 'Ad campaigns'],
+      correctIndex: 0,
+      correctText: 'Exactly — logging in lets you access field maps, crop schedules, and farm tools.',
+      wrongText: 'Close — the main benefit is access to farm operations, not marketing.',
+    },
+    {
+      title: 'Speed tip',
+      question: 'What is the quickest way to get started after login?',
+      options: ['Add a farm', 'Open settings', 'View notifications'],
+      correctIndex: 0,
+      correctText: 'Yes — adding a farm gets you into FarmEazy fast.',
+      wrongText: 'Try again — your farm setup is the first step, not settings or notifications.',
+    },
+    {
+      title: 'Security alert',
+      question: 'What should you do if you see an unknown login alert?',
+      options: ['Ignore it', 'Contact support', 'Share password'],
+      correctIndex: 1,
+      correctText: 'Good call — unknown login alerts should be reported to support immediately.',
+      wrongText: 'Not safe — you should report unknown login alerts instead of ignoring them.',
+    },
+    {
+      title: 'Dashboard habit',
+      question: 'How do you check irrigation progress quickly?',
+      options: ['Open farm dashboard', 'Read email', 'Call support'],
+      correctIndex: 0,
+      correctText: 'Exactly — the farm dashboard gives the fastest irrigation overview.',
+      wrongText: 'The farm dashboard is the right spot, not email or support calls.',
+    },
+    {
+      title: 'Data tip',
+      question: 'Where do crop trend alerts appear?',
+      options: ['In dashboard cards', 'In settings', 'In the blog'],
+      correctIndex: 0,
+      correctText: 'Right — crop trend alerts show up in dashboard cards by design.',
+      wrongText: 'Try again — alerts are surfaced in dashboard cards, not settings or blog posts.',
+    },
+    {
+      title: 'User flow',
+      question: 'Which card shows your active farms?',
+      options: ['Farm overview', 'Billing', 'Notification center'],
+      correctIndex: 0,
+      correctText: 'Yes — Farm overview highlights your active farm list first.',
+      wrongText: 'Not quite — active farms are visible in Farm overview, not billing or notifications.',
+    },
+    {
+      title: 'Shortcut',
+      question: 'What helps make FarmEazy faster daily?',
+      options: ['Using saved profiles', 'Clearing browser cache', 'Changing theme'],
+      correctIndex: 0,
+      correctText: 'Correct — saved profiles speed up repeated farm access.',
+      wrongText: 'The best daily shortcut is using saved profiles, not cache clearing or themes.',
+    },
+    {
+      title: 'Mobile login',
+      question: 'What does OTP login require?',
+      options: ['Phone number', 'Address', 'Bank account'],
+      correctIndex: 0,
+      correctText: 'Yes — OTP login needs your phone number to send the code.',
+      wrongText: 'No — OTP login specifically uses phone number verification.',
+    },
+    {
+      title: 'Notifications',
+      question: 'A yellow badge usually means?',
+      options: ['Attention needed', 'Success', 'Deleted'],
+      correctIndex: 0,
+      correctText: 'Right — yellow badges signal attention or an item needing review.',
+      wrongText: 'Yellow is for attention, not success or deletion.',
+    },
+    {
+      title: 'Setup check',
+      question: 'Before logging in, confirm:',
+      options: ['Your password', 'Your favorite crop', 'Your browser theme'],
+      correctIndex: 0,
+      correctText: 'Correct — verifying the right password is essential before signing in.',
+      wrongText: 'Not quite — the key check is your password, not cosmetic preferences.',
+    },
+    {
+      title: 'Analytics',
+      question: 'Which metric helps compare harvest dates?',
+      options: ['Crop status', 'Email history', 'Theme setting'],
+      correctIndex: 0,
+      correctText: 'Right — crop status helps compare harvest timing and readiness.',
+      wrongText: 'Analytics are based on crop status, not email or theme settings.',
+    },
+    {
+      title: 'Farm routine',
+      question: 'If fields need watering, FarmEazy will show:',
+      options: ['Irrigation alerts', 'Theme options', 'Promo banners'],
+      correctIndex: 0,
+      correctText: 'Exactly — irrigation alerts are shown when watering is needed.',
+      wrongText: 'Water alerts are featured, not theme or promo messages.',
+    },
+  ]
+
+  const pickRandomCards = (cards, count) => {
+    const shuffled = [...cards]
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+    }
+    return shuffled.slice(0, count)
+  }
+
+  const displayLoginCards = useMemo(() => pickRandomCards(loginQuestionCards, 2), [loginQuizSeed])
+  const refreshLoginCards = () => setLoginQuizSeed(Math.random())
+
   const googleButtonRef = useRef(null)
   const googleRenderedRef = useRef(false)
   const googleMode = 'login'
@@ -185,10 +392,10 @@ function Login() {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: isDark ? 'filled_black' : 'outline',
         size: 'large',
-        shape: 'pill',
-        text: 'signin_with',
+        shape: 'circle',
+        text: 'icon',
         logo_alignment: 'left',
-        width: 320,
+        width: 48,
       })
 
       googleRenderedRef.current = true
@@ -463,90 +670,42 @@ function Login() {
 
   return (
     <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-      {/* Animated Background */}
-      <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900' : 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100'}`}>
-        <div className="absolute inset-0 opacity-30">
-          <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-emerald-800' : 'bg-yellow-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-          <div className={`absolute top-0 -right-4 w-72 h-72 ${isDark ? 'bg-teal-800' : 'bg-emerald-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '2s'}}></div>
-          <div className={`absolute -bottom-8 left-20 w-72 h-72 ${isDark ? 'bg-cyan-900' : 'bg-green-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '4s'}}></div>
-        </div>
-        {/* Farm Pattern Overlay */}
-        <div className={`absolute inset-0 ${isDark ? 'opacity-5' : 'opacity-10'}`} style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? 'ffffff' : '065f46'}' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}></div>
-      </div>
-
-      {/* Floating Farm Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 text-6xl opacity-20 animate-bounce" style={{animationDuration: '3s'}}>🌾</div>
-        <div className="absolute top-40 right-20 text-5xl opacity-20 animate-bounce" style={{animationDuration: '4s', animationDelay: '1s'}}>🌻</div>
-        <div className="absolute bottom-32 left-1/4 text-4xl opacity-20 animate-bounce" style={{animationDuration: '5s', animationDelay: '2s'}}>🌱</div>
-        <div className="absolute bottom-20 right-1/3 text-5xl opacity-20 animate-bounce" style={{animationDuration: '3.5s'}}>🚜</div>
+      <div className={`absolute inset-0 ${isDark ? 'bg-slate-950' : 'bg-slate-900'}`}>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(56,189,248,0.14),transparent_26%)]" />
+        <div className="absolute inset-0 opacity-20" style={{ backgroundSize: '24px 24px', backgroundImage: `radial-gradient(circle, ${isDark ? 'rgba(148,163,184,0.16)' : 'rgba(255,255,255,0.08)'} 1px, transparent 1px)` }} />
       </div>
 
       {/* Login Experience Grid */}
-      <div className="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6 items-stretch">
-        <div className={`hidden lg:flex flex-col justify-between rounded-[2rem] border p-8 interactive-card ${isDark ? 'bg-slate-900/75 border-slate-700 text-slate-100' : 'bg-white/90 border-emerald-200 text-slate-900'}`}>
-          <div className="space-y-6">
-            <div>
-              <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Smart Farming Access</p>
-              <h2 className="mt-3 text-4xl font-black leading-tight">Operate your farms with less friction.</h2>
-              <p className={`mt-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-                Sign in quickly and keep field operations, support, and marketplace tools within reach.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/95'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Field-friendly</p>
-                <p className="mt-2 text-3xl font-black">Mobile ready</p>
-                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Login from the farm without losing progress.
-                </p>
-              </div>
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-cyan-700/50 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/90'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Secure</p>
-                <p className="mt-2 text-3xl font-black">OTP + password</p>
-                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Choose the login flow that fits your routine.
-                </p>
-              </div>
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-slate-600 bg-slate-800/75' : 'border-slate-200 bg-white/95'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Trusted</p>
-                <p className="mt-2 text-3xl font-black">Fast recovery</p>
-                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Secure reset options keep your account available.
-                </p>
-              </div>
-              <div className={`rounded-3xl border p-5 ${isDark ? 'border-emerald-700/50 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/95'}`}>
-                <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Connected</p>
-                <p className="mt-2 text-3xl font-black">Dashboard ready</p>
-                <p className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                  Your account gives access to farms, crops, and support tools.
-                </p>
-              </div>
-            </div>
+      <div className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-6 items-stretch">
+        <div className={`flex flex-col justify-between rounded-[2rem] border border-slate-700 overflow-hidden shadow-[0_25px_90px_rgba(0,0,0,0.3)] ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
+          <div className="relative overflow-hidden rounded-[2rem] border border-transparent shadow-2xl">
+            <img src="/auth-login.png" alt="FarmEazy login illustration" className="w-full h-full object-cover rounded-[2rem]" />
           </div>
-
-          <div className={`rounded-[2rem] border p-5 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-white/95'}`}>
-            <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Member Benefits</p>
-            <p className={`mt-3 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-              One account gives you farm tracking, support access, crop alerts, and marketplace actions in one place.
+          <div className="mt-8">
+            <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>FarmEazy login</p>
+            <h2 className="mt-3 text-4xl font-black leading-tight">Welcome back to your farm dashboard</h2>
+            <p className={`mt-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              Securely access your fields, crop advice, and marketplace tools from one vibrant farm view.
             </p>
-            <div className="mt-4 grid gap-3">
-              <div className={`rounded-2xl p-3 ${isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-emerald-50 border-emerald-200'}`}>
-                <p className="text-sm font-semibold">📱 OTP login for field access</p>
-              </div>
-              <div className={`rounded-2xl p-3 ${isDark ? 'bg-slate-900/60 border-slate-700' : 'bg-white border-slate-200'}`}>
-                <p className="text-sm font-semibold">🔐 Password login for secure admin work</p>
-              </div>
+          </div>
+          <div className={`mt-6 rounded-3xl border p-5 ${isDark ? 'border-slate-700 bg-slate-900/90' : 'border-slate-200 bg-white/95'} shadow-sm`}> 
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <p className={`text-xs uppercase tracking-[0.28em] font-semibold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>Quick questions</p>
+              <button type="button" onClick={refreshLoginCards} className={`text-xs font-semibold transition ${isDark ? 'text-emerald-300 hover:text-emerald-100' : 'text-emerald-700 hover:text-emerald-900'}`}>
+                Refresh
+              </button>
+            </div>
+            <div className="space-y-4">
+              {displayLoginCards.map((card, index) => (
+                <HoverQuestionCard key={`${card.question}-${loginQuizSeed}-${index}`} {...card} isDark={isDark} />
+              ))}
             </div>
           </div>
         </div>
 
         <div className="relative w-full">
-        <div className={`glass-card interactive-card p-8 rounded-[2rem] transform transition-all duration-500 hover:scale-[1.02] ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-emerald-200'}`}>
-          
+          <div className={`backdrop-blur-xl relative overflow-hidden rounded-[2rem] border border-slate-700 shadow-[0_20px_80px_rgba(0,0,0,0.32)] transform transition duration-300 hover:scale-[1.01] p-8 ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
+
           {/* Logo & Header */}
           <div className="text-center mb-6">
             <div className="relative inline-block">
@@ -558,7 +717,8 @@ function Login() {
             <h1 className={`text-4xl font-extrabold ${isDark ? 'text-slate-100' : 'text-emerald-800'} mt-6 tracking-tight`}>FarmEazy</h1>
             <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} mt-2 font-medium`}>Sign in to your FarmEazy account</p>
           </div>
-          
+
+
           {/* Login Mode Tabs */}
           <div className={`flex mb-6 rounded-2xl overflow-hidden border ${isDark ? 'border-slate-600' : 'border-emerald-200'}`}>
             <button
@@ -602,7 +762,7 @@ function Login() {
 
           <div className={`glass-card mb-5 rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/40' : 'border-emerald-100 bg-emerald-50/70'}`}>
             <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-emerald-800'}`}>Continue sign in with Google</p>
-            <div ref={googleButtonRef} className="flex items-center justify-center min-h-[62px]" />
+            <div ref={googleButtonRef} className="flex items-center justify-center min-h-[48px] min-w-[48px]" />
             <p className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-emerald-600'}`}>
               Google sign-in is for existing FarmEazy accounts only. If this email is new, use Register so FarmEazy can create your account and send the usual welcome email, SMS, and notification after setup.
             </p>

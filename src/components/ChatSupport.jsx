@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets } from '../services/SupportTicketService';
 import apiClient from '../services/apiClient';
+import { useGlobalToast } from '../context/ToastContext';
 import { STORAGE_KEYS } from '../config/api';
 
 const DEFAULT_GREETING = 'Welcome to FarmEazy live chat. Tell me what you need help with, or choose one of the quick topics below.';
@@ -87,6 +88,69 @@ function mergeMessages(existingMessages, incomingMessages) {
   return merged;
 }
 
+const extractUploadPath = (url) => {
+  if (!url) return null;
+  const raw = String(url || '');
+  const match = raw.match(/\/uploads\/[^\s?#)]+/i);
+  return match ? match[0] : null;
+};
+
+const toAbsoluteAttachmentUrl = (url) => {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/')) return `${window.location.origin}${url}`;
+  return `${window.location.origin}/${url}`;
+};
+
+const stripAttachmentLines = (text) =>
+  String(text || '')
+    .replace(/^.*Attachment[s]?:\s*([^\n\r]+?)\s*\((https?:\/\/(?:[^\s)]+)|\/uploads\/[^\s)]+)\).*$/gim, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+const parseAttachmentsFromMessage = (message) => {
+  if (!message) return [];
+  const collected = [];
+  const seen = new Set();
+
+  const addAttachment = (url, fallbackName = 'attachment') => {
+    const normalizedUrl = String(url || '').trim();
+    const key = normalizeAttachmentKey(normalizedUrl);
+    if (!normalizedUrl || !key || seen.has(key)) return;
+    seen.add(key);
+    const fileName = fallbackName || normalizedUrl.split('/').filter(Boolean).pop() || 'attachment';
+    collected.push({ url: normalizedUrl, fileName });
+  };
+
+  const directUrl = message.attachmentUrl || message.attachment_url;
+  if (directUrl) addAttachment(directUrl);
+
+  const body = String(message.message || message.content || message.text || '');
+  const regex = /Attachment[s]?:\s*([^\n\r]+?)\s*\((https?:\/\/(?:[^\s)]+)|\/uploads\/[^\s)]+)\)/gi;
+  let match;
+  while ((match = regex.exec(body)) !== null) {
+    const explicitName = String(match[1] || '').trim() || 'attachment';
+    addAttachment(match[2], explicitName);
+  }
+
+  return collected;
+};
+
+
+const fetchAttachmentBlob = async (url) => {
+  const uploadPath = extractUploadPath(url);
+  if (uploadPath) {
+    const response = await apiClient.get('/attachments/file', {
+      params: { path: uploadPath },
+      responseType: 'blob',
+    });
+    return response.data;
+  }
+  const response = await apiClient.get(toAbsoluteAttachmentUrl(url), { responseType: 'blob' });
+  return response.data;
+};
+
+
 export default function ChatSupport({ className = '' }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem(STORAGE_KEYS.USER_TOKEN)));
   const [open, setOpen] = useState(false);
@@ -101,6 +165,48 @@ export default function ChatSupport({ className = '' }) {
   const [liveStatus, setLiveStatus] = useState('unknown');
   const [ticketHistory, setTicketHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [allowAutoTicketSelection, setAllowAutoTicketSelection] = useState(true);
+  const { showToast } = useGlobalToast();
+
+  const openAttachment = async (url) => {
+    if (!url) {
+      showToast('Attachment URL is unavailable.', 'error');
+      return;
+    }
+
+    try {
+      const blob = await fetchAttachmentBlob(url);
+      const blobUrl = window.URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank', 'noopener,noreferrer');
+      window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60 * 1000);
+    } catch (err) {
+      console.error('Failed to open attachment', err);
+      showToast('Could not open attachment. Please verify your login/session.', 'error');
+    }
+  };
+
+  const downloadAttachment = async (attachment) => {
+    if (!attachment?.url) {
+      showToast('Attachment URL is unavailable.', 'error');
+      return;
+    }
+
+    try {
+      const blob = await fetchAttachmentBlob(attachment.url);
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = downloadUrl;
+      anchor.download = attachment.fileName || 'attachment';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 10 * 1000);
+      showToast('Attachment downloaded successfully.', 'success');
+    } catch (err) {
+      console.error('Failed to download attachment', err);
+      showToast('Could not download attachment. Please verify your login/session.', 'error');
+    }
+  };
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.USER_ID) || 'anonymous';
   const storageKey = `farmEazy_chat_history_${currentUserId}`;
@@ -173,6 +279,7 @@ export default function ChatSupport({ className = '' }) {
           return;
         }
 
+        if (!allowAutoTicketSelection) return;
         if (normalizedTickets.length === 0) return;
 
         const latestTicketId = normalizedTickets[0]?.displayId;
@@ -440,6 +547,7 @@ export default function ChatSupport({ className = '' }) {
     setTicketId(null);
     setAttachment(null);
     setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
+    setAllowAutoTicketSelection(false);
     localStorage.removeItem(storageKey);
   };
 
@@ -510,27 +618,41 @@ export default function ChatSupport({ className = '' }) {
           </div>
 
           <div className="flex-1 p-3 overflow-y-auto space-y-2" style={{ maxHeight: 360 }}>
-            {messages.map((msg, idx) => (
-              <div key={idx} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
-                <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-sm leading-5 ${msg.sender === 'user' ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20' : 'bg-slate-800 text-slate-200 border border-slate-700'}`}>
-                  {msg.text}
-                </span>
-              </div>
-            ))}
-
-            <div className="pt-2 flex flex-wrap gap-2">
-              {quickSuggestions.map((item) => (
-                <button
-                  key={item.label}
-                  type="button"
-                  className="rounded-full bg-slate-800 px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-700 border border-slate-700"
-                  onClick={() => handleFAQ(item.text)}
-                  disabled={loading}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </div>
+            {messages.map((msg, idx) => {
+              const attachments = (msg?.attachments || []).map(a => ({ url: a.url, fileName: a.fileName }));
+              const displayText = stripAttachmentLines(msg.text || '');
+              const bubbleText = displayText || (attachments.length > 0 ? 'Attachment included' : '');
+              return (
+                <div key={idx} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
+                  <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-sm leading-5 ${msg.sender === 'user' ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20' : 'bg-slate-800 text-slate-200 border border-slate-700'}`}>
+                    {bubbleText}
+                  </span>
+                  {attachments.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2 justify-start">
+                      {attachments.map((attachment) => (
+                        <div key={`${idx}-${attachment.url}`} className="flex flex-wrap gap-2 items-center">
+                          <button
+                            type="button"
+                            onClick={() => openAttachment(attachment.url)}
+                            className="rounded-full bg-slate-700 text-slate-100 px-2 py-1 text-[11px] hover:bg-slate-600"
+                          >
+                            Open {attachment.fileName}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => downloadAttachment(attachment)}
+                            className="rounded-full bg-cyan-600 text-white px-2 py-1 text-[11px] hover:bg-cyan-500"
+                          >
+                            Download
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
 
             {faqLoading && (
               <div className="text-xs text-slate-400">Loading help articles...</div>
@@ -539,7 +661,6 @@ export default function ChatSupport({ className = '' }) {
             {attachment && (
               <div className="text-xs text-cyan-200">Attachment selected: {attachment.name}</div>
             )}
-          </div>
 
           <div className="flex gap-2 p-3 border-t border-slate-700 bg-slate-950/80">
             <input

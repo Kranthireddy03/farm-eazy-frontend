@@ -112,3 +112,22 @@ export function FlipCard({ frontTitle, frontText, backTitle, backText, icon, cla
 export function ScrollRail({ children, className = '' }) {
   return <div className={`scroll-snap-x overflow-x-auto pb-2 ${className}`}>{children}</div>
 }
+
+export function PageFooter({ headline, description, actions, className = '' }) {
+  const { isDark } = useTheme()
+
+  return (
+    <section className={`rounded-[2rem] border p-5 md:p-6 shadow-2xl transition-all ${isDark ? 'border-slate-700 bg-slate-900/90 text-slate-100' : 'border-slate-200 bg-white/95 text-slate-900'} ${className}`}>
+      <div className="grid gap-5 md:grid-cols-[1.3fr_0.9fr] items-center">
+        <div className="space-y-3">
+          <p className={`text-xs font-semibold uppercase tracking-[0.34em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Next step</p>
+          <h3 className="text-xl md:text-2xl font-black leading-tight">Choose your next action.</h3>
+          <p className={`text-sm md:text-base ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{description || 'Select a page to continue exploring the platform, view services, or contact support.'}</p>
+        </div>
+        <div className="flex flex-wrap justify-end gap-3">
+          {actions}
+        </div>
+      </div>
+    </section>
+  )
+}

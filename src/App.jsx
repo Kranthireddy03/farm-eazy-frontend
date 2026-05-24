@@ -252,6 +252,14 @@ function AppContent() {
     return `onboardingComplete_${identity}`;
   };
 
+  const scrollToTopPage = () => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      if (document.documentElement) document.documentElement.scrollTop = 0;
+      if (document.body) document.body.scrollTop = 0;
+    });
+  };
+
   const renderContextAwarePage = (PageComponent) => {
     if (isAuthenticated) {
       return (
@@ -284,7 +292,7 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollToTopPage();
   }, [location.pathname]);
 
   useEffect(() => {
@@ -356,16 +364,33 @@ function AppContent() {
           <Route path="/email-error" element={<EmailError />} />
           <Route path="/session-expired" element={<SessionExpired />} />
           <Route path="/fallback" element={<PremiumFallback />} />
-          <Route path="/service-unavailable" element={<ServiceUnavailableLocation />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms" element={<Terms />} />
-          <Route path="/refund-policy" element={<RefundPolicy />} />
-          <Route path="/shipping-policy" element={<ShippingPolicy />} />
-          <Route path="/marketplace-disclosure" element={<MarketplaceDisclosure />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/public-services" element={<PublicServices />} />
         </Route>
+
+        <Route
+          path="/service-unavailable"
+          element={
+            isAuthenticated ? (
+              <ProtectedRoute>
+                <Layout>
+                  <ServiceUnavailableLocation />
+                </Layout>
+              </ProtectedRoute>
+            ) : (
+              <PublicLayout>
+                <ServiceUnavailableLocation />
+              </PublicLayout>
+            )
+          }
+        />
+
+        <Route path="/privacy-policy" element={renderContextAwarePage(PrivacyPolicy)} />
+        <Route path="/terms" element={renderContextAwarePage(Terms)} />
+        <Route path="/refund-policy" element={renderContextAwarePage(RefundPolicy)} />
+        <Route path="/shipping-policy" element={renderContextAwarePage(ShippingPolicy)} />
+        <Route path="/marketplace-disclosure" element={renderContextAwarePage(MarketplaceDisclosure)} />
+        <Route path="/about" element={renderContextAwarePage(About)} />
+        <Route path="/contact" element={renderContextAwarePage(Contact)} />
+        <Route path="/public-services" element={renderContextAwarePage(PublicServices)} />
 
         <Route
           path="/support"

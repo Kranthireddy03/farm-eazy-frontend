@@ -3,6 +3,7 @@ import { useTheme } from '../context/ThemeContext'
 
 function PublicFooter() {
   const { isDark } = useTheme()
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' })
 
   return (
     <footer className={`mt-auto px-4 md:px-6 pb-8 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
@@ -26,7 +27,12 @@ function PublicFooter() {
               <p className={`text-xs font-bold uppercase tracking-[0.3em] mb-4 ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Public Pages</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 {['/', '/about', '/public-services', '/blog', '/faq', '/contact'].map((path) => (
-                  <Link key={path} to={path} className={`rounded-2xl border px-3 py-2 transition ${isDark ? 'border-white/8 bg-white/5 hover:bg-white/10' : 'border-slate-200 bg-white/70 hover:bg-white'}`}>
+                  <Link
+                    key={path}
+                    to={path}
+                    onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                    className={`rounded-2xl border px-3 py-2 transition ${isDark ? 'border-white/8 bg-white/5 hover:bg-white/10' : 'border-slate-200 bg-white/70 hover:bg-white'}`}
+                  >
                     {path === '/' ? 'Home' : path.replace('/', '').replace('-', ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
                   </Link>
                 ))}
@@ -43,7 +49,12 @@ function PublicFooter() {
                   ['/shipping-policy', 'Shipping Policy'],
                   ['/marketplace-disclosure', 'Marketplace Disclosure'],
                 ].map(([path, label]) => (
-                  <Link key={path} to={path} className={`rounded-2xl border px-3 py-2 transition ${isDark ? 'border-white/8 bg-white/5 hover:bg-white/10' : 'border-slate-200 bg-white/70 hover:bg-white'}`}>
+                  <Link
+                    key={path}
+                    to={path}
+                    onClick={scrollToTop}
+                    className={`rounded-2xl border px-3 py-2 transition ${isDark ? 'border-white/8 bg-white/5 hover:bg-white/10' : 'border-slate-200 bg-white/70 hover:bg-white'}`}
+                  >
                     {label}
                   </Link>
                 ))}

@@ -35,15 +35,18 @@ function PublicHeader() {
           </Link>
 
           <nav className="hidden xl:flex items-center gap-2 text-sm font-medium">
-            {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={`px-3 py-2 rounded-full transition ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/80'}`}
-              >
-                {item.label}
-              </Link>
-            ))}
+            {navItems.map((item) => {
+              const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={`px-3 py-2 rounded-full transition ${isActive ? (isDark ? 'text-white bg-emerald-500/10 ring-1 ring-emerald-400/30' : 'text-emerald-900 bg-emerald-100 ring-1 ring-emerald-300/40') : (isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100/80')}`}
+                >
+                  {item.label}
+                </Link>
+              )
+            })}
           </nav>
 
           <div className="hidden md:flex items-center gap-2">
@@ -78,7 +81,7 @@ function PublicHeader() {
                 <Link
                   key={item.to}
                   to={item.to}
-                  onClick={() => setMenuOpen(false)}
+                  onClick={() => { setMenuOpen(false); window.scrollTo({ top: 0, behavior: 'smooth' }) }}
                   className={`px-4 py-3 rounded-2xl transition ${isDark ? 'text-slate-300 hover:text-white hover:bg-white/5' : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'}`}
                 >
                   {item.label}
