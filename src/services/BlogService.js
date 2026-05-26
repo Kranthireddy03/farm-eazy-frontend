@@ -28,3 +28,13 @@ export async function submitBlogRating(slug, rating) {
   const response = await apiClient.post(`/blog-posts/${slug}/ratings`, { rating })
   return response.data
 }
+
+export async function getBlogComments(slug) {
+  const response = await apiClient.get(`/blog-posts/${slug}/comments`)
+  return Array.isArray(response.data) ? response.data : []
+}
+
+export async function submitBlogComment(slug, content) {
+  const response = await apiClient.post(`/blog-posts/${slug}/comments`, { content })
+  return response.data
+}

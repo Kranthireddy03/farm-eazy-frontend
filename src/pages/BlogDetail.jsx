@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
-import { getPublicBlogPostBySlug, submitBlogRating } from '../services/BlogService'
+import { getPublicBlogPostBySlug, submitBlogRating, getBlogComments, submitBlogComment } from '../services/BlogService'
 import { GlassPanel, HeroFrame, PillButton, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 
 export default function BlogDetail() {
@@ -14,6 +14,9 @@ export default function BlogDetail() {
   const [post, setPost] = useState(null)
   const [rating, setRating] = useState(0)
   const [ratingSaving, setRatingSaving] = useState(false)
+  const [comments, setComments] = useState([])
+  const [commentText, setCommentText] = useState('')
+  const [commentSaving, setCommentSaving] = useState(false)
 
   useEffect(() => {
     const load = async () => {
@@ -22,6 +25,8 @@ export default function BlogDetail() {
       try {
         const data = await getPublicBlogPostBySlug(slug)
         setPost(data)
+        const cms = await getBlogComments(slug)
+        setComments(cms)
       } catch (_err) {
         setError('Unable to load this blog article right now.')
       } finally {
@@ -55,6 +60,41 @@ export default function BlogDetail() {
               </div>
             </GlassPanel>
           ) : null}
+              <div className="mt-6">
+                <SectionTitle eyebrow="Comments" title="Reader comments" />
+                {comments.length === 0 ? (
+                  <div className="text-sm text-slate-500 mt-2">No comments yet. Be the first to comment.</div>
+                ) : (
+                  <div className="space-y-3 mt-3">
+                    {comments.map((c) => (
+                      <div key={c.id} className="p-3 rounded-lg bg-white/80 dark:bg-slate-800/80">
+                        <div className="text-sm font-semibold">{c.authorName}</div>
+                        <div className="text-sm text-slate-700 dark:text-slate-300 mt-1 whitespace-pre-wrap">{c.content}</div>
+                        <div className="text-xs text-slate-400 mt-2">{c.createdAt ? new Date(c.createdAt).toLocaleString() : ''}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {isAuthenticated ? (
+                  <div className="mt-4">
+                    <textarea value={commentText} onChange={(e) => setCommentText(e.target.value)} rows={3} className="w-full p-3 rounded border" placeholder="Write a comment..." />
+                    <div className="mt-2 flex gap-2">
+                      <button disabled={commentSaving || !commentText.trim()} onClick={async () => {
+                        try {
+                          setCommentSaving(true)
+                          const added = await submitBlogComment(slug, commentText.trim())
+                          setComments((prev) => [...prev, added])
+                          setCommentText('')
+                        } catch (_err) {
+                        } finally { setCommentSaving(false) }
+                      }} className="px-3 py-2 bg-emerald-600 text-white rounded">Comment</button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-3 text-sm"> <Link to="/login" className="text-cyan-600">Login</Link> to comment.</div>
+                )}
+              </div>
         />
 
         {loading ? (

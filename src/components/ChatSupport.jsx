@@ -140,8 +140,10 @@ const parseAttachmentsFromMessage = (message) => {
 const fetchAttachmentBlob = async (url) => {
   const uploadPath = extractUploadPath(url);
   if (uploadPath) {
+    const ticketDisplayId = ticketId || undefined;
+    const contactEmail = localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || undefined;
     const response = await apiClient.get('/attachments/file', {
-      params: { path: uploadPath },
+      params: { path: uploadPath, ticketDisplayId, contactEmail },
       responseType: 'blob',
     });
     return response.data;
@@ -427,6 +429,9 @@ export default function ChatSupport({ className = '' }) {
       : await createTicket(ticketPayload);
 
     setTicketId(ticket.displayId);
+    if (ticket?.contactEmail) {
+      try { localStorage.setItem('farmEazy_email', ticket.contactEmail); } catch(_) {}
+    }
     return ticket;
   };
 
@@ -619,9 +624,24 @@ export default function ChatSupport({ className = '' }) {
 
           <div className="flex-1 p-3 overflow-y-auto space-y-2" style={{ maxHeight: 360 }}>
             {messages.map((msg, idx) => {
-              const attachments = (msg?.attachments || []).map(a => ({ url: a.url, fileName: a.fileName }));
-              const displayText = stripAttachmentLines(msg.text || '');
-              const bubbleText = displayText || (attachments.length > 0 ? 'Attachment included' : '');
+                const attachmentsSource = []
+                  .concat(msg?.attachments || [])
+                  .concat(parseAttachmentsFromMessage(msg) || [])
+
+                const seen = new Set()
+                const attachments = (attachmentsSource || []).map((a) => {
+                  if (!a) return null
+                  const url = typeof a === 'string' ? (a.startsWith('/') ? window.location.origin + a : a) : (a.url || a.attachmentUrl || a.url)
+                  const fileName = a.fileName || a.name || (url ? decodeURIComponent(url.split('/').pop()) : 'attachment')
+                  const key = url || fileName
+                  if (!key || seen.has(key)) return null
+                  seen.add(key)
+                  return { url, fileName }
+                }).filter(Boolean)
+
+                const displayText = msg.text || '';
+                const stripped = stripAttachmentLines(displayText)
+                const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '')
               return (
                 <div key={idx} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
                   <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-sm leading-5 ${msg.sender === 'user' ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20' : 'bg-slate-800 text-slate-200 border border-slate-700'}`}>
@@ -664,7 +684,7 @@ export default function ChatSupport({ className = '' }) {
 
           <div className="flex gap-2 p-3 border-t border-slate-700 bg-slate-950/80">
             <input
-              className="flex-1 bg-slate-800 border border-slate-700 text-white placeholder-slate-400 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+              className="flex-1 bg-slate-800 border border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
               type="text"
               value={input}
               onChange={(event) => setInput(event.target.value)}
