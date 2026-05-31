@@ -17,11 +17,16 @@ export default function RaiseTicket() {
     setSubmitted(false);
     setError('');
     try {
+      const gatewayClient = import.meta.env.VITE_API_GATEWAY_CLIENT || '';
+      const ts = String(Date.now());
+      const nonce = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : `nonce-${ts}-${Math.random().toString(36).slice(2)}`;
+      const config = gatewayClient ? { headers: { 'X-Gateway-Client': gatewayClient, 'X-Gateway-Timestamp': ts, 'X-Request-Nonce': nonce } } : undefined;
+
       await apiClient.post('/support-tickets/guest', {
         subject: subject.trim(),
         description: description.trim(),
         contactEmail: email.trim(),
-      });
+      }, config);
       setSubmitted(true);
       setSubject('');
       setDescription('');

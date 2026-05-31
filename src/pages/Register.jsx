@@ -791,29 +791,29 @@ function Register() {
       <div className="absolute inset-0 opacity-20" style={{ backgroundSize: '24px 24px', backgroundImage: 'radial-gradient(circle, rgba(255,255,255,0.06) 1px, transparent 1px)' }} />
 
       {/* Register Experience Grid */}
-      <div className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-[1.05fr_0.95fr] gap-6 items-stretch">
-        <div className={`relative overflow-hidden rounded-[2rem] border border-slate-700 shadow-[0_25px_90px_rgba(0,0,0,0.3)] ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
-          <div className="relative h-full min-h-[680px] overflow-hidden rounded-[2rem]">
-            <img src="/auth-register.png" alt="FarmEazy register illustration" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/95 via-slate-950/50 to-transparent" />
-            <div className="absolute left-0 bottom-0 w-full p-8 sm:p-10">
-              <span className="text-xs uppercase tracking-[0.24em] text-emerald-300">FARMEAZY signup</span>
-              <h2 className="mt-3 text-4xl font-black leading-tight">Create your smart farming account</h2>
-              <p className="mt-4 text-sm leading-relaxed text-slate-300 max-w-lg">
-                Join FarmEazy to manage farms, irrigation, crop sales, and expert support from one polished dashboard.
-              </p>
-              <div className={`mt-6 rounded-3xl border p-5 ${isDark ? 'border-slate-700 bg-slate-900/90' : 'border-slate-200 bg-white/95'} shadow-sm`}>
-                <div className="flex items-center justify-between gap-3 mb-4">
-                  <p className={`text-xs uppercase tracking-[0.28em] font-semibold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>Quick questions</p>
-                  <button type="button" onClick={refreshRegisterCards} className={`text-xs font-semibold transition ${isDark ? 'text-emerald-300 hover:text-emerald-100' : 'text-emerald-700 hover:text-emerald-900'}`}>
-                    Refresh
-                  </button>
-                </div>
-                <div className="space-y-4">
-                  {displayRegisterCards.map((card, index) => (
-                    <HoverQuestionCard key={`${card.question}-${registerQuizSeed}-${index}`} {...card} isDark={isDark} />
-                  ))}
-                </div>
+      <div className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-6 items-stretch">
+        <div className={`flex flex-col justify-between rounded-[2rem] border border-slate-700 overflow-hidden shadow-[0_25px_90px_rgba(0,0,0,0.3)] ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
+          <div className="relative overflow-hidden rounded-[2rem] border border-transparent shadow-2xl h-[280px] sm:h-[360px]">
+            <img src="/auth-register.png" alt="FarmEazy register illustration" className="w-full h-full object-cover rounded-[2rem]" />
+          </div>
+          <div className="mt-8 p-6 sm:p-8">
+            <span className="text-xs uppercase tracking-[0.24em] text-emerald-300">FARMEAZY signup</span>
+            <h2 className="mt-3 text-4xl font-black leading-tight">Create your smart farming account</h2>
+            <p className="mt-4 text-sm leading-relaxed text-slate-300 max-w-lg">
+              Join FarmEazy to manage farms, irrigation, crop sales, and expert support from one polished dashboard.
+            </p>
+
+            <div className={`mt-6 rounded-3xl border p-5 ${isDark ? 'border-slate-700 bg-slate-900/90' : 'border-slate-200 bg-white/95'} shadow-sm`}>
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <p className={`text-xs uppercase tracking-[0.28em] font-semibold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>Quick questions</p>
+                <button type="button" onClick={refreshRegisterCards} className={`text-xs font-semibold transition ${isDark ? 'text-emerald-300 hover:text-emerald-100' : 'text-emerald-700 hover:text-emerald-900'}`}>
+                  Refresh
+                </button>
+              </div>
+              <div className="space-y-4">
+                {displayRegisterCards.map((card, index) => (
+                  <HoverQuestionCard key={`${card.question}-${registerQuizSeed}-${index}`} {...card} isDark={isDark} />
+                ))}
               </div>
             </div>
           </div>

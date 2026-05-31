@@ -85,7 +85,8 @@ export function FlipCard({ frontTitle, frontText, backTitle, backText, icon, cla
   return (
     <div className={`flip-perspective ${className}`}>
       <div className={`flip-card relative min-h-[22rem] rounded-[1.5rem] ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>
-        <div className={`flip-card-face absolute inset-0 rounded-[1.5rem] border ${isDark ? 'border-slate-700 bg-slate-900/90' : 'border-slate-200 bg-white/90'} p-6 flex flex-col justify-between shadow-[0_20px_60px_rgba(15,23,42,0.16)]`}>
+        <div className="flip-card-inner relative w-full h-full">
+          <div className={`flip-card-face absolute inset-0 rounded-[1.5rem] border ${isDark ? 'border-slate-700 bg-slate-900/90' : 'border-slate-200 bg-white/90'} p-6 flex flex-col justify-between shadow-[0_20px_60px_rgba(15,23,42,0.16)]`}>
           <div>
             <div className="text-4xl mb-4">{icon}</div>
             <h3 className="text-xl font-black">{frontTitle}</h3>
@@ -93,7 +94,7 @@ export function FlipCard({ frontTitle, frontText, backTitle, backText, icon, cla
           </div>
           <p className={`text-xs uppercase tracking-[0.28em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Hover to reveal</p>
         </div>
-        <div className={`flip-card-face flip-card-back absolute inset-0 rounded-[1.5rem] border ${isDark ? 'border-emerald-400/20 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950' : 'border-emerald-200 bg-gradient-to-br from-white via-emerald-50 to-cyan-50'} p-6 flex flex-col justify-between shadow-[0_20px_60px_rgba(15,23,42,0.16)]`}>
+          <div className={`flip-card-face flip-card-back absolute inset-0 rounded-[1.5rem] border ${isDark ? 'border-emerald-400/20 bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950' : 'border-emerald-200 bg-gradient-to-br from-white via-emerald-50 to-cyan-50'} p-6 flex flex-col justify-between shadow-[0_20px_60px_rgba(15,23,42,0.16)]`}>
           <div>
             <p className={`text-xs font-bold uppercase tracking-[0.28em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>More detail</p>
             <h3 className="mt-3 text-xl font-black">{backTitle}</h3>
@@ -102,6 +103,7 @@ export function FlipCard({ frontTitle, frontText, backTitle, backText, icon, cla
           <div className={`rounded-2xl p-4 ${isDark ? 'bg-white/5' : 'bg-white/75'}`}>
             <div className={`text-xs font-semibold ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Built for clarity</div>
             <div className={`mt-1 text-sm ${isDark ? 'text-white' : 'text-slate-800'}`}>Fast scanning, subtle motion, and actionable presentation.</div>
+          </div>
           </div>
         </div>
       </div>
