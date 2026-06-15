@@ -415,9 +415,7 @@ apiClient.interceptors.request.use(
 
     const method = String(config.method || '').toLowerCase();
     const requestPath = getRequestPathForSignature(config);
-    const shouldSkipRequestEncryption = requestPath.startsWith('/api/auth/')
-      || requestPath.startsWith('/api/otp/')
-      || requestPath.startsWith('/api/public/')
+    const shouldSkipRequestEncryption = requestPath.startsWith('/api/public/')
       || requestPath.startsWith('/api/faq-question')
       || requestPath.startsWith('/api/faq-questions')
       || requestPath.startsWith('/api/faq/question');
