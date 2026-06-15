@@ -315,7 +315,7 @@ function broadcastAuthEvent(isAuthenticated, reason = null) {
  */
 function clearSessionData() {
   localStorage.removeItem(STORAGE_KEYS.USER_TOKEN);
-  localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+  localStorage.removeItem('farmEazy_refresh_token');
   localStorage.removeItem(STORAGE_KEYS.USER_EMAIL);
   localStorage.removeItem(STORAGE_KEYS.USER_ID);
   localStorage.removeItem(STORAGE_KEYS.USER_USERNAME);

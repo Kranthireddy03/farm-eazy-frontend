@@ -199,7 +199,7 @@ export function AuthProvider({ children }) {
     if (userData.token) {
       localStorage.setItem(STORAGE_KEYS.USER_TOKEN, userData.token);
     }
-    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+    localStorage.removeItem('farmEazy_refresh_token');
     if (userData.email) {
       localStorage.setItem(STORAGE_KEYS.USER_EMAIL, userData.email);
     }

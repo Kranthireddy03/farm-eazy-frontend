@@ -146,7 +146,6 @@ export const API_ENDPOINTS = {
 // Storage Keys
 export const STORAGE_KEYS = {
     USER_TOKEN: 'farmEazy_token',
-    USER_REFRESH_TOKEN: 'farmEazy_refresh_token',
     USER_EMAIL: 'farmEazy_email',
     USER_ID: 'farmEazy_userId',
     USER_USERNAME: 'farmEazy_username',

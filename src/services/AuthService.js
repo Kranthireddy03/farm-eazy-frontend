@@ -13,7 +13,7 @@
  * and for non-React code.
  */
 
-import axios from 'axios';
+import apiClient from './apiClient';
 import CaptchaService from './CaptchaService';
 import { API_ENDPOINTS, STORAGE_KEYS } from '../config/api';
 
@@ -44,7 +44,7 @@ class AuthService {
         captchaToken: token,
       };
 
-      const response = await axios.post(API_ENDPOINTS.REGISTER, payload, { withCredentials: true });
+      const response = await apiClient.post(API_ENDPOINTS.REGISTER, payload, { withCredentials: true });
 
       // Store token and user info in local storage
       if (response.data.token) {
@@ -59,7 +59,7 @@ class AuthService {
 
   async checkRegistrationAvailability(username, email, phone) {
     try {
-      const response = await axios.post(API_ENDPOINTS.REGISTER_AVAILABILITY, {
+      const response = await apiClient.post(API_ENDPOINTS.REGISTER_AVAILABILITY, {
         username,
         email,
         phone,
@@ -79,7 +79,7 @@ class AuthService {
   async login(identifier, password, rememberMe = true, captchaToken = null) {
     try {
       const token = captchaToken || await CaptchaService.getToken('login');
-      const response = await axios.post(API_ENDPOINTS.LOGIN, {
+      const response = await apiClient.post(API_ENDPOINTS.LOGIN, {
         identifier,
         password,
         rememberMe,
@@ -99,7 +99,7 @@ class AuthService {
 
   async loginWithGoogle(credential) {
     try {
-      const response = await axios.post(API_ENDPOINTS.GOOGLE_LOGIN, {
+      const response = await apiClient.post(API_ENDPOINTS.GOOGLE_LOGIN, {
         credential,
       }, { withCredentials: true });
 
@@ -115,7 +115,7 @@ class AuthService {
 
   async registerWithGoogle(credential) {
     try {
-      const response = await axios.post(API_ENDPOINTS.GOOGLE_REGISTER, {
+      const response = await apiClient.post(API_ENDPOINTS.GOOGLE_REGISTER, {
         credential,
       }, { withCredentials: true });
 
@@ -140,7 +140,7 @@ class AuthService {
           Authorization: `Bearer ${token}`,
         };
       }
-      const response = await axios.post(
+      const response = await apiClient.post(
         API_ENDPOINTS.COMPLETE_GOOGLE_PROFILE,
         profileData,
         config
@@ -159,7 +159,7 @@ class AuthService {
   async deferGoogleProfileCompletion(explicitToken = null) {
     try {
       const token = explicitToken || this.getToken();
-      await axios.post(
+      await apiClient.post(
         API_ENDPOINTS.DEFER_GOOGLE_PROFILE,
         {},
         token
@@ -190,7 +190,7 @@ class AuthService {
     // Note: fullName is no longer used - username is the display name
     localStorage.setItem(STORAGE_KEYS.USER_FULLNAME, userData.username || '');
     // Refresh tokens are managed by HttpOnly cookies, not client-side storage.
-    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+    localStorage.removeItem('farmEazy_refresh_token');
     if (userData.roles && userData.roles.length > 0) {
       localStorage.setItem(STORAGE_KEYS.USER_ROLES, JSON.stringify(userData.roles));
     } else {
@@ -321,7 +321,7 @@ class AuthService {
     localStorage.removeItem(STORAGE_KEYS.USER_ID);
     localStorage.removeItem(STORAGE_KEYS.USER_USERNAME);
     localStorage.removeItem(STORAGE_KEYS.USER_FULLNAME);
-    localStorage.removeItem(STORAGE_KEYS.USER_REFRESH_TOKEN);
+    localStorage.removeItem('farmEazy_refresh_token');
     localStorage.removeItem(STORAGE_KEYS.USER_PROFILE_COMPLETION_REQUIRED);
     
     // Clear session tracking
@@ -353,7 +353,7 @@ class AuthService {
   async forgotPassword(email, captchaToken = null) {
     try {
       const token = captchaToken || await CaptchaService.getToken('forgot_password');
-      const response = await axios.post(API_ENDPOINTS.FORGOT_PASSWORD, {
+      const response = await apiClient.post(API_ENDPOINTS.FORGOT_PASSWORD, {
         email,
         captchaToken: token,
       });
@@ -373,7 +373,7 @@ class AuthService {
   async requestOtp(email, phone, purpose) {
     try {
       const locationHeader = await this.getUserLocationHeader();
-      const response = await axios.post(API_ENDPOINTS.REQUEST_OTP, {
+      const response = await apiClient.post(API_ENDPOINTS.REQUEST_OTP, {
         email,
         phone,
         purpose,
@@ -395,7 +395,7 @@ class AuthService {
    */
   async verifyOtp(email, otpCode, purpose) {
     try {
-      const response = await axios.post(API_ENDPOINTS.VERIFY_OTP, {
+      const response = await apiClient.post(API_ENDPOINTS.VERIFY_OTP, {
         email,
         otpCode,
         purpose,
@@ -414,7 +414,7 @@ class AuthService {
    */
   async resetPassword(token, newPassword) {
     try {
-      const response = await axios.post(API_ENDPOINTS.RESET_PASSWORD, {
+      const response = await apiClient.post(API_ENDPOINTS.RESET_PASSWORD, {
         token,
         newPassword,
       });
@@ -435,7 +435,7 @@ class AuthService {
     try {
       const token = captchaToken || await CaptchaService.getToken('login_otp');
       const locationHeader = await this.getUserLocationHeader();
-      const response = await axios.post(API_ENDPOINTS.LOGIN_REQUEST_OTP, {
+      const response = await apiClient.post(API_ENDPOINTS.LOGIN_REQUEST_OTP, {
         phone,
         captchaToken: token,
       }, {
@@ -449,7 +449,7 @@ class AuthService {
 
   async previewLoginUser(phone) {
     try {
-      const response = await axios.post(API_ENDPOINTS.LOGIN_PREVIEW_USER, {
+      const response = await apiClient.post(API_ENDPOINTS.LOGIN_PREVIEW_USER, {
         phone,
       });
       return response.data;
@@ -466,7 +466,7 @@ class AuthService {
    */
   async loginWithOtp(phone, otpCode) {
     try {
-      const response = await axios.post(API_ENDPOINTS.LOGIN_VERIFY_OTP, {
+      const response = await apiClient.post(API_ENDPOINTS.LOGIN_VERIFY_OTP, {
         phone,
         otpCode,
       });
