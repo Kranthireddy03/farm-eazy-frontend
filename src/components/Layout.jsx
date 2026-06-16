@@ -28,6 +28,8 @@ import { useCoin } from '../context/CoinContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal'
+import AppOpenLocationModal from './AppOpenLocationModal'
+import SavedAddressesDropdown from './SavedAddressesDropdown'
 
 function Layout({ onShowTour, children }) {
   const navigate = useNavigate()
@@ -46,6 +48,7 @@ function Layout({ onShowTour, children }) {
     scrollToTopPage()
   }, [location.pathname])
   const { logout: authLogout, getUserEmail, getUserName, isAdmin, hasRole, isAuthenticated } = useAuth()
+  const [selectedLocationLabel, setSelectedLocationLabel] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { coins, refreshCoins } = useCoin()
   const [coinsLoading, setCoinsLoading] = useState(false)
@@ -82,13 +85,38 @@ function Layout({ onShowTour, children }) {
   }
 
   // Check if user is authenticated on mount
+  // Read selected location from storage and listen for changes
+  useEffect(() => {
+    const readSelection = () => {
+      try {
+        const sel = localStorage.getItem('farmeazy_selected_location')
+        if (!sel) { setSelectedLocationLabel(null); return }
+        const parsed = JSON.parse(sel)
+        if (parsed) {
+          if (parsed.type === 'coords') setSelectedLocationLabel(`${parsed.latitude.toFixed ? parsed.latitude.toFixed(3) : parsed.latitude}, ${parsed.longitude.toFixed ? parsed.longitude.toFixed(3) : parsed.longitude}`)
+          else if (parsed.label) setSelectedLocationLabel(parsed.label)
+          else if (parsed.id) setSelectedLocationLabel(`Address #${parsed.id}`)
+        }
+      } catch { setSelectedLocationLabel(null) }
+    }
+    readSelection()
+    const onChange = () => { readSelection() }
+    window.addEventListener('farmeazy:location-changed', onChange)
+    window.addEventListener('storage', onChange)
+    return () => {
+      window.removeEventListener('farmeazy:location-changed', onChange)
+      window.removeEventListener('storage', onChange)
+    }
+  }, [])
+
+  // Check if user is authenticated on mount
   useEffect(() => {
     // Prevent multiple redirects
     if (hasRedirectedRef.current) return
-    
+
     const token = localStorage.getItem('farmEazy_token')
     const email = localStorage.getItem('farmEazy_email')
-    
+
     if (!token || !email) {
       hasRedirectedRef.current = true
       // User data missing, redirect to login (no alert to avoid loop)
@@ -495,6 +523,9 @@ function Layout({ onShowTour, children }) {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all border border-white/20"
                 >
+                  {selectedLocationLabel && (
+                    <div className="hidden sm:flex items-center mr-2 px-3 py-1 rounded-full bg-white/10 text-xs text-white/80">{selectedLocationLabel}</div>
+                  )}
                   <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner">
                     {(userUsername || 'U').charAt(0).toUpperCase()}
                   </div>
@@ -536,6 +567,11 @@ function Layout({ onShowTour, children }) {
 
                     {/* Menu Items */}
                     <div className="p-2">
+                      {/* Quick saved addresses selector */}
+                      <div className="px-2 mb-2">
+                        <div className="text-xs text-gray-500 mb-1">Saved addresses</div>
+                        <SavedAddressesDropdown onSelect={() => setShowUserMenu(false)} />
+                      </div>
                       <button
                         onClick={() => {
                           setShowUserMenu(false)
@@ -710,6 +746,9 @@ function Layout({ onShowTour, children }) {
           </div>
         </div>
       </header>
+
+      {/* App-open location prompt */}
+      <AppOpenLocationModal />
 
       {/* Inactivity Warning Modal - Remove from here */}
 

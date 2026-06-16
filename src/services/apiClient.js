@@ -91,35 +91,55 @@ async function resolveUserLocationHeader() {
     return locationHeaderPromise;
   }
 
-  locationHeaderPromise = new Promise((resolve) => {
-    if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      resolve(null);
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const latitude = Number(position.coords.latitude).toFixed(3);
-        const longitude = Number(position.coords.longitude).toFixed(3);
-        const headerValue = `Lat ${latitude}, Lon ${longitude}`;
+  locationHeaderPromise = (async () => {
+    try {
+      // Prefer explicit user selection stored by the UI
+      const sel = localStorage.getItem('farmeazy_selected_location');
+      if (sel) {
         try {
-          localStorage.setItem(LOCATION_CACHE_KEY, headerValue);
-          localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
-        } catch {
-          // ignore storage failures
+          const parsed = JSON.parse(sel);
+          if (parsed) {
+            if (parsed.type === 'coords' && parsed.latitude && parsed.longitude) {
+              const latitude = Number(parsed.latitude).toFixed(3);
+              const longitude = Number(parsed.longitude).toFixed(3);
+              const headerValue = `Lat ${latitude}, Lon ${longitude}`;
+              localStorage.setItem(LOCATION_CACHE_KEY, headerValue);
+              localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
+              return headerValue;
+            }
+            if (parsed.type === 'address' && parsed.id) {
+              const headerValue = `Address ${parsed.id}`;
+              localStorage.setItem(LOCATION_CACHE_KEY, headerValue);
+              localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
+              return headerValue;
+            }
+          }
+        } catch (_e) {
+          // fallthrough to geolocation
         }
-        resolve(headerValue);
-      },
-      () => resolve(null),
-      {
-        enableHighAccuracy: false,
-        timeout: 3000,
-        maximumAge: 300000,
       }
-    );
-  }).finally(() => {
-    locationHeaderPromise = null;
-  });
+
+      if (typeof navigator === 'undefined' || !navigator.geolocation) {
+        return null;
+      }
+
+      const position = await new Promise((resolve) => {
+        navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 });
+      });
+
+      if (!position) return null;
+      const latitude = Number(position.coords.latitude).toFixed(3);
+      const longitude = Number(position.coords.longitude).toFixed(3);
+      const headerValue = `Lat ${latitude}, Lon ${longitude}`;
+      try {
+        localStorage.setItem(LOCATION_CACHE_KEY, headerValue);
+        localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
+      } catch {}
+      return headerValue;
+    } finally {
+      locationHeaderPromise = null;
+    }
+  })();
 
   return locationHeaderPromise;
 }
@@ -389,7 +409,8 @@ const apiClient = axios.create({
 // --- Request Interceptor ---
 apiClient.interceptors.request.use(
   async (config) => {
-    const isPublicApi = Boolean(config.url && (config.url.includes('/faq/question') || config.url.includes('/admin/faq-questions')));
+    const requestPath = getRequestPathForSignature(config);
+    const isPublicApi = isPublicApiPath(requestPath);
 
     config.headers = config.headers || {};
 
@@ -414,15 +435,14 @@ apiClient.interceptors.request.use(
     }
 
     const method = String(config.method || '').toLowerCase();
-    const requestPath = getRequestPathForSignature(config);
-    const shouldSkipRequestEncryption = requestPath.startsWith('/api/public/')
-      || requestPath.startsWith('/api/faq-question')
+    const shouldSkipRequestEncryption = requestPath.startsWith('/api/faq-question')
       || requestPath.startsWith('/api/faq-questions')
       || requestPath.startsWith('/api/faq/question');
     const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
     const contentType = String(config.headers['Content-Type'] || config.headers['content-type'] || '').toLowerCase();
     const shouldEncryptBody = API_ENCRYPTION_ENABLED
       && !shouldSkipRequestEncryption
+      && !isPublicApi
       && ['post', 'put', 'patch'].includes(method)
       && !isFormData
       && (!contentType || contentType.includes('application/json'));

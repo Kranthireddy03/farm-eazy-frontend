@@ -5,6 +5,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import OtpService from '../services/OtpService';
 import ProductService from '../services/ProductService';
 import apiClient from '../services/apiClient';
+import LocationPicker from '../components/LocationPicker';
 import { useGlobalToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
@@ -64,6 +65,15 @@ function Selling() {
     vendorLocation: '',
     vendorType: ''
   });
+  // Ensure geofence fields are present in formData
+  useEffect(() => {
+    setFormData(prev => ({
+      geofenceLatitude: prev.geofenceLatitude || null,
+      geofenceLongitude: prev.geofenceLongitude || null,
+      geofenceRadiusKm: prev.geofenceRadiusKm || 5,
+      ...prev
+    }))
+  }, [])
 
   const categories = [
     { value: 'seeds', label: '🌱 Seeds', color: 'from-green-400 to-green-600' },
@@ -211,6 +221,10 @@ function Selling() {
       vendorName: getUserName() || '',
       vendorLocation: product.vendorLocation || '',
       vendorType: product.vendorType || ''
+      ,
+      geofenceLatitude: product.geofenceLatitude || null,
+      geofenceLongitude: product.geofenceLongitude || null,
+      geofenceRadiusKm: product.geofenceRadiusKm || 5
     });
     setCurrentStep(2); // Start at Basic step
     setShowForm(true);
@@ -334,6 +348,10 @@ function Selling() {
         vendorName: getUserName() || '',
         vendorLocation: '',
         vendorType: ''
+        ,
+        geofenceLatitude: null,
+        geofenceLongitude: null,
+        geofenceRadiusKm: 5
       });
       fetchMyProducts();
     } catch (error) {
@@ -846,6 +864,42 @@ function Selling() {
                       className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
                       placeholder="e.g., 1 year manufacturer warranty"
                     />
+                  </div>
+                  {/* Geofence selection for this product */}
+                  <div>
+                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Delivery Geofence (optional)</label>
+                    <div className="rounded-xl overflow-hidden border mb-3">
+                      <LocationPicker
+                        onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, geofenceLatitude: lat, geofenceLongitude: lng }))}
+                        onAddressSubmit={(addr) => setFormData(prev => ({ ...prev, geofenceLatitude: addr.latitude, geofenceLongitude: addr.longitude }))}
+                        initialAddress={null}
+                      />
+                    </div>
+
+                    <div className="mt-2">
+                      <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Radius (km)</label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min="0"
+                          max="50"
+                          step="0.5"
+                          value={formData.geofenceRadiusKm || 5}
+                          onChange={(e) => setFormData(prev => ({ ...prev, geofenceRadiusKm: Number(e.target.value) }))}
+                          className="flex-1"
+                        />
+                        <input
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          value={formData.geofenceRadiusKm || 5}
+                          onChange={(e) => setFormData(prev => ({ ...prev, geofenceRadiusKm: e.target.value === '' ? '' : Number(e.target.value) }))}
+                          className="w-24 px-3 py-2 border rounded-lg"
+                        />
+                      </div>
+                      <p className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Current geofence: {formData.geofenceLatitude ? formData.geofenceLatitude.toFixed(5) : '—'}, {formData.geofenceLongitude ? formData.geofenceLongitude.toFixed(5) : '—'} • {formData.geofenceRadiusKm || 5} km</p>
+                    </div>
                   </div>
                   <div>
                     <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Contact Email *</label>
