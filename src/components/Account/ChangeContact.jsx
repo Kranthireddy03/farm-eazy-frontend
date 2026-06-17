@@ -1,58 +1,79 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState } from 'react'
+import apiClient from '../../services/apiClient'
 
 export default function ChangeContact({ type, onSuccess }) {
-  const [step, setStep] = useState(1);
-  const [oldOtp, setOldOtp] = useState('');
-  const [newOtp, setNewOtp] = useState('');
-  const [newValue, setNewValue] = useState('');
-  const [message, setMessage] = useState('');
+  const [step, setStep] = useState(1)
+  const [oldOtp, setOldOtp] = useState('')
+  const [newOtp, setNewOtp] = useState('')
+  const [newValue, setNewValue] = useState('')
+  const [message, setMessage] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const isEmail = type === 'email';
 
   const requestOld = async () => {
+    setLoading(true)
+    setMessage('')
     try {
-      const payload = isEmail ? { newEmail: newValue } : { newPhone: newValue };
-      const res = await axios.post('/api/account/request-' + type + '-change', payload);
-      setMessage(res.data || 'OTP sent to old contact');
-      setStep(2);
-    } catch (e) {
-      setMessage(e.response?.data || 'Error');
+      const payload = isEmail ? { newEmail: newValue } : { newPhone: newValue }
+      const res = await apiClient.post(`/account/request-${type}-change`, payload)
+      setMessage(res.data?.message || res.data || 'OTP sent to old contact')
+      setStep(2)
+    } catch (error) {
+      setMessage(error?.response?.data || error?.message || 'Failed to request OTP')
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   const verifyOld = async () => {
+    setLoading(true)
+    setMessage('')
     try {
-      const payload = isEmail ? { newEmail: newValue, oldOtp } : { newPhone: newValue, oldOtp };
-      const res = await axios.post('/api/account/verify-' + type + '-change-old', payload);
-      setMessage(res.data || 'Old verified');
-      setStep(3);
-    } catch (e) {
-      setMessage(e.response?.data || 'Error');
+      const payload = isEmail ? { newEmail: newValue, oldOtp } : { newPhone: newValue, oldOtp }
+      const res = await apiClient.post(`/account/verify-${type}-change-old`, payload)
+      setMessage(res.data?.message || res.data || 'Old verified')
+      setStep(3)
+    } catch (error) {
+      setMessage(error?.response?.data || error?.message || 'Failed to verify old OTP')
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   const requestNew = async () => {
+    setLoading(true)
+    setMessage('')
     try {
-      const payload = isEmail ? { newEmail: newValue } : { newPhone: newValue };
-      const res = await axios.post('/api/account/request-' + type + '-change-new', payload);
-      setMessage(res.data || 'OTP sent to new contact');
-      setStep(4);
-    } catch (e) {
-      setMessage(e.response?.data || 'Error');
+      const payload = isEmail ? { newEmail: newValue } : { newPhone: newValue }
+      const res = await apiClient.post(`/account/request-${type}-change-new`, payload)
+      setMessage(res.data?.message || res.data || 'OTP sent to new contact')
+      setStep(4)
+    } catch (error) {
+      setMessage(error?.response?.data || error?.message || 'Failed to request OTP to new contact')
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   const confirm = async () => {
+    setLoading(true)
+    setMessage('')
     try {
-      const payload = isEmail ? { newEmail: newValue, oldOtp, newOtp } : { newPhone: newValue, oldOtp, newOtp };
-      const res = await axios.post('/api/account/confirm-' + type + '-change', payload);
-      setMessage(res.data || 'Updated');
-      onSuccess && onSuccess();
-    } catch (e) {
-      setMessage(e.response?.data || 'Error');
+      const payload = isEmail ? { newEmail: newValue, oldOtp, newOtp } : { newPhone: newValue, oldOtp, newOtp }
+      const res = await apiClient.post(`/account/confirm-${type}-change`, payload)
+      setMessage(res.data?.message || res.data || 'Updated successfully')
+      setStep(1)
+      setOldOtp('')
+      setNewOtp('')
+      setNewValue('')
+      onSuccess && onSuccess()
+    } catch (error) {
+      setMessage(error?.response?.data || error?.message || 'Failed to confirm change')
+    } finally {
+      setLoading(false)
     }
-  };
+  }
 
   return (
     <div className="p-4 rounded bg-white dark:bg-gray-800">

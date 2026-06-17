@@ -21,11 +21,33 @@ export default function AppOpenLocationModal() {
     return () => window.removeEventListener('farmeazy:open-location-modal', onOpen)
   }, [isAuthenticated])
 
+  const reverseGeocodeLabel = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&zoom=14&addressdetails=1`
+      )
+      if (!response.ok) return null
+      const data = await response.json()
+      if (data?.display_name) return data.display_name
+      if (data?.address) {
+        const { road, neighbourhood, suburb, village, town, city, state, postcode, country } = data.address
+        return [road || neighbourhood || suburb, village || town || city, state, postcode, country].filter(Boolean).join(', ')
+      }
+    } catch (error) {
+      console.error('Reverse geocoding failed', error)
+    }
+    return null
+  }
+
   const useCurrent = () => {
     if (!navigator.geolocation) return alert('Geolocation not supported')
     setAsking(true)
-    navigator.geolocation.getCurrentPosition((pos) => {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
       const payload = { type: 'coords', latitude: pos.coords.latitude, longitude: pos.coords.longitude }
+      const label = await reverseGeocodeLabel(payload.latitude, payload.longitude)
+      if (label) {
+        payload.label = label
+      }
       localStorage.setItem('farmeazy_selected_location', JSON.stringify(payload))
       window.dispatchEvent(new CustomEvent('farmeazy:location-changed', { detail: payload }))
       setShow(false)

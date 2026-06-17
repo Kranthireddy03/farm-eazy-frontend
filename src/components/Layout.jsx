@@ -73,6 +73,37 @@ function Layout({ onShowTour, children }) {
     window.dispatchEvent(new CustomEvent('farmeazy:open-location-modal'))
   }
 
+  const formatCoordsLabel = (latitude, longitude) => `Lat ${Number(latitude).toFixed(3)}, Lon ${Number(longitude).toFixed(3)}`
+
+  const buildLocationLabel = (parsed) => {
+    if (!parsed) return null
+    if (parsed.label) return String(parsed.label)
+    if (parsed.address) return String(parsed.address)
+    if (parsed.type === 'coords' && parsed.latitude != null && parsed.longitude != null) {
+      return formatCoordsLabel(parsed.latitude, parsed.longitude)
+    }
+    if (parsed.id != null) return `Address #${parsed.id}`
+    return null
+  }
+
+  const reverseGeocodeLabel = async (latitude, longitude) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&zoom=14&addressdetails=1`
+      )
+      if (!response.ok) return null
+      const data = await response.json()
+      if (data?.display_name) return data.display_name
+      if (data?.address) {
+        const { road, neighbourhood, suburb, village, town, city, state, postcode, country } = data.address
+        return [road || neighbourhood || suburb, village || town || city, state, postcode, country].filter(Boolean).join(', ')
+      }
+    } catch (error) {
+      console.error('Reverse geocoding failed', error)
+    }
+    return null
+  }
+
   // Refresh coins manually
   const handleRefreshCoins = async () => {
     setCoinsLoading(true)
@@ -90,23 +121,46 @@ function Layout({ onShowTour, children }) {
   // Check if user is authenticated on mount
   // Read selected location from storage and listen for changes
   useEffect(() => {
-    const readSelection = () => {
+    let active = true
+
+    const readSelection = async () => {
       try {
         const sel = localStorage.getItem('farmeazy_selected_location')
-        if (!sel) { setSelectedLocationLabel(null); return }
-        const parsed = JSON.parse(sel)
-        if (parsed) {
-          if (parsed.type === 'coords') setSelectedLocationLabel(`${parsed.latitude.toFixed ? parsed.latitude.toFixed(3) : parsed.latitude}, ${parsed.longitude.toFixed ? parsed.longitude.toFixed(3) : parsed.longitude}`)
-          else if (parsed.label) setSelectedLocationLabel(parsed.label)
-          else if (parsed.id) setSelectedLocationLabel(`Address #${parsed.id}`)
+        if (!sel) {
+          if (active) setSelectedLocationLabel(null)
+          return
         }
-      } catch { setSelectedLocationLabel(null) }
+        const parsed = JSON.parse(sel)
+        if (!parsed) {
+          if (active) setSelectedLocationLabel(null)
+          return
+        }
+
+        let label = buildLocationLabel(parsed)
+        if (parsed.type === 'coords' && !parsed.label && parsed.latitude != null && parsed.longitude != null) {
+          const resolvedLabel = await reverseGeocodeLabel(parsed.latitude, parsed.longitude)
+          if (resolvedLabel) {
+            label = resolvedLabel
+            try {
+              localStorage.setItem('farmeazy_selected_location', JSON.stringify({ ...parsed, label: resolvedLabel }))
+            } catch {
+              // ignore storage failures
+            }
+          }
+        }
+
+        if (active) setSelectedLocationLabel(label)
+      } catch (error) {
+        if (active) setSelectedLocationLabel(null)
+      }
     }
+
     readSelection()
     const onChange = () => { readSelection() }
     window.addEventListener('farmeazy:location-changed', onChange)
     window.addEventListener('storage', onChange)
     return () => {
+      active = false
       window.removeEventListener('farmeazy:location-changed', onChange)
       window.removeEventListener('storage', onChange)
     }
