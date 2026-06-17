@@ -445,27 +445,23 @@ apiClient.interceptors.request.use(
     }
 
     const method = String(config.method || '').toLowerCase();
-    const shouldSkipRequestEncryption = requestPath.startsWith('/api/faq-question')
-      || requestPath.startsWith('/api/faq-questions')
-      || requestPath.startsWith('/api/faq/question');
+    // Do not skip encryption for any API endpoint — encrypt all JSON POST/PUT/PATCH requests
+    const shouldSkipRequestEncryption = false;
     const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
     const contentType = String(config.headers['Content-Type'] || config.headers['content-type'] || '').toLowerCase();
     const shouldEncryptBody = API_ENCRYPTION_ENABLED
       && !shouldSkipRequestEncryption
-      && !isPublicApi
       && ['post', 'put', 'patch'].includes(method)
       && !isFormData
       && (!contentType || contentType.includes('application/json'));
 
     if (shouldEncryptBody && config.data && typeof config.data === 'object' && !('payload' in config.data)) {
       if (!ENCRYPTION_SECRET) {
-        // In Option B we do not keep secrets in the browser; skip client-side encryption.
-        console.warn('Skipping client-side request encryption: no ENCRYPTION_SECRET present');
-      } else {
-        const encryptedPayload = await encryptPayload(config.data);
-        config.data = { payload: encryptedPayload };
-        config.headers['Content-Type'] = 'application/json';
+        throw new Error('VITE_API_ENCRYPTION_SECRET is required when API encryption is enabled for this environment');
       }
+      const encryptedPayload = await encryptPayload(config.data);
+      config.data = { payload: encryptedPayload };
+      config.headers['Content-Type'] = 'application/json';
     }
 
     if (shouldAttachLocationHeader(config.url)) {
