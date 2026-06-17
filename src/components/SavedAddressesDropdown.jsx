@@ -11,7 +11,7 @@ export default function SavedAddressesDropdown({ onSelect }) {
   const fetchAddresses = async () => {
     setLoading(true)
     try {
-      const resp = await apiClient.get('/api/addresses')
+      const resp = await apiClient.get('/addresses')
       setAddresses(resp.data || [])
     } catch (err) {
       console.error('Failed to load addresses', err)
@@ -32,7 +32,7 @@ export default function SavedAddressesDropdown({ onSelect }) {
 
   const setDefault = async (addr) => {
     try {
-      await apiClient.post(`/api/addresses/${addr.id}/default`)
+      await apiClient.post(`/addresses/${addr.id}/default`)
       await fetchAddresses()
     } catch (e) { console.error('Failed to set default', e) }
   }
@@ -41,7 +41,7 @@ export default function SavedAddressesDropdown({ onSelect }) {
     e.stopPropagation()
     if (!confirm('Delete this address?')) return
     try {
-      await apiClient.delete(`/api/addresses/${addr.id}`)
+      await apiClient.delete(`/addresses/${addr.id}`)
       await fetchAddresses()
     } catch (err) { console.error('Delete failed', err) }
   }

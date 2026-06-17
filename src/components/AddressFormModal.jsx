@@ -31,9 +31,9 @@ export default function AddressFormModal({ address, onClose, onSaved }) {
     setSaving(true)
     try {
       if (address && address.id) {
-        await apiClient.put(`/api/addresses/${address.id}`, form)
+        await apiClient.put(`/addresses/${address.id}`, form)
       } else {
-        await apiClient.post('/api/addresses', form)
+        await apiClient.post('/addresses', form)
       }
       if (onSaved) await onSaved()
     } catch (err) {

@@ -96,7 +96,6 @@ const Orders = lazy(() => import('./pages/Orders'));
 import OrderConfirmation from './pages/OrderConfirmation';
 const RefundDetails = lazy(() => import('./pages/RefundDetails'));
 const AddressBook = lazy(() => import('./pages/AddressBook'));
-const AddressSettings = lazy(() => import('./pages/AddressSettings'));
 const ContactSettings = lazy(() => import('./pages/ContactSettings'));
 const Support = lazy(() => import('./pages/Support'));
 const IrrigationServices = lazy(() => import('./pages/IrrigationServices'));
@@ -452,7 +451,7 @@ function AppContent() {
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
           <Route path="/product/:id" element={<LocationAccessRoute><ProductDetail /></LocationAccessRoute>} />
           <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="/user/address" element={<AddressSettings />} />
+          <Route path="/user/address" element={<AddressBook />} />
           <Route path="/user/contact" element={<ContactSettings />} />
           <Route path="/orders" element={<LocationAccessRoute><Orders /></LocationAccessRoute>} />
           <Route path="/refund-details" element={<RefundDetails />} />

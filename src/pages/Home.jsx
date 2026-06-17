@@ -147,6 +147,18 @@ function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showLoader, hideLoader])
 
+  useEffect(() => {
+    const onLocationChanged = () => {
+      fetchStats()
+    }
+    window.addEventListener('farmeazy:location-changed', onLocationChanged)
+    window.addEventListener('storage', onLocationChanged)
+    return () => {
+      window.removeEventListener('farmeazy:location-changed', onLocationChanged)
+      window.removeEventListener('storage', onLocationChanged)
+    }
+  }, [])
+
     useEffect(() => {
       const timer = setInterval(() => {
         setCurrentInsight((prev) => (prev + 1) % 3)

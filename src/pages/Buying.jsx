@@ -53,6 +53,19 @@ function Buying() {
     filterProducts()
   }, [products, searchTerm, selectedCategory])
 
+  useEffect(() => {
+    const onLocationChanged = () => {
+      setLoading(true)
+      fetchProducts()
+    }
+    window.addEventListener('farmeazy:location-changed', onLocationChanged)
+    window.addEventListener('storage', onLocationChanged)
+    return () => {
+      window.removeEventListener('farmeazy:location-changed', onLocationChanged)
+      window.removeEventListener('storage', onLocationChanged)
+    }
+  }, [])
+
   const fetchProducts = async () => {
     try {
       setLoading(true)

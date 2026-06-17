@@ -29,7 +29,6 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal'
 import AppOpenLocationModal from './AppOpenLocationModal'
-import SavedAddressesDropdown from './SavedAddressesDropdown'
 
 function Layout({ onShowTour, children }) {
   const navigate = useNavigate()
@@ -69,6 +68,10 @@ function Layout({ onShowTour, children }) {
   // Format user ID as 5-digit display (e.g., 00001, 00123)
   const userDisplayId = userId ? String(userId).padStart(5, '0') : '-----'
   const { toast, showToast, closeToast } = useToast()
+
+  const openLocationSelector = () => {
+    window.dispatchEvent(new CustomEvent('farmeazy:open-location-modal'))
+  }
 
   // Refresh coins manually
   const handleRefreshCoins = async () => {
@@ -468,6 +471,15 @@ function Layout({ onShowTour, children }) {
                 <span>Tour</span>
               </button>
 
+              <button
+                onClick={openLocationSelector}
+                className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-full border border-white/20 bg-white/10 text-white text-xs font-semibold hover:bg-white/20 transition"
+                title={selectedLocationLabel ? `Current location: ${selectedLocationLabel}` : 'Select location'}
+              >
+                <span>📍</span>
+                <span className="max-w-[10rem] truncate">{selectedLocationLabel || 'Set location'}</span>
+              </button>
+
               {/* Notification Bell - API-based */}
               <NotificationBell />
 
@@ -567,11 +579,32 @@ function Layout({ onShowTour, children }) {
 
                     {/* Menu Items */}
                     <div className="p-2">
-                      {/* Quick saved addresses selector */}
-                      <div className="px-2 mb-2">
-                        <div className="text-xs text-gray-500 mb-1">Saved addresses</div>
-                        <SavedAddressesDropdown onSelect={() => setShowUserMenu(false)} />
-                      </div>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false)
+                          navigate('/address-book')
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                      >
+                        <span className={`w-9 h-9 ${isDark ? 'bg-cyan-900/50' : 'bg-cyan-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🏠</span>
+                        <div>
+                          <span className="font-medium block">Manage Addresses</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>View, edit, delete, and add addresses</span>
+                        </div>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowUserMenu(false)
+                          navigate('/user/contact')
+                        }}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                      >
+                        <span className={`w-9 h-9 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>✉️</span>
+                        <div>
+                          <span className="font-medium block">Contact Details</span>
+                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Update email and phone</span>
+                        </div>
+                      </button>
                       <button
                         onClick={() => {
                           setShowUserMenu(false)

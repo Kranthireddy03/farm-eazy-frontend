@@ -45,6 +45,26 @@ const LOCATION_CACHE_KEY = 'farmEazy_userLocationHeader';
 const LOCATION_CACHE_TIME_KEY = 'farmEazy_userLocationHeaderAt';
 const LOCATION_CACHE_TTL_MS = 10 * 60 * 1000;
 let locationHeaderPromise = null;
+
+function deriveLocationHeaderFromSelection(selectionValue) {
+  if (!selectionValue) return null;
+  try {
+    const parsed = JSON.parse(selectionValue);
+    if (parsed) {
+      if (parsed.type === 'coords' && parsed.latitude != null && parsed.longitude != null) {
+        const latitude = Number(parsed.latitude).toFixed(3);
+        const longitude = Number(parsed.longitude).toFixed(3);
+        return `Lat ${latitude}, Lon ${longitude}`;
+      }
+      if (parsed.type === 'address' && parsed.id != null) {
+        return `Address ${parsed.id}`;
+      }
+    }
+  } catch (_err) {
+    return null;
+  }
+  return null;
+}
 const OFFLINE_QUEUE_KEY = 'farmEazy_offlineQueue';
 
 function getQueue() {
@@ -78,6 +98,22 @@ function shouldIgnoreFallbackForUrl(url) {
 
 async function resolveUserLocationHeader() {
   try {
+    const selectedLocation = localStorage.getItem('farmeazy_selected_location');
+    const derivedHeader = deriveLocationHeaderFromSelection(selectedLocation);
+    if (derivedHeader) {
+      const cachedHeader = localStorage.getItem(LOCATION_CACHE_KEY);
+      if (cachedHeader === derivedHeader) {
+        return cachedHeader;
+      }
+      try {
+        localStorage.setItem(LOCATION_CACHE_KEY, derivedHeader);
+        localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
+      } catch {
+        // silently ignore storage errors
+      }
+      return derivedHeader;
+    }
+
     const cachedHeader = localStorage.getItem(LOCATION_CACHE_KEY);
     const cachedAt = Number(localStorage.getItem(LOCATION_CACHE_TIME_KEY) || 0);
     if (cachedHeader && cachedAt && (Date.now() - cachedAt) < LOCATION_CACHE_TTL_MS) {
@@ -93,32 +129,6 @@ async function resolveUserLocationHeader() {
 
   locationHeaderPromise = (async () => {
     try {
-      // Prefer explicit user selection stored by the UI
-      const sel = localStorage.getItem('farmeazy_selected_location');
-      if (sel) {
-        try {
-          const parsed = JSON.parse(sel);
-          if (parsed) {
-            if (parsed.type === 'coords' && parsed.latitude && parsed.longitude) {
-              const latitude = Number(parsed.latitude).toFixed(3);
-              const longitude = Number(parsed.longitude).toFixed(3);
-              const headerValue = `Lat ${latitude}, Lon ${longitude}`;
-              localStorage.setItem(LOCATION_CACHE_KEY, headerValue);
-              localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
-              return headerValue;
-            }
-            if (parsed.type === 'address' && parsed.id) {
-              const headerValue = `Address ${parsed.id}`;
-              localStorage.setItem(LOCATION_CACHE_KEY, headerValue);
-              localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
-              return headerValue;
-            }
-          }
-        } catch (_e) {
-          // fallthrough to geolocation
-        }
-      }
-
       if (typeof navigator === 'undefined' || !navigator.geolocation) {
         return null;
       }
@@ -146,7 +156,7 @@ async function resolveUserLocationHeader() {
 
 function shouldAttachLocationHeader(url) {
   const value = String(url || '');
-  return value.startsWith('/products') || value.startsWith('/orders') || value.includes('/checkout') || value.startsWith('/location-access');
+  return value.startsWith('/products') || value.startsWith('/services') || value.startsWith('/orders') || value.includes('/checkout') || value.startsWith('/location-access');
 }
 
 function isPublicApiPath(path) {

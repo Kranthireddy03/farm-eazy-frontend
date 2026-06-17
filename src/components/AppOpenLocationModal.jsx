@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import SavedAddressesDropdown from './SavedAddressesDropdown'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
@@ -16,6 +15,10 @@ export default function AppOpenLocationModal() {
         setTimeout(() => setShow(true), 300)
       }
     } catch (e) {}
+
+    const onOpen = () => setShow(true)
+    window.addEventListener('farmeazy:open-location-modal', onOpen)
+    return () => window.removeEventListener('farmeazy:open-location-modal', onOpen)
   }, [isAuthenticated])
 
   const useCurrent = () => {
@@ -30,7 +33,7 @@ export default function AppOpenLocationModal() {
     }, (err) => { setAsking(false); alert('Failed to read current location: ' + (err.message || 'Denied')) })
   }
 
-  const openAddressBook = () => { setShow(false); navigate('/address-book') }
+  const openAddressBook = () => { setShow(false); navigate('/user/address') }
 
   if (!show) return null
 
@@ -43,10 +46,7 @@ export default function AppOpenLocationModal() {
           <button onClick={useCurrent} className="flex-1 px-4 py-2 rounded-lg bg-emerald-600 text-white">Use current location</button>
           <button onClick={openAddressBook} className="flex-1 px-4 py-2 rounded-lg border">Choose saved address</button>
         </div>
-        <div className="text-sm text-gray-500 mb-2">Quick pick from saved addresses</div>
-        <div className="max-h-40 overflow-auto">
-          <SavedAddressesDropdown onSelect={() => setShow(false)} />
-        </div>
+        <div className="text-sm text-gray-500 mb-2">Manage your saved addresses from the address book.</div>
         <div className="text-right mt-4">
           <button onClick={() => setShow(false)} className="px-4 py-2 text-sm text-gray-600">Skip for now</button>
         </div>

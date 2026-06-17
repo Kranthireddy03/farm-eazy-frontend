@@ -75,6 +75,19 @@ function IrrigationServices() {
     loadInitialData()
   }, [])
 
+  useEffect(() => {
+    const onLocationChanged = () => {
+      fetchAllListings()
+      fetchListings()
+    }
+    window.addEventListener('farmeazy:location-changed', onLocationChanged)
+    window.addEventListener('storage', onLocationChanged)
+    return () => {
+      window.removeEventListener('farmeazy:location-changed', onLocationChanged)
+      window.removeEventListener('storage', onLocationChanged)
+    }
+  }, [])
+
   const fetchListingEligibility = async () => {
     try {
       setEligibilityLoading(true)
