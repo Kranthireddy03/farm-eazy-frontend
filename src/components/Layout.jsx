@@ -74,11 +74,21 @@ function Layout({ onShowTour, children }) {
   }
 
   const formatCoordsLabel = (latitude, longitude) => `Lat ${Number(latitude).toFixed(3)}, Lon ${Number(longitude).toFixed(3)}`
+  const truncateLabel = (value, max = 38) => {
+    if (!value || typeof value !== 'string') return value
+    return value.length <= max ? value : `${value.slice(0, max).trimEnd()}...`
+  }
+  const cleanLocationLabel = (raw) => {
+    if (!raw) return null
+    const parts = String(raw).split(',').map((part) => part.trim()).filter(Boolean)
+    if (parts.length <= 3) return parts.join(', ')
+    return parts.slice(0, 3).join(', ')
+  }
 
   const buildLocationLabel = (parsed) => {
     if (!parsed) return null
-    if (parsed.label) return String(parsed.label)
-    if (parsed.address) return String(parsed.address)
+    if (parsed.label) return truncateLabel(cleanLocationLabel(parsed.label))
+    if (parsed.address) return truncateLabel(cleanLocationLabel(parsed.address))
     if (parsed.type === 'coords' && parsed.latitude != null && parsed.longitude != null) {
       return formatCoordsLabel(parsed.latitude, parsed.longitude)
     }
@@ -589,9 +599,6 @@ function Layout({ onShowTour, children }) {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all border border-white/20"
                 >
-                  {selectedLocationLabel && (
-                    <div className="hidden sm:flex items-center mr-2 px-3 py-1 rounded-full bg-white/10 text-xs text-white/80">{selectedLocationLabel}</div>
-                  )}
                   <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner">
                     {(userUsername || 'U').charAt(0).toUpperCase()}
                   </div>

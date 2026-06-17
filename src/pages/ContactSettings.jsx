@@ -15,7 +15,7 @@ export default function ContactSettings() {
     let mounted = true
     ;(async () => {
       try {
-        const resp = await apiClient.get('/user/contact')
+        const resp = await apiClient.get('/account/contact')
         if (!mounted) return
         setContact({ email: resp.data?.email || '', phone: resp.data?.phone || '' })
       } catch (_) {
@@ -29,7 +29,7 @@ export default function ContactSettings() {
 
   const loadContact = async () => {
     try {
-      const resp = await apiClient.get('/user/contact')
+      const resp = await apiClient.get('/account/contact')
       setContact({ email: resp.data?.email || '', phone: resp.data?.phone || '' })
     } catch (error) {
       setErrorMessage('Unable to reload contact details.')
