@@ -13,9 +13,8 @@
 import axios from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '../config/api';
 
-const DEFAULT_BROWSER_SECURITY_FLAG = 'true';
-const API_ENCRYPTION_ENABLED = (import.meta.env.VITE_API_ENCRYPTION_ENABLED || DEFAULT_BROWSER_SECURITY_FLAG) !== 'false';
-const GATEWAY_ENABLED = (import.meta.env.VITE_API_GATEWAY_ENABLED || DEFAULT_BROWSER_SECURITY_FLAG) !== 'false';
+const API_ENCRYPTION_ENABLED = import.meta.env.VITE_API_ENCRYPTION_ENABLED === 'true';
+const GATEWAY_ENABLED = import.meta.env.VITE_API_GATEWAY_ENABLED === 'true';
 // IMPORTANT: Do not store cryptographic secrets in VITE_* for production.
 const ENCRYPTION_SECRET = import.meta.env.VITE_API_ENCRYPTION_SECRET || '';
 const GATEWAY_CLIENT = import.meta.env.VITE_API_GATEWAY_CLIENT || '';
