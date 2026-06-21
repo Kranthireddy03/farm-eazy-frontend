@@ -388,8 +388,8 @@ async function getOrRefreshAccessToken() {
 }
 
 async function refreshAccessToken() {
-  const refreshResponse = await axios.post(`${API_BASE_URL}/auth/refresh`, null, {
-    headers: { 'Content-Type': 'application/json' },
+  const refreshResponse = await apiClient.post('/auth/refresh', null, {
+    _skipAuthRefresh: true,
     timeout: 15000,
     withCredentials: true,
   });
@@ -419,10 +419,11 @@ apiClient.interceptors.request.use(
   async (config) => {
     const requestPath = getRequestPathForSignature(config);
     const isPublicApi = isPublicApiPath(requestPath);
+    const skipAuthRefresh = Boolean(config._skipAuthRefresh);
 
     config.headers = config.headers || {};
 
-    if (!isPublicApi) {
+    if (!isPublicApi && !skipAuthRefresh) {
       const token = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
       if (token) {
         if (isTokenExpiredOrExpiring(token)) {
@@ -443,17 +444,11 @@ apiClient.interceptors.request.use(
     }
 
     const method = String(config.method || '').toLowerCase();
-    // Do not skip encryption for any API endpoint — encrypt all JSON POST/PUT/PATCH requests
-    const shouldSkipRequestEncryption = false;
-    const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
-    const contentType = String(config.headers['Content-Type'] || config.headers['content-type'] || '').toLowerCase();
-    const shouldEncryptBody = API_ENCRYPTION_ENABLED
-      && !shouldSkipRequestEncryption
-      && ['post', 'put', 'patch'].includes(method)
-      && !isFormData
-      && (!contentType || contentType.includes('application/json'));
-    // Encrypt all JSON modifying requests when encryption is enabled
-    const shouldEncrypt = shouldEncryptBody;
+  const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
+  const contentType = String(config.headers['Content-Type'] || config.headers['content-type'] || '').toLowerCase();
+  const shouldEncryptBody = API_ENCRYPTION_ENABLED
+    && !isFormData
+    && (!contentType || contentType.includes('application/json'));
 
     if (shouldEncrypt && config.data && typeof config.data === 'object' && !('payload' in config.data)) {
       if (!ENCRYPTION_SECRET) {
