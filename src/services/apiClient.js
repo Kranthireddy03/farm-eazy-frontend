@@ -444,11 +444,12 @@ apiClient.interceptors.request.use(
     }
 
     const method = String(config.method || '').toLowerCase();
-  const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
-  const contentType = String(config.headers['Content-Type'] || config.headers['content-type'] || '').toLowerCase();
-  const shouldEncryptBody = API_ENCRYPTION_ENABLED
-    && !isFormData
-    && (!contentType || contentType.includes('application/json'));
+    const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
+    const contentType = String(config.headers['Content-Type'] || config.headers['content-type'] || '').toLowerCase();
+    const shouldEncryptBody = API_ENCRYPTION_ENABLED
+      && !isFormData
+      && (!contentType || contentType.includes('application/json'));
+    const shouldEncrypt = shouldEncryptBody;
 
     if (shouldEncrypt && config.data && typeof config.data === 'object' && !('payload' in config.data)) {
       if (!ENCRYPTION_SECRET) {
