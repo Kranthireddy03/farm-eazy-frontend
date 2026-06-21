@@ -454,8 +454,10 @@ apiClient.interceptors.request.use(
       && ['post', 'put', 'patch'].includes(method)
       && !isFormData
       && (!contentType || contentType.includes('application/json'));
+    // Do not encrypt public API endpoints (guest, auth, public paths)
+    const shouldEncrypt = shouldEncryptBody && !isPublicApi;
 
-    if (shouldEncryptBody && config.data && typeof config.data === 'object' && !('payload' in config.data)) {
+    if (shouldEncrypt && config.data && typeof config.data === 'object' && !('payload' in config.data)) {
       if (!ENCRYPTION_SECRET) {
         throw new Error('VITE_API_ENCRYPTION_SECRET is required when API encryption is enabled for this environment');
       }

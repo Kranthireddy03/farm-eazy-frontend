@@ -1,2 +1,0 @@
-import{a as o}from"./index-C1qJMb4q.js";import{C as r}from"./CaptchaService-C15h73ps.js";const l={sendOtp:async(e,a,t=null)=>{const n=t||await r.getToken("otp");return(await o.post("/otp/send",{email:e,purpose:a,captchaToken:n})).data},sendOtpDetailed:async(e,a,t=null,n=null)=>{const s=n||await r.getToken("otp"),p={email:e,purpose:a,captchaToken:s};return t&&(p.phone=t),(await o.post("/otp/send-detailed",p)).data},verifyOtp:async(e,a,t)=>(await o.post("/otp/verify",{email:e,otpCode:a,purpose:t})).data};export{l as O};
-//# sourceMappingURL=OtpService-yiigi3F2.js.map
