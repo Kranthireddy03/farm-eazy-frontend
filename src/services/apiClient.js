@@ -161,7 +161,6 @@ function shouldAttachLocationHeader(url) {
 
 function isPublicApiPath(path) {
   const publicPaths = [
-    '/api/auth/',
     '/api/otp/',
     '/api/public/',
     '/api/faq-question',
@@ -454,8 +453,8 @@ apiClient.interceptors.request.use(
       && ['post', 'put', 'patch'].includes(method)
       && !isFormData
       && (!contentType || contentType.includes('application/json'));
-    // Do not encrypt public API endpoints (guest, auth, public paths)
-    const shouldEncrypt = shouldEncryptBody && !isPublicApi;
+    // Encrypt all JSON modifying requests when encryption is enabled
+    const shouldEncrypt = shouldEncryptBody;
 
     if (shouldEncrypt && config.data && typeof config.data === 'object' && !('payload' in config.data)) {
       if (!ENCRYPTION_SECRET) {
