@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import apiClient from '../../services/apiClient'
 
-export default function ChangeContact({ type, onSuccess }) {
+export default function ChangeContact({ type, currentValue, onSuccess }) {
   const [step, setStep] = useState(1)
   const [oldOtp, setOldOtp] = useState('')
   const [newOtp, setNewOtp] = useState('')
@@ -79,8 +79,16 @@ export default function ChangeContact({ type, onSuccess }) {
     <div className="p-4 rounded bg-white dark:bg-gray-800">
       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Change {type}</h3>
       <div className="mt-3">
-        <label className="block text-sm text-gray-700 dark:text-gray-200">New {type}</label>
-        <input className="mt-1 block w-full p-2 border rounded bg-white dark:bg-gray-900 dark:text-gray-100" value={newValue} onChange={e => setNewValue(e.target.value)} />
+        <p className="text-sm text-gray-600 dark:text-gray-300">
+          The first OTP will be sent to your current {isEmail ? 'email' : 'phone'}: <span className="font-semibold">{currentValue || 'not set'}</span>
+        </p>
+        <label className="mt-3 block text-sm text-gray-700 dark:text-gray-200">New {type}</label>
+        <input
+          className="mt-1 block w-full p-2 border rounded bg-white dark:bg-gray-900 dark:text-gray-100"
+          placeholder={isEmail ? 'Enter new email address' : 'Enter new phone number'}
+          value={newValue}
+          onChange={e => setNewValue(e.target.value)}
+        />
       </div>
 
       {step >= 2 && (

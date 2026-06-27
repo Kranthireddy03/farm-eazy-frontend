@@ -160,6 +160,7 @@ function shouldAttachLocationHeader(url) {
 
 function isPublicApiPath(path) {
   const publicPaths = [
+    '/api/auth/',
     '/api/otp/',
     '/api/public/',
     '/api/faq-question',

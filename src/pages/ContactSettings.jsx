@@ -47,7 +47,7 @@ export default function ContactSettings() {
       <div className="max-w-3xl mx-auto">
         <h1 className="text-3xl font-bold mb-3 text-slate-900 dark:text-slate-100">Contact Details</h1>
         <p className="mb-6 max-w-2xl text-sm text-slate-600 dark:text-slate-300">
-          Update your primary email or phone with OTP verification. A secure two-step OTP flow is required before any contact changes are finalized.
+          Existing values are shown below. The first OTP is sent to your current contact to confirm ownership, and a second OTP is sent to the new contact before the change is finalized.
         </p>
 
         {statusMessage && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-600/40 dark:bg-emerald-950/40 dark:text-emerald-200">{statusMessage}</div>}
@@ -73,7 +73,7 @@ export default function ContactSettings() {
 
               {activeChange === 'email' && (
                 <div className="mt-6">
-                  <ChangeContact type="email" onSuccess={() => handleSuccess('email')} />
+                  <ChangeContact type="email" currentValue={contact.email} onSuccess={() => handleSuccess('email')} />
                 </div>
               )}
             </div>
@@ -94,7 +94,7 @@ export default function ContactSettings() {
 
               {activeChange === 'phone' && (
                 <div className="mt-6">
-                  <ChangeContact type="phone" onSuccess={() => handleSuccess('phone')} />
+                  <ChangeContact type="phone" currentValue={contact.phone} onSuccess={() => handleSuccess('phone')} />
                 </div>
               )}
             </div>
