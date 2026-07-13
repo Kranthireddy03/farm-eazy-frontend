@@ -46,7 +46,7 @@ export default function AppOpenLocationModal() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState([])
 
-  const mustStayOpen = isAuthenticated() && !hasSelectedLocation
+  const mustStayOpen = isAuthenticated && !hasSelectedLocation
   const show = isSelectorOpen || mustStayOpen
 
   useEffect(() => {
@@ -71,7 +71,7 @@ export default function AppOpenLocationModal() {
   }
 
   useEffect(() => {
-    if (!show || !isAuthenticated()) return
+    if (!show || !isAuthenticated) return
     fetchSavedAddresses()
   }, [show, isAuthenticated])
 
