@@ -7,7 +7,7 @@ export default function LocationBar() {
 
   return (
     <div className={`sticky top-[68px] z-40 border-b backdrop-blur ${isDark ? 'bg-slate-900/90 border-slate-700' : 'bg-white/90 border-slate-200'}`}>
-      <div className="app-shell-wrap py-2.5">
+      <div className="container-main py-2.5">
         <button
           type="button"
           onClick={openSelector}

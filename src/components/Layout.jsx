@@ -385,7 +385,7 @@ function Layout({ onShowTour, children }) {
         {/* Animated Shimmer Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
         
-        <div className="relative app-shell-wrap">
+        <div className="relative container-main">
           <div className="flex justify-between items-center py-3 gap-3">
             {/* Logo Section */}
             <Link to="/" className="flex items-center space-x-3 group shrink-0">
@@ -749,7 +749,7 @@ function Layout({ onShowTour, children }) {
 
       {/* Mobile Navigation - Slide Down */}
       <div className="xl:hidden bg-gradient-to-r from-emerald-700 to-teal-700 border-b border-white/10">
-        <div className="app-shell-wrap py-2">
+        <div className="container-main py-2">
           <nav className="flex flex-wrap gap-2 pb-1">
             {menuItems.map((item) => (
               <Link
@@ -767,15 +767,15 @@ function Layout({ onShowTour, children }) {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 app-shell-wrap app-page-main">
-        <div className={`variant-surface content-dense app-page-surface ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border min-h-auto animate-[fadeIn_.45s_ease-out]`}>
+      <main className="flex-1 container-main py-8">
+        <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border min-h-auto animate-[fadeIn_.45s_ease-out]`}>
           {children || <Outlet />}
         </div>
       </main>
 
       {/* Footer */}
       <footer className={`${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border-t mt-4 shadow-inner backdrop-blur-md`}>
-        <div className="app-shell-wrap py-8">
+        <div className="container-main py-8">
           <div className="flex justify-between items-center">
               <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
                 © 2026 FarmEazy. Smart Farm Management.

@@ -200,7 +200,7 @@ function Home() {
       <div className={`pointer-events-none absolute -top-24 -left-24 h-80 w-80 rounded-full blur-3xl ${isDark ? 'bg-emerald-700/30' : 'bg-emerald-300/50'}`} />
       <div className={`pointer-events-none absolute top-20 -right-28 h-96 w-96 rounded-full blur-3xl ${isDark ? 'bg-cyan-700/25' : 'bg-cyan-200/60'}`} />
 
-      <main className="app-shell-wrap py-8 relative z-10">
+      <main className="container-main py-8 relative z-10">
         <div className={`rounded-[2rem] p-6 md:p-8 shadow-2xl border ${isDark ? 'bg-slate-900/75 border-slate-700' : 'bg-white/85 border-emerald-100'} backdrop-blur-sm`}>
           <section className={`rounded-3xl p-6 md:p-10 border shadow-xl mb-8 ${isDark ? 'bg-gradient-to-r from-emerald-900/70 via-cyan-900/60 to-slate-900 border-slate-700' : 'bg-gradient-to-r from-[#dff6d4] via-[#d8f3ff] to-[#f0f7ff] border-emerald-200'}`}>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
