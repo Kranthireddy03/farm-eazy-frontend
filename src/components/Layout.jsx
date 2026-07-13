@@ -29,6 +29,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal'
 import AppOpenLocationModal from './AppOpenLocationModal'
+import LocationBar from './LocationBar'
 
 function Layout({ onShowTour, children }) {
   const navigate = useNavigate()
@@ -47,7 +48,6 @@ function Layout({ onShowTour, children }) {
     scrollToTopPage()
   }, [location.pathname])
   const { logout: authLogout, getUserEmail, getUserName, isAdmin, hasRole, isAuthenticated } = useAuth()
-  const [selectedLocationLabel, setSelectedLocationLabel] = useState(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const { coins, refreshCoins } = useCoin()
   const [coinsLoading, setCoinsLoading] = useState(false)
@@ -69,50 +69,6 @@ function Layout({ onShowTour, children }) {
   const userDisplayId = userId ? String(userId).padStart(5, '0') : '-----'
   const { toast, showToast, closeToast } = useToast()
 
-  const openLocationSelector = () => {
-    window.dispatchEvent(new CustomEvent('farmeazy:open-location-modal'))
-  }
-
-  const formatCoordsLabel = (latitude, longitude) => `Lat ${Number(latitude).toFixed(3)}, Lon ${Number(longitude).toFixed(3)}`
-  const truncateLabel = (value, max = 38) => {
-    if (!value || typeof value !== 'string') return value
-    return value.length <= max ? value : `${value.slice(0, max).trimEnd()}...`
-  }
-  const cleanLocationLabel = (raw) => {
-    if (!raw) return null
-    const parts = String(raw).split(',').map((part) => part.trim()).filter(Boolean)
-    if (parts.length <= 3) return parts.join(', ')
-    return parts.slice(0, 3).join(', ')
-  }
-
-  const buildLocationLabel = (parsed) => {
-    if (!parsed) return null
-    if (parsed.label) return truncateLabel(cleanLocationLabel(parsed.label))
-    if (parsed.address) return truncateLabel(cleanLocationLabel(parsed.address))
-    if (parsed.type === 'coords' && parsed.latitude != null && parsed.longitude != null) {
-      return formatCoordsLabel(parsed.latitude, parsed.longitude)
-    }
-    if (parsed.id != null) return `Address #${parsed.id}`
-    return null
-  }
-
-  const reverseGeocodeLabel = async (latitude, longitude) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}&zoom=14&addressdetails=1`
-      )
-      if (!response.ok) return null
-      const data = await response.json()
-      if (data?.display_name) return data.display_name
-      if (data?.address) {
-        const { road, neighbourhood, suburb, village, town, city, state, postcode, country } = data.address
-        return [road || neighbourhood || suburb, village || town || city, state, postcode, country].filter(Boolean).join(', ')
-      }
-    } catch (error) {
-      console.error('Reverse geocoding failed', error)
-    }
-    return null
-  }
 
   // Refresh coins manually
   const handleRefreshCoins = async () => {
@@ -127,54 +83,6 @@ function Layout({ onShowTour, children }) {
       setCoinsLoading(false)
     }
   }
-
-  // Check if user is authenticated on mount
-  // Read selected location from storage and listen for changes
-  useEffect(() => {
-    let active = true
-
-    const readSelection = async () => {
-      try {
-        const sel = localStorage.getItem('farmeazy_selected_location')
-        if (!sel) {
-          if (active) setSelectedLocationLabel(null)
-          return
-        }
-        const parsed = JSON.parse(sel)
-        if (!parsed) {
-          if (active) setSelectedLocationLabel(null)
-          return
-        }
-
-        let label = buildLocationLabel(parsed)
-        if (parsed.type === 'coords' && !parsed.label && parsed.latitude != null && parsed.longitude != null) {
-          const resolvedLabel = await reverseGeocodeLabel(parsed.latitude, parsed.longitude)
-          if (resolvedLabel) {
-            label = resolvedLabel
-            try {
-              localStorage.setItem('farmeazy_selected_location', JSON.stringify({ ...parsed, label: resolvedLabel }))
-            } catch {
-              // ignore storage failures
-            }
-          }
-        }
-
-        if (active) setSelectedLocationLabel(label)
-      } catch (error) {
-        if (active) setSelectedLocationLabel(null)
-      }
-    }
-
-    readSelection()
-    const onChange = () => { readSelection() }
-    window.addEventListener('farmeazy:location-changed', onChange)
-    window.addEventListener('storage', onChange)
-    return () => {
-      active = false
-      window.removeEventListener('farmeazy:location-changed', onChange)
-      window.removeEventListener('storage', onChange)
-    }
-  }, [])
 
   // Check if user is authenticated on mount
   useEffect(() => {
@@ -477,7 +385,7 @@ function Layout({ onShowTour, children }) {
         {/* Animated Shimmer Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
         
-        <div className="relative container-main">
+        <div className="relative app-shell-wrap">
           <div className="flex justify-between items-center py-3 gap-3">
             {/* Logo Section */}
             <Link to="/" className="flex items-center space-x-3 group shrink-0">
@@ -533,15 +441,6 @@ function Layout({ onShowTour, children }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <span>Tour</span>
-              </button>
-
-              <button
-                onClick={openLocationSelector}
-                className="hidden md:inline-flex items-center gap-2 px-3 py-2 rounded-full border border-white/20 bg-white/10 text-white text-xs font-semibold hover:bg-white/20 transition"
-                title={selectedLocationLabel ? `Current location: ${selectedLocationLabel}` : 'Select location'}
-              >
-                <span>📍</span>
-                <span className="max-w-[10rem] truncate">{selectedLocationLabel || 'Set location'}</span>
               </button>
 
               {/* Notification Bell - API-based */}
@@ -841,6 +740,8 @@ function Layout({ onShowTour, children }) {
         </div>
       </header>
 
+      <LocationBar />
+
       {/* App-open location prompt */}
       <AppOpenLocationModal />
 
@@ -848,7 +749,7 @@ function Layout({ onShowTour, children }) {
 
       {/* Mobile Navigation - Slide Down */}
       <div className="xl:hidden bg-gradient-to-r from-emerald-700 to-teal-700 border-b border-white/10">
-        <div className="container-main py-2">
+        <div className="app-shell-wrap py-2">
           <nav className="flex flex-wrap gap-2 pb-1">
             {menuItems.map((item) => (
               <Link
@@ -866,15 +767,15 @@ function Layout({ onShowTour, children }) {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 container-main py-4 md:py-5">
-        <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border p-4 md:p-6 lg:p-7 min-h-auto animate-[fadeIn_.45s_ease-out]`}>
+      <main className="flex-1 app-shell-wrap app-page-main">
+        <div className={`variant-surface content-dense app-page-surface ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border min-h-auto animate-[fadeIn_.45s_ease-out]`}>
           {children || <Outlet />}
         </div>
       </main>
 
       {/* Footer */}
       <footer className={`${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border-t mt-4 shadow-inner backdrop-blur-md`}>
-        <div className="container-main py-8">
+        <div className="app-shell-wrap py-8">
           <div className="flex justify-between items-center">
               <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
                 © 2026 FarmEazy. Smart Farm Management.

@@ -29,7 +29,7 @@ const ProductService = {
   },
 
   getAllProducts: async () => {
-    const response = await apiClient.get('/products');
+    const response = await apiClient.get('/products/nearby');
     return response.data;
   },
 

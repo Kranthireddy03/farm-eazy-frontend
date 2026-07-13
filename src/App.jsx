@@ -63,6 +63,8 @@ import { CoinProvider } from './context/CoinContext';
 import { LoaderProvider } from './context/LoaderContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './context/ToastContext';
+import { LocationProvider } from './context/LocationContext';
+import { useLocationContext } from './context/LocationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { STORAGE_KEYS } from './config/api';
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from './utils/supportPortal';
@@ -190,11 +192,20 @@ function SupportPortalRedirect({
 }
 
 function LocationAccessRoute({ children }) {
+  const { hasSelectedLocation, openSelector } = useLocationContext()
   const [checking, setChecking] = useState(true)
   const [allowed, setAllowed] = useState(true)
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    if (!hasSelectedLocation) {
+      setAllowed(false)
+      setMessage('Please select your location to continue.')
+      setChecking(false)
+      openSelector()
+      return
+    }
+
     let active = true
 
     const runCheck = async () => {
@@ -219,7 +230,7 @@ function LocationAccessRoute({ children }) {
     return () => {
       active = false
     }
-  }, [])
+  }, [hasSelectedLocation, openSelector])
 
   if (checking) {
     return (
@@ -230,6 +241,7 @@ function LocationAccessRoute({ children }) {
   }
 
   if (!allowed) {
+    openSelector()
     return <Navigate to="/service-unavailable" replace state={{ message }} />
   }
 
@@ -244,6 +256,7 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, isLoading, getUserId, getUserEmail } = useAuth();
+  const { locationVersion } = useLocationContext();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   const getOnboardingStorageKey = () => {
@@ -329,7 +342,7 @@ function AppContent() {
   return (
     <Suspense fallback={<div className="flex items-center justify-center h-screen text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900">Loading page...</div>}>
       <>
-      <Routes>
+      <Routes key={isAuthenticated ? `loc-${locationVersion}` : 'public'}>
         {/* Public landing page for unauthenticated users. Authenticated users get Home inside the main Layout */}
         <Route
           path="/"
@@ -432,7 +445,9 @@ function AppContent() {
         <Route
           element={
             <ProtectedRoute>
-              <Layout onShowTour={() => setShowOnboarding(true)} />
+              <LocationAccessRoute>
+                <Layout onShowTour={() => setShowOnboarding(true)} />
+              </LocationAccessRoute>
             </ProtectedRoute>
           }
         >
@@ -445,15 +460,15 @@ function AppContent() {
           <Route path="/irrigation" element={<IrrigationSchedules />} />
           <Route path="/irrigation-services" element={<IrrigationServices />} />
           <Route path="/selling" element={<Selling />} />
-          <Route path="/buying" element={<LocationAccessRoute><Buying /></LocationAccessRoute>} />
-          <Route path="/cart" element={<LocationAccessRoute><Cart /></LocationAccessRoute>} />
-          <Route path="/checkout" element={<LocationAccessRoute><Checkout /></LocationAccessRoute>} />
+          <Route path="/buying" element={<Buying />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-          <Route path="/product/:id" element={<LocationAccessRoute><ProductDetail /></LocationAccessRoute>} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/user/address" element={<AddressBook />} />
           <Route path="/user/contact" element={<ContactSettings />} />
-          <Route path="/orders" element={<LocationAccessRoute><Orders /></LocationAccessRoute>} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/refund-details" element={<RefundDetails />} />
           <Route path="/address-book" element={<AddressBook />} />
           <Route path="/activities" element={<Activities />} />
@@ -493,13 +508,15 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider>
         <AuthProvider>
-          <LoaderProvider>
-            <CoinProvider>
-              <ToastProvider>
-                <AppContent />
-              </ToastProvider>
-            </CoinProvider>
-          </LoaderProvider>
+          <LocationProvider>
+            <LoaderProvider>
+              <CoinProvider>
+                <ToastProvider>
+                  <AppContent />
+                </ToastProvider>
+              </CoinProvider>
+            </LoaderProvider>
+          </LocationProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

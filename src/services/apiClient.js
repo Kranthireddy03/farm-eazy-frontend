@@ -45,18 +45,28 @@ const LOCATION_CACHE_TIME_KEY = 'farmEazy_userLocationHeaderAt';
 const LOCATION_CACHE_TTL_MS = 10 * 60 * 1000;
 let locationHeaderPromise = null;
 
-function deriveLocationHeaderFromSelection(selectionValue) {
+function deriveLocationHeadersFromSelection(selectionValue) {
   if (!selectionValue) return null;
   try {
     const parsed = JSON.parse(selectionValue);
     if (parsed) {
       if (parsed.type === 'coords' && parsed.latitude != null && parsed.longitude != null) {
-        const latitude = Number(parsed.latitude).toFixed(3);
-        const longitude = Number(parsed.longitude).toFixed(3);
-        return `Lat ${latitude}, Lon ${longitude}`;
+        const latitude = Number(parsed.latitude).toFixed(6);
+        const longitude = Number(parsed.longitude).toFixed(6);
+        return {
+          legacy: `Lat ${latitude}, Lon ${longitude}`,
+          latitude,
+          longitude,
+          addressId: null,
+        };
       }
       if (parsed.type === 'address' && parsed.id != null) {
-        return `Address ${parsed.id}`;
+        return {
+          legacy: `Address ${parsed.id}`,
+          latitude: parsed.latitude != null ? Number(parsed.latitude).toFixed(6) : null,
+          longitude: parsed.longitude != null ? Number(parsed.longitude).toFixed(6) : null,
+          addressId: String(parsed.id),
+        };
       }
     }
   } catch (_err) {
@@ -95,72 +105,32 @@ function shouldIgnoreFallbackForUrl(url) {
   return value.includes('/products/media/') || value.endsWith('/health') || value.includes('/health?');
 }
 
-async function resolveUserLocationHeader() {
+async function resolveUserLocationHeaders() {
   try {
     const selectedLocation = localStorage.getItem('farmeazy_selected_location');
-    const derivedHeader = deriveLocationHeaderFromSelection(selectedLocation);
-    if (derivedHeader) {
+    const derivedHeaders = deriveLocationHeadersFromSelection(selectedLocation);
+    if (derivedHeaders?.legacy) {
       const cachedHeader = localStorage.getItem(LOCATION_CACHE_KEY);
-      if (cachedHeader === derivedHeader) {
-        return cachedHeader;
+      if (cachedHeader === derivedHeaders.legacy) {
+        return derivedHeaders;
       }
       try {
-        localStorage.setItem(LOCATION_CACHE_KEY, derivedHeader);
+        localStorage.setItem(LOCATION_CACHE_KEY, derivedHeaders.legacy);
         localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
       } catch {
         // silently ignore storage errors
       }
-      return derivedHeader;
-    }
-
-    const cachedHeader = localStorage.getItem(LOCATION_CACHE_KEY);
-    const cachedAt = Number(localStorage.getItem(LOCATION_CACHE_TIME_KEY) || 0);
-    if (cachedHeader && cachedAt && (Date.now() - cachedAt) < LOCATION_CACHE_TTL_MS) {
-      return cachedHeader;
+      return derivedHeaders;
     }
   } catch {
     // ignore storage failures
   }
 
-  if (locationHeaderPromise) {
-    return locationHeaderPromise;
-  }
-
-  locationHeaderPromise = (async () => {
-    try {
-      if (typeof navigator === 'undefined' || !navigator.geolocation) {
-        return null;
-      }
-
-      const position = await new Promise((resolve) => {
-        navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), { enableHighAccuracy: false, timeout: 3000, maximumAge: 300000 });
-      });
-
-      if (!position) return null;
-      const latitude = Number(position.coords.latitude).toFixed(3);
-      const longitude = Number(position.coords.longitude).toFixed(3);
-      const headerValue = `Lat ${latitude}, Lon ${longitude}`;
-      try {
-        localStorage.setItem(LOCATION_CACHE_KEY, headerValue);
-        localStorage.setItem(LOCATION_CACHE_TIME_KEY, String(Date.now()));
-      } catch {}
-      return headerValue;
-    } finally {
-      locationHeaderPromise = null;
-    }
-  })();
-
-  return locationHeaderPromise;
-}
-
-function shouldAttachLocationHeader(url) {
-  const value = String(url || '');
-  return value.startsWith('/products') || value.startsWith('/services') || value.startsWith('/orders') || value.includes('/checkout') || value.startsWith('/location-access');
+  return null;
 }
 
 function isPublicApiPath(path) {
   const publicPaths = [
-    '/api/auth/',
     '/api/otp/',
     '/api/public/',
     '/api/faq-question',
@@ -461,10 +431,18 @@ apiClient.interceptors.request.use(
       config.headers['Content-Type'] = 'application/json';
     }
 
-    if (shouldAttachLocationHeader(config.url)) {
-      const locationHeader = await resolveUserLocationHeader();
-      if (locationHeader) {
-        config.headers['X-User-Location'] = locationHeader;
+    const hasAuthHeader = Boolean(config.headers.Authorization || config.headers.authorization);
+    if (hasAuthHeader) {
+      const locationHeaders = await resolveUserLocationHeaders();
+      if (locationHeaders?.legacy) {
+        config.headers['X-User-Location'] = locationHeaders.legacy;
+        if (locationHeaders.latitude && locationHeaders.longitude) {
+          config.headers['X-Current-Latitude'] = locationHeaders.latitude;
+          config.headers['X-Current-Longitude'] = locationHeaders.longitude;
+        }
+        if (locationHeaders.addressId) {
+          config.headers['Current-Address-Id'] = locationHeaders.addressId;
+        }
       }
     }
 

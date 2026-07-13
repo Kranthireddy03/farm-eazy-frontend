@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import { useLocationContext } from '../context/LocationContext'
 import apiClient from '../services/apiClient'
 
 const EMPTY_FORM = {
@@ -12,11 +13,15 @@ const EMPTY_FORM = {
   state: '',
   postalCode: '',
   country: 'India',
+  label: '',
+  latitude: '',
+  longitude: '',
   isDefault: false,
 }
 
 function AddressBook() {
   const { isDark } = useTheme()
+  const { setSelectedLocation } = useLocationContext()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [addresses, setAddresses] = useState([])
@@ -70,6 +75,9 @@ function AddressBook() {
       state: form.state.trim(),
       postalCode: form.postalCode.trim(),
       country: form.country.trim() || 'India',
+      label: form.label.trim() || null,
+      latitude: form.latitude === '' ? null : Number(form.latitude),
+      longitude: form.longitude === '' ? null : Number(form.longitude),
     }
 
     try {
@@ -102,6 +110,9 @@ function AddressBook() {
       state: address.state || '',
       postalCode: address.postalCode || '',
       country: address.country || 'India',
+      label: address.label || '',
+      latitude: address.latitude ?? '',
+      longitude: address.longitude ?? '',
       isDefault: Boolean(address.isDefault),
     })
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -114,6 +125,23 @@ function AddressBook() {
       await loadAddresses()
     } catch (_error) {
       setMessage({ type: 'error', text: 'Unable to set default address.' })
+    }
+  }
+
+  const setAsCurrentLocation = async (address) => {
+    try {
+      await apiClient.patch('/addresses/current', { addressId: address.id })
+      await setSelectedLocation({
+        type: 'address',
+        id: address.id,
+        label: [address.label, address.addressLine1, address.city, address.state].filter(Boolean).join(', '),
+        latitude: address.latitude,
+        longitude: address.longitude,
+        address,
+      }, { syncCurrentAddress: false })
+      setMessage({ type: 'success', text: 'Current location updated from address.' })
+    } catch (_error) {
+      setMessage({ type: 'error', text: 'Unable to set this as current location.' })
     }
   }
 
@@ -171,6 +199,9 @@ function AddressBook() {
         <input name="phoneNumber" value={form.phoneNumber} onChange={handleChange} placeholder="Phone Number" required className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
         <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="Email" required className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
         <input name="postalCode" value={form.postalCode} onChange={handleChange} placeholder="Postal Code" required className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+        <input name="label" value={form.label} onChange={handleChange} placeholder="Label (Home/Farm/Office)" className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+        <input name="latitude" type="number" step="0.000001" value={form.latitude} onChange={handleChange} placeholder="Latitude (optional)" className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+        <input name="longitude" type="number" step="0.000001" value={form.longitude} onChange={handleChange} placeholder="Longitude (optional)" className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
         <input name="addressLine1" value={form.addressLine1} onChange={handleChange} placeholder="Address Line 1" required className={`px-3 py-2 rounded-lg border md:col-span-2 ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
         <input name="addressLine2" value={form.addressLine2} onChange={handleChange} placeholder="Address Line 2" className={`px-3 py-2 rounded-lg border md:col-span-2 ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
         <input name="city" value={form.city} onChange={handleChange} placeholder="City" required className={`px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
@@ -213,6 +244,7 @@ function AddressBook() {
                     {!address.isDefault && (
                       <button type="button" onClick={() => setDefault(address.id)} className="px-2 py-1 text-xs rounded bg-emerald-600 text-white hover:bg-emerald-700">Set Default</button>
                     )}
+                    <button type="button" onClick={() => setAsCurrentLocation(address)} className="px-2 py-1 text-xs rounded bg-violet-600 text-white hover:bg-violet-700">Set Current</button>
                     <button type="button" onClick={() => startEdit(address)} className="px-2 py-1 text-xs rounded bg-cyan-600 text-white hover:bg-cyan-700">Edit</button>
                     <button type="button" onClick={() => removeAddress(address.id)} className="px-2 py-1 text-xs rounded bg-rose-600 text-white hover:bg-rose-700">Delete</button>
                   </div>
@@ -220,6 +252,11 @@ function AddressBook() {
                 <p className={`text-sm mt-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
                   {address.addressLine1}{address.addressLine2 ? `, ${address.addressLine2}` : ''}, {address.city}, {address.state} {address.postalCode}
                 </p>
+                {(address.latitude != null && address.longitude != null) && (
+                  <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Coords: {Number(address.latitude).toFixed(5)}, {Number(address.longitude).toFixed(5)}
+                  </p>
+                )}
                 <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   {address.phoneNumber} | {address.email}
                 </p>

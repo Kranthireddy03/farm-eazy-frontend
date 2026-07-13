@@ -877,7 +877,30 @@ function Selling() {
                     </div>
 
                     <div className="mt-2">
-                      <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Radius (km)</label>
+                      <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Deliver Within</label>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {[5, 10, 20, 50].map((radius) => (
+                          <button
+                            key={radius}
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, geofenceRadiusKm: radius }))}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${Number(formData.geofenceRadiusKm || 5) === radius
+                              ? 'bg-emerald-600 text-white border-emerald-600'
+                              : (isDark ? 'bg-slate-800 text-slate-200 border-slate-600 hover:border-emerald-500' : 'bg-white text-slate-700 border-slate-300 hover:border-emerald-500')}`}
+                          >
+                            {radius} km
+                          </button>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, geofenceRadiusKm: prev.geofenceRadiusKm || 5 }))}
+                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${[5, 10, 20, 50].includes(Number(formData.geofenceRadiusKm || 5))
+                            ? (isDark ? 'bg-slate-800 text-slate-200 border-slate-600' : 'bg-white text-slate-700 border-slate-300')
+                            : 'bg-blue-600 text-white border-blue-600'}`}
+                        >
+                          Custom
+                        </button>
+                      </div>
                       <div className="flex items-center gap-3">
                         <input
                           type="range"

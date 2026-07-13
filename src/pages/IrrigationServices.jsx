@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
 import { useTheme } from '../context/ThemeContext'
+import { useLocationContext } from '../context/LocationContext'
 import Toast from '../components/Toast'
 
 function IrrigationServices() {
   const { isDark } = useTheme()
+  const { selectedLocation } = useLocationContext()
   const navigate = useNavigate()
   const { toast, showToast, closeToast } = useToast()
   const [activeTab, setActiveTab] = useState('listings') // 'listings', 'browse', 'bookings', or 'provider-requests'
@@ -16,6 +18,7 @@ function IrrigationServices() {
     title: '',
     location: '',
     serviceableLocations: '',
+    serviceRadiusKm: 20,
     rate: '',
     contactName: '',
     contactPhone: '',
@@ -152,7 +155,7 @@ function IrrigationServices() {
 
   const fetchAllListings = async () => {
     try {
-      const response = await apiClient.get('/services/listings');
+      const response = await apiClient.get('/services/nearby');
       setAllListings(Array.isArray(response.data.content) ? response.data.content : Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Error fetching all listings:', error);
@@ -294,6 +297,9 @@ function IrrigationServices() {
         price: parseFloat(postForm.rate),
         type: postForm.type,
         location: postForm.location,
+        latitude: selectedLocation?.latitude ?? null,
+        longitude: selectedLocation?.longitude ?? null,
+        serviceRadiusKm: Number(postForm.serviceRadiusKm) || 20,
         availability: postForm.availability || 'Available',
         contactName: postForm.contactName,
         contactPhone: postForm.contactPhone,
@@ -307,6 +313,7 @@ function IrrigationServices() {
         title: '',
         location: '',
         serviceableLocations: '',
+        serviceRadiusKm: 20,
         rate: '',
         contactName: '',
         contactPhone: '',
@@ -360,6 +367,7 @@ function IrrigationServices() {
       title: listing.title || listing.serviceName || '',
       location: listing.location || '',
       serviceableLocations: listing.serviceableLocations || '',
+      serviceRadiusKm: listing.serviceRadiusKm || 20,
       rate: listing.rate?.toString() || listing.price?.toString() || '',
       contactName: listing.contactName || '',
       contactPhone: listing.contactPhone || '',
@@ -377,6 +385,7 @@ function IrrigationServices() {
       title: '',
       location: '',
       serviceableLocations: '',
+      serviceRadiusKm: 20,
       rate: '',
       contactName: '',
       contactPhone: '',
@@ -402,6 +411,9 @@ function IrrigationServices() {
         price: parseFloat(postForm.rate),
         type: postForm.type,
         location: postForm.location,
+        latitude: selectedLocation?.latitude ?? editingListing?.latitude ?? null,
+        longitude: selectedLocation?.longitude ?? editingListing?.longitude ?? null,
+        serviceRadiusKm: Number(postForm.serviceRadiusKm) || editingListing?.serviceRadiusKm || 20,
         availability: postForm.availability || 'Available',
         contactName: postForm.contactName,
         contactPhone: postForm.contactPhone,
@@ -811,6 +823,41 @@ function IrrigationServices() {
                         </div>
                         <p className="text-xs text-slate-500 mt-1">Enter amount per hour</p>
                       </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                          Service Radius (KM)
+                        </label>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {[5, 10, 20, 50].map((radius) => (
+                            <button
+                              key={radius}
+                              type="button"
+                              onClick={() => setPostForm((prev) => ({ ...prev, serviceRadiusKm: radius }))}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${Number(postForm.serviceRadiusKm || 20) === radius
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : 'bg-slate-800 text-slate-200 border-slate-600 hover:border-emerald-500'}`}
+                            >
+                              {radius} km
+                            </button>
+                          ))}
+                        </div>
+                        <div className="relative">
+                          <input
+                            name="serviceRadiusKm"
+                            type="number"
+                            min="1"
+                            max="500"
+                            value={postForm.serviceRadiusKm}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-purple-400 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all"
+                            placeholder="20"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-slate-400">📡</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Nearby users inside this radius can discover your service.</p>
+                      </div>
                     </div>
                   </div>
 
@@ -1113,6 +1160,41 @@ function IrrigationServices() {
                           </div>
                         </div>
                         <p className="text-xs text-slate-500 mt-1">Enter amount per hour</p>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                          Service Radius (KM)
+                        </label>
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {[5, 10, 20, 50].map((radius) => (
+                            <button
+                              key={radius}
+                              type="button"
+                              onClick={() => setPostForm((prev) => ({ ...prev, serviceRadiusKm: radius }))}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${Number(postForm.serviceRadiusKm || 20) === radius
+                                ? 'bg-emerald-600 text-white border-emerald-600'
+                                : 'bg-slate-800 text-slate-200 border-slate-600 hover:border-emerald-500'}`}
+                            >
+                              {radius} km
+                            </button>
+                          ))}
+                        </div>
+                        <div className="relative">
+                          <input
+                            name="serviceRadiusKm"
+                            type="number"
+                            min="1"
+                            max="500"
+                            value={postForm.serviceRadiusKm}
+                            onChange={handlePostChange}
+                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            placeholder="20"
+                          />
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                            <span className="text-slate-400">📡</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-1">Nearby users inside this radius can discover your service.</p>
                       </div>
                     </div>
                   </div>

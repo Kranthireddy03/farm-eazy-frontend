@@ -24,8 +24,6 @@ export default function SavedAddressesDropdown({ onSelect }) {
 
   const choose = (addr) => {
     try {
-      localStorage.setItem('farmeazy_selected_location', JSON.stringify({ type: 'address', id: addr.id, label: addr.addressLine1 || addr.fullName }))
-      window.dispatchEvent(new CustomEvent('farmeazy:location-changed', { detail: { source: 'address', address: addr } }))
       if (onSelect) onSelect(addr)
     } catch (e) { console.error(e) }
   }

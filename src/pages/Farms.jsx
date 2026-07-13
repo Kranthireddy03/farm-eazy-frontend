@@ -12,8 +12,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLoader } from '../context/LoaderContext'
 import { useTheme } from '../context/ThemeContext'
+import { useLocationContext } from '../context/LocationContext'
 import { useToast } from '../hooks/useToast';
 import Toast from '../components/Toast';
+import LocationPicker from '../components/LocationPicker'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
@@ -39,7 +41,11 @@ function Farms() {
     farmName: '',
     location: '',
     areaSize: '',
+    latitude: null,
+    longitude: null,
   })
+  const [showLocationPicker, setShowLocationPicker] = useState(false)
+  const { selectedLocation } = useLocationContext()
   const { show: showLoader, hide: hideLoader } = useLoader();
 
   const farmMetrics = useMemo(() => {
@@ -116,10 +122,13 @@ function Farms() {
       await apiClient.post(API_ENDPOINTS.CREATE_FARM, {
         ...formData,
         areaSize: parseFloat(formData.areaSize),
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       })
 
-      setFormData({ farmName: '', location: '', areaSize: '' })
+      setFormData({ farmName: '', location: '', areaSize: '', latitude: null, longitude: null })
       setShowAddForm(false)
+      setShowLocationPicker(false)
       setError('')
       showToast('Farm created successfully!', 'success');
       sendNotification(`Farm "${formData.farmName}" created!`, 'success', '🌾');
@@ -162,6 +171,8 @@ function Farms() {
       farmName: farm.farmName,
       location: farm.location,
       areaSize: farm.areaSize.toString(),
+      latitude: farm.latitude ?? null,
+      longitude: farm.longitude ?? null,
     })
     setShowAddForm(false)
   }
@@ -182,10 +193,13 @@ function Farms() {
       await apiClient.put(API_ENDPOINTS.UPDATE_FARM(editingFarm.id), {
         ...formData,
         areaSize: parseFloat(formData.areaSize),
+        latitude: formData.latitude,
+        longitude: formData.longitude,
       })
 
-      setFormData({ farmName: '', location: '', areaSize: '' })
+      setFormData({ farmName: '', location: '', areaSize: '', latitude: null, longitude: null })
       setEditingFarm(null)
+      setShowLocationPicker(false)
       setError('')
       showToast('Farm updated successfully!', 'success');
       await fetchFarms()
@@ -203,7 +217,29 @@ function Farms() {
    */
   const handleCancelEdit = () => {
     setEditingFarm(null)
-    setFormData({ farmName: '', location: '', areaSize: '' })
+    setFormData({ farmName: '', location: '', areaSize: '', latitude: null, longitude: null })
+    setShowLocationPicker(false)
+  }
+
+  const useCurrentAppLocation = () => {
+    if (!selectedLocation) {
+      showToast('Select a global location first from the location bar.', 'warning')
+      return
+    }
+
+    const latitude = selectedLocation.latitude ?? null
+    const longitude = selectedLocation.longitude ?? null
+    const label = selectedLocation.label
+      || selectedLocation.address?.addressLine1
+      || (latitude != null && longitude != null ? `Lat ${Number(latitude).toFixed(5)}, Lon ${Number(longitude).toFixed(5)}` : '')
+
+    setFormData((prev) => ({
+      ...prev,
+      location: label || prev.location,
+      latitude,
+      longitude,
+    }))
+    showToast('Farm location set from current active location.', 'success')
   }
 
   if (loading) {
@@ -238,7 +274,8 @@ function Farms() {
             onClick={() => {
               setShowAddForm(!showAddForm)
               setEditingFarm(null)
-              setFormData({ farmName: '', location: '', areaSize: '' })
+              setFormData({ farmName: '', location: '', areaSize: '', latitude: null, longitude: null })
+              setShowLocationPicker(false)
             }}
             className="premium-button"
           >
@@ -336,6 +373,29 @@ function Farms() {
               </div>
             </div>
             <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-slate-700 bg-slate-800/80 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={useCurrentAppLocation} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
+                  Use Current Location
+                </button>
+                <button type="button" onClick={() => setShowLocationPicker((prev) => !prev)} className={`px-3 py-2 rounded-lg text-xs font-semibold ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
+                  {showLocationPicker ? 'Hide Map Picker' : 'Search / Map Pin'}
+                </button>
+              </div>
+              <p className="mt-2 text-xs">Current farm coordinates: {formData.latitude != null ? Number(formData.latitude).toFixed(5) : 'not set'}, {formData.longitude != null ? Number(formData.longitude).toFixed(5) : 'not set'}</p>
+            </div>
+            {showLocationPicker && (
+              <LocationPicker
+                onLocationSelect={(lat, lng) => setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }))}
+                onAddressSubmit={(addr) => setFormData((prev) => ({
+                  ...prev,
+                  location: addr.addressLine1 || addr.city || prev.location,
+                  latitude: addr.latitude,
+                  longitude: addr.longitude,
+                }))}
+                initialAddress={null}
+              />
+            )}
+            <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-slate-700 bg-slate-800/80 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
               Tip: Use specific names and location tags so your crops and irrigation schedules are easier to filter later.
             </div>
             <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
@@ -402,6 +462,29 @@ function Farms() {
                 />
               </div>
             </div>
+            <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-slate-700 bg-slate-800/80 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+              <div className="flex flex-wrap gap-2">
+                <button type="button" onClick={useCurrentAppLocation} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
+                  Use Current Location
+                </button>
+                <button type="button" onClick={() => setShowLocationPicker((prev) => !prev)} className={`px-3 py-2 rounded-lg text-xs font-semibold ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
+                  {showLocationPicker ? 'Hide Map Picker' : 'Search / Map Pin'}
+                </button>
+              </div>
+              <p className="mt-2 text-xs">Current farm coordinates: {formData.latitude != null ? Number(formData.latitude).toFixed(5) : 'not set'}, {formData.longitude != null ? Number(formData.longitude).toFixed(5) : 'not set'}</p>
+            </div>
+            {showLocationPicker && (
+              <LocationPicker
+                onLocationSelect={(lat, lng) => setFormData((prev) => ({ ...prev, latitude: lat, longitude: lng }))}
+                onAddressSubmit={(addr) => setFormData((prev) => ({
+                  ...prev,
+                  location: addr.addressLine1 || addr.city || prev.location,
+                  latitude: addr.latitude,
+                  longitude: addr.longitude,
+                }))}
+                initialAddress={null}
+              />
+            )}
             <div className="flex space-x-2">
               <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
                 {submitting ? (
