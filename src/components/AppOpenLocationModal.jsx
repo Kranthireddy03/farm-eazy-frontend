@@ -34,6 +34,8 @@ export default function AppOpenLocationModal() {
     closeSelector,
     openSelector,
     hasSelectedLocation,
+    locationSessionReady,
+    isHydratingLocation,
     recentLocations,
     setSelectedLocation,
   } = useLocationContext()
@@ -46,7 +48,7 @@ export default function AppOpenLocationModal() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState([])
 
-  const mustStayOpen = isAuthenticated && !hasSelectedLocation
+  const mustStayOpen = isAuthenticated && locationSessionReady && !isHydratingLocation && !hasSelectedLocation
   const show = isSelectorOpen || mustStayOpen
 
   useEffect(() => {

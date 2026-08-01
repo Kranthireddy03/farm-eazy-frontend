@@ -1,8 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import apiClient from '../services/apiClient'
+import { STORAGE_KEYS } from '../config/api'
 
 const LOCATION_STORAGE_KEY = 'farmeazy_selected_location'
 const RECENT_STORAGE_KEY = 'farmeazy_recent_locations'
+const LOCATION_SESSION_READY_KEY = 'farmeazy_location_session_ready'
 const MAX_RECENT = 5
 
 const LocationContext = createContext(null)
@@ -55,6 +57,11 @@ function buildLocationLabel(location) {
   return ''
 }
 
+function buildAddressLabel(address) {
+  const parts = [address?.label, address?.addressLine1, address?.city, address?.state].filter(Boolean)
+  return parts.join(', ')
+}
+
 function mergeRecent(nextLocation, previousRecent) {
   const base = Array.isArray(previousRecent) ? previousRecent : []
   const key = nextLocation.type === 'address' ? `address:${nextLocation.id}` : `coords:${nextLocation.latitude}:${nextLocation.longitude}`
@@ -68,17 +75,33 @@ function mergeRecent(nextLocation, previousRecent) {
   return [nextLocation, ...deduped].slice(0, MAX_RECENT)
 }
 
+function markLocationSessionReady() {
+  sessionStorage.setItem(LOCATION_SESSION_READY_KEY, '1')
+}
+
+function clearLocationSessionReady() {
+  sessionStorage.removeItem(LOCATION_SESSION_READY_KEY)
+}
+
 export function LocationProvider({ children }) {
   const [selectedLocation, setSelectedLocationState] = useState(null)
   const [recentLocations, setRecentLocations] = useState([])
   const [isSelectorOpen, setIsSelectorOpen] = useState(false)
   const [locationVersion, setLocationVersion] = useState(0)
+  const [isHydratingLocation, setIsHydratingLocation] = useState(false)
+  const [locationSessionReady, setLocationSessionReady] = useState(
+    () => sessionStorage.getItem(LOCATION_SESSION_READY_KEY) === '1'
+  )
 
   useEffect(() => {
     const fromStorage = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
     const normalized = normalizeLocationPayload(fromStorage)
     if (normalized) {
       setSelectedLocationState(normalized)
+      if (!sessionStorage.getItem(LOCATION_SESSION_READY_KEY)) {
+        markLocationSessionReady()
+        setLocationSessionReady(true)
+      }
     }
 
     const recent = safeParse(localStorage.getItem(RECENT_STORAGE_KEY), [])
@@ -96,6 +119,8 @@ export function LocationProvider({ children }) {
     setSelectedLocationState(normalized)
     setLocationVersion((previous) => previous + 1)
     localStorage.setItem(LOCATION_STORAGE_KEY, JSON.stringify(normalized))
+    markLocationSessionReady()
+    setLocationSessionReady(true)
 
     setRecentLocations((previous) => {
       const merged = mergeRecent(normalized, previous)
@@ -114,6 +139,73 @@ export function LocationProvider({ children }) {
     window.dispatchEvent(new CustomEvent('farmeazy:location-changed', { detail: normalized }))
     return normalized
   }, [])
+
+    const hydrateFromCurrentAddress = useCallback(async () => {
+    const token = localStorage.getItem(STORAGE_KEYS.USER_TOKEN)
+    if (!token) {
+      markLocationSessionReady()
+      setLocationSessionReady(true)
+      return
+    }
+
+    if (locationSessionReady) {
+      return
+    }
+
+    if (selectedLocation) {
+      markLocationSessionReady()
+      setLocationSessionReady(true)
+      return
+    }
+
+    setIsHydratingLocation(true)
+    try {
+      const response = await apiClient.get('/addresses/current')
+      const address = response?.data
+      if (address?.id != null) {
+        await persistSelection({
+          type: 'address',
+          id: address.id,
+          label: buildAddressLabel(address),
+          latitude: address.latitude,
+          longitude: address.longitude,
+          address,
+        }, { syncCurrentAddress: false })
+      }
+    } catch {
+      // No current address or endpoint unavailable — user will pick location once
+    } finally {
+      markLocationSessionReady()
+      setLocationSessionReady(true)
+      setIsHydratingLocation(false)
+    }
+  }, [locationSessionReady, persistSelection, selectedLocation])
+
+  useEffect(() => {
+    const onLogin = () => {
+      clearLocationSessionReady()
+      setLocationSessionReady(false)
+      hydrateFromCurrentAddress()
+    }
+    const onLogout = () => {
+      clearLocationSessionReady()
+      setLocationSessionReady(false)
+    }
+
+    window.addEventListener('farmeazy:auth-login', onLogin)
+    window.addEventListener('farmeazy:auth-logout', onLogout)
+    return () => {
+      window.removeEventListener('farmeazy:auth-login', onLogin)
+      window.removeEventListener('farmeazy:auth-logout', onLogout)
+    }
+  }, [hydrateFromCurrentAddress])
+
+  useEffect(() => {
+    const token = localStorage.getItem(STORAGE_KEYS.USER_TOKEN)
+    if (token && !locationSessionReady && !selectedLocation) {
+      hydrateFromCurrentAddress()
+    }
+  }, [hydrateFromCurrentAddress, locationSessionReady, selectedLocation])
 
   const clearSelection = useCallback(() => {
     setSelectedLocationState(null)
@@ -136,13 +228,28 @@ export function LocationProvider({ children }) {
     selectedLocationLabel: buildLocationLabel(selectedLocation),
     hasSelectedLocation: Boolean(selectedLocation),
     locationVersion,
+    locationSessionReady,
+    isHydratingLocation,
     recentLocations,
     isSelectorOpen,
     openSelector,
     closeSelector,
     setSelectedLocation: persistSelection,
+    hydrateFromCurrentAddress,
     clearSelection,
-  }), [selectedLocation, locationVersion, recentLocations, isSelectorOpen, openSelector, closeSelector, persistSelection, clearSelection])
+  }), [
+    selectedLocation,
+    locationVersion,
+    locationSessionReady,
+    isHydratingLocation,
+    recentLocations,
+    isSelectorOpen,
+    openSelector,
+    closeSelector,
+    persistSelection,
+    hydrateFromCurrentAddress,
+    clearSelection,
+  ])
 
   return <LocationContext.Provider value={value}>{children}</LocationContext.Provider>
 }

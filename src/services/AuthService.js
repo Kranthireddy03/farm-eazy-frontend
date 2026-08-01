@@ -412,12 +412,15 @@ class AuthService {
    * @param {string} newPassword - New password
    * @returns {Promise} Response with message
    */
-  async resetPassword(token, newPassword) {
+  async resetPassword(token, newPassword, shortCode = null) {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.RESET_PASSWORD, {
-        token,
-        newPassword,
-      });
+      const payload = { newPassword };
+      if (shortCode) {
+        payload.shortCode = shortCode;
+      } else if (token) {
+        payload.token = token;
+      }
+      const response = await apiClient.post(API_ENDPOINTS.RESET_PASSWORD, payload);
       return response.data;
     } catch (error) {
       throw this.handleError(error);

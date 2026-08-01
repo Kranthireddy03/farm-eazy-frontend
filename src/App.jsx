@@ -203,7 +203,7 @@ function SupportPortalRedirect({
 }
 
 function LocationAccessRoute({ children }) {
-  const { hasSelectedLocation, openSelector } = useLocationContext()
+  const { hasSelectedLocation, locationVersion, openSelector } = useLocationContext()
   const [checking, setChecking] = useState(true)
   const [allowed, setAllowed] = useState(true)
   const [message, setMessage] = useState('')
@@ -241,7 +241,7 @@ function LocationAccessRoute({ children }) {
     return () => {
       active = false
     }
-  }, [hasSelectedLocation, openSelector])
+  }, [hasSelectedLocation, locationVersion, openSelector])
 
   if (checking) {
     return (
