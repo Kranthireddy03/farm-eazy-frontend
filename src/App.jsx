@@ -74,6 +74,9 @@ import Layout from './components/Layout';
 import PublicLayout from './components/PublicLayout';
 const UserPreferences = lazy(() => import('./pages/UserPreferences'));
 const CommunicationPreferences = lazy(() => import('./pages/CommunicationPreferences'));
+import { ShellProvider } from './components/shell/ShellContext';
+import CommandPalette from './components/shell/CommandPalette';
+import PageLoader from './components/shell/PageLoader';
 import OnboardingTour from './components/OnboardingTour';
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
@@ -135,11 +138,7 @@ function ProtectedRoute({ children }) {
   const profileCompletionRequired = localStorage.getItem(STORAGE_KEYS.USER_PROFILE_COMPLETION_REQUIRED) === 'true';
   
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-slate-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   if (isAuthenticated && profileCompletionRequired && location.pathname !== '/complete-google-profile') {
@@ -327,21 +326,13 @@ function AppContent() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="spinner">
-          <svg className="w-10 h-10 text-green-600 animate-spin" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
-          </svg>
-        </div>
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (
-    <Suspense fallback={<div className="flex items-center justify-center h-screen text-gray-500 dark:text-slate-400 bg-white dark:bg-slate-900">Loading page...</div>}>
+    <Suspense fallback={<PageLoader />}>
       <>
+      <CommandPalette />
       <Routes key={isAuthenticated ? `loc-${locationVersion}` : 'public'}>
         {/* Public landing page for unauthenticated users. Authenticated users get Home inside the main Layout */}
         <Route
@@ -512,7 +503,9 @@ function App() {
             <LoaderProvider>
               <CoinProvider>
                 <ToastProvider>
-                  <AppContent />
+                  <ShellProvider>
+                    <AppContent />
+                  </ShellProvider>
                 </ToastProvider>
               </CoinProvider>
             </LoaderProvider>

@@ -30,6 +30,7 @@ import { useAuth } from '../context/AuthContext'
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal'
 import AppOpenLocationModal from './AppOpenLocationModal'
 import LocationBar from './LocationBar'
+import { useShell } from './shell/ShellContext'
 
 function Layout({ onShowTour, children }) {
   const navigate = useNavigate()
@@ -67,7 +68,7 @@ function Layout({ onShowTour, children }) {
   const userId = localStorage.getItem('farmEazy_userId')
   // Format user ID as 5-digit display (e.g., 00001, 00123)
   const userDisplayId = userId ? String(userId).padStart(5, '0') : '-----'
-  const { toast, showToast, closeToast } = useToast()
+  const { openCommandPalette } = useShell()
 
 
   // Refresh coins manually
@@ -430,6 +431,19 @@ function Layout({ onShowTour, children }) {
 
             {/* Right Section - Actions */}
             <div className="flex items-center space-x-2 shrink-0">
+              <button
+                type="button"
+                onClick={openCommandPalette}
+                className="hidden sm:flex items-center gap-1.5 px-3 py-2 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full text-white text-sm font-medium transition-all border border-white/20"
+                title="Command palette (Ctrl+K)"
+              >
+                <span>🔍</span>
+                <span className="hidden lg:inline">Search</span>
+                <kbd className="text-[10px] opacity-70 font-mono">⌘K</kbd>
+              </button>
+
+              <DarkModeToggle className="!bg-white/15 !border-white/20 !text-white shrink-0" />
+
               {/* Tour Button - Compact */}
               <button
                 data-tour="tour-button"
@@ -793,7 +807,6 @@ function Layout({ onShowTour, children }) {
         </div>
       </footer>
 
-      <DarkModeToggle floating />
       <ChatSupport />
       </div>
     </div>

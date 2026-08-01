@@ -1,7 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom'
 import { useEffect } from 'react'
-import DarkModeToggle from './DarkModeToggle'
-import PublicHeader from './PublicHeader'
+import UnifiedHeader from './shell/UnifiedHeader'
 import PublicFooter from './PublicFooter'
 import { PageCanvas } from './ui/PremiumSurface'
 
@@ -41,14 +40,13 @@ function PublicLayout({ children }) {
         }} />
 
         <div className="relative z-10 flex min-h-screen flex-col">
-          <PublicHeader />
+          <UnifiedHeader />
           <main className="flex-1 px-3 sm:px-4 md:px-6 lg:px-8 py-4 md:py-6">
             <div className={`glass-card variant-surface content-dense ${publicVariant} min-h-full p-4 sm:p-5 md:p-6 lg:p-8 animate-[fadeIn_.45s_ease-out]`}>
               {children || <Outlet />}
             </div>
           </main>
           <PublicFooter />
-          <DarkModeToggle floating />
         </div>
       </div>
     </PageCanvas>

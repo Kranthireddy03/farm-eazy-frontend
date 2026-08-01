@@ -5,6 +5,8 @@ import { useCoin } from '../context/CoinContext';
 import { useTheme } from '../context/ThemeContext';
 import apiClient from '../services/apiClient';
 import Toast from '../components/Toast';
+import ActivityTimeline from '../components/ui/ActivityTimeline';
+import { PageSkeleton } from '../components/ui/Skeleton';
 
 /**
  * Enhanced Dashboard with Analytics & Activity Feed
@@ -209,13 +211,12 @@ function DashboardEnhanced() {
 
   if (loading) {
     return (
-      <div className={`premium-shell min-h-screen py-8 px-4 flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-400 mx-auto mb-4"></div>
-          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Loading dashboard...</p>
+      <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+        <div className="max-w-7xl mx-auto">
+          <PageSkeleton />
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -520,35 +521,11 @@ function DashboardEnhanced() {
           </div>
 
           {/* Activity List */}
-          <div className="divide-y divide-slate-700 max-h-96 overflow-y-auto">
-            {filteredActivities.length === 0 ? (
-              <div className="px-6 py-12 text-center">
-                <p className="text-slate-400 text-lg">📭 No activities found</p>
-                <p className="text-slate-500 text-sm mt-2">Your activities will appear here</p>
-              </div>
-            ) : (
-              filteredActivities.map((activity) => (
-                <div key={activity.id} className="px-6 py-4 hover:bg-slate-700/50 transition">
-                  <div className="flex items-start gap-4">
-                    <div className="text-2xl flex-shrink-0 pt-1">
-                      {getActivityIcon(activity.activityType)}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white">{activity.description}</p>
-                      {activity.details && (
-                        <p className="text-xs text-slate-400 mt-1">{activity.details}</p>
-                      )}
-                      <p className="text-xs text-slate-500 mt-2">{activity.timeAgo}</p>
-                    </div>
-                    <div className="flex-shrink-0 ml-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-700 text-slate-300">
-                        {activity.activityType.replace(/_/g, ' ')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="px-6 py-6 max-h-[28rem] overflow-y-auto custom-scrollbar">
+            <ActivityTimeline
+              activities={filteredActivities}
+              emptyMessage="📭 No activities match your filters yet."
+            />
           </div>
 
           {/* Activity Stats */}
