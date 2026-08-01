@@ -519,76 +519,58 @@ function Login() {
             )}
           </div>
 
-          {/* Error Display */}
           {apiError && (
-            <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} ops-panel border px-4 py-3 rounded-xl flex items-start gap-3 mb-5`}>
-              <span className="text-xl">⚠️</span>
-              <div>
-                <p className="font-medium">{apiError}</p>
-                {apiError.includes('not found') || apiError.includes('not registered') ? (
-                  <Link to="/register" className={`${isDark ? 'text-red-300 hover:text-red-100' : 'text-red-600 hover:text-red-800'} underline text-sm mt-1 inline-block`}>
-                    Create an account →
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          )}
-          
-          {/* Success Message (for OTP) */}
-          {otpMessage && (
-            <div className={`${isDark ? 'bg-primary/10 border-primary/40 text-primary/80' : 'bg-primary/10 border-primary/30 text-primary'} ops-panel border px-4 py-3 rounded-xl flex items-center gap-3 mb-5`}>
-              <span className="text-xl">✅</span>
-              <p className="font-medium">{otpMessage}</p>
-            </div>
+            <InfoPanel variant="destructive" title="Sign in failed" description={apiError} className="mb-5" />
           )}
 
-          {/* PASSWORD LOGIN FORM */}
+          {otpMessage && (
+            <InfoPanel variant="success" title="OTP sent" description={otpMessage} className="mb-5" />
+          )}
+
           {loginMode === 'password' && (
             <form onSubmit={handlePasswordSubmit} className="space-y-5">
-              {/* Identifier Field */}
               <div className="space-y-2">
-                <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
-                  <span>👤</span> Email / Username / User ID
+                <label className="text-sm font-semibold text-foreground" htmlFor="login-identifier">
+                  Email, username, or user ID
                 </label>
-                <input
+                <Input
+                  id="login-identifier"
                   type="text"
                   name="identifier"
                   value={formData.identifier}
                   onChange={handleChange}
-                  className={`form-input w-full px-4 py-3.5 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
-                  placeholder="email@example.com or username or 10001"
+                  placeholder="email@example.com or username"
                 />
-                {errors.identifier && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.identifier}</p>}
+                {errors.identifier && <p className="text-sm text-destructive">{errors.identifier}</p>}
               </div>
 
-              {/* Password Field */}
               <div className="space-y-2">
-                <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
-                  <span>🔐</span> Password
+                <label className="text-sm font-semibold text-foreground" htmlFor="login-password">
+                  Password
                 </label>
                 <div className="relative">
-                  <input
+                  <Input
+                    id="login-password"
                     type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className={`form-input w-full px-4 py-3.5 pr-12 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                     placeholder="••••••••"
+                    className="pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-muted-foreground hover:text-muted-foreground' : 'text-primary hover:text-primary'} transition-colors`}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm"
                   >
-                    {showPassword ? '👁️' : '👁️‍🗨️'}
+                    {showPassword ? 'Hide' : 'Show'}
                   </button>
                 </div>
-                {errors.password && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.password}</p>}
+                {errors.password && <p className="text-sm text-destructive">{errors.password}</p>}
               </div>
 
-              {/* Forgot Password */}
               <div className="flex items-center justify-between">
-                <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-medium inline-flex items-center gap-2`}>
+                <label className="text-sm inline-flex items-center gap-2 text-foreground">
                   <input
                     type="checkbox"
                     checked={rememberMe}
@@ -597,31 +579,14 @@ function Login() {
                   />
                   Remember me
                 </label>
-                <Link to="/forgot-password" className={`${isDark ? 'text-primary hover:text-white' : 'text-primary hover:text-foreground'} text-sm font-medium transition-colors`}>
-                  Forgot password? →
+                <Link to="/forgot-password" className="text-sm font-medium text-primary hover:underline">
+                  Forgot password?
                 </Link>
               </div>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={loading}
-                className="premium-button w-full py-4 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {loading ? (
-                  <>
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Logging in...
-                  </>
-                ) : (
-                  <>
-                    <span>🔑</span> Sign in
-                  </>
-                )}
-              </button>
+              <Button type="submit" disabled={loading} className="w-full">
+                {loading ? 'Signing in…' : 'Sign in'}
+              </Button>
             </form>
           )}
 

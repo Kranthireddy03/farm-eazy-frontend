@@ -15,6 +15,9 @@ import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { useGlobalToast } from '../context/ToastContext'
 import { AuthPageLayout, AuthSidePanel } from '../components/layout/AuthPageLayout'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { InfoPanel } from '../components/platform/InfoPanel'
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 const GOOGLE_ALLOWED_ORIGINS = (import.meta.env.VITE_GOOGLE_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
@@ -418,164 +421,109 @@ function Register() {
     setApiError('')
   }
 
-  // Success Screen
   if (showSuccess) {
     return (
-      <div className="premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
-        {/* Background */}
-        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-background via-card to-background' : 'bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10'}`}>
-          <div className="absolute inset-0 opacity-30">
-            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-primary/30' : 'bg-yellow-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-            <div className={`absolute -bottom-8 right-20 w-72 h-72 ${isDark ? 'bg-teal-900' : 'bg-green-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
+      <AuthPageLayout
+        title="Welcome to FarmEazy"
+        description="Your account has been created successfully."
+        side={
+          <AuthSidePanel
+            imageSrc="/auth-register.png"
+            imageAlt="FarmEazy welcome"
+            title="You're all set"
+            description="Sign in to manage farms, irrigation, marketplace listings, and expert support."
+          />
+        }
+      >
+        <div className="text-center space-y-4">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/15 text-2xl">
+            ✓
           </div>
-          <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none"></div>
-        </div>
-
-        <div className="relative z-10 text-center">
-          <div className={`backdrop-blur-xl ${isDark ? 'bg-muted/90 border-border' : 'bg-background/90 border-border'} rounded-3xl shadow-2xl border p-12`}>
-            <div className="w-24 h-24 bg-gradient-to-br from-primary to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-              <span className="text-5xl">🎉</span>
-            </div>
-            <h1 className={`text-4xl font-extrabold ${isDark ? 'text-foreground' : 'text-foreground'} mb-4`}>Welcome to FarmEazy!</h1>
-            <p className={`${isDark ? 'text-primary' : 'text-primary'} text-lg mb-4`}>Your account has been created successfully.</p>
-            {(location.state?.socialSignupSource === 'google' || location.state?.signupPrompt) && (
-              <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm mb-4`}>
-                You can finish sign-up with the Google email that was detected in the login flow.
-              </p>
-            )}
-            <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-xs mb-4`}>
-              After sign-up, you will receive the same welcome notification, email, and SMS as every other new account.
+          {(location.state?.socialSignupSource === 'google' || location.state?.signupPrompt) && (
+            <p className="text-sm text-muted-foreground">
+              You can finish sign-up with the Google email detected in the login flow.
             </p>
-            
-            {/* Display User ID */}
-            <div className={`${isDark ? 'bg-muted/80 border-border' : 'bg-primary/5 border-border'} border-2 rounded-2xl p-6 mb-6`}>
-              <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-medium mb-2`}>Your User ID</p>
-              <div className={`text-4xl font-bold font-mono ${isDark ? 'text-primary' : 'text-primary'}`}>
-                #{registeredUserId ? String(registeredUserId).padStart(5, '0') : '-----'}
-              </div>
-              <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-xs mt-2`}>Remember this ID for quick reference</p>
-            </div>
-            
-            <div className={`flex items-center justify-center gap-2 ${isDark ? 'text-muted-foreground' : 'text-primary'}`}>
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Redirecting to login...</span>
-            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            After sign-up, you will receive the standard welcome notification, email, and SMS.
+          </p>
+          <div className="rounded-xl border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-muted-foreground mb-1">Your user ID</p>
+            <p className="text-3xl font-bold font-mono text-primary">
+              #{registeredUserId ? String(registeredUserId).padStart(5, '0') : '-----'}
+            </p>
           </div>
+          <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+            <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+            Redirecting to login…
+          </p>
         </div>
-      </div>
+      </AuthPageLayout>
     )
   }
 
-  // OTP Verification Screen
   if (showOtpScreen) {
     return (
-      <div className="premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
-        {/* Background */}
-        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-background via-card to-background' : 'bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10'}`}>
-          <div className="absolute inset-0 opacity-30">
-            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-primary/30' : 'bg-yellow-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-            <div className={`absolute -bottom-8 right-20 w-72 h-72 ${isDark ? 'bg-teal-900' : 'bg-green-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-          </div>
-          <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none"></div>
+      <AuthPageLayout
+        title="Verify your email"
+        description={`Enter the 6-digit code sent to ${formData.email}`}
+        side={
+          <AuthSidePanel
+            imageSrc="/auth-register.png"
+            imageAlt="Verify email"
+            title="Secure your account"
+            description="Email verification helps protect your FarmEazy profile and farm data."
+          />
+        }
+      >
+        {apiError && (
+          <InfoPanel variant="destructive" title="Could not verify" description={apiError} className="mb-4" />
+        )}
+
+        <div className="flex justify-center gap-2 mb-6">
+          {otpCode.map((digit, index) => (
+            <Input
+              key={index}
+              id={`otp-${index}`}
+              type="text"
+              inputMode="numeric"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleOtpChange(index, e.target.value)}
+              onKeyDown={(e) => handleOtpKeyDown(index, e)}
+              className="w-12 h-14 text-center text-2xl font-bold"
+            />
+          ))}
         </div>
 
-        <div className="relative z-10 w-full max-w-md">
-          <div className={`backdrop-blur-xl ${isDark ? 'bg-muted/90 border-border' : 'bg-background/90 border-border'} rounded-3xl shadow-2xl border p-8`}>
-            
-            {/* Header */}
-            <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-                <span className="text-4xl">📧</span>
-              </div>
-              <h1 className={`text-2xl font-bold ${isDark ? 'text-foreground' : 'text-foreground'}`}>Verify Your Email</h1>
-              <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} mt-2`}>
-                We've sent a 6-digit OTP to
-              </p>
-              <p className={`${isDark ? 'text-primary' : 'text-primary'} font-semibold`}>{formData.email}</p>
-            </div>
-
-            {/* Error */}
-            {apiError && (
-              <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} border px-4 py-3 rounded-xl mb-4 flex items-center gap-2`}>
-                <span>⚠️</span>
-                <p className="text-sm">{apiError}</p>
-              </div>
-            )}
-
-            {/* OTP Input */}
-            <div className="flex justify-center gap-2 mb-6">
-              {otpCode.map((digit, index) => (
-                <input
-                  key={index}
-                  id={`otp-${index}`}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleOtpChange(index, e.target.value)}
-                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                  className={`w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 focus:outline-none focus:ring-2 transition-all ${
-                    isDark 
-                      ? 'bg-muted border-border text-white focus:border-primary focus:ring-primary/30' 
-                      : 'bg-background border-border text-foreground focus:border-primary focus:ring-primary/30'
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Timer */}
-            <div className="text-center mb-6">
-              {timer > 0 ? (
-                <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} text-sm`}>
-                  OTP expires in <span className="text-orange-500 font-semibold">{Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}</span>
-                </p>
-              ) : (
-                <button
-                  onClick={handleResendOtp}
-                  disabled={loading}
-                  className={`${isDark ? 'text-primary hover:text-primary' : 'text-primary hover:text-primary'} font-semibold text-sm transition`}
-                >
-                  Didn't receive OTP? Resend
-                </button>
-              )}
-            </div>
-
-            {/* Verify Button */}
-            <button
-              onClick={handleVerifyOtp}
-              disabled={otpVerifying || otpCode.join('').length !== 6}
-              className="w-full py-4 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white font-bold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {otpVerifying ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Verifying...
-                </>
-              ) : (
-                <>
-                  <span>✓</span> Verify & Sign up
-                </>
-              )}
-            </button>
-
-            {/* Back Button */}
-            <button
-              onClick={handleBackToForm}
-              className={`w-full mt-3 py-3 rounded-xl font-semibold transition ${
-                isDark ? 'text-muted-foreground hover:text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              }`}
-            >
-              ← Back to form
-            </button>
-          </div>
+        <div className="text-center mb-6">
+          {timer > 0 ? (
+            <p className="text-sm text-muted-foreground">
+              OTP expires in{' '}
+              <span className="font-semibold text-foreground">
+                {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
+              </span>
+            </p>
+          ) : (
+            <Button type="button" variant="link" onClick={handleResendOtp} disabled={loading}>
+              Didn&apos;t receive OTP? Resend
+            </Button>
+          )}
         </div>
-      </div>
+
+        <Button
+          type="button"
+          onClick={handleVerifyOtp}
+          disabled={otpVerifying || otpCode.join('').length !== 6}
+          className="w-full"
+        >
+          {otpVerifying ? 'Verifying…' : 'Verify & sign up'}
+        </Button>
+
+        <Button type="button" variant="ghost" onClick={handleBackToForm} className="w-full mt-3">
+          Back to form
+        </Button>
+      </AuthPageLayout>
     )
   }
 
