@@ -48,4 +48,8 @@ export {
   HeroSection,
   FeatureGrid,
   FeatureGridItem,
+  PremiumHero,
+  BentoGrid,
+  BentoCell,
+  QuickActionTile,
 } from '../platform';

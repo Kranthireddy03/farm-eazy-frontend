@@ -18,10 +18,10 @@ export default function UnifiedHeader() {
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
         <Link to="/" className="flex items-center gap-2.5 shrink-0">
-          <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">FE</div>
+          <div className="fe-logo-mark">FE</div>
           <div className="leading-tight">
             <p className="font-semibold text-sm">FarmEazy</p>
             <p className="text-[10px] text-muted-foreground hidden sm:block">Farm operations platform</p>

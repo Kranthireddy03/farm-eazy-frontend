@@ -14,14 +14,14 @@ export default function ProductPublicLayout({ children }) {
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col fe-premium-canvas">
       <UnifiedHeader />
       <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8 min-h-[calc(100vh-10rem)]">
         <div className={cn('animate-in fade-in duration-300')}>
           {children || <Outlet />}
         </div>
       </main>
-      <footer className="border-t border-border mt-auto">
+      <footer className="fe-footer-premium mt-auto">
         <div className="max-w-6xl mx-auto px-4 py-6 flex flex-col sm:flex-row justify-between gap-4 text-sm text-muted-foreground">
           <span>© {new Date().getFullYear()} FarmEazy — Smart farm operations</span>
           <div className="flex flex-wrap gap-4">

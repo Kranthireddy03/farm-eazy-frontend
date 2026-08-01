@@ -26,7 +26,7 @@ export default function AppPage({
   const content = (
     <div className={cn('space-y-6', className)}>
       <Breadcrumbs items={crumbs} />
-      {(title || description) && (
+      {(title || description || toolbar) && (
         <PageHeader
           title={title}
           description={description}

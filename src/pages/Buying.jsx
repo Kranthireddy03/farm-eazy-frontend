@@ -20,12 +20,13 @@ import { FilterBar } from '../components/ui/filter-bar'
 import { PageToolbar, PageToolbarGroup } from '../components/ui/page-toolbar'
 import { EmptyState } from '../components/ui/empty-state'
 import { PageSkeleton } from '../components/ui/Skeleton'
-import { Badge } from '../components/ui/badge'
 import { InfoPanel } from '../components/platform/InfoPanel'
 import { SummaryPanel } from '../components/platform/SummaryPanel'
+import { PremiumHero } from '../components/platform/PremiumHero'
 import { useWishlist } from '../hooks/useWishlist'
 import { useMarketplaceFilters } from '../hooks/useMarketplaceFilters'
 import { buildCartItem, addToCartStorage } from '../lib/marketplace'
+import { cn } from '../lib/utils'
 
 const CATEGORIES = [
   { value: 'ALL', label: 'All' },
@@ -195,30 +196,31 @@ function Buying() {
   )
 
   return (
-    <AppPage
-      title="Marketplace"
-      description="Browse quality agricultural products from verified sellers in your delivery zone."
-      meta={
-        <>
-          <Badge variant="muted">{products.length} live listings</Badge>
-          <Badge variant="outline">{filteredProducts.length} deliverable to you</Badge>
-        </>
-      }
-      actions={
-        <>
-          <Button variant="outline" onClick={() => navigate('/selling')} className="gap-2">
-            <Store className="h-4 w-4" />
-            Sell products
-          </Button>
-          <Button onClick={() => navigate('/cart')} className="gap-2">
-            <ShoppingCart className="h-4 w-4" />
-            View cart
-          </Button>
-        </>
-      }
-      toolbar={toolbar}
-    >
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <AppPage noMotion toolbar={toolbar}>
+      <PremiumHero
+        eyebrow="Marketplace"
+        title="Discover agricultural products"
+        description="Browse quality listings from verified sellers in your delivery zone — seeds, tools, equipment, and more."
+        actions={
+          <>
+            <Button variant="outline" onClick={() => navigate('/selling')} className="gap-2">
+              <Store className="h-4 w-4" />
+              Sell products
+            </Button>
+            <Button onClick={() => navigate('/cart')} className="gap-2 shadow-md shadow-primary/20">
+              <ShoppingCart className="h-4 w-4" />
+              View cart
+            </Button>
+          </>
+        }
+        stats={[
+          { label: 'Live listings', value: products.length },
+          { label: 'Deliverable', value: deliverableCount },
+          { label: 'Saved', value: wishlistIds.length },
+        ]}
+      />
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8">
         <KpiCard title="Live products" value={products.length} hint="All listings" icon={Package} />
         <KpiCard title="In your zone" value={deliverableCount} hint="Deliverable now" icon={MapPin} />
         <KpiCard
@@ -284,15 +286,17 @@ function Buying() {
         <div className="space-y-6">
           <div className="flex flex-wrap gap-2">
             {QUICK_CHIPS.map((chip) => (
-              <Button
+              <button
                 key={chip}
                 type="button"
-                size="sm"
-                variant={searchTerm === chip ? 'default' : 'outline'}
+                className={cn(
+                  'fe-chip',
+                  searchTerm === chip && 'fe-chip-active',
+                )}
                 onClick={() => setSearchTerm(chip)}
               >
                 {chip}
-              </Button>
+              </button>
             ))}
             {hasActiveFilters && (
               <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>

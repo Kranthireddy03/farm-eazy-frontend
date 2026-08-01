@@ -6,6 +6,7 @@
  */
 
 @import './design-system/tokens.css';
+@import './design-system/premium.css';
 
 @tailwind base;
 @tailwind components;

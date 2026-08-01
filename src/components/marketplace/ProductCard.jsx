@@ -50,7 +50,7 @@ export function ProductCard({
   return (
     <Card
       className={cn(
-        'group overflow-hidden border-border shadow-sm hover:shadow-md transition-shadow duration-normal',
+        'group overflow-hidden fe-surface fe-surface-interactive border-border/80',
         className,
       )}
     >

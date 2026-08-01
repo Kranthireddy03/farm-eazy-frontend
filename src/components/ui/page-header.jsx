@@ -13,7 +13,7 @@ export function PageHeader({
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1 min-w-0">
           {title && (
-            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+            <h1 className="fe-display text-2xl sm:text-3xl text-foreground leading-tight">
               {title}
             </h1>
           )}

@@ -105,16 +105,16 @@ export default function AppShell({ children, onShowTour }) {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex">
+    <div className="min-h-screen bg-background text-foreground flex fe-premium-canvas">
       <aside
         className={cn(
-          'hidden lg:flex flex-col border-r border-border bg-card transition-[width] duration-200 shrink-0',
+          'hidden lg:flex flex-col border-r border-border/70 bg-card/80 backdrop-blur-md transition-[width] duration-200 shrink-0',
           collapsed ? 'w-[4.5rem]' : 'w-60',
         )}
       >
-        <div className="h-14 flex items-center gap-2 px-3 border-b border-border">
-          <div className="h-8 w-8 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">FE</div>
-          {!collapsed && <span className="font-semibold text-sm truncate">FarmEazy</span>}
+        <div className="h-14 flex items-center gap-2.5 px-3 border-b border-border/70">
+          <div className="fe-logo-mark">FE</div>
+          {!collapsed && <span className="font-semibold text-sm truncate tracking-tight">FarmEazy</span>}
         </div>
         <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
           {NAV.map(({ name, path, icon: Icon }) => (
@@ -122,10 +122,10 @@ export default function AppShell({ children, onShowTour }) {
               key={path}
               to={path}
               className={cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
                 isActive(path)
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  ? 'fe-nav-active'
+                  : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
               )}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -146,7 +146,7 @@ export default function AppShell({ children, onShowTour }) {
       </aside>
 
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-40 h-14 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <header className="sticky top-0 z-40 h-14 border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
           <div className="h-full px-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => navigate('/dashboard')} aria-label="Menu">
@@ -215,8 +215,8 @@ export default function AppShell({ children, onShowTour }) {
           {children || <Outlet />}
         </main>
 
-        <footer className="border-t border-border py-4 px-6 text-xs text-muted-foreground flex flex-wrap gap-4 justify-between">
-          <span>© {new Date().getFullYear()} FarmEazy</span>
+        <footer className="fe-footer-premium py-5 px-6 text-xs text-muted-foreground flex flex-wrap gap-4 justify-between">
+          <span>© {new Date().getFullYear()} FarmEazy — Premium farm operations</span>
           <div className="flex gap-4">
             <Link to="/privacy-policy" className="hover:text-foreground">Privacy</Link>
             <Link to="/terms" className="hover:text-foreground">Terms</Link>

@@ -7,6 +7,7 @@ import { useLocationContext } from '../context/LocationContext';
 import apiClient from '../services/apiClient';
 import AppPage from '../components/layout/AppPage';
 import { KpiCard } from '../components/ui/kpi-card';
+import { PremiumHero, BentoGrid, BentoCell, QuickActionTile } from '../components/platform';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -193,36 +194,53 @@ function DashboardEnhanced() {
   ];
 
   return (
-    <AppPage
-      title="Operations dashboard"
-      description="Analytics, activity, and marketplace signals for your selected service location."
-      actions={
-        <>
-          <Button variant="outline" size="sm" onClick={() => navigate('/notifications')}>
-            <Bell className="h-4 w-4" />
-            Notifications
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => navigate('/activities')}>
-            Activity log
-          </Button>
-        </>
-      }
-    >
+    <AppPage noMotion>
+      <PremiumHero
+        eyebrow="Analytics"
+        title="Operations dashboard"
+        description="Analytics, activity, and marketplace signals for your selected service location."
+        actions={
+          <>
+            <Button variant="outline" size="sm" onClick={() => navigate('/notifications')}>
+              <Bell className="h-4 w-4" />
+              Notifications
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => navigate('/activities')}>
+              Activity log
+            </Button>
+          </>
+        }
+        stats={[
+          { label: 'Farms', value: stats.totalFarms },
+          { label: 'Orders', value: stats.totalOrders },
+          { label: 'Coins', value: coins?.totalCoins || 0 },
+        ]}
+      />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-        <KpiCard title="Active farms" value={stats.totalFarms} hint="Registered locations" icon={Sprout} />
-        <KpiCard title="Growing crops" value={stats.totalCrops} hint="Across all farms" icon={Sprout} />
-        <KpiCard title="Listed products" value={stats.totalProducts} hint="Marketplace" icon={ShoppingCart} />
-        <KpiCard title="Orders" value={stats.totalOrders} hint="Purchase history" icon={TrendingUp} />
+      <BentoGrid className="mt-8">
+        <BentoCell span={3}>
+          <KpiCard title="Active farms" value={stats.totalFarms} hint="Registered locations" icon={Sprout} />
+        </BentoCell>
+        <BentoCell span={3}>
+          <KpiCard title="Growing crops" value={stats.totalCrops} hint="Across all farms" icon={Sprout} />
+        </BentoCell>
+        <BentoCell span={3}>
+          <KpiCard title="Listed products" value={stats.totalProducts} hint="Marketplace" icon={ShoppingCart} />
+        </BentoCell>
+        <BentoCell span={3}>
+          <KpiCard title="Orders" value={stats.totalOrders} hint="Purchase history" icon={TrendingUp} />
+        </BentoCell>
+      </BentoGrid>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
         <KpiCard title="Coins" value={coins?.totalCoins || 0} hint="Rewards balance" icon={ShoppingCart} />
         <KpiCard title="Irrigation" value={stats.totalIrrigations} hint="Active schedules" icon={Droplets} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-8">
         <div className="lg:col-span-2 grid gap-4">
           <ActivityAreaChart data={activityChartData} description="Events recorded in the last 7 days" />
         </div>
-        <Card>
+        <Card className="fe-surface">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <CloudSun className="h-4 w-4 text-muted-foreground" />
@@ -231,7 +249,7 @@ function DashboardEnhanced() {
             <CardDescription>Weather and service area for marketplace data.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <div className="rounded-md border border-border bg-muted/40 p-4">
+            <div className="rounded-xl border border-border/70 bg-muted/30 p-4">
               <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Service location</p>
               <p className="font-medium text-foreground mt-1">
                 {hasSelectedLocation ? selectedLocationLabel : 'No location selected'}
@@ -368,34 +386,10 @@ function DashboardEnhanced() {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button
-          type="button"
-          onClick={() => navigate('/farms')}
-          className="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
-        >
-          <Sprout className="h-5 w-5 text-primary mb-2" />
-          <p className="font-medium text-foreground">Add farm</p>
-          <p className="text-sm text-muted-foreground">Create a new farm</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/crops')}
-          className="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
-        >
-          <Plus className="h-5 w-5 text-primary mb-2" />
-          <p className="font-medium text-foreground">Plant crop</p>
-          <p className="text-sm text-muted-foreground">Add new crop</p>
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/buying')}
-          className="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
-        >
-          <ShoppingCart className="h-5 w-5 text-primary mb-2" />
-          <p className="font-medium text-foreground">Shop</p>
-          <p className="text-sm text-muted-foreground">Browse marketplace</p>
-        </button>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+        <QuickActionTile icon={Sprout} title="Add farm" description="Create a new farm" onClick={() => navigate('/farms')} />
+        <QuickActionTile icon={Plus} title="Plant crop" description="Add new crop" onClick={() => navigate('/crops')} />
+        <QuickActionTile icon={ShoppingCart} title="Shop" description="Browse marketplace" onClick={() => navigate('/buying')} />
       </div>
 
       {deleteConfirmId && (

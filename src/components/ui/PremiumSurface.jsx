@@ -116,10 +116,14 @@ export function PageFooter({ headline, description, actions, className = '' }) {
 
 export function FeatureCard({ icon: Icon, title, description, className = '' }) {
   return (
-    <Card className={cn('h-full', className)}>
-      <CardContent className="p-5">
-        {Icon && <Icon className="h-5 w-5 text-primary mb-3" strokeWidth={1.75} />}
-        <h3 className="font-medium text-foreground">{title}</h3>
+    <Card className={cn('h-full fe-surface border-0 shadow-none', className)}>
+      <CardContent className="p-5 sm:p-6">
+        {Icon && (
+          <div className="rounded-lg bg-primary/10 p-2 text-primary mb-3 inline-flex">
+            <Icon className="h-5 w-5" strokeWidth={1.75} />
+          </div>
+        )}
+        <h3 className="font-semibold text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground mt-2 leading-relaxed">{description}</p>
       </CardContent>
     </Card>
