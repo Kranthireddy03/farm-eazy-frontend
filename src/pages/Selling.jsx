@@ -21,7 +21,7 @@ import { FilterBar } from '../components/ui/filter-bar';
 import { useDebouncedValue } from '../hooks/useDebouncedValue';
 
 const STATUS_STYLES = {
-  ACTIVE: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+  ACTIVE: 'bg-primary/10 text-foreground dark:bg-primary/10 dark:text-primary',
   OUT_OF_STOCK: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   DRAFT: 'bg-muted text-muted-foreground',
 };

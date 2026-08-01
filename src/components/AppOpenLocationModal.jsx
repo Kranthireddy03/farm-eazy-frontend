@@ -164,16 +164,16 @@ export default function AppOpenLocationModal() {
 
   return (
     <div className="fixed inset-0 z-[120] bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-      <div className={`w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border p-5 ${isDark ? 'bg-slate-900 border-slate-700 text-slate-100' : 'bg-white border-slate-200 text-slate-900'}`}>
+      <div className={`w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border p-5 ${isDark ? 'bg-card border-border text-slate-100' : 'bg-white border-border text-foreground'}`}>
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-black">Select Delivery Location</h2>
-            <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            <p className={`mt-1 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Location is required before you can use products, services, and marketplace features.
             </p>
           </div>
           {canClose && (
-            <button type="button" onClick={closeSelector} className={`rounded-lg px-3 py-1 text-sm ${isDark ? 'bg-slate-800 hover:bg-slate-700' : 'bg-slate-100 hover:bg-slate-200'}`}>
+            <button type="button" onClick={closeSelector} className={`rounded-lg px-3 py-1 text-sm ${isDark ? 'bg-muted hover:bg-muted' : 'bg-muted hover:bg-slate-200'}`}>
               Close
             </button>
           )}
@@ -185,7 +185,7 @@ export default function AppOpenLocationModal() {
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
             placeholder="Search address, area, or pincode"
-            className={`w-full rounded-xl border px-3 py-2 text-sm ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`}
+            className={`w-full rounded-xl border px-3 py-2 text-sm ${isDark ? 'bg-muted border-border text-white' : 'bg-white border-border text-foreground'}`}
           />
         </div>
 
@@ -201,7 +201,7 @@ export default function AppOpenLocationModal() {
           <button
             type="button"
             onClick={() => navigate('/address-book')}
-            className={`rounded-xl border px-4 py-2 font-semibold ${isDark ? 'border-slate-600 hover:bg-slate-800' : 'border-slate-300 hover:bg-slate-50'}`}
+            className={`rounded-xl border px-4 py-2 font-semibold ${isDark ? 'border-border hover:bg-muted' : 'border-border hover:bg-muted/30'}`}
           >
             Manage Saved Addresses
           </button>
@@ -214,8 +214,8 @@ export default function AppOpenLocationModal() {
         )}
 
         <section className="mt-5">
-          <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Search Results</h3>
-          <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
+          <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-primary">Search Results</h3>
+          <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-border bg-muted/50' : 'border-border bg-muted/30'}`}>
             {searchLoading && <div className="px-2 py-3 text-sm">Searching...</div>}
             {!searchLoading && searchQuery.trim().length >= 3 && searchResults.length === 0 && (
               <div className="px-2 py-3 text-sm">No matches found.</div>
@@ -225,7 +225,7 @@ export default function AppOpenLocationModal() {
                 type="button"
                 key={`${result.latitude}:${result.longitude}:${index}`}
                 onClick={() => chooseCoords(result)}
-                className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white'}`}
+                className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-muted' : 'hover:bg-white'}`}
               >
                 <p className="text-sm font-semibold">{result.label}</p>
               </button>
@@ -234,8 +234,8 @@ export default function AppOpenLocationModal() {
         </section>
 
         <section className="mt-5">
-          <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Saved Addresses</h3>
-          <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
+          <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-primary">Saved Addresses</h3>
+          <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-border bg-muted/50' : 'border-border bg-muted/30'}`}>
             {loadingAddresses && <div className="px-2 py-3 text-sm">Loading saved addresses...</div>}
             {!loadingAddresses && savedAddresses.length === 0 && (
               <div className="px-2 py-3 text-sm">No saved addresses yet.</div>
@@ -245,11 +245,11 @@ export default function AppOpenLocationModal() {
                 type="button"
                 key={address.id}
                 onClick={() => chooseAddress(address)}
-                className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white'}`}
+                className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-muted' : 'hover:bg-white'}`}
               >
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-semibold truncate">{buildAddressLabel(address)}</p>
-                  {address.isDefault && <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-500">Default</span>}
+                  {address.isDefault && <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Default</span>}
                 </div>
               </button>
             ))}
@@ -257,15 +257,15 @@ export default function AppOpenLocationModal() {
         </section>
 
         <section className="mt-5">
-          <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-emerald-600">Recent Locations</h3>
-          <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-slate-700 bg-slate-800/50' : 'border-slate-200 bg-slate-50'}`}>
+          <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-primary">Recent Locations</h3>
+          <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-border bg-muted/50' : 'border-border bg-muted/30'}`}>
             {recents.length === 0 && <div className="px-2 py-3 text-sm">No recent locations.</div>}
             {recents.map((recent, index) => (
               <button
                 type="button"
                 key={`${recent.type}:${recent.id || index}:${recent.latitude || ''}:${recent.longitude || ''}`}
                 onClick={() => chooseCoords(recent)}
-                className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-slate-700' : 'hover:bg-white'}`}
+                className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-muted' : 'hover:bg-white'}`}
               >
                 <p className="text-sm font-semibold">{recent.label || `Recent ${index + 1}`}</p>
               </button>

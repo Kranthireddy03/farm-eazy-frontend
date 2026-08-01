@@ -167,16 +167,16 @@ function Support() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="lg:col-span-2">
-          <div className={`glass-card interactive-card rounded-2xl border p-6 md:p-8 ${isDark ? 'border-slate-700' : 'border-slate-100 shadow-lg'}`}>
+          <div className={`ops-panel interactive-card rounded-2xl border p-6 md:p-8 ${isDark ? 'border-border' : 'border-border shadow-lg'}`}>
             <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>FAQ</p>
-            <h1 className={`mt-2 text-3xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>Support Knowledge Base</h1>
-            <p className={`mt-3 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            <h1 className={`mt-2 text-3xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>Support Knowledge Base</h1>
+            <p className={`mt-3 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Review published answers first. If your case is still unresolved, raise a support request and our team will guide you.
             </p>
 
             <div className="mt-5 flex flex-wrap gap-2">
               <button
-                className={`px-3 py-1.5 rounded-lg text-sm border ${faqFilter === 'all' ? 'bg-emerald-600 text-white border-emerald-600' : isDark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                className={`px-3 py-1.5 rounded-lg text-sm border ${faqFilter === 'all' ? 'bg-primary text-white border-primary' : isDark ? 'bg-muted text-muted-foreground border-border' : 'bg-muted text-foreground border-border'}`}
                 onClick={() => setFaqFilter('all')}
               >
                 All
@@ -184,7 +184,7 @@ function Support() {
               {FAQ_CATEGORIES.map((cat) => (
                 <button
                   key={cat.value}
-                  className={`px-3 py-1.5 rounded-lg text-sm border ${faqFilter === cat.value ? 'bg-emerald-600 text-white border-emerald-600' : isDark ? 'bg-slate-800 text-slate-300 border-slate-700' : 'bg-slate-100 text-slate-700 border-slate-200'}`}
+                  className={`px-3 py-1.5 rounded-lg text-sm border ${faqFilter === cat.value ? 'bg-primary text-white border-primary' : isDark ? 'bg-muted text-muted-foreground border-border' : 'bg-muted text-foreground border-border'}`}
                   onClick={() => setFaqFilter(cat.value)}
                 >
                   {cat.label}
@@ -194,18 +194,18 @@ function Support() {
 
             <div className="mt-5 space-y-5">
               <div>
-                <p className={`text-sm font-semibold mb-2 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>Quick Answers</p>
+                <p className={`text-sm font-semibold mb-2 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Quick Answers</p>
                 <ul className="space-y-3">
                   {filteredCoreFaqs.map((faq, idx) => {
                     const key = `core-${idx}`
                     return (
-                      <li key={key} className={`rounded-lg border p-3 ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'}`}>
+                      <li key={key} className={`rounded-lg border p-3 ${isDark ? 'border-border bg-muted' : 'border-border bg-muted/30'}`}>
                         <button className="w-full text-left flex items-center justify-between gap-3" onClick={() => toggleFaq(key)}>
-                          <span className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{faq.q}</span>
-                          <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{openFaq.includes(key) ? '−' : '+'}</span>
+                          <span className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{faq.q}</span>
+                          <span className={isDark ? 'text-muted-foreground' : 'text-muted-foreground'}>{openFaq.includes(key) ? '−' : '+'}</span>
                         </button>
                         {openFaq.includes(key) && (
-                          <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{faq.a}</p>
+                          <p className={`mt-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>{faq.a}</p>
                         )}
                       </li>
                     )
@@ -217,7 +217,7 @@ function Support() {
                 <button
                   type="button"
                   onClick={() => setShowMoreFaqs(prev => !prev)}
-                  className={`px-4 py-2 rounded-lg text-sm font-semibold border transition ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-800' : 'border-emerald-200 text-emerald-800 hover:bg-emerald-50'}`}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold border transition ${isDark ? 'border-border text-muted-foreground hover:bg-muted' : 'border-border text-foreground hover:bg-primary/5'}`}
                 >
                   {showMoreFaqs ? 'Hide more questions' : 'See more questions'}
                 </button>
@@ -225,13 +225,13 @@ function Support() {
 
               {showMoreFaqs && (
                 <div>
-                  <p className={`text-sm font-semibold mb-2 ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>More Questions</p>
+                  <p className={`text-sm font-semibold mb-2 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>More Questions</p>
                   {faqLoading ? (
                     <div className="flex justify-center py-6">
-                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-emerald-500"></div>
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
                     </div>
                   ) : filteredMoreFaqs.length === 0 ? (
-                    <div className={`rounded-lg p-4 text-sm ${isDark ? 'bg-slate-800 text-slate-300' : 'bg-emerald-50 text-slate-700'}`}>
+                    <div className={`rounded-lg p-4 text-sm ${isDark ? 'bg-muted text-muted-foreground' : 'bg-primary/5 text-foreground'}`}>
                       There are no additional approved questions in this category right now. Use Ask Question to submit yours.
                     </div>
                   ) : (
@@ -239,13 +239,13 @@ function Support() {
                       {filteredMoreFaqs.map((faq, idx) => {
                         const key = `db-${faq.id || idx}`
                         return (
-                          <li key={key} className={`rounded-lg border p-3 ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'}`}>
+                          <li key={key} className={`rounded-lg border p-3 ${isDark ? 'border-border bg-muted' : 'border-border bg-muted/30'}`}>
                             <button className="w-full text-left flex items-center justify-between gap-3" onClick={() => toggleFaq(key)}>
-                              <span className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{faq.q}</span>
-                              <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>{openFaq.includes(key) ? '−' : '+'}</span>
+                              <span className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{faq.q}</span>
+                              <span className={isDark ? 'text-muted-foreground' : 'text-muted-foreground'}>{openFaq.includes(key) ? '−' : '+'}</span>
                             </button>
                             {openFaq.includes(key) && (
-                              <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{faq.a}</p>
+                              <p className={`mt-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>{faq.a}</p>
                             )}
                           </li>
                         )
@@ -260,14 +260,14 @@ function Support() {
 
         <section className="space-y-5">
           {!isAuthenticated ? (
-            <div className={`glass-card interactive-card rounded-2xl border p-6 ${isDark ? 'border-slate-700' : 'border-slate-100 shadow-sm'}`}>
-              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Need personal support?</h2>
-              <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+            <div className={`ops-panel interactive-card rounded-2xl border p-6 ${isDark ? 'border-border' : 'border-border shadow-sm'}`}>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Need personal support?</h2>
+              <p className={`mt-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 Sign in to create and track support tickets.
               </p>
               <div className="mt-4 flex gap-3">
-                <Link to="/login" className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Login</Link>
-                <Link to="/register" className={`px-4 py-2 rounded-lg border text-sm font-semibold ${isDark ? 'border-slate-600 text-slate-200' : 'border-slate-200 text-slate-700'}`}>Register</Link>
+                <Link to="/login" className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold">Login</Link>
+                <Link to="/register" className={`px-4 py-2 rounded-lg border text-sm font-semibold ${isDark ? 'border-border text-muted-foreground' : 'border-border text-foreground'}`}>Register</Link>
               </div>
               <Link to="/ask-question" className={`mt-4 inline-block text-sm underline ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>
                 Ask a public question
@@ -275,9 +275,9 @@ function Support() {
             </div>
           ) : (
             <>
-              <div className={`glass-card interactive-card rounded-2xl border p-6 ${isDark ? 'border-slate-700' : 'border-slate-100 shadow-sm'}`}>
-                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Support Portal for Signed-In Users</h2>
-                <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+              <div className={`ops-panel interactive-card rounded-2xl border p-6 ${isDark ? 'border-border' : 'border-border shadow-sm'}`}>
+                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Support Portal for Signed-In Users</h2>
+                <p className={`mt-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   FAQ follow-ups and ticket management are now handled in the dedicated Support Portal.
                   You will be signed in automatically with your current session.
                 </p>
@@ -293,7 +293,7 @@ function Support() {
                     href={supportDashboardBaseUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className={`px-4 py-3 rounded-lg border text-sm font-semibold text-center ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}
+                    className={`px-4 py-3 rounded-lg border text-sm font-semibold text-center ${isDark ? 'border-border text-muted-foreground hover:bg-muted' : 'border-border text-foreground hover:bg-muted/30'}`}
                   >
                     Open Standalone Support Site
                   </a>

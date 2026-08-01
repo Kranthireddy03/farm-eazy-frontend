@@ -127,22 +127,22 @@ export default function AdminNotifications() {
   };
 
   const surfaceClass = isDark
-    ? 'bg-slate-800 border-slate-700'
-    : 'bg-white border-slate-200 shadow-sm';
+    ? 'bg-muted border-border'
+    : 'bg-background border-border shadow-sm';
 
   const fieldClass = isDark
-    ? 'w-full bg-slate-700 border border-slate-600 text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400'
-    : 'w-full bg-white border border-slate-300 text-slate-900 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400';
+    ? 'w-full bg-muted border border-border text-white rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 placeholder:text-muted-foreground'
+    : 'w-full bg-background border border-border text-foreground rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 placeholder:text-muted-foreground';
 
-  const labelClass = isDark ? 'block text-slate-300 mb-1 text-sm font-medium' : 'block text-slate-700 mb-1 text-sm font-medium';
+  const labelClass = isDark ? 'block text-muted-foreground mb-1 text-sm font-medium' : 'block text-foreground mb-1 text-sm font-medium';
 
-  const mutedTextClass = isDark ? 'text-slate-400' : 'text-slate-600';
+  const mutedTextClass = isDark ? 'text-muted-foreground' : 'text-muted-foreground';
 
   return (
       <div className="max-w-6xl mx-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className={`text-2xl font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <h1 className={`text-2xl font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-foreground'}`}>
             ⚡ Admin - Notification Center
           </h1>
         </div>
@@ -164,7 +164,7 @@ export default function AdminNotifications() {
         </div>
 
         {/* Tabs */}
-        <div className={`flex gap-2 mb-6 border-b pb-2 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+        <div className={`flex gap-2 mb-6 border-b pb-2 ${isDark ? 'border-border' : 'border-border'}`}>
           {['send', 'history', 'users'].map(tab => (
             <button
               key={tab}
@@ -172,7 +172,7 @@ export default function AdminNotifications() {
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === tab 
                   ? 'bg-blue-600 text-white' 
-                  : (isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-slate-100 text-slate-700 hover:bg-slate-200')
+                  : (isDark ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-muted text-foreground hover:bg-muted')
               }`}
             >
               {tab === 'send' && '📤 Send'}
@@ -196,7 +196,7 @@ export default function AdminNotifications() {
         {/* Send Tab */}
         {activeTab === 'send' && (
           <div className={`rounded-xl p-6 border ${surfaceClass}`}>
-            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>📤 Send Notification</h2>
+            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-foreground'}`}>📤 Send Notification</h2>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Broadcast Toggle */}
@@ -209,7 +209,7 @@ export default function AdminNotifications() {
                     onChange={() => setFormData(prev => ({ ...prev, isBroadcast: true }))}
                     className="w-4 h-4 text-blue-600"
                   />
-                  <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>📢 Broadcast to All Users</span>
+                  <span className={isDark ? 'text-foreground' : 'text-foreground'}>📢 Broadcast to All Users</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input
@@ -219,7 +219,7 @@ export default function AdminNotifications() {
                     onChange={() => setFormData(prev => ({ ...prev, isBroadcast: false }))}
                     className="w-4 h-4 text-blue-600"
                   />
-                  <span className={isDark ? 'text-slate-100' : 'text-slate-800'}>👤 Send to Specific User</span>
+                  <span className={isDark ? 'text-foreground' : 'text-foreground'}>👤 Send to Specific User</span>
                 </label>
               </div>
 
@@ -359,11 +359,11 @@ export default function AdminNotifications() {
         {/* History Tab */}
         {activeTab === 'history' && (
           <div className={`rounded-xl p-6 border ${surfaceClass}`}>
-            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>📜 Broadcast History</h2>
+            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-foreground'}`}>📜 Broadcast History</h2>
             
             {loading ? (
               <div className="flex justify-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-slate-500 border-t-blue-500 rounded-full"></div>
+                <div className="animate-spin w-8 h-8 border-4 border-border border-t-blue-500 rounded-full"></div>
               </div>
             ) : broadcasts.length === 0 ? (
               <div className={`text-center py-12 ${mutedTextClass}`}>
@@ -375,13 +375,13 @@ export default function AdminNotifications() {
                 {broadcasts.map(broadcast => (
                   <div 
                     key={broadcast.id}
-                    className={`flex items-start gap-4 p-4 rounded-lg border ${isDark ? 'bg-slate-700/50 border-slate-600' : 'bg-slate-50 border-slate-200'}`}
+                    className={`flex items-start gap-4 p-4 rounded-lg border ${isDark ? 'bg-muted/50 border-border' : 'bg-muted/30 border-border'}`}
                   >
                     <span className="text-2xl">{getTypeIcon(broadcast.type)}</span>
                     <div className="flex-1">
-                      <div className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{broadcast.title}</div>
+                      <div className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{broadcast.title}</div>
                       <div className={`text-sm mt-1 ${mutedTextClass}`}>{broadcast.message}</div>
-                      <div className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>{broadcast.timeAgo}</div>
+                      <div className={`text-xs mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{broadcast.timeAgo}</div>
                     </div>
                     <button
                       onClick={() => handleDeleteBroadcast(broadcast.id)}
@@ -399,17 +399,17 @@ export default function AdminNotifications() {
         {/* Users Tab */}
         {activeTab === 'users' && (
           <div className={`rounded-xl p-6 border ${surfaceClass}`}>
-            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>👥 User List</h2>
+            <h2 className={`text-xl font-semibold mb-4 ${isDark ? 'text-white' : 'text-foreground'}`}>👥 User List</h2>
             
             {loading ? (
               <div className="flex justify-center py-12">
-                <div className="animate-spin w-8 h-8 border-4 border-slate-500 border-t-blue-500 rounded-full"></div>
+                <div className="animate-spin w-8 h-8 border-4 border-border border-t-blue-500 rounded-full"></div>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className={`text-left border-b ${isDark ? 'text-slate-300 border-slate-700' : 'text-slate-600 border-slate-200'}`}>
+                    <tr className={`text-left border-b ${isDark ? 'text-muted-foreground border-border' : 'text-muted-foreground border-border'}`}>
                       <th className="pb-3">ID</th>
                       <th className="pb-3">Username</th>
                       <th className="pb-3">Email</th>
@@ -420,9 +420,9 @@ export default function AdminNotifications() {
                   </thead>
                   <tbody>
                     {users.map(user => (
-                      <tr key={user.id} className={`border-b ${isDark ? 'border-slate-700/50' : 'border-slate-200'} ${isDark ? 'hover:bg-slate-700/20' : 'hover:bg-slate-50'} transition-colors`}>
+                      <tr key={user.id} className={`border-b ${isDark ? 'border-border/50' : 'border-border'} ${isDark ? 'hover:bg-muted/20' : 'hover:bg-muted/30'} transition-colors`}>
                         <td className={`py-3 ${mutedTextClass}`}>{user.id}</td>
-                        <td className={`py-3 font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>{user.username}</td>
+                        <td className={`py-3 font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>{user.username}</td>
                         <td className={`py-3 ${mutedTextClass}`}>{user.email}</td>
                         <td className={`py-3 ${mutedTextClass}`}>{user.phone || '-'}</td>
                         <td className="py-3">

@@ -426,7 +426,7 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                       type="button"
                       onClick={handleVerifyOtp}
                       disabled={loading || otpCode.join('').length !== 6}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 mb-3"
+                      className="w-full bg-gradient-to-r from-primary to-primary text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 mb-3"
                     >
                       {loading ? 'Verifying...' : 'Verify OTP'}
                     </button>

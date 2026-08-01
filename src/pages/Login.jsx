@@ -516,8 +516,8 @@ function Login() {
                     ? 'border-amber-700/60 bg-amber-900/30 text-amber-200'
                     : 'border-amber-200 bg-amber-50 text-amber-700'
                   : isDark
-                    ? 'border-slate-600 bg-slate-800/80 text-slate-300'
-                    : 'border-slate-200 bg-white text-slate-600'}`}
+                    ? 'border-border bg-muted/80 text-muted-foreground'
+                    : 'border-border bg-background text-muted-foreground'}`}
               >
                 {googleStatus}
               </div>
@@ -526,7 +526,7 @@ function Login() {
 
           {/* Error Display */}
           {apiError && (
-            <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} glass-card border px-4 py-3 rounded-xl flex items-start gap-3 mb-5`}>
+            <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} ops-panel border px-4 py-3 rounded-xl flex items-start gap-3 mb-5`}>
               <span className="text-xl">⚠️</span>
               <div>
                 <p className="font-medium">{apiError}</p>
@@ -541,7 +541,7 @@ function Login() {
           
           {/* Success Message (for OTP) */}
           {otpMessage && (
-            <div className={`${isDark ? 'bg-emerald-900/50 border-emerald-700 text-emerald-200' : 'bg-emerald-100 border-emerald-300 text-emerald-700'} glass-card border px-4 py-3 rounded-xl flex items-center gap-3 mb-5`}>
+            <div className={`${isDark ? 'bg-primary/10 border-primary/40 text-primary/80' : 'bg-primary/10 border-primary/30 text-primary'} ops-panel border px-4 py-3 rounded-xl flex items-center gap-3 mb-5`}>
               <span className="text-xl">✅</span>
               <p className="font-medium">{otpMessage}</p>
             </div>
@@ -552,7 +552,7 @@ function Login() {
             <form onSubmit={handlePasswordSubmit} className="space-y-5">
               {/* Identifier Field */}
               <div className="space-y-2">
-                <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+                <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                   <span>👤</span> Email / Username / User ID
                 </label>
                 <input
@@ -560,7 +560,7 @@ function Login() {
                   name="identifier"
                   value={formData.identifier}
                   onChange={handleChange}
-                  className={`form-input w-full px-4 py-3.5 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'}`}
+                  className={`form-input w-full px-4 py-3.5 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                   placeholder="email@example.com or username or 10001"
                 />
                 {errors.identifier && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.identifier}</p>}
@@ -568,7 +568,7 @@ function Login() {
 
               {/* Password Field */}
               <div className="space-y-2">
-                <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+                <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                   <span>🔐</span> Password
                 </label>
                 <div className="relative">
@@ -577,13 +577,13 @@ function Login() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
-                    className={`form-input w-full px-4 py-3.5 pr-12 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'}`}
+                    className={`form-input w-full px-4 py-3.5 pr-12 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                     placeholder="••••••••"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-emerald-500 hover:text-emerald-700'} transition-colors`}
+                    className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-muted-foreground hover:text-muted-foreground' : 'text-primary hover:text-primary'} transition-colors`}
                   >
                     {showPassword ? '👁️' : '👁️‍🗨️'}
                   </button>
@@ -593,16 +593,16 @@ function Login() {
 
               {/* Forgot Password */}
               <div className="flex items-center justify-between">
-                <label className={`${isDark ? 'text-slate-300' : 'text-emerald-700'} text-sm font-medium inline-flex items-center gap-2`}>
+                <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-medium inline-flex items-center gap-2`}>
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="rounded border-slate-400"
+                    className="rounded border-border"
                   />
                   Remember me
                 </label>
-                <Link to="/forgot-password" className={`${isDark ? 'text-emerald-300 hover:text-white' : 'text-emerald-600 hover:text-emerald-800'} text-sm font-medium transition-colors`}>
+                <Link to="/forgot-password" className={`${isDark ? 'text-primary hover:text-white' : 'text-primary hover:text-foreground'} text-sm font-medium transition-colors`}>
                   Forgot password? →
                 </Link>
               </div>
@@ -637,23 +637,23 @@ function Login() {
               {otpStage === 'phone' && (
                 <form onSubmit={handleRequestOtp} className="space-y-5">
                   <div className="space-y-2">
-                    <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+                    <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                       <span>📱</span> Mobile Number
                     </label>
                     <div className="relative">
-                      <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400' : 'text-emerald-500'} font-medium`}>+91</span>
+                      <span className={`absolute left-4 top-1/2 -translate-y-1/2 ${isDark ? 'text-muted-foreground' : 'text-primary'} font-medium`}>+91</span>
                       <input
                         type="tel"
                         name="phone"
                         value={otpFormData.phone}
                         onChange={handleOtpChange}
-                        className={`w-full pl-14 pr-4 py-3.5 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+                        className={`w-full pl-14 pr-4 py-3.5 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
                         placeholder="9876543210"
                         maxLength={10}
                       />
                     </div>
                     {errors.phone && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.phone}</p>}
-                    <p className={`${isDark ? 'text-slate-400' : 'text-emerald-500'} text-xs`}>
+                    <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-xs`}>
                       We'll send a 6-digit OTP to this number
                     </p>
                   </div>
@@ -682,14 +682,14 @@ function Login() {
 
               {otpStage === 'confirm' && (
                 <div className="space-y-5">
-                  <div className={`${isDark ? 'bg-slate-700/50 border-slate-600' : 'bg-emerald-50 border-emerald-200'} border rounded-xl p-4`}>
-                    <p className={`${isDark ? 'text-slate-300' : 'text-emerald-700'} text-sm mb-2`}>
+                  <div className={`${isDark ? 'bg-muted/50 border-border' : 'bg-primary/5 border-border'} border rounded-xl p-4`}>
+                    <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm mb-2`}>
                       Is this your account?
                     </p>
-                    <p className={`${isDark ? 'text-white' : 'text-emerald-900'} font-bold text-lg`}>
+                    <p className={`${isDark ? 'text-white' : 'text-foreground'} font-bold text-lg`}>
                       {otpPreview?.username || 'Unknown user'}
                     </p>
-                    <p className={`${isDark ? 'text-slate-400' : 'text-emerald-600'} text-sm mt-1`}>
+                    <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm mt-1`}>
                       {otpPreview?.maskedPhone ? `Mobile: ${otpPreview.maskedPhone}` : `+91 ${otpFormData.phone}`}
                     </p>
                   </div>
@@ -698,7 +698,7 @@ function Login() {
                     type="button"
                     onClick={handleConfirmAndSendOtp}
                     disabled={loading}
-                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -720,8 +720,8 @@ function Login() {
                     onClick={handleBackToPhone}
                     className={`w-full py-3 rounded-xl border transition ${
                       isDark
-                        ? 'border-slate-600 text-slate-300 hover:bg-slate-700'
-                        : 'border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                        ? 'border-border text-muted-foreground hover:bg-muted'
+                        : 'border-border text-primary hover:bg-primary/5'
                     }`}
                   >
                     No, change mobile number
@@ -733,22 +733,22 @@ function Login() {
               {otpStage === 'verify' && (
                 <form onSubmit={handleVerifyOtp} className="space-y-5">
                   {/* Phone display with edit option */}
-                  <div className={`${isDark ? 'bg-slate-700/50 border-slate-600' : 'bg-emerald-50 border-emerald-200'} border rounded-xl p-3 flex items-center justify-between`}>
+                  <div className={`${isDark ? 'bg-muted/50 border-border' : 'bg-primary/5 border-border'} border rounded-xl p-3 flex items-center justify-between`}>
                     <div className="flex items-center gap-2">
                       <span className="text-lg">📱</span>
-                      <span className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} font-medium`}>+91 {otpFormData.phone}</span>
+                      <span className={`${isDark ? 'text-muted-foreground' : 'text-primary'} font-medium`}>+91 {otpFormData.phone}</span>
                     </div>
                     <button
                       type="button"
                       onClick={handleBackToPhone}
-                      className={`${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'} text-sm font-medium`}
+                      className={`${isDark ? 'text-primary hover:text-primary' : 'text-primary hover:text-primary'} text-sm font-medium`}
                     >
                       Change
                     </button>
                   </div>
                   
                   <div className="space-y-2">
-                    <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+                    <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                       <span>🔢</span> Enter OTP
                     </label>
                     <input
@@ -756,7 +756,7 @@ function Login() {
                       name="otpCode"
                       value={otpFormData.otpCode}
                       onChange={handleOtpChange}
-                      className={`w-full px-4 py-3.5 text-center text-2xl tracking-[0.5em] font-mono ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+                      className={`w-full px-4 py-3.5 text-center text-2xl tracking-[0.5em] font-mono ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
                       placeholder="••••••"
                       maxLength={6}
                       autoFocus
@@ -767,7 +767,7 @@ function Login() {
                   {/* Resend OTP */}
                   <div className="text-center">
                     {resendTimer > 0 ? (
-                      <p className={`${isDark ? 'text-slate-400' : 'text-emerald-500'} text-sm`}>
+                      <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm`}>
                         Resend OTP in <span className="font-bold">{resendTimer}s</span>
                       </p>
                     ) : (
@@ -775,7 +775,7 @@ function Login() {
                         type="button"
                         onClick={handleResendOtp}
                         disabled={loading}
-                        className={`${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'} text-sm font-medium transition-colors disabled:opacity-50`}
+                        className={`${isDark ? 'text-primary hover:text-primary' : 'text-primary hover:text-primary'} text-sm font-medium transition-colors disabled:opacity-50`}
                       >
                         Didn't receive OTP? Resend →
                       </button>
@@ -785,7 +785,7 @@ function Login() {
                   <button
                     type="submit"
                     disabled={loading || otpFormData.otpCode.length !== 6}
-                    className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+                    className="w-full py-4 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
                   >
                     {loading ? (
                       <>
@@ -808,9 +808,9 @@ function Login() {
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
-            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-emerald-200'}`}></div>
-            <span className={`${isDark ? 'text-slate-400' : 'text-emerald-400'} text-sm`}>or</span>
-            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-emerald-200'}`}></div>
+            <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-primary/20'}`}></div>
+            <span className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm`}>or</span>
+            <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-primary/20'}`}></div>
           </div>
 
           {/* Register Link */}

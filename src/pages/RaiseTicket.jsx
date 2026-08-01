@@ -64,8 +64,8 @@ export default function RaiseTicket() {
 
       <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-6 items-start">
         <StrongPanel className="p-6 md:p-8">
-          <h1 className={`text-2xl md:text-3xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Raise a Support Ticket</h1>
-          <p className={`mb-4 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Describe your issue or question. Our support team will contact you via email.</p>
+          <h1 className={`text-2xl md:text-3xl font-black mb-4 ${isDark ? 'text-white' : 'text-foreground'}`}>Raise a Support Ticket</h1>
+          <p className={`mb-4 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Describe your issue or question. Our support team will contact you via email.</p>
 
           {submitted && (
             <div className="mb-4 p-4 rounded-lg bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300">Your ticket has been submitted successfully.</div>
@@ -76,14 +76,14 @@ export default function RaiseTicket() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
-              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-950/60 border-white/10 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-500'}`}
+              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary ${isDark ? 'bg-background/60 border-white/10 text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
               placeholder="Subject"
               value={subject}
               onChange={e => setSubject(e.target.value)}
               required
             />
             <textarea
-              className={`w-full px-4 py-3 rounded-lg resize-none border focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-950/60 border-white/10 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-500'}`}
+              className={`w-full px-4 py-3 rounded-lg resize-none border focus:ring-2 focus:ring-primary ${isDark ? 'bg-background/60 border-white/10 text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
               placeholder="Describe your issue"
               value={description}
               onChange={e => setDescription(e.target.value)}
@@ -91,14 +91,14 @@ export default function RaiseTicket() {
               required
             />
             <input
-              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-950/60 border-white/10 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-500'}`}
+              className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary ${isDark ? 'bg-background/60 border-white/10 text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
               placeholder="Your email"
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
             />
-            <button type="submit" className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950">Submit Ticket</button>
+            <button type="submit" className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-primary/50 to-cyan-500 hover:from-primary hover:to-primary/80 text-foreground">Submit Ticket</button>
           </form>
         </StrongPanel>
 
@@ -110,7 +110,7 @@ export default function RaiseTicket() {
               'Support reviews issue severity',
               'Response is shared on email',
             ].map((item) => (
-              <div key={item} className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-white/10 bg-white/5 text-slate-200' : 'border-slate-200 bg-white/80 text-slate-700'}`}>
+              <div key={item} className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-white/10 bg-background/5 text-muted-foreground' : 'border-border bg-background/80 text-foreground'}`}>
                 {item}
               </div>
             ))}

@@ -51,13 +51,13 @@ function EmailError() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-rose-50 to-orange-50'}`}>
+    <div className={`min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-gradient-to-br from-background to-card' : 'bg-gradient-to-br from-rose-50 to-orange-50'}`}>
       <div className="w-full max-w-lg">
         {/* Error Card */}
-        <div className={`${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-rose-200'} border rounded-2xl shadow-xl overflow-hidden`}>
+        <div className={`${isDark ? 'bg-muted border-border' : 'bg-background border-rose-200'} border rounded-2xl shadow-xl overflow-hidden`}>
           {/* Header with Icon */}
           <div className="bg-gradient-to-r from-red-500 to-orange-500 px-8 py-10 text-center">
-            <div className="w-20 h-20 bg-white/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-20 h-20 bg-background/20 backdrop-blur rounded-full flex items-center justify-center mx-auto mb-4">
               <svg 
                 className="w-10 h-10 text-white" 
                 fill="none" 
@@ -113,27 +113,27 @@ function EmailError() {
 
             {/* Email Info (if available) */}
             {errorDetails.email && (
-              <div className={`${isDark ? 'bg-slate-700 border-slate-600' : 'bg-slate-50 border-slate-200'} border rounded-xl p-4 mb-6`}>
-                <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>
+              <div className={`${isDark ? 'bg-muted border-border' : 'bg-muted/30 border-border'} border rounded-xl p-4 mb-6`}>
+                <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} text-sm`}>
                   <span className="font-medium">Recipient:</span>{' '}
-                  <span className={isDark ? 'text-white' : 'text-slate-900'}>{errorDetails.email}</span>
+                  <span className={isDark ? 'text-white' : 'text-foreground'}>{errorDetails.email}</span>
                 </p>
               </div>
             )}
 
             {/* Suggestions */}
             <div className="mb-8">
-              <h3 className={`${isDark ? 'text-white' : 'text-slate-900'} font-semibold mb-3`}>What you can do:</h3>
+              <h3 className={`${isDark ? 'text-white' : 'text-foreground'} font-semibold mb-3`}>What you can do:</h3>
               <ul className="space-y-2">
-                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
                   <span className="text-green-400 mt-0.5">✓</span>
                   <span>Wait a few minutes and try again</span>
                 </li>
-                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
                   <span className="text-green-400 mt-0.5">✓</span>
                   <span>Check that your email address is correct</span>
                 </li>
-                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                <li className={`flex items-start space-x-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
                   <span className="text-green-400 mt-0.5">✓</span>
                   <span>Contact our support team if the issue persists</span>
                 </li>
@@ -144,22 +144,22 @@ function EmailError() {
             <div className="space-y-3">
               <button
                 onClick={handleTryAgain}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
+                className="w-full bg-gradient-to-r from-primary to-green-600 hover:from-primary/90 hover:to-primary/90 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 shadow-lg shadow-green-500/30 hover:shadow-green-500/40"
               >
                 Try Again
               </button>
               
               <Link
                 to="/login"
-                className={`block w-full text-center font-semibold py-3 px-6 rounded-lg transition-all duration-200 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}`}
+                className={`block w-full text-center font-semibold py-3 px-6 rounded-lg transition-all duration-200 ${isDark ? 'bg-muted hover:bg-muted text-muted-foreground' : 'bg-muted hover:bg-muted text-foreground'}`}
               >
                 Back to Login
               </Link>
             </div>
 
             {/* Support Link */}
-            <div className={`mt-6 pt-6 border-t text-center ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
-              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} text-sm`}>
+            <div className={`mt-6 pt-6 border-t text-center ${isDark ? 'border-border' : 'border-border'}`}>
+              <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} text-sm`}>
                 Need help?{' '}
                 <Link 
                   to="/support" 
@@ -173,7 +173,7 @@ function EmailError() {
             {/* Error Code (for debugging) */}
             {errorDetails.errorCode && (
               <div className="mt-4 text-center">
-                <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+                <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   Error Code: {errorDetails.errorCode}
                 </p>
               </div>
@@ -183,7 +183,7 @@ function EmailError() {
 
         {/* Bottom Info */}
         <div className="mt-6 text-center">
-          <p className={`text-sm ${isDark ? 'text-slate-500' : 'text-slate-500'}`}>
+          <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             © 2026 FarmEazy. All rights reserved.
           </p>
         </div>

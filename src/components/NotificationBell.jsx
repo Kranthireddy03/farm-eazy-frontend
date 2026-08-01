@@ -205,11 +205,11 @@ function NotificationBell() {
       FARM: 'border-l-yellow-500',
       IRRIGATION: 'border-l-cyan-500',
       PRODUCT: 'border-l-purple-500',
-      ACCOUNT: 'border-l-gray-500',
+      ACCOUNT: 'border-l-border',
       SYSTEM: 'border-l-orange-500',
       PROMO: 'border-l-pink-500'
     };
-    return colors[type] || 'border-l-gray-500';
+    return colors[type] || 'border-l-border';
   };
 
   return (
@@ -233,10 +233,10 @@ function NotificationBell() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1rem))] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden">
+        <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1rem))] bg-white dark:bg-muted border border-gray-200 dark:border-border rounded-xl shadow-2xl z-50 overflow-hidden">
           {/* Header */}
-          <div className="p-4 border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
-            <span className="font-bold text-gray-900 dark:text-white text-lg">Notifications</span>
+          <div className="p-4 border-b border-gray-200 dark:border-border flex items-center justify-between">
+            <span className="font-bold text-foreground dark:text-white text-lg">Notifications</span>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
@@ -250,11 +250,11 @@ function NotificationBell() {
           {/* Notification List */}
           <ul className="max-h-80 overflow-y-auto">
             {loading ? (
-              <li className="p-6 text-center text-gray-500 dark:text-slate-400">
-                <div className="animate-spin inline-block w-6 h-6 border-2 border-slate-500 border-t-blue-500 rounded-full"></div>
+              <li className="p-6 text-center text-muted-foreground dark:text-muted-foreground">
+                <div className="animate-spin inline-block w-6 h-6 border-2 border-border border-t-blue-500 rounded-full"></div>
               </li>
             ) : notifications.length === 0 ? (
-              <li className="p-6 text-gray-500 dark:text-slate-400 text-center">
+              <li className="p-6 text-muted-foreground dark:text-muted-foreground text-center">
                 <span className="text-4xl block mb-2">📭</span>
                 No notifications
               </li>
@@ -262,8 +262,8 @@ function NotificationBell() {
               notifications.map((notification) => (
                 <li 
                   key={notification.id} 
-                  className={`p-4 border-b border-gray-200 dark:border-slate-700 last:border-b-0 hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors border-l-4 ${getTypeColorClass(notification.type)} ${
-                    !notification.isRead ? 'bg-blue-50 dark:bg-slate-700/30' : ''
+                  className={`p-4 border-b border-gray-200 dark:border-border last:border-b-0 hover:bg-muted/50 dark:hover:bg-muted/50 transition-colors border-l-4 ${getTypeColorClass(notification.type)} ${
+                    !notification.isRead ? 'bg-blue-50 dark:bg-muted/30' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -273,15 +273,15 @@ function NotificationBell() {
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className={`font-semibold text-sm ${!notification.isRead ? 'text-gray-900 dark:text-white' : 'text-gray-700 dark:text-slate-300'}`}>
+                        <span className={`font-semibold text-sm ${!notification.isRead ? 'text-foreground dark:text-white' : 'text-muted-foreground dark:text-muted-foreground'}`}>
                           {notification.title}
                         </span>
                         {!notification.isRead && (
                           <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></span>
                         )}
                       </div>
-                      <p className="text-xs text-gray-600 dark:text-slate-400 mt-1 line-clamp-2">{notification.message}</p>
-                      <span className="text-xs text-gray-500 dark:text-slate-500 mt-1 block">{notification.timeAgo}</span>
+                      <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-1 line-clamp-2">{notification.message}</p>
+                      <span className="text-xs text-muted-foreground dark:text-muted-foreground mt-1 block">{notification.timeAgo}</span>
                     </div>
 
                     {/* Actions */}
@@ -297,7 +297,7 @@ function NotificationBell() {
                       )}
                       <button
                         onClick={(e) => { e.stopPropagation(); handleDismiss(notification.id); }}
-                        className="text-xs text-gray-500 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 p-1"
+                        className="text-xs text-muted-foreground dark:text-muted-foreground hover:text-red-500 dark:hover:text-red-400 p-1"
                         title="Dismiss"
                       >
                         ✕
@@ -322,7 +322,7 @@ function NotificationBell() {
 
           {/* Footer */}
           {notifications.length > 0 && (
-            <div className="p-3 border-t border-gray-200 dark:border-slate-700 text-center">
+            <div className="p-3 border-t border-gray-200 dark:border-border text-center">
               <Link
                 to="/notifications"
                 className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
@@ -336,13 +336,13 @@ function NotificationBell() {
 
       {selectedNotification && (
         <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/55 px-4">
-          <div className="w-full max-w-xl rounded-2xl border shadow-2xl bg-white border-slate-200 dark:bg-slate-800 dark:border-slate-700">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-700">
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">Notification Details</h2>
+          <div className="w-full max-w-xl rounded-2xl border shadow-2xl bg-white border-border dark:bg-muted dark:border-border">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border dark:border-border">
+              <h2 className="text-lg font-bold text-foreground dark:text-white">Notification Details</h2>
               <button
                 type="button"
                 onClick={() => setSelectedNotification(null)}
-                className="text-sm rounded-lg px-2 py-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
+                className="text-sm rounded-lg px-2 py-1 text-muted-foreground hover:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
               >
                 ✕
               </button>
@@ -350,31 +350,31 @@ function NotificationBell() {
 
             <div className="px-5 py-4 space-y-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-semibold text-slate-900 dark:text-slate-100">{selectedNotification.title}</span>
+                <span className="text-base font-semibold text-foreground dark:text-slate-100">{selectedNotification.title}</span>
                 {selectedNotification.priority && (
                   <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500 text-white">
                     {selectedNotification.priority}
                   </span>
                 )}
                 {selectedNotification.type && (
-                  <span className="text-xs px-2 py-0.5 rounded-full border border-slate-300 text-slate-700 dark:border-slate-600 dark:text-slate-300">
+                  <span className="text-xs px-2 py-0.5 rounded-full border border-border text-foreground dark:border-border dark:text-muted-foreground">
                     {selectedNotification.type}
                   </span>
                 )}
               </div>
 
-              <div className="rounded-xl p-4 border border-slate-200 bg-slate-50 dark:border-slate-700 dark:bg-slate-900/60">
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+              <div className="rounded-xl p-4 border border-border bg-muted/30 dark:border-border dark:bg-muted/40">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground dark:text-muted-foreground">
                   {selectedNotification.message}
                 </p>
               </div>
 
-              <div className="text-xs text-slate-500 dark:text-slate-400">
+              <div className="text-xs text-muted-foreground dark:text-muted-foreground">
                 Received: {selectedNotification.timeAgo || 'just now'}
               </div>
             </div>
 
-            <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-700 flex items-center justify-end gap-2">
+            <div className="px-5 py-4 border-t border-border dark:border-border flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={handleAcknowledgeNotification}

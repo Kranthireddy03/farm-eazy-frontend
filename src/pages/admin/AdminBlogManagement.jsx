@@ -62,18 +62,18 @@ export default function AdminBlogManagement() {
   }), [posts])
 
   const surfaceClass = isDark
-    ? 'bg-slate-900 border-slate-700'
-    : 'bg-white border-slate-100 shadow-sm'
+    ? 'bg-card border-border'
+    : 'bg-background border-border shadow-sm'
 
   const fieldClass = isDark
-    ? 'w-full px-3 py-2 rounded-lg border bg-slate-800 border-slate-700 text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500'
-    : 'w-full px-3 py-2 rounded-lg border bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500'
+    ? 'w-full px-3 py-2 rounded-lg border bg-muted border-border text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary'
+    : 'w-full px-3 py-2 rounded-lg border bg-background border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary'
 
   const statusBadgeClass = (status) => {
-    if (status === 'PUBLISHED') return 'bg-emerald-600 text-white'
+    if (status === 'PUBLISHED') return 'bg-primary text-white'
     if (status === 'PENDING_APPROVAL') return isDark ? 'bg-indigo-900/60 text-indigo-200' : 'bg-indigo-100 text-indigo-700'
-    if (status === 'ARCHIVED') return isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'
-    return isDark ? 'bg-slate-700 text-slate-300' : 'bg-slate-200 text-slate-700'
+    if (status === 'ARCHIVED') return isDark ? 'bg-muted text-muted-foreground' : 'bg-muted text-foreground'
+    return isDark ? 'bg-muted text-muted-foreground' : 'bg-muted text-foreground'
   }
 
   const loadPosts = async () => {
@@ -199,32 +199,32 @@ export default function AdminBlogManagement() {
 
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+          <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>
             Admin Blog Management
           </h1>
-          <p className={`mt-2 text-sm md:text-base ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+          <p className={`mt-2 text-sm md:text-base ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             Create drafts, submit for approval, and publish only approved blogs to public users.
           </p>
-          <div className={`mt-3 rounded-xl border p-3 text-sm ${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-emerald-50 border-emerald-100 text-slate-700'}`}>
+          <div className={`mt-3 rounded-xl border p-3 text-sm ${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-primary/5 border-border/60 text-foreground'}`}>
             Workflow: Draft -&gt; Pending Approval -&gt; Approved (Published). Only approved posts are displayed on the public blog page.
           </div>
 
           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Posts</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{postStats.total}</p>
+            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
+              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Total Posts</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>{postStats.total}</p>
             </div>
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Draft</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-slate-200' : 'text-slate-800'}`}>{postStats.draft}</p>
+            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
+              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Draft</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>{postStats.draft}</p>
             </div>
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Pending</p>
+            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
+              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Pending</p>
               <p className={`text-xl font-bold ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>{postStats.pending}</p>
             </div>
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}`}>
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Published</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>{postStats.published}</p>
+            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
+              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Published</p>
+              <p className={`text-xl font-bold ${isDark ? 'text-primary' : 'text-primary'}`}>{postStats.published}</p>
             </div>
           </div>
         </div>
@@ -232,11 +232,11 @@ export default function AdminBlogManagement() {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
           <section className={`xl:col-span-2 rounded-2xl border p-4 md:p-6 ${surfaceClass}`}>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className={`text-lg md:text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Published Flow</h2>
+              <h2 className={`text-lg md:text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Published Flow</h2>
               <select
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className={`w-full sm:w-auto px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-slate-800 border-slate-600 text-slate-100' : 'bg-white border-slate-200 text-slate-900'}`}
+                className={`w-full sm:w-auto px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-muted border-border text-foreground' : 'bg-background border-border text-foreground'}`}
               >
                 <option value="ALL">All</option>
                 <option value="DRAFT">Draft</option>
@@ -248,25 +248,25 @@ export default function AdminBlogManagement() {
 
             {loading ? (
               <div className="py-16 flex justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-emerald-500"></div>
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
               </div>
             ) : visiblePosts.length === 0 ? (
-              <p className={`mt-6 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>No posts found for selected filter.</p>
+              <p className={`mt-6 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>No posts found for selected filter.</p>
             ) : (
               <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {visiblePosts.map((post) => (
-                  <article key={post.id} className={`rounded-xl border p-4 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-slate-50 border-slate-100'}`}>
+                  <article key={post.id} className={`rounded-xl border p-4 ${isDark ? 'bg-muted border-border' : 'bg-muted/30 border-border'}`}>
                     <div className="flex items-start justify-between gap-2">
-                      <h3 className={`font-bold text-base line-clamp-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>{post.title}</h3>
+                      <h3 className={`font-bold text-base line-clamp-2 ${isDark ? 'text-white' : 'text-foreground'}`}>{post.title}</h3>
                       <span className={`text-xs px-2 py-1 rounded-full ${statusBadgeClass(post.status)}`}>
                         {post.status}
                       </span>
                     </div>
-                    <p className={`mt-2 text-sm line-clamp-3 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{post.excerpt}</p>
-                    <div className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <p className={`mt-2 text-sm line-clamp-3 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{post.excerpt}</p>
+                    <div className={`mt-3 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                       {post.category || 'General'} • {post.authorName || 'Admin'} • {post.source || 'ADMIN_PORTAL'}
                     </div>
-                    <div className={`mt-1 text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+                    <div className={`mt-1 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                       Rating: {post.averageRating > 0 ? `${post.averageRating}/5` : 'No ratings yet'} ({post.ratingCount || 0})
                     </div>
                     <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -277,7 +277,7 @@ export default function AdminBlogManagement() {
                         </button>
                       )}
                       {post.status === 'PENDING_APPROVAL' && (
-                        <button onClick={() => handleApprove(post.id)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <button onClick={() => handleApprove(post.id)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-primary hover:bg-primary/90 text-white">
                           Approve & Publish
                         </button>
                       )}
@@ -287,7 +287,7 @@ export default function AdminBlogManagement() {
                         </button>
                       )}
                       {post.status === 'ARCHIVED' && (
-                        <button onClick={() => startEdit(post)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-slate-600 hover:bg-slate-700 text-white">
+                        <button onClick={() => startEdit(post)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-muted hover:bg-muted text-white">
                           Review
                         </button>
                       )}
@@ -301,11 +301,11 @@ export default function AdminBlogManagement() {
 
           <section className={`rounded-2xl border p-4 md:p-6 ${surfaceClass}`}>
             <div className="flex items-center justify-between gap-3">
-              <h2 className={`text-lg md:text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+              <h2 className={`text-lg md:text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                 {selectedPost ? 'Edit Post' : 'Create Post'}
               </h2>
               {selectedPost && (
-                <button onClick={resetForm} className={`text-xs px-2 py-1 rounded-md border ${isDark ? 'border-slate-600 text-slate-300' : 'border-slate-300 text-slate-700'}`}>
+                <button onClick={resetForm} className={`text-xs px-2 py-1 rounded-md border ${isDark ? 'border-border text-muted-foreground' : 'border-border text-foreground'}`}>
                   New Post
                 </button>
               )}
@@ -367,14 +367,14 @@ export default function AdminBlogManagement() {
                 <option value="ARCHIVED">ARCHIVED</option>
               </select>
 
-              <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 Tip: Use Draft while writing, then set Pending Approval. Approved posts are published to the public blog.
               </p>
 
               <button
                 type="submit"
                 disabled={saving}
-                className="w-full px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold disabled:opacity-60"
+                className="w-full px-4 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold disabled:opacity-60"
               >
                 {saving ? 'Saving...' : selectedPost ? 'Update Blog Post' : 'Create Blog Post'}
               </button>

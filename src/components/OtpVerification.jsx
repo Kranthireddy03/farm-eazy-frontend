@@ -144,10 +144,10 @@ function OtpVerification({
 
       {/* Modal */}
       <div className="relative w-full max-w-md transform transition-all animate-[slideUp_0.3s_ease-out]">
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
+        <div className="bg-gradient-to-br from-background via-card to-background rounded-3xl shadow-2xl border border-white/10 overflow-hidden">
           
           {/* Header with Gradient */}
-          <div className="bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 p-6 text-center">
+          <div className="bg-gradient-to-r from-primary via-green-600 to-teal-600 p-6 text-center">
             <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-bounce" style={{animationDuration: '2s'}}>
               <span className="text-4xl">📧</span>
             </div>
@@ -177,7 +177,7 @@ function OtpVerification({
                     error 
                       ? 'border-red-400 bg-red-500/10' 
                       : digit 
-                        ? 'border-emerald-400 bg-emerald-500/10' 
+                        ? 'border-emerald-400 bg-primary/50/10' 
                         : 'border-white/20 hover:border-white/40'
                   }`}
                   disabled={loading}
@@ -195,7 +195,7 @@ function OtpVerification({
 
             {/* Success Message */}
             {success && (
-              <div className="bg-emerald-500/20 border border-emerald-400/30 text-emerald-200 px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+              <div className="bg-primary/50/20 border border-emerald-400/30 text-primary/80 px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
                 <span>✅</span>
                 <p className="text-sm font-medium">{success}</p>
               </div>
@@ -207,8 +207,8 @@ function OtpVerification({
               disabled={loading || otp.join('').length !== 6}
               className={`w-full py-4 rounded-xl font-bold text-white transition-all transform flex items-center justify-center gap-2 ${
                 loading || otp.join('').length !== 6
-                  ? 'bg-gray-600 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 shadow-lg shadow-emerald-500/30 hover:scale-[1.02]'
+                  ? 'bg-muted-foreground cursor-not-allowed'
+                  : 'bg-gradient-to-r from-primary/50 to-green-600 hover:from-primary/90 hover:to-primary/90 shadow-lg shadow-primary/20 hover:scale-[1.02]'
               }`}
             >
               {loading ? (
@@ -228,17 +228,17 @@ function OtpVerification({
 
             {/* Resend Section */}
             <div className="text-center mt-6 pt-4 border-t border-white/10">
-              <p className="text-gray-400 text-sm">
+              <p className="text-muted-foreground text-sm">
                 Didn't receive the code?{' '}
                 {resendCountdown > 0 ? (
-                  <span className="text-gray-500">
-                    Resend in <span className="text-emerald-400 font-bold">{resendCountdown}s</span>
+                  <span className="text-muted-foreground">
+                    Resend in <span className="text-primary font-bold">{resendCountdown}s</span>
                   </span>
                 ) : (
                   <button
                     onClick={handleResend}
                     disabled={loading}
-                    className="text-emerald-400 hover:text-emerald-300 font-semibold hover:underline disabled:text-gray-500"
+                    className="text-primary hover:text-primary font-semibold hover:underline disabled:text-muted-foreground"
                   >
                     Resend OTP
                   </button>
@@ -250,7 +250,7 @@ function OtpVerification({
             <button
               onClick={onClose}
               disabled={loading}
-              className="w-full mt-4 py-3 text-gray-400 hover:text-white font-medium transition-colors rounded-xl hover:bg-white/5"
+              className="w-full mt-4 py-3 text-muted-foreground hover:text-white font-medium transition-colors rounded-xl hover:bg-white/5"
             >
               ← Back to Login
             </button>

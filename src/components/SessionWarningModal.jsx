@@ -26,7 +26,7 @@ function SessionWarningModal() {
       {/* Modal */}
       <div className={`relative w-full max-w-md rounded-2xl shadow-2xl border-2 overflow-hidden ${
         isDark 
-          ? 'bg-slate-800 border-orange-500/50' 
+          ? 'bg-muted border-orange-500/50' 
           : 'bg-white border-orange-400'
       }`}>
         {/* Warning Header */}
@@ -46,9 +46,9 @@ function SessionWarningModal() {
         <div className="p-6">
           {/* Countdown Timer */}
           <div className={`text-center mb-6 p-6 rounded-xl ${
-            isDark ? 'bg-slate-700/50' : 'bg-orange-50'
+            isDark ? 'bg-muted/50' : 'bg-orange-50'
           }`}>
-            <p className={`text-sm mb-2 ${isDark ? 'text-slate-400' : 'text-orange-600'}`}>
+            <p className={`text-sm mb-2 ${isDark ? 'text-muted-foreground' : 'text-orange-600'}`}>
               You will be logged out in
             </p>
             <div className={`text-6xl font-bold font-mono ${
@@ -58,17 +58,17 @@ function SessionWarningModal() {
             }`}>
               {warningCountdown}
             </div>
-            <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-orange-600'}`}>
+            <p className={`text-sm mt-2 ${isDark ? 'text-muted-foreground' : 'text-orange-600'}`}>
               seconds
             </p>
           </div>
 
           {/* Info Message */}
-          <div className={`text-center mb-6 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+          <div className={`text-center mb-6 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             <p className="text-sm">
               You have been inactive for 2 minutes. Click below to continue your session.
             </p>
-            <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
+            <p className={`text-xs mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Session will end after 30 seconds without response
             </p>
           </div>
@@ -76,7 +76,7 @@ function SessionWarningModal() {
           {/* Action Button */}
           <button
             onClick={handleStayLoggedIn}
-            className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+            className="w-full py-4 px-6 bg-gradient-to-r from-primary/50 to-green-600 hover:from-primary/90 hover:to-primary/90 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
           >
             <span>✅</span>
             <span>Stay Logged In</span>

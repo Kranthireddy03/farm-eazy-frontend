@@ -9,7 +9,7 @@ export function StatsCard({
 }) {
   const toneClass =
     tone === 'success'
-      ? 'border-emerald-200/80 bg-emerald-50/50 dark:border-emerald-800/40 dark:bg-emerald-950/20'
+      ? 'border-border/80 bg-primary/5/50 dark:border-emerald-800/40 dark:bg-emerald-950/20'
       : tone === 'warning'
         ? 'border-amber-200/80 bg-amber-50/50 dark:border-amber-800/40 dark:bg-amber-950/20'
         : tone === 'danger'

@@ -352,7 +352,7 @@ function Layout({ onShowTour, children }) {
   const layoutVariant = getLayoutVariant(location.pathname)
 
   return (
-    <div className={`premium-shell layout-variant ${layoutVariant} min-h-screen relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50'}`}>
+    <div className={`premium-shell layout-variant ${layoutVariant} min-h-screen relative overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-950 via-card to-card' : 'bg-gradient-to-br from-primary/5 via-teal-50 to-cyan-50'}`}>
       <div className={`pointer-events-none absolute -top-24 -left-20 h-80 w-80 rounded-full blur-3xl ${isDark ? 'bg-emerald-700/25' : 'bg-emerald-300/45'}`} />
       <div className={`pointer-events-none absolute top-16 -right-20 h-96 w-96 rounded-full blur-3xl ${isDark ? 'bg-cyan-700/20' : 'bg-cyan-200/55'}`} />
       <div className={`pointer-events-none absolute inset-0 ${isDark ? 'opacity-10' : 'opacity-[0.06]'}`} style={{
@@ -382,7 +382,7 @@ function Layout({ onShowTour, children }) {
       {/* Modern Header with Gradient */}
       <header className="sticky top-0 z-50">
         {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-teal-600 to-primary/80"></div>
         {/* Animated Shimmer Effect */}
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse"></div>
         
@@ -512,7 +512,7 @@ function Layout({ onShowTour, children }) {
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 pl-2 pr-3 py-1.5 bg-white/15 hover:bg-white/25 backdrop-blur-sm rounded-full transition-all border border-white/20"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner">
+                  <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-primary rounded-full flex items-center justify-center text-white font-bold text-sm shadow-inner">
                     {(userUsername || 'U').charAt(0).toUpperCase()}
                   </div>
                   <span className="hidden sm:inline text-sm font-mono font-semibold text-white">#{userDisplayId}</span>
@@ -523,9 +523,9 @@ function Layout({ onShowTour, children }) {
 
                 {/* Modern User Dropdown */}
                 {showUserMenu && (
-                  <div className={`absolute right-0 mt-3 w-[min(18rem,calc(100vw-1rem))] ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'} border backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] max-h-[80vh] overflow-y-auto custom-scrollbar`} style={{ top: '100%' }}>
+                  <div className={`absolute right-0 mt-3 w-[min(18rem,calc(100vw-1rem))] ${isDark ? 'bg-muted border-border' : 'bg-white border-gray-200'} border backdrop-blur-xl rounded-2xl shadow-2xl py-2 z-[100] max-h-[80vh] overflow-y-auto custom-scrollbar`} style={{ top: '100%' }}>
                     {/* User Info Header */}
-                    <div className="px-4 py-4 bg-gradient-to-r from-emerald-500 to-teal-500">
+                    <div className="px-4 py-4 bg-gradient-to-r from-primary/50 to-primary">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg">
                           {(userUsername || 'U').charAt(0).toUpperCase()}
@@ -539,15 +539,15 @@ function Layout({ onShowTour, children }) {
                     </div>
                     
                     {/* Quick Stats */}
-                    <div className={`flex items-center justify-around py-3 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                    <div className={`flex items-center justify-around py-3 border-b ${isDark ? 'border-border' : 'border-gray-200'}`}>
                       <div className="text-center">
                         <div className="text-lg font-bold text-amber-400">🪙 {coins?.totalCoins || 0}</div>
-                        <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Coins</div>
+                        <div className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Coins</div>
                       </div>
-                      <div className={`w-px h-8 ${isDark ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
+                      <div className={`w-px h-8 ${isDark ? 'bg-slate-600' : 'bg-border'}`}></div>
                       <div className="text-center">
-                        <div className="text-lg font-bold text-emerald-400">🛒 {cartCount}</div>
-                        <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>In Cart</div>
+                        <div className="text-lg font-bold text-primary">🛒 {cartCount}</div>
+                        <div className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>In Cart</div>
                       </div>
                     </div>
 
@@ -558,12 +558,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/address-book')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-cyan-900/50' : 'bg-cyan-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🏠</span>
                         <div>
                           <span className="font-medium block">Manage Addresses</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>View, edit, delete, and add addresses</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>View, edit, delete, and add addresses</span>
                         </div>
                       </button>
                       <button
@@ -571,12 +571,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/user/contact')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
-                        <span className={`w-9 h-9 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>✉️</span>
+                        <span className={`w-9 h-9 ${isDark ? 'bg-primary/10' : 'bg-primary/10'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>✉️</span>
                         <div>
                           <span className="font-medium block">Contact Details</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Update email and phone</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Update email and phone</span>
                         </div>
                       </button>
                       <button
@@ -584,12 +584,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/change-password')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-blue-900/50' : 'bg-blue-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🔐</span>
                         <div>
                           <span className="font-medium block">Change Password</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Update your security</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Update your security</span>
                         </div>
                       </button>
                       <button
@@ -597,12 +597,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/orders')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-purple-900/50' : 'bg-purple-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📦</span>
                         <div>
                           <span className="font-medium block">My Orders</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Track your purchases</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Track your purchases</span>
                         </div>
                       </button>
                       <button
@@ -610,12 +610,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           openSupportPortal()
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-green-900/50' : 'bg-green-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>💬</span>
                         <div>
                           <span className="font-medium block">Support</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Get help anytime</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Get help anytime</span>
                         </div>
                       </button>
                       <button
@@ -623,12 +623,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/service-requests')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-cyan-900/50' : 'bg-cyan-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📝</span>
                         <div>
                           <span className="font-medium block">Service Requests</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Manage your requests</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Manage your requests</span>
                         </div>
                       </button>
                       <button
@@ -636,12 +636,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/bank-verification')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-teal-900/50' : 'bg-teal-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🏦</span>
                         <div>
                           <span className="font-medium block">Bank Verification</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Verify bank details</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Verify bank details</span>
                         </div>
                       </button>
                       <button
@@ -649,12 +649,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/activities')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-amber-900/50' : 'bg-amber-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📜</span>
                         <div>
                           <span className="font-medium block">My Activities</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>View recent actions</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>View recent actions</span>
                         </div>
                       </button>
                       <button
@@ -662,12 +662,12 @@ function Layout({ onShowTour, children }) {
                           setShowUserMenu(false)
                           navigate('/communication-preferences')
                         }}
-                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                        className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                       >
                         <span className={`w-9 h-9 ${isDark ? 'bg-indigo-900/50' : 'bg-indigo-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📬</span>
                         <div>
                           <span className="font-medium block">Communication</span>
-                          <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Email & SMS preferences</span>
+                          <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Email & SMS preferences</span>
                         </div>
                       </button>
                       {isAuthenticated && (
@@ -676,12 +676,12 @@ function Layout({ onShowTour, children }) {
                             setShowUserMenu(false)
                             navigate('/vendor-dashboard')
                           }}
-                          className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                          className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                         >
-                          <span className={`w-9 h-9 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🏪</span>
+                          <span className={`w-9 h-9 ${isDark ? 'bg-primary/10' : 'bg-primary/10'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🏪</span>
                           <div>
                             <span className="font-medium block">Vendor Dashboard</span>
-                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Manage sales and services</span>
+                            <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Manage sales and services</span>
                           </div>
                         </button>
                       )}
@@ -692,12 +692,12 @@ function Layout({ onShowTour, children }) {
                             setShowUserMenu(false)
                             navigate('/admin/notifications')
                           }}
-                          className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                          className={`w-full text-left px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                         >
                           <span className={`w-9 h-9 ${isDark ? 'bg-rose-900/50' : 'bg-rose-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🔔</span>
                           <div>
                             <span className="font-medium block">Admin Notifications</span>
-                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Send broadcasts & alerts</span>
+                            <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Send broadcasts & alerts</span>
                           </div>
                         </button>
                       )}
@@ -707,12 +707,12 @@ function Layout({ onShowTour, children }) {
                             setShowUserMenu(false)
                             openSupportPortal('/access-control', 'admin')
                           }}
-                          className={`w-full text-left mt-2 px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                          className={`w-full text-left mt-2 px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                         >
                           <span className={`w-9 h-9 ${isDark ? 'bg-indigo-900/50' : 'bg-indigo-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>🛠️</span>
                           <div>
                             <span className="font-medium block">Access Control</span>
-                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Manage roles in Support Portal</span>
+                            <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Manage roles in Support Portal</span>
                           </div>
                         </button>
                       )}
@@ -722,19 +722,19 @@ function Layout({ onShowTour, children }) {
                             setShowUserMenu(false)
                             navigate('/admin/blog-posts')
                           }}
-                          className={`w-full text-left mt-2 px-4 py-3 rounded-xl ${isDark ? 'text-slate-200 hover:bg-slate-700' : 'text-gray-700 hover:bg-gray-100'} transition-colors flex items-center gap-3 group`}
+                          className={`w-full text-left mt-2 px-4 py-3 rounded-xl ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'} transition-colors flex items-center gap-3 group`}
                         >
-                          <span className={`w-9 h-9 ${isDark ? 'bg-emerald-900/50' : 'bg-emerald-100'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📝</span>
+                          <span className={`w-9 h-9 ${isDark ? 'bg-primary/10' : 'bg-primary/10'} rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>📝</span>
                           <div>
                             <span className="font-medium block">Blog Management</span>
-                            <span className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Create and publish posts</span>
+                            <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Create and publish posts</span>
                           </div>
                         </button>
                       )}
                     </div>
                     
                     {/* Logout Button */}
-                    <div className={`p-2 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                    <div className={`p-2 border-t ${isDark ? 'border-border' : 'border-gray-200'}`}>
                       <button
                         onClick={handleLogout}
                         className={`w-full text-left px-4 py-3 rounded-xl text-red-400 ${isDark ? 'hover:bg-red-900/30' : 'hover:bg-red-50'} transition-colors flex items-center gap-3 group`}
@@ -782,26 +782,26 @@ function Layout({ onShowTour, children }) {
 
       {/* Main Content */}
       <main className="flex-1 container-main py-8">
-        <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border min-h-auto animate-[fadeIn_.45s_ease-out]`}>
+        <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-muted/90 border-border' : 'bg-white/90 border-gray-200'} border min-h-auto animate-[fadeIn_.45s_ease-out]`}>
           {children || <Outlet />}
         </div>
       </main>
 
       {/* Footer */}
-      <footer className={`${isDark ? 'bg-slate-800/90 border-slate-700' : 'bg-white/90 border-gray-200'} border-t mt-4 shadow-inner backdrop-blur-md`}>
+      <footer className={`${isDark ? 'bg-muted/90 border-border' : 'bg-white/90 border-gray-200'} border-t mt-4 shadow-inner backdrop-blur-md`}>
         <div className="container-main py-8">
           <div className="flex justify-between items-center">
-              <p className={`${isDark ? 'text-slate-400' : 'text-gray-500'} text-sm`}>
+              <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} text-sm`}>
                 © 2026 FarmEazy. Smart Farm Management.
               </p>
               <div className="flex flex-wrap items-center gap-4">
-                <Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>About</Link>
-                <Link to="/privacy-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Privacy Policy</Link>
-                <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Terms & Conditions</Link>
-                <Link to="/refund-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Refund Policy</Link>
-                <Link to="/shipping-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Shipping Policy</Link>
-                <Link to="/marketplace-disclosure" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</Link>
-                <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-slate-400 hover:text-green-400' : 'text-gray-500 hover:text-green-600'} text-sm underline`}>Contact Us</Link>
+                <Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>About</Link>
+                <Link to="/privacy-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Privacy Policy</Link>
+                <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Terms & Conditions</Link>
+                <Link to="/refund-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Refund Policy</Link>
+                <Link to="/shipping-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Shipping Policy</Link>
+                <Link to="/marketplace-disclosure" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</Link>
+                <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Contact Us</Link>
               </div>
           </div>
         </div>

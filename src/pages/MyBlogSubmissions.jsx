@@ -4,9 +4,9 @@ import { useTheme } from '../context/ThemeContext'
 import { getMyBlogSubmissions } from '../services/BlogService'
 
 const STATUS_STYLE = {
-  DRAFT: 'bg-slate-200 text-slate-700',
+  DRAFT: 'bg-muted text-foreground',
   PENDING_APPROVAL: 'bg-amber-100 text-amber-700',
-  PUBLISHED: 'bg-emerald-100 text-emerald-700',
+  PUBLISHED: 'bg-primary/10 text-primary',
   ARCHIVED: 'bg-rose-100 text-rose-700',
 }
 
@@ -51,30 +51,30 @@ export default function MyBlogSubmissions() {
     : posts.filter((post) => (post.status || 'DRAFT') === statusFilter)
 
   return (
-    <div className={`min-h-screen px-4 py-10 ${isDark ? 'bg-slate-900 text-white' : 'bg-gradient-to-br from-emerald-50 to-cyan-50 text-slate-900'}`}>
+    <div className={`min-h-screen px-4 py-10 ${isDark ? 'bg-card text-white' : 'bg-gradient-to-br from-primary/5 to-cyan-50 text-foreground'}`}>
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between gap-3">
-          <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-emerald-900'}`}>My Blog Submissions</h1>
+          <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>My Blog Submissions</h1>
           <div className="flex items-center gap-2">
-            <Link to="/blog/submit" className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Write New Blog</Link>
+            <Link to="/blog/submit" className="px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold">Write New Blog</Link>
             <Link to="/blog" className={`text-sm font-semibold ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>Back to Blog</Link>
           </div>
         </div>
 
-        <p className={`mt-3 text-sm md:text-base ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+        <p className={`mt-3 text-sm md:text-base ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
           Track review progress of your submitted blog posts. Admin may edit and publish approved entries.
         </p>
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
           <div className={`${isDark ? 'bg-red-900/30 border-red-700 text-red-200' : 'bg-red-50 border-red-200 text-red-700'} border rounded-xl p-4 mt-6`}>
             {error}
           </div>
         ) : posts.length === 0 ? (
-          <div className={`${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-emerald-100 text-emerald-700'} border rounded-xl p-6 mt-6`}>
+          <div className={`${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-background border-border/60 text-primary'} border rounded-xl p-6 mt-6`}>
             <p className="font-semibold">No blog submissions yet.</p>
             <p className="mt-1 text-sm opacity-90">Start by creating your first farming story or practical guide.</p>
           </div>
@@ -88,10 +88,10 @@ export default function MyBlogSubmissions() {
                   onClick={() => setStatusFilter(key)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                     statusFilter === key
-                      ? 'bg-emerald-600 border-emerald-600 text-white'
+                      ? 'bg-primary border-primary text-white'
                       : isDark
-                        ? 'border-slate-600 text-slate-300 hover:border-slate-500'
-                        : 'border-emerald-200 text-emerald-800 hover:border-emerald-300'
+                        ? 'border-border text-muted-foreground hover:border-border'
+                        : 'border-border text-foreground hover:border-primary/30'
                   }`}
                 >
                   {label} ({statusCounts[key] || 0})
@@ -100,7 +100,7 @@ export default function MyBlogSubmissions() {
             </div>
 
             {filteredPosts.length === 0 ? (
-              <div className={`${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-emerald-100 text-emerald-700'} border rounded-xl p-6 mt-4`}>
+              <div className={`${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-background border-border/60 text-primary'} border rounded-xl p-6 mt-4`}>
                 <p className="font-semibold">No submissions in this status.</p>
                 <p className="mt-1 text-sm opacity-90">Try another filter to review your full submission history.</p>
               </div>
@@ -109,17 +109,17 @@ export default function MyBlogSubmissions() {
                 {filteredPosts.map((post) => {
                   const status = post.status || 'DRAFT'
                   return (
-                    <article key={post.id} className={`${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-emerald-100'} border rounded-xl p-4 shadow-sm`}>
+                    <article key={post.id} className={`${isDark ? 'bg-muted border-border' : 'bg-background border-border/60'} border rounded-xl p-4 shadow-sm`}>
                       <div className="flex items-start justify-between gap-2">
-                        <h2 className={`font-bold text-base ${isDark ? 'text-white' : 'text-slate-900'}`}>{post.title}</h2>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${STATUS_STYLE[status] || 'bg-slate-100 text-slate-700'}`}>
+                        <h2 className={`font-bold text-base ${isDark ? 'text-white' : 'text-foreground'}`}>{post.title}</h2>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${STATUS_STYLE[status] || 'bg-muted text-foreground'}`}>
                           {status.replace('_', ' ')}
                         </span>
                       </div>
 
-                      <p className={`mt-2 text-sm line-clamp-3 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>{post.excerpt}</p>
+                      <p className={`mt-2 text-sm line-clamp-3 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>{post.excerpt}</p>
 
-                      <div className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                      <div className={`mt-3 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                         {post.category || 'General'} • Updated {post.updatedAt ? new Date(post.updatedAt).toLocaleString() : 'recently'}
                       </div>
 

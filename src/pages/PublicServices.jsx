@@ -63,7 +63,7 @@ export default function PublicServices() {
               <SectionTitle eyebrow="Promise" title="Public pages should already feel like a product" />
               <div className="mt-5 space-y-3">
                 {promisePoints.map((point) => (
-                  <div key={point} className={`rounded-lg px-4 py-3 text-sm border ${isDark ? 'bg-card border-border text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}>
+                  <div key={point} className={`rounded-lg px-4 py-3 text-sm border ${isDark ? 'bg-card border-border text-muted-foreground' : 'bg-background border-border text-foreground'}`}>
                     {point}
                   </div>
                 ))}
@@ -81,12 +81,12 @@ export default function PublicServices() {
             />
             <div className="mt-6 space-y-4">
               {pillars.map((pillar) => (
-                <article key={pillar.name} className={`rounded-lg border p-4 ${isDark ? 'border-border bg-card' : 'border-slate-200 bg-white'}`}>
+                <article key={pillar.name} className={`rounded-lg border p-4 ${isDark ? 'border-border bg-card' : 'border-border bg-background'}`}>
                   <div className="flex items-start gap-3">
                     <pillar.icon className="h-5 w-5 text-primary mt-0.5 shrink-0" strokeWidth={1.75} />
                     <div>
-                      <h2 className={`font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{pillar.name}</h2>
-                      <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{pillar.desc}</p>
+                      <h2 className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{pillar.name}</h2>
+                      <p className={`mt-1 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{pillar.desc}</p>
                     </div>
                   </div>
                 </article>
@@ -106,10 +106,10 @@ export default function PublicServices() {
                 { label: 'Support', path: '/faq' },
                 { label: 'Guidance', path: '/contact' },
               ].map((item) => (
-                <Link key={item.path} to={item.path} className={`rounded-lg p-5 border transition ${isDark ? 'border-border bg-card text-slate-100 hover:bg-accent' : 'border-slate-200 bg-white text-slate-700 hover:bg-slate-50'}`}>
+                <Link key={item.path} to={item.path} className={`rounded-lg p-5 border transition ${isDark ? 'border-border bg-card text-foreground hover:bg-accent' : 'border-border bg-background text-foreground hover:bg-muted/30'}`}>
                   <div className="text-sm uppercase tracking-wide text-primary">Next stop</div>
                   <div className="mt-2 text-lg font-semibold">{item.label}</div>
-                  <div className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.path}</div>
+                  <div className={`mt-1 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{item.path}</div>
                 </Link>
               ))}
             </ScrollRail>
@@ -119,8 +119,8 @@ export default function PublicServices() {
         <GlassPanel className="p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h2 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-slate-950'}`}>Explore knowledge and support next</h2>
-              <p className={`mt-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Dive into practical content and user support workflows.</p>
+              <h2 className={`text-2xl font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>Explore knowledge and support next</h2>
+              <p className={`mt-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Dive into practical content and user support workflows.</p>
             </div>
             <div className="flex gap-3">
               <PillButton to="/blog" active>View Blog</PillButton>

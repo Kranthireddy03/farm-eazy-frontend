@@ -88,7 +88,7 @@ function EmailTest() {
     <div className="max-w-6xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white mb-2">📧 Email Testing</h1>
-        <p className="text-slate-400">Test email functionality for FarmEazy notifications</p>
+        <p className="text-muted-foreground">Test email functionality for FarmEazy notifications</p>
       </div>
 
       {/* Message Alert */}
@@ -106,21 +106,21 @@ function EmailTest() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Test Email */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-6">
+        <div className="bg-muted border border-border rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
             <span className="text-2xl mr-2">🧪</span>
             Test Email
           </h2>
           <form onSubmit={handleSendTestEmail}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Email Address
               </label>
               <input
                 type="email"
                 value={testEmail}
                 onChange={(e) => setTestEmail(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-muted border border-border text-white placeholder:text-muted-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="test@example.com"
                 required
               />
@@ -128,7 +128,7 @@ function EmailTest() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 disabled:bg-muted disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Sending...' : 'Send Test Email'}
             </button>
@@ -136,34 +136,34 @@ function EmailTest() {
         </div>
 
         {/* Welcome Email */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-6">
+        <div className="bg-muted border border-border rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
             <span className="text-2xl mr-2">👋</span>
             Welcome Email
           </h2>
           <form onSubmit={handleSendWelcomeEmail}>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Email Address
               </label>
               <input
                 type="email"
                 value={welcomeEmail}
                 onChange={(e) => setWelcomeEmail(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-muted border border-border text-white placeholder:text-muted-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="user@example.com"
                 required
               />
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 User Name
               </label>
               <input
                 type="text"
                 value={welcomeName}
                 onChange={(e) => setWelcomeName(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-muted border border-border text-white placeholder:text-muted-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 placeholder="John Doe"
                 required
               />
@@ -171,7 +171,7 @@ function EmailTest() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:bg-muted disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Sending...' : 'Send Welcome Email'}
             </button>
@@ -179,7 +179,7 @@ function EmailTest() {
         </div>
 
         {/* Custom Email */}
-        <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-md p-6 lg:col-span-2">
+        <div className="bg-muted border border-border rounded-lg shadow-md p-6 lg:col-span-2">
           <h2 className="text-xl font-semibold text-white mb-4 flex items-center">
             <span className="text-2xl mr-2">✉️</span>
             Custom Email
@@ -187,40 +187,40 @@ function EmailTest() {
           <form onSubmit={handleSendCustomEmail}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   To (Email Address)
                 </label>
                 <input
                   type="email"
                   value={customEmail.to}
                   onChange={(e) => setCustomEmail({ ...customEmail, to: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-muted border border-border text-white placeholder:text-muted-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="recipient@example.com"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Subject
                 </label>
                 <input
                   type="text"
                   value={customEmail.subject}
                   onChange={(e) => setCustomEmail({ ...customEmail, subject: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  className="w-full px-4 py-2 bg-muted border border-border text-white placeholder:text-muted-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   placeholder="Email subject"
                   required
                 />
               </div>
             </div>
             <div className="mb-4">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Message Body
               </label>
               <textarea
                 value={customEmail.body}
                 onChange={(e) => setCustomEmail({ ...customEmail, body: e.target.value })}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-muted border border-border text-white placeholder:text-muted-foreground rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                 rows="6"
                 placeholder="Type your message here..."
                 required
@@ -232,15 +232,15 @@ function EmailTest() {
                   type="checkbox"
                   checked={customEmail.html}
                   onChange={(e) => setCustomEmail({ ...customEmail, html: e.target.checked })}
-                  className="w-4 h-4 text-green-600 border-slate-600 bg-slate-700 rounded focus:ring-green-500"
+                  className="w-4 h-4 text-green-600 border-border bg-muted rounded focus:ring-primary"
                 />
-                <span className="ml-2 text-sm text-slate-300">Send as HTML</span>
+                <span className="ml-2 text-sm text-muted-foreground">Send as HTML</span>
               </label>
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:bg-slate-600 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:bg-muted disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Sending...' : 'Send Custom Email'}
             </button>
@@ -249,9 +249,9 @@ function EmailTest() {
       </div>
 
       {/* Info Section */}
-      <div className="mt-8 bg-slate-800 border border-slate-700 rounded-lg p-6">
+      <div className="mt-8 bg-muted border border-border rounded-lg p-6">
         <h3 className="text-lg font-semibold text-blue-400 mb-3">📝 Email Configuration</h3>
-        <div className="text-slate-300 space-y-2">
+        <div className="text-muted-foreground space-y-2">
           <p>✅ Email service is enabled and configured</p>
           <p>📤 Emails are sent via Gmail SMTP (port 587)</p>
           <p>⏱️ Emails typically arrive within 5-10 seconds</p>

@@ -11,15 +11,15 @@ export function InfoPanel({
 }) {
   const variantClass =
     variant === 'warning'
-      ? 'border-amber-200 bg-amber-50/60 dark:border-amber-800/50 dark:bg-amber-950/20'
+      ? 'ops-alert ops-alert-warning border-0 shadow-none'
       : variant === 'destructive'
-        ? 'border-destructive/30 bg-destructive/5'
+        ? 'ops-alert ops-alert-error border-0 shadow-none'
         : variant === 'success'
-          ? 'border-emerald-200 bg-emerald-50/60 dark:border-emerald-800/50 dark:bg-emerald-950/20'
+          ? 'ops-alert ops-alert-success border-0 shadow-none'
           : '';
 
   return (
-    <Card className={cn(variantClass, className)}>
+    <Card className={cn('border-0 shadow-none', variantClass, className)}>
       {(title || description) && (
         <CardHeader className="pb-2">
           <div className="flex items-start gap-3">

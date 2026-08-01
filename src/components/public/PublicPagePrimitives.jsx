@@ -1,32 +1,30 @@
-import { Card, CardContent } from '../ui/card'
-import { HeroFrame, SectionTitle, StrongPanel } from '../ui/PremiumSurface'
+import { cn } from '../../lib/utils';
+import { HeroFrame, SectionTitle } from '../ui/PremiumSurface';
 
 export function PublicPageContainer({ children, className = '' }) {
   return (
-    <div className={`px-4 md:px-6 py-12 md:py-16 ${className}`}>
+    <div className={cn('px-4 md:px-6 py-12 md:py-16', className)}>
       <div className="max-w-7xl mx-auto space-y-8">{children}</div>
     </div>
-  )
+  );
 }
 
 export function PublicNotePanel({ eyebrow, title, note, items = [] }) {
   return (
-    <Card className="shadow-sm">
-      <CardContent className="p-5 md:p-6">
-        <SectionTitle eyebrow={eyebrow} title={title} />
-        {note && <p className="mt-3 text-sm text-muted-foreground">{note}</p>}
-        {items.length > 0 && (
-          <div className="mt-5 space-y-3">
-            {items.map((item) => (
-              <Card key={item} className="border-border shadow-none">
-                <CardContent className="px-4 py-3 text-sm text-muted-foreground">{item}</CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
+    <div className="ops-panel p-5 md:p-6">
+      <SectionTitle eyebrow={eyebrow} title={title} />
+      {note && <p className="mt-3 text-sm text-muted-foreground">{note}</p>}
+      {items.length > 0 && (
+        <div className="mt-5 space-y-3">
+          {items.map((item) => (
+            <div key={item} className="ops-panel !p-3 text-sm text-muted-foreground">
+              {item}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function PublicLegalPage({ title, description, noteTitle, noteText, sections }) {
@@ -48,14 +46,14 @@ export function PublicLegalPage({ title, description, noteTitle, noteText, secti
 
       <div className="grid gap-6">
         {sections.map((section) => (
-          <StrongPanel key={section.title} className="p-6 md:p-7">
-            <h2 className="text-xl font-bold text-foreground">{section.title}</h2>
-            <div className="mt-3 text-sm md:text-base text-muted-foreground">
+          <div key={section.title} className="ops-panel p-6 md:p-7">
+            <h2 className="ops-section-title text-lg text-foreground">{section.title}</h2>
+            <div className="mt-3 text-sm md:text-base text-muted-foreground leading-relaxed">
               {section.body}
             </div>
-          </StrongPanel>
+          </div>
         ))}
       </div>
     </div>
-  )
+  );
 }

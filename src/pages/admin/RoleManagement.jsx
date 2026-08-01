@@ -87,7 +87,7 @@ export default function RoleManagement() {
       </div>
 
       {/* Role Lookup Panel */}
-      <div className="mb-6 p-4 bg-gray-100 rounded shadow">
+      <div className="mb-6 p-4 bg-muted rounded shadow">
         <h3 className="text-lg font-semibold mb-2">Role Lookup</h3>
         <div className="flex gap-2 mb-2">
           <input
@@ -115,10 +115,10 @@ export default function RoleManagement() {
 
       {error && <div className="mb-4 text-red-600">{error}</div>}
 
-      <div className="overflow-x-auto bg-white rounded shadow">
+      <div className="overflow-x-auto bg-background rounded shadow">
         <table className="min-w-full table-auto">
           <thead>
-            <tr className="bg-gray-50 text-left">
+            <tr className="bg-muted/50 text-left">
               <th className="px-4 py-3">#</th>
               <th className="px-4 py-3">Email</th>
               <th className="px-4 py-3">Username</th>

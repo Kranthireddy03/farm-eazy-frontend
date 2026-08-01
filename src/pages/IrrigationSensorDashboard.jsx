@@ -20,7 +20,7 @@ const SENSOR_TYPES = {
 
 const STATUS_COLORS = {
   ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-  INACTIVE: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+  INACTIVE: 'bg-muted text-foreground dark:bg-muted/30 dark:text-muted-foreground',
   ERROR: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   MAINTENANCE: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
 }
@@ -199,8 +199,8 @@ function IrrigationSensorDashboard() {
         <select
           value={selectedFarm}
           onChange={(e) => setSelectedFarm(e.target.value)}
-          className={`px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 ${
-            isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+          className={`px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary ${
+            isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
           }`}
         >
           {farms.map(farm => (
@@ -235,12 +235,12 @@ function IrrigationSensorDashboard() {
         {/* Sensor Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           {sensors.length === 0 ? (
-            <div className={`col-span-full glass-card interactive-card rounded-xl shadow-lg border p-12 text-center ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+            <div className={`col-span-full ops-panel interactive-card rounded-xl shadow-lg border p-12 text-center ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
               <div className="text-6xl mb-4">📡</div>
-              <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+              <h3 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>
                 No Sensor Data Available
               </h3>
-              <p className={`mt-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+              <p className={`mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 Connect IoT sensors to start monitoring your farm
               </p>
             </div>
@@ -252,16 +252,16 @@ function IrrigationSensorDashboard() {
               return (
                 <div
                   key={index}
-                  className={`glass-card interactive-card rounded-xl shadow-lg border p-6 transition hover:shadow-xl ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}
+                  className={`ops-panel interactive-card rounded-xl shadow-lg border p-6 transition hover:shadow-xl ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <span className="text-3xl">{config.icon}</span>
                       <div>
-                        <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>
                           {config.label}
                         </h3>
-                        <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                           {sensor.sensorId || 'Sensor'}
                         </p>
                       </div>
@@ -277,22 +277,22 @@ function IrrigationSensorDashboard() {
                         statusColor === 'red' ? 'text-red-500' :
                         statusColor === 'yellow' ? 'text-yellow-500' :
                         statusColor === 'green' ? 'text-green-500' :
-                        isDark ? 'text-white' : 'text-gray-800'
+                        isDark ? 'text-white' : 'text-foreground'
                       }`}>
                         {sensor.value?.toFixed(1) || '-'}
                       </span>
-                      <span className={`text-xl ml-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                      <span className={`text-xl ml-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                         {config.unit}
                       </span>
                     </div>
-                    <div className={`text-right text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    <div className={`text-right text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                       <p>Updated</p>
                       <p>{formatDate(sensor.recordedAt || sensor.updatedAt)}</p>
                     </div>
                   </div>
 
                   {/* Mini Chart Placeholder */}
-                  <div className={`mt-4 h-12 rounded flex items-end gap-1 ${isDark ? 'bg-slate-700/50' : 'bg-gray-100'}`}>
+                  <div className={`mt-4 h-12 rounded flex items-end gap-1 ${isDark ? 'bg-muted/50' : 'bg-muted'}`}>
                     {[...Array(12)].map((_, i) => (
                       <div
                         key={i}
@@ -313,19 +313,19 @@ function IrrigationSensorDashboard() {
         </div>
 
         {/* Automation Rules Section */}
-        <div className={`glass-card interactive-card rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-          <div className="p-6 border-b border-gray-200 dark:border-slate-700 flex justify-between items-center">
+        <div className={`ops-panel interactive-card rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
+          <div className="p-6 border-b border-border dark:border-border flex justify-between items-center">
             <div>
-              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                 Automation Rules
               </h2>
-              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+              <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 Set up automatic irrigation based on sensor readings
               </p>
             </div>
             <button
               onClick={() => setShowRuleForm(!showRuleForm)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
             >
               {showRuleForm ? '✕ Cancel' : '+ Add Rule'}
             </button>
@@ -333,16 +333,16 @@ function IrrigationSensorDashboard() {
 
           {/* Rule Form */}
           {showRuleForm && (
-            <div className={`p-6 border-b ${isDark ? 'bg-slate-700/50 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
+            <div className={`p-6 border-b ${isDark ? 'bg-muted/50 border-border' : 'bg-muted/50 border-border'}`}>
               <form onSubmit={handleCreateRule} className="grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     When
                   </label>
                   <select
                     value={ruleForm.sensorType}
                     onChange={(e) => setRuleForm({ ...ruleForm, sensorType: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-600 border-slate-500 text-white' : 'bg-white border-gray-300'}`}
+                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border'}`}
                   >
                     {Object.entries(SENSOR_TYPES).map(([key, val]) => (
                       <option key={key} value={key}>{val.label}</option>
@@ -351,13 +351,13 @@ function IrrigationSensorDashboard() {
                 </div>
                 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     Is
                   </label>
                   <select
                     value={ruleForm.conditionType}
                     onChange={(e) => setRuleForm({ ...ruleForm, conditionType: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-600 border-slate-500 text-white' : 'bg-white border-gray-300'}`}
+                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border'}`}
                   >
                     <option value="BELOW">Below</option>
                     <option value="ABOVE">Above</option>
@@ -366,7 +366,7 @@ function IrrigationSensorDashboard() {
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     Threshold
                   </label>
                   <input
@@ -376,18 +376,18 @@ function IrrigationSensorDashboard() {
                     required
                     step="0.1"
                     placeholder="e.g., 30"
-                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-600 border-slate-500 text-white' : 'bg-white border-gray-300'}`}
+                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border'}`}
                   />
                 </div>
 
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     Then
                   </label>
                   <select
                     value={ruleForm.action}
                     onChange={(e) => setRuleForm({ ...ruleForm, action: e.target.value })}
-                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-600 border-slate-500 text-white' : 'bg-white border-gray-300'}`}
+                    className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border'}`}
                   >
                     <option value="TURN_ON_IRRIGATION">Turn On Irrigation</option>
                     <option value="TURN_OFF_IRRIGATION">Turn Off Irrigation</option>
@@ -399,7 +399,7 @@ function IrrigationSensorDashboard() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
                 >
                   {submitting ? 'Creating...' : 'Create Rule'}
                 </button>
@@ -408,11 +408,11 @@ function IrrigationSensorDashboard() {
           )}
 
           {/* Rules List */}
-          <div className="divide-y divide-gray-200 dark:divide-slate-700">
+          <div className="divide-y divide-border dark:divide-border">
             {rules.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-5xl mb-4">⚙️</div>
-                <p className={isDark ? 'text-slate-400' : 'text-gray-500'}>
+                <p className={isDark ? 'text-muted-foreground' : 'text-muted-foreground'}>
                   No automation rules configured yet
                 </p>
               </div>
@@ -420,16 +420,16 @@ function IrrigationSensorDashboard() {
               rules.map((rule, index) => {
                 const sensor = SENSOR_TYPES[rule.sensorType] || { label: rule.sensorType, icon: '📊' }
                 return (
-                  <div key={index} className={`p-4 flex items-center justify-between ${isDark ? 'hover:bg-slate-700/50' : 'hover:bg-gray-50'}`}>
+                  <div key={index} className={`p-4 flex items-center justify-between ${isDark ? 'hover:bg-muted/50' : 'hover:bg-muted/50'}`}>
                     <div className="flex items-center gap-4">
                       <span className="text-2xl">{sensor.icon}</span>
                       <div>
-                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        <p className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
                           When <span className="font-semibold">{sensor.label}</span> is{' '}
                           <span className="text-blue-500">{rule.conditionType?.toLowerCase()}</span>{' '}
                           <span className="font-semibold">{rule.thresholdValue}</span>
                         </p>
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                           → {rule.action?.replace(/_/g, ' ')}
                         </p>
                       </div>
@@ -440,7 +440,7 @@ function IrrigationSensorDashboard() {
                         className={`px-3 py-1 rounded-full text-xs font-semibold transition ${
                           rule.isActive 
                             ? 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400' 
-                            : 'bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-900/30 dark:text-gray-400'
+                            : 'bg-muted text-foreground hover:bg-muted dark:bg-muted/30 dark:text-muted-foreground'
                         }`}
                       >
                         {rule.isActive ? 'Active' : 'Inactive'}
@@ -464,38 +464,38 @@ function IrrigationSensorDashboard() {
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
             onClick={fetchSensorData}
-            className={`glass-card interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
-              isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-200 hover:bg-gray-50'
+            className={`ops-panel interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
+              isDark ? 'bg-muted border-border hover:bg-muted' : 'bg-background border-border hover:bg-muted/50'
             }`}
           >
             <span className="text-2xl">🔄</span>
             <div className="text-left">
-              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>Refresh Data</p>
-              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Update sensor readings</p>
+              <p className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>Refresh Data</p>
+              <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Update sensor readings</p>
             </div>
           </button>
 
           <button
-            className={`glass-card interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
-              isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-200 hover:bg-gray-50'
+            className={`ops-panel interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
+              isDark ? 'bg-muted border-border hover:bg-muted' : 'bg-background border-border hover:bg-muted/50'
             }`}
           >
             <span className="text-2xl">💧</span>
             <div className="text-left">
-              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>Manual Irrigation</p>
-              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Start watering now</p>
+              <p className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>Manual Irrigation</p>
+              <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Start watering now</p>
             </div>
           </button>
 
           <button
-            className={`glass-card interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
-              isDark ? 'bg-slate-800 border-slate-700 hover:bg-slate-700' : 'bg-white border-gray-200 hover:bg-gray-50'
+            className={`ops-panel interactive-card p-4 rounded-xl border flex items-center gap-3 transition ${
+              isDark ? 'bg-muted border-border hover:bg-muted' : 'bg-background border-border hover:bg-muted/50'
             }`}
           >
             <span className="text-2xl">📊</span>
             <div className="text-left">
-              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>View History</p>
-              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Sensor data trends</p>
+              <p className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>View History</p>
+              <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Sensor data trends</p>
             </div>
           </button>
         </div>

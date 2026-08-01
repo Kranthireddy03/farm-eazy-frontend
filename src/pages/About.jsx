@@ -1,31 +1,12 @@
 import { Target, Shield, Sprout, TrendingUp, Compass, Settings, Puzzle } from 'lucide-react'
-import { useTheme } from '../context/ThemeContext'
 import { FeatureCard, GlassPanel, HeroFrame, ScrollRail, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 
 export default function About() {
-  const { isDark } = useTheme()
-
   const principles = [
-    {
-      title: 'Operational Clarity',
-      text: 'Every flow is designed to reduce confusion and help users take action fast.',
-      icon: Target,
-    },
-    {
-      title: 'Reliable by Design',
-      text: 'From auth to support, we prioritize stable workflows that teams can trust daily.',
-      icon: Shield,
-    },
-    {
-      title: 'Farmer-first UX',
-      text: 'Practical interfaces shaped around real agricultural operations.',
-      icon: Sprout,
-    },
-    {
-      title: 'Scalable Architecture',
-      text: 'Built for growth from individual users to larger farm organizations.',
-      icon: TrendingUp,
-    },
+    { title: 'Operational clarity', text: 'Every flow is designed to reduce confusion and help users take action fast.', icon: Target },
+    { title: 'Reliable by design', text: 'From auth to support, we prioritize stable workflows teams can trust daily.', icon: Shield },
+    { title: 'Farmer-first UX', text: 'Practical interfaces shaped around real agricultural operations.', icon: Sprout },
+    { title: 'Scalable architecture', text: 'Built for growth from individual users to larger farm organizations.', icon: TrendingUp },
   ]
 
   const milestones = [
@@ -42,18 +23,17 @@ export default function About() {
           eyebrow="About FarmEazy"
           title="A practical digital platform built for farming operations and support workflows."
           description="FarmEazy helps growers reduce manual work by bringing farm records, crop plans, irrigation schedules, product listings, and support into one reliable dashboard."
-          actions={null}
           side={
-            <GlassPanel className="p-5 md:p-6">
-              <p className="text-xs uppercase tracking-wide text-primary">Vision</p>
-              <p className={`mt-3 text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
+            <GlassPanel>
+              <p className="text-xs uppercase tracking-wider text-primary font-semibold">Vision</p>
+              <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
                 Build a dependable digital backbone for agriculture where users can manage operations, collaborate efficiently, and scale outcomes without workflow friction.
               </p>
               <div className="mt-5 grid grid-cols-2 gap-3">
                 {milestones.map((item) => (
-                  <div key={item.label} className={`rounded-lg p-4 border ${isDark ? 'bg-card border-border' : 'bg-white border-slate-200'}`}>
-                    <div className="text-2xl font-semibold text-primary">{item.year}</div>
-                    <div className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.label}</div>
+                  <div key={item.label} className="ops-panel !p-4">
+                    <div className="text-2xl font-semibold text-primary tabular-nums">{item.year}</div>
+                    <div className="mt-1 text-sm text-muted-foreground">{item.label}</div>
                   </div>
                 ))}
               </div>
@@ -61,71 +41,38 @@ export default function About() {
           }
         />
 
-        <section className="grid lg:grid-cols-[0.9fr_1.1fr] gap-6 items-start">
-          <StrongPanel className="p-6 md:p-7">
-            <SectionTitle
-              eyebrow="Design principles"
-              title="A product language that stays operational under pressure"
-              text="The interface is meant to be calm, fast, and predictable, even when the user is moving between support, onboarding, and task management."
-            />
-            <div className="mt-6 space-y-4">
-              {principles.map((item) => (
-                <article key={item.title} className={`rounded-lg border p-4 ${isDark ? 'bg-card border-border' : 'bg-white border-slate-200'}`}>
-                  <div className="flex items-start gap-3">
-                    <item.icon className="h-5 w-5 text-primary mt-0.5 shrink-0" strokeWidth={1.75} />
-                    <div>
-                      <h2 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.title}</h2>
-                      <p className={`mt-1 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.text}</p>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </StrongPanel>
+        <SectionTitle eyebrow="Principles" title="What guides our product" text="Design choices rooted in field operations, not generic SaaS patterns." />
 
-          <GlassPanel className="p-6 md:p-7">
-            <SectionTitle eyebrow="Outcome" title="Built to scale without visual fatigue" />
-            <ScrollRail className="mt-5 grid gap-4 md:grid-cols-2 md:overflow-visible">
-              {[
-                'Clear paths for public visitors and returning users',
-                'Support surfaces that make escalation easier',
-                'Theme-aware styling across dark and light modes',
-                'A consistent visual rhythm that can expand page by page',
-              ].map((item) => (
-                <div key={item} className={`rounded-lg p-4 text-sm border ${isDark ? 'bg-card border-border text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}>
-                  {item}
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {principles.map((item) => (
+            <FeatureCard key={item.title} icon={item.icon} title={item.title} description={item.text} />
+          ))}
+        </div>
+
+        <StrongPanel>
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            <div>
+              <SectionTitle
+                eyebrow="Platform scope"
+                title="One place for farms, commerce, and support"
+                text="FarmEazy connects operational data with marketplace and help desk flows so growers spend less time switching tools."
+              />
+            </div>
+            <ScrollRail className="gap-3">
+              {['Farms & crops', 'Irrigation', 'Marketplace', 'Vendor tools', 'Support desk'].map((label) => (
+                <div key={label} className="ops-panel shrink-0 snap-start px-4 py-3 text-sm font-medium text-foreground">
+                  {label}
                 </div>
               ))}
             </ScrollRail>
-          </GlassPanel>
-        </section>
-
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { title: 'Public Experience', text: 'Visitors quickly understand the value proposition and where to start.', icon: Compass },
-            { title: 'Protected Workflows', text: 'Signed-in users move through farms, crops, and marketplace without friction.', icon: Settings },
-            { title: 'Support Reliability', text: 'Escalations, ticketing, and communication remain visible and structured.', icon: Puzzle },
-          ].map((item) => (
-            <FeatureCard key={item.title} icon={item.icon} title={item.title} description={item.text} />
-          ))}
-        </section>
-
-        <GlassPanel className="p-6 md:p-7 mt-6">
-          <SectionTitle eyebrow="For normal users" title="A clear, practical experience for everyone" text="This interface is built to help everyday users navigate operations, support, and farm management without unnecessary complexity." />
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {[
-              { title: 'Simple actions', detail: 'Actions are grouped around what the user needs to do next.' },
-              { title: 'Visible support', detail: 'Help and contact options are easy to find on every page.' },
-              { title: 'Focused workflows', detail: 'Farm tasks, irrigation, and orders are presented clearly and consistently.' },
-              { title: 'Modern comfort', detail: 'Dark and light modes work without changing the experience.' },
-            ].map((item) => (
-              <div key={item.title} className={`rounded-lg border p-5 ${isDark ? 'bg-card border-border' : 'bg-white border-slate-200'}`}>
-                <h3 className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.title}</h3>
-                <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.detail}</p>
-              </div>
-            ))}
           </div>
-        </GlassPanel>
+        </StrongPanel>
+
+        <div className="grid md:grid-cols-3 gap-4">
+          <FeatureCard icon={Compass} title="Location-aware" description="Browse products and services available in your service area." />
+          <FeatureCard icon={Settings} title="Account controls" description="Preferences, communication settings, and secure sign-in flows." />
+          <FeatureCard icon={Puzzle} title="Integrated support" description="FAQ, tickets, and contact options when you need help." />
+        </div>
       </div>
     </div>
   )

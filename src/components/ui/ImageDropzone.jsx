@@ -42,13 +42,13 @@ export default function ImageDropzone({
         onDrop={onDrop}
         className={`flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed p-8 cursor-pointer transition ${
           dragging
-            ? 'border-emerald-500 bg-emerald-500/10'
-            : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400 hover:bg-emerald-500/5'
+            ? 'border-primary bg-primary/50/10'
+            : 'border-border dark:border-border hover:border-primary hover:bg-primary/50/5'
         }`}
       >
         <span className="text-3xl">📂</span>
-        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</span>
-        <span className="text-xs text-slate-500">{hint}</span>
+        <span className="text-sm font-semibold text-foreground dark:text-muted-foreground">{label}</span>
+        <span className="text-xs text-muted-foreground">{hint}</span>
         <input
           type="file"
           accept={accept}
@@ -61,7 +61,7 @@ export default function ImageDropzone({
       {previews.length > 0 && (
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
           {previews.map((p) => (
-            <div key={p.url} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+            <div key={p.url} className="relative aspect-square rounded-xl overflow-hidden border border-border dark:border-border bg-muted dark:bg-muted">
               <img src={p.url} alt={p.name} className="h-full w-full object-cover" />
             </div>
           ))}

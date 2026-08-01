@@ -3,11 +3,11 @@ import { formatDistanceToNow } from 'date-fns';
 const TYPE_META = {
   REGISTERED: { icon: '✍️', color: 'bg-blue-500/15 text-blue-600 dark:text-blue-300' },
   ORDER_PLACED: { icon: '📦', color: 'bg-amber-500/15 text-amber-600 dark:text-amber-300' },
-  ADDED_PRODUCT: { icon: '➕', color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-300' },
+  ADDED_PRODUCT: { icon: '➕', color: 'bg-primary/50/15 text-primary dark:text-primary' },
   FARM_ADDED: { icon: '🌾', color: 'bg-lime-500/15 text-lime-600 dark:text-lime-300' },
   CROP_ADDED: { icon: '🌱', color: 'bg-green-500/15 text-green-600 dark:text-green-300' },
   COINS_EARNED: { icon: '🪙', color: 'bg-yellow-500/15 text-yellow-600 dark:text-yellow-300' },
-  DEFAULT: { icon: '📋', color: 'bg-slate-500/15 text-slate-600 dark:text-slate-300' },
+  DEFAULT: { icon: '📋', color: 'bg-muted/300/15 text-muted-foreground dark:text-muted-foreground' },
 };
 
 function getMeta(type) {
@@ -17,7 +17,7 @@ function getMeta(type) {
 export default function ActivityTimeline({ activities = [], emptyMessage = 'No activity yet.', className = '' }) {
   if (!activities.length) {
     return (
-      <div className={`rounded-2xl border border-dashed border-slate-300 dark:border-slate-600 p-8 text-center text-sm text-slate-500 ${className}`}>
+      <div className={`rounded-2xl border border-dashed border-border dark:border-border p-8 text-center text-sm text-muted-foreground ${className}`}>
         {emptyMessage}
       </div>
     );
@@ -25,7 +25,7 @@ export default function ActivityTimeline({ activities = [], emptyMessage = 'No a
 
   return (
     <div className={`relative ${className}`}>
-      <div className="absolute left-[1.15rem] top-3 bottom-3 w-px bg-slate-200 dark:bg-slate-700" aria-hidden />
+      <div className="absolute left-[1.15rem] top-3 bottom-3 w-px bg-slate-200 dark:bg-muted" aria-hidden />
       <ul className="space-y-4">
         {activities.map((activity, index) => {
           const meta = getMeta(activity.activityType || activity.type);
@@ -38,9 +38,9 @@ export default function ActivityTimeline({ activities = [], emptyMessage = 'No a
                 <span>{meta.icon}</span>
               </div>
               <div className="flex-1 min-w-0 pb-1">
-                <p className="text-sm font-medium text-slate-800 dark:text-slate-100 leading-snug">{label}</p>
+                <p className="text-sm font-medium text-foreground dark:text-slate-100 leading-snug">{label}</p>
                 {ts && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-muted-foreground dark:text-muted-foreground mt-0.5">
                     {formatDistanceToNow(new Date(ts), { addSuffix: true })}
                   </p>
                 )}

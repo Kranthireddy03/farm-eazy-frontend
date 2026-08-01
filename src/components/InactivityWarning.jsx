@@ -25,7 +25,7 @@ function InactivityWarning({ showWarning, timeRemaining, onStayOnline }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-      <div className="bg-slate-800 border border-slate-700 rounded-lg shadow-2xl p-8 max-w-md mx-4 border-4 border-red-600 animate-pulse">
+      <div className="bg-muted border border-border rounded-lg shadow-2xl p-8 max-w-md mx-4 border-4 border-red-600 animate-pulse">
         <div className="flex justify-center mb-6">
           <div className="bg-red-900/50 rounded-full p-6">
             <svg
@@ -48,7 +48,7 @@ function InactivityWarning({ showWarning, timeRemaining, onStayOnline }) {
           ⚠️ Session Expiring Soon
         </h2>
 
-        <p className="text-center text-slate-200 mb-6 text-lg font-semibold">
+        <p className="text-center text-muted-foreground mb-6 text-lg font-semibold">
           You have been inactive. Your session will expire in:
         </p>
 
@@ -57,7 +57,7 @@ function InactivityWarning({ showWarning, timeRemaining, onStayOnline }) {
           <p className="text-red-400 text-sm mt-2 font-semibold">minutes remaining</p>
         </div>
 
-        <p className="text-center text-slate-400 mb-8">
+        <p className="text-center text-muted-foreground mb-8">
           Click "Stay Online" to continue your session, or you will be logged out automatically.
         </p>
 
@@ -68,7 +68,7 @@ function InactivityWarning({ showWarning, timeRemaining, onStayOnline }) {
           ✓ Stay Online
         </button>
 
-        <p className="text-center text-slate-500 text-xs mt-6">
+        <p className="text-center text-muted-foreground text-xs mt-6">
           Warning appears after 120 seconds of inactivity.
         </p>
       </div>

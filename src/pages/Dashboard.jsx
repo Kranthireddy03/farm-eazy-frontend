@@ -178,17 +178,17 @@ For more details, visit: https://farm-eazy.com
    */
   const getActivityColor = (activityType) => {
     const colorMap = {
-      'CREATE_FARM': 'bg-green-600',
+      'CREATE_FARM': 'bg-primary',
       'CREATE_CROP': 'bg-blue-600',
       'CREATE_IRRIGATION': 'bg-cyan-600',
-      'UPDATE_FARM': 'bg-green-500',
+      'UPDATE_FARM': 'bg-primary',
       'UPDATE_CROP': 'bg-blue-500',
       'UPDATE_IRRIGATION': 'bg-cyan-500',
       'DELETE_FARM': 'bg-red-600',
       'DELETE_CROP': 'bg-red-500',
       'DELETE_IRRIGATION': 'bg-red-400',
     }
-    return colorMap[activityType] || 'bg-gray-600'
+    return colorMap[activityType] || 'bg-muted-foreground'
   }
 
   /**
@@ -262,23 +262,23 @@ For more details, visit: https://farm-eazy.com
       <div className="space-y-8 px-2 sm:px-6 py-4 max-w-lg mx-auto">
         <div className="animate-pulse grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1,2,3,4].map(i => (
-            <div key={i} className="card h-32 bg-gray-200 rounded-lg" />
+            <div key={i} className="card h-32 bg-muted rounded-lg" />
           ))}
         </div>
-        <div className="h-8 bg-gray-200 rounded w-1/2 mx-auto mt-6 animate-pulse" />
+        <div className="h-8 bg-muted rounded w-1/2 mx-auto mt-6 animate-pulse" />
       </div>
     )
   }
 
   return (
-    <div className={`space-y-8 px-2 sm:px-6 py-4 max-w-lg mx-auto min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`} role="main" aria-label="Dashboard main content">
+    <div className={`space-y-8 px-2 sm:px-6 py-4 max-w-lg mx-auto min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-background to-card' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`} role="main" aria-label="Dashboard main content">
       {showTour && (
         <OnboardingTour onFinish={handleTourFinish} />
       )}
       {/* Page Header */}
       <div>
-        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`} tabIndex={0} aria-label="Dashboard heading">{t('Dashboard')}</h1>
-        <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`} tabIndex={0} aria-label="Dashboard welcome message">
+        <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`} tabIndex={0} aria-label="Dashboard heading">{t('Dashboard')}</h1>
+        <p className={`mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`} tabIndex={0} aria-label="Dashboard welcome message">
           {getGreeting()}, {userName}! {window.history.state && window.history.state.usr && window.history.state.usr.welcome
             ? t('Welcome')
             : t('Welcome')}
@@ -298,7 +298,7 @@ For more details, visit: https://farm-eazy.com
         <div className="card hover:shadow-lg transition-shadow" aria-label="Total Farms statistic">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`} aria-label="Total Farms label">{t('Total Farms')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`} aria-label="Total Farms label">{t('Total Farms')}</p>
               <p className="text-3xl font-bold text-green-600 mt-2" aria-label={`Total Farms value: ${stats.totalFarms}`}>{stats.totalFarms}</p>
             </div>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-green-900/50' : 'bg-green-100'}`} aria-label="Farm icon" role="img">
@@ -311,7 +311,7 @@ For more details, visit: https://farm-eazy.com
         <div className="card hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{t('Total Crops')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{t('Total Crops')}</p>
               <p className="text-3xl font-bold text-blue-600 mt-2">{stats.totalCrops}</p>
             </div>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-blue-900/50' : 'bg-blue-100'}`}>
@@ -324,7 +324,7 @@ For more details, visit: https://farm-eazy.com
         <div className="card hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{t('Products Listed')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{t('Products Listed')}</p>
               <p className="text-3xl font-bold text-purple-600 mt-2">{stats.productsListed}</p>
             </div>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-purple-900/50' : 'bg-purple-100'}`}>
@@ -333,14 +333,14 @@ For more details, visit: https://farm-eazy.com
           </div>
         </div>
         {/* Analytics Charts */}
-        <Suspense fallback={<div className={`text-center ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Loading charts...</div>}>
+        <Suspense fallback={<div className={`text-center ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Loading charts...</div>}>
           <DashboardCharts stats={stats} />
         </Suspense>
         {/* Active Alerts */}
         <div className="card hover:shadow-lg transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{t('Active Alerts')}</p>
+              <p className={`text-sm font-medium ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{t('Active Alerts')}</p>
               <p className="text-3xl font-bold text-orange-600 mt-2">{stats.activeAlerts}</p>
             </div>
             <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${isDark ? 'bg-orange-900/50' : 'bg-orange-100'}`}>
@@ -373,23 +373,23 @@ For more details, visit: https://farm-eazy.com
 
       {/* Quick Actions */}
       <div className="card" aria-label="Dashboard quick actions">
-        <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`} aria-label="Quick actions heading">{t('Quick Actions')}</h2>
+        <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-foreground'}`} aria-label="Quick actions heading">{t('Quick Actions')}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Quick actions grid">
           <Link
             to="/farms"
-            className="btn-primary text-center block hover:bg-green-700"
+            className="btn-primary text-center block hover:bg-primary/90"
           >
             {t('View Farms')}
           </Link>
           <Link
             to="/crops"
-            className="btn-primary text-center block hover:bg-green-700"
+            className="btn-primary text-center block hover:bg-primary/90"
           >
             {t('Manage Crops')}
           </Link>
           <Link
             to="/irrigation"
-            className="btn-primary text-center block hover:bg-green-700"
+            className="btn-primary text-center block hover:bg-primary/90"
           >
             {t('Schedule Irrigation')}
           </Link>
@@ -398,7 +398,7 @@ For more details, visit: https://farm-eazy.com
             disabled={generatingReport}
             className={`px-6 py-3 rounded-lg font-semibold transition-all text-center ${
               generatingReport
-                ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+                ? 'bg-border text-muted-foreground cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700 active:scale-95'
             }`}
           >
@@ -420,17 +420,17 @@ For more details, visit: https://farm-eazy.com
 
       {/* Recent Activities */}
       <div className="card">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">{t('Recent Activities')}</h2>
+        <h2 className="text-xl font-bold text-foreground mb-4">{t('Recent Activities')}</h2>
         <div className="space-y-3">
           {activities.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No activities yet. Start by creating a farm!</p>
+            <p className="text-muted-foreground text-center py-4">No activities yet. Start by creating a farm!</p>
           ) : (
             activities.map((activity) => (
-              <div key={activity.id} className="flex items-center space-x-4 pb-3 border-b border-gray-200 last:border-b-0">
+              <div key={activity.id} className="flex items-center space-x-4 pb-3 border-b border-border last:border-b-0">
                 <div className={`w-3 h-3 ${getActivityColor(activity.activityType)} rounded-full`}></div>
                 <div className="flex-1">
-                  <p className="text-gray-800 font-medium">{activity.description}</p>
-                  <p className="text-gray-500 text-sm">{getRelativeTime(activity.createdAt)}</p>
+                  <p className="text-foreground font-medium">{activity.description}</p>
+                  <p className="text-muted-foreground text-sm">{getRelativeTime(activity.createdAt)}</p>
                 </div>
               </div>
             ))
@@ -440,8 +440,8 @@ For more details, visit: https://farm-eazy.com
 
       {/* Getting Started Guide */}
       <div className="bg-gradient-to-r from-green-50 to-blue-50 rounded-lg p-6 border border-green-200">
-        <h3 className="text-lg font-bold text-gray-800 mb-3">{t('Getting Started')}</h3>
-        <ul className="space-y-2 text-gray-700">
+        <h3 className="text-lg font-bold text-foreground mb-3">{t('Getting Started')}</h3>
+        <ul className="space-y-2 text-muted-foreground">
           <li className="flex items-start space-x-3">
             <span className="text-green-600 font-bold">1.</span>
             <span>{t('Create your first farm in the Farms section')}</span>

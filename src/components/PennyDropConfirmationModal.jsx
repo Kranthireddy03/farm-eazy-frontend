@@ -61,53 +61,53 @@ function PennyDropConfirmationModal({ isOpen, bankDetails, onClose, onConfirm, o
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div
         className={`${
-          isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'
+          isDark ? 'bg-muted border-border' : 'bg-white border-gray-200'
         } rounded-lg shadow-xl border max-w-md w-full p-6 transform transition-all`}
       >
         {/* Header */}
         <div className="mb-4">
-          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <h2 className={`text-xl font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>
             Verify Your Bank Account
           </h2>
-          <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`text-sm mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             We'll send ₹1 to confirm your account details
           </p>
         </div>
 
         {/* Bank Details Summary */}
-        <div className={`${isDark ? 'bg-slate-700/50' : 'bg-gray-50'} rounded-lg p-4 mb-4 space-y-3`}>
+        <div className={`${isDark ? 'bg-muted/50' : 'bg-muted/50'} rounded-lg p-4 mb-4 space-y-3`}>
           <div className="flex justify-between items-center">
-            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Account Holder
             </span>
-            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
               {bankDetails?.accountHolderName || 'N/A'}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Account Number
             </span>
-            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
               ••••{bankDetails?.accountNumber?.slice(-4) || 'N/A'}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Bank Name
             </span>
-            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
               {bankDetails?.bankName || 'N/A'}
             </span>
           </div>
 
           <div className="flex justify-between items-center">
-            <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               IFSC Code
             </span>
-            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+            <span className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
               {bankDetails?.ifscCode || 'N/A'}
             </span>
           </div>
@@ -138,7 +138,7 @@ function PennyDropConfirmationModal({ isOpen, bankDetails, onClose, onConfirm, o
               <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
               <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
             </div>
-            <span className={`ml-3 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span className={`ml-3 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Initiating verification...
             </span>
           </div>
@@ -157,8 +157,8 @@ function PennyDropConfirmationModal({ isOpen, bankDetails, onClose, onConfirm, o
               disabled={loading}
               className={`flex-1 px-4 py-2 rounded font-medium transition-colors ${
                 isDark
-                  ? 'bg-slate-700 hover:bg-slate-600 text-white'
-                  : 'bg-gray-200 hover:bg-gray-300 text-gray-900'
+                  ? 'bg-muted hover:bg-slate-600 text-white'
+                  : 'bg-muted hover:bg-border text-foreground'
               } disabled:opacity-50`}
             >
               Skip for Now

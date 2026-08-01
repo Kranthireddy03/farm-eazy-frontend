@@ -50,21 +50,21 @@ export default function SavedAddressesDropdown({ onSelect }) {
   return (
     <div>
       <div className="flex items-center justify-between px-3 mb-2">
-        <div className="text-xs text-gray-500">Saved addresses</div>
+        <div className="text-xs text-muted-foreground">Saved addresses</div>
         <button onClick={openNew} className="text-xs text-blue-600">Add</button>
       </div>
       {loading && <div className="px-4 py-3 text-sm">Loading addresses...</div>}
       {!loading && addresses.length === 0 && <div className="px-4 py-3 text-sm">No saved addresses</div>}
       {!loading && addresses.map(addr => (
-        <div key={addr.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 cursor-pointer" onClick={() => choose(addr)}>
+        <div key={addr.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg hover:bg-muted/50 cursor-pointer" onClick={() => choose(addr)}>
           <div>
             <div className="text-sm font-medium">{addr.fullName || addr.addressLine1}</div>
-            <div className="text-xs text-gray-500 truncate">{addr.addressLine1}{addr.city ? ', ' + addr.city : ''}</div>
+            <div className="text-xs text-muted-foreground truncate">{addr.addressLine1}{addr.city ? ', ' + addr.city : ''}</div>
           </div>
           <div className="flex items-center gap-2">
-            {addr.isDefault && <span className="text-xs text-emerald-600">Default</span>}
+            {addr.isDefault && <span className="text-xs text-primary">Default</span>}
             <button onClick={(e) => { e.stopPropagation(); setDefault(addr) }} className="text-xs text-blue-600">Set Default</button>
-            <button onClick={(e) => openEdit(addr, e)} className="text-xs text-gray-600">Edit</button>
+            <button onClick={(e) => openEdit(addr, e)} className="text-xs text-muted-foreground">Edit</button>
             <button onClick={(e) => remove(addr, e)} className="text-xs text-red-500">Delete</button>
           </div>
         </div>

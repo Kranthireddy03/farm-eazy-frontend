@@ -37,7 +37,7 @@ class ErrorBoundary extends React.Component {
           >
             Open resilience mode
           </button>
-          <details className="text-xs text-gray-500 whitespace-pre-wrap max-w-xl mx-auto">
+          <details className="text-xs text-muted-foreground whitespace-pre-wrap max-w-xl mx-auto">
             {this.state.error && this.state.error.toString()}
           </details>
         </div>
@@ -193,10 +193,10 @@ function SupportPortalRedirect({
   if (requireAdmin && !hasAdminAccess) return <Navigate to="/dashboard" replace />;
 
   return (
-    <div className="flex items-center justify-center h-screen bg-white dark:bg-slate-900">
+    <div className="flex items-center justify-center h-screen bg-white dark:bg-card">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-        <p className="text-gray-700 dark:text-slate-300">Redirecting to Support Portal...</p>
+        <p className="text-muted-foreground dark:text-slate-300">Redirecting to Support Portal...</p>
       </div>
     </div>
   );
@@ -245,7 +245,7 @@ function LocationAccessRoute({ children }) {
 
   if (checking) {
     return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-slate-900">
+      <div className="flex items-center justify-center h-screen bg-white dark:bg-card">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
       </div>
     )

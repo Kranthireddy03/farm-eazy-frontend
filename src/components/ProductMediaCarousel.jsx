@@ -62,12 +62,12 @@ export default function ProductMediaCarousel({ mediaUrls, videoUrls }) {
             onClick={() => setActiveIndex(index)}
             className={`relative flex-shrink-0 w-20 h-20 rounded-xl overflow-hidden border transition-all ${
               index === activeIndex
-                ? 'border-emerald-500 ring-2 ring-emerald-200 dark:ring-emerald-900/50'
-                : 'border-slate-300 dark:border-slate-600 hover:border-emerald-400'
+                ? 'border-primary ring-2 ring-emerald-200 dark:ring-emerald-900/50'
+                : 'border-border dark:border-border hover:border-primary'
             }`}
           >
             {item.type === 'video' ? (
-              <div className="w-full h-full bg-slate-900 flex items-center justify-center text-white text-xs font-semibold">VIDEO</div>
+              <div className="w-full h-full bg-card flex items-center justify-center text-white text-xs font-semibold">VIDEO</div>
             ) : (
               <img src={item.url} alt={`Media ${index + 1}`} className="w-full h-full object-cover" loading="lazy" />
             )}
@@ -76,7 +76,7 @@ export default function ProductMediaCarousel({ mediaUrls, videoUrls }) {
       </div>
 
       <div
-        className="order-1 md:order-2 relative h-96 md:h-[28rem] rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800"
+        className="order-1 md:order-2 relative h-96 md:h-[28rem] rounded-2xl overflow-hidden bg-muted dark:bg-muted"
         onMouseDown={handleDragStart}
         onMouseUp={handleDragEnd}
         onTouchStart={handleDragStart}
@@ -107,7 +107,7 @@ export default function ProductMediaCarousel({ mediaUrls, videoUrls }) {
           <>
             <button
               type="button"
-              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/85 text-slate-700 dark:text-slate-100 rounded-full w-10 h-10 shadow-md"
+              className="absolute left-3 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-card/85 text-foreground dark:text-slate-100 rounded-full w-10 h-10 shadow-md"
               onClick={handlePrev}
               aria-label="Previous"
             >
@@ -115,7 +115,7 @@ export default function ProductMediaCarousel({ mediaUrls, videoUrls }) {
             </button>
             <button
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-slate-900/85 text-slate-700 dark:text-slate-100 rounded-full w-10 h-10 shadow-md"
+              className="absolute right-3 top-1/2 -translate-y-1/2 bg-white/90 dark:bg-card/85 text-foreground dark:text-slate-100 rounded-full w-10 h-10 shadow-md"
               onClick={handleNext}
               aria-label="Next"
             >

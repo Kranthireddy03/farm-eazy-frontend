@@ -19,8 +19,8 @@ const STATUS_COLORS = {
   PENDING: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
   VERIFIED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
   REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-  EXPIRED: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
-  CANCELLED: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+  EXPIRED: 'bg-muted text-foreground dark:bg-muted/30 dark:text-muted-foreground',
+  CANCELLED: 'bg-muted text-foreground dark:bg-muted/30 dark:text-muted-foreground'
 }
 
 const STATUS_LABELS = {
@@ -355,15 +355,15 @@ function BankVerification() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-background to-card' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`}>
       <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
             {isVendorFlow ? 'Vendor Verification' : 'Bank Verification'}
           </h1>
-          <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+          <p className={`mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             {isVendorFlow
               ? 'Complete verification to unlock vendor dashboard and paid product/service listings'
               : 'Verify your bank account or UPI ID for secure transactions'}
@@ -381,7 +381,7 @@ function BankVerification() {
               <p className={`font-semibold ${limits.canVerify ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 {limits.canVerify ? '✓ Verifications Available' : '✕ Daily Limit Reached'}
               </p>
-              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+              <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 {limits.remainingToday} of {limits.dailyLimit} verifications remaining today
               </p>
             </div>
@@ -393,7 +393,7 @@ function BankVerification() {
 
         <div className={`interactive-card mb-6 p-4 rounded-2xl border ${isDark ? 'bg-blue-900/20 border-blue-800' : 'bg-blue-50/95 border-blue-200'}`}>
           <p className={`text-sm font-semibold ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>Manual Penny Drop Security</p>
-          <p className={`text-sm mt-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+          <p className={`text-sm mt-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
             FarmEazy uses a controlled INR 1 verification flow with audit logs and masked account details. Verification is finalized only after successful transfer confirmation.
           </p>
         </div>
@@ -406,11 +406,11 @@ function BankVerification() {
               <p className={`font-semibold ${otpVerified ? 'text-green-600 dark:text-green-400' : 'text-amber-600 dark:text-amber-400'}`}>
                 {otpVerified ? '✓ OTP Verified' : 'OTP Verification Required'}
               </p>
-              <p className={`text-sm mt-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              <p className={`text-sm mt-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
                 Verify OTP before submitting {isVendorFlow ? 'vendor bank' : 'bank/UPI'} verification.
               </p>
               {otpChannelMessage && (
-                <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{otpChannelMessage}</p>
+                <p className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{otpChannelMessage}</p>
               )}
             </div>
 
@@ -432,13 +432,13 @@ function BankVerification() {
               onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               placeholder="Enter 6-digit OTP"
               className={`w-44 px-3 py-2 rounded-lg border ${
-                isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
               }`}
             />
             <button
               onClick={verifyVerificationOtp}
               disabled={otpVerifying || otpCode.length !== 6}
-              className="px-4 py-2 rounded-lg text-sm font-semibold bg-slate-800 text-white dark:bg-slate-600 disabled:opacity-50"
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-muted text-white dark:bg-muted disabled:opacity-50"
             >
               {otpVerifying ? 'Verifying...' : 'Verify OTP'}
             </button>
@@ -458,8 +458,8 @@ function BankVerification() {
 
         {/* Verification Type Selection */}
         {!verificationType && (
-          <div className={`interactive-card rounded-2xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
-            <h2 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+          <div className={`interactive-card rounded-2xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
+            <h2 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-foreground'}`}>
               Select Verification Type
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -471,16 +471,16 @@ function BankVerification() {
                   className={`p-6 rounded-xl border text-left transition ${
                     (limits.canVerify && otpVerified)
                       ? isDark 
-                        ? 'bg-slate-700 border-slate-600 hover:border-green-500 hover:bg-slate-600' 
-                        : 'bg-gray-50 border-gray-200 hover:border-green-500 hover:bg-green-50'
-                      : 'opacity-50 cursor-not-allowed bg-gray-100 border-gray-200'
+                        ? 'bg-muted border-border hover:border-green-500 hover:bg-muted' 
+                        : 'bg-muted/50 border-border hover:border-green-500 hover:bg-green-50'
+                      : 'opacity-50 cursor-not-allowed bg-muted border-border'
                   }`}
                 >
                   <div className="text-4xl mb-3">{type.icon}</div>
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                     {type.label}
                   </h3>
-                  <p className={`mt-1 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+                  <p className={`mt-1 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     {type.description}
                   </p>
                 </button>
@@ -491,14 +491,14 @@ function BankVerification() {
 
         {/* Bank Account Form */}
         {verificationType === 'BANK_ACCOUNT' && (
-          <div className={`interactive-card rounded-2xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
+          <div className={`interactive-card rounded-2xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                 🏦 Bank Account Verification
               </h2>
               <button
                 onClick={() => setVerificationType('')}
-                className={`text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'}`}
+                className={`text-sm ${isDark ? 'text-muted-foreground hover:text-white' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 ← Change Type
               </button>
@@ -506,7 +506,7 @@ function BankVerification() {
 
             <form onSubmit={handleSubmitBank} className="space-y-6">
               <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   Account Holder Name *
                 </label>
                 <input
@@ -515,15 +515,15 @@ function BankVerification() {
                   onChange={(e) => setBankForm({ ...bankForm, accountHolderName: e.target.value })}
                   required
                   placeholder="Name as per bank records"
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                   }`}
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     Account Number *
                   </label>
                   <input
@@ -534,13 +534,13 @@ function BankVerification() {
                     minLength={9}
                     maxLength={18}
                     placeholder="Enter account number"
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                     }`}
                   />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     Confirm Account Number *
                   </label>
                   <input
@@ -549,8 +549,8 @@ function BankVerification() {
                     onChange={(e) => setBankForm({ ...bankForm, confirmAccountNumber: e.target.value.replace(/\D/g, '') })}
                     required
                     placeholder="Re-enter account number"
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                     }`}
                   />
                 </div>
@@ -563,13 +563,13 @@ function BankVerification() {
                   onChange={(e) => setBankForm({ ...bankForm, consentAccepted: e.target.checked })}
                   className="mt-1"
                 />
-                <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
                   I confirm this bank account belongs to me and I authorize FarmEazy to perform INR 1 penny-drop verification for payout/refund security.
                 </span>
               </label>
 
               <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   IFSC Code *
                 </label>
                 <input
@@ -580,18 +580,18 @@ function BankVerification() {
                   pattern="^[A-Z]{4}0[A-Z0-9]{6}$"
                   placeholder="e.g., SBIN0001234"
                   maxLength={11}
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                   }`}
                 />
-                <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                <p className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   11-character IFSC code (e.g., SBIN0001234)
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     Bank Name
                   </label>
                   <input
@@ -599,13 +599,13 @@ function BankVerification() {
                     value={bankForm.bankName}
                     onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
                     placeholder="e.g., State Bank of India"
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                     }`}
                   />
                 </div>
                 <div>
-                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                  <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     Branch Name
                   </label>
                   <input
@@ -613,8 +613,8 @@ function BankVerification() {
                     value={bankForm.branchName}
                     onChange={(e) => setBankForm({ ...bankForm, branchName: e.target.value })}
                     placeholder="e.g., Hyderabad Main"
-                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                    className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                      isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                     }`}
                   />
                 </div>
@@ -635,14 +635,14 @@ function BankVerification() {
 
         {/* UPI Form */}
         {!isVendorFlow && verificationType === 'UPI' && (
-          <div className={`rounded-xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+          <div className={`rounded-xl shadow-lg border p-6 mb-8 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                 📱 UPI Verification
               </h2>
               <button
                 onClick={() => setVerificationType('')}
-                className={`text-sm ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-500 hover:text-gray-800'}`}
+                className={`text-sm ${isDark ? 'text-muted-foreground hover:text-white' : 'text-muted-foreground hover:text-foreground'}`}
               >
                 ← Change Type
               </button>
@@ -650,7 +650,7 @@ function BankVerification() {
 
             <form onSubmit={handleSubmitUPI} className="space-y-6">
               <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   UPI ID *
                 </label>
                 <input
@@ -660,11 +660,11 @@ function BankVerification() {
                   required
                   pattern="^[a-zA-Z0-9._-]+@[a-zA-Z]{2,}$"
                   placeholder="e.g., yourname@upi"
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                   }`}
                 />
-                <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                <p className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   Enter your UPI ID (e.g., mobile@paytm, name@ybl)
                 </p>
               </div>
@@ -676,13 +676,13 @@ function BankVerification() {
                   onChange={(e) => setUpiForm({ ...upiForm, consentAccepted: e.target.checked })}
                   className="mt-1"
                 />
-                <span className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+                <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
                   I confirm this UPI ID belongs to me and I authorize FarmEazy to validate it for secure transactions.
                 </span>
               </label>
 
               <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                   Account Holder Name *
                 </label>
                 <input
@@ -691,8 +691,8 @@ function BankVerification() {
                   onChange={(e) => setUpiForm({ ...upiForm, accountHolderName: e.target.value })}
                   required
                   placeholder="Name linked to UPI"
-                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                    isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                  className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary focus:border-transparent ${
+                    isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                   }`}
                 />
               </div>
@@ -711,9 +711,9 @@ function BankVerification() {
         )}
 
         {/* Verification History */}
-        <div className={`rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-          <div className="p-6 border-b border-gray-200 dark:border-slate-700">
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+        <div className={`rounded-xl shadow-lg border overflow-hidden ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
+          <div className="p-6 border-b border-border dark:border-border">
+            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
               Verification History
             </h2>
           </div>
@@ -725,24 +725,24 @@ function BankVerification() {
           ) : verifications.length === 0 ? (
             <div className="p-12 text-center">
               <div className="text-5xl mb-4">🏦</div>
-              <p className={isDark ? 'text-slate-400' : 'text-gray-500'}>
+              <p className={isDark ? 'text-muted-foreground' : 'text-muted-foreground'}>
                 No verification requests yet
               </p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200 dark:divide-slate-700">
+            <div className="divide-y divide-border dark:divide-border">
               {verifications.map((v, index) => (
-                <div key={index} className={`p-4 ${isDark ? 'hover:bg-slate-700/50' : 'hover:bg-gray-50'}`}>
+                <div key={index} className={`p-4 ${isDark ? 'hover:bg-muted/50' : 'hover:bg-muted/50'}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="text-3xl">
                         {v.verificationType === 'UPI' ? '📱' : '🏦'}
                       </div>
                       <div>
-                        <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                        <p className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>
                           {v.verificationType === 'UPI' ? (v.upiMasked || v.accountMasked || '-') : (v.accountMasked || '-')}
                         </p>
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                           {v.accountHolderName} • {v.verificationNumber}
                         </p>
                       </div>
@@ -751,7 +751,7 @@ function BankVerification() {
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${STATUS_COLORS[v.status] || STATUS_COLORS.PENDING}`}>
                         {STATUS_LABELS[v.status] || v.status}
                       </span>
-                      <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                      <p className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                         {formatDate(v.createdAt)}
                       </p>
                       {v.status === 'TRANSFER_SUCCESS' && (
@@ -759,7 +759,7 @@ function BankVerification() {
                           type="button"
                           onClick={() => confirmVerification(v.verificationNumber)}
                           disabled={confirmingVerificationNumber === v.verificationNumber}
-                          className="mt-2 px-3 py-1 rounded-md text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                          className="mt-2 px-3 py-1 rounded-md text-xs font-semibold bg-primary text-white hover:bg-primary/90 disabled:opacity-50"
                         >
                           {confirmingVerificationNumber === v.verificationNumber ? 'Confirming...' : 'Confirm ₹1 Received'}
                         </button>
@@ -773,11 +773,11 @@ function BankVerification() {
         </div>
 
         {/* Info Section */}
-        <div className={`mt-8 p-6 rounded-xl border ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
-          <h3 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+        <div className={`mt-8 p-6 rounded-xl border ${isDark ? 'bg-muted/50 border-border' : 'bg-muted/50 border-border'}`}>
+          <h3 className={`font-semibold mb-3 ${isDark ? 'text-white' : 'text-foreground'}`}>
             🔒 Security Information
           </h3>
-          <ul className={`space-y-2 text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+          <ul className={`space-y-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             <li>• Your bank details are encrypted and stored securely</li>
             <li>• Verification is done through RBI-approved payment gateways</li>
             <li>• We never share your financial information with third parties</li>

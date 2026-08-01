@@ -54,7 +54,7 @@ function SessionTimer({ timeRemaining, warningTime = 90 }) {
             <div className="text-3xl font-bold">{formattedTime}</div>
             <p className="text-xs opacity-75">Time remaining</p>
           </div>
-          <div className="w-full bg-gray-300 rounded-full h-2 overflow-hidden">
+          <div className="w-full bg-border rounded-full h-2 overflow-hidden">
             <div
               className={`h-full transition-all duration-1000 ${getTimerBgColor()}`}
               style={{ width: `${(timeRemaining / 300) * 100}%` }}

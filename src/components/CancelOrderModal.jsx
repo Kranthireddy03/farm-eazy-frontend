@@ -114,36 +114,36 @@ function CancelOrderModal({ isOpen, onClose, onSuccess, order, type = 'cancel' }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-            <div className={`w-full max-w-md mx-4 rounded-2xl shadow-2xl p-6 ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
+            <div className={`w-full max-w-md mx-4 rounded-2xl shadow-2xl p-6 ${isDark ? 'bg-muted' : 'bg-white'}`}>
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                    <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                    <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                         {isCancel ? '❌' : '↩️'} {title}
                     </h2>
                     <button
                         onClick={onClose}
-                        className={`p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-700 transition ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+                        className={`p-2 rounded-full hover:bg-muted dark:hover:bg-muted transition ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}
                     >
                         ✕
                     </button>
                 </div>
 
                 {/* Order summary */}
-                <div className={`p-4 rounded-lg mb-4 ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                <div className={`p-4 rounded-lg mb-4 ${isDark ? 'bg-muted/50' : 'bg-muted/50'}`}>
                     <div className="flex justify-between items-center mb-2">
-                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Order ID</span>
-                        <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>#FZ{order.id}</span>
+                        <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Order ID</span>
+                        <span className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>#FZ{order.id}</span>
                     </div>
                     <div className="flex justify-between items-center mb-2">
-                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Total Amount</span>
+                        <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Total Amount</span>
                         <span className="font-semibold text-orange-500">₹{(order.finalAmount || order.totalAmount || 0).toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                        <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Status</span>
+                        <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Status</span>
                         <span className={`px-2 py-1 rounded text-xs font-medium ${
                             order.orderStatus === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
                             order.orderStatus === 'DELIVERED' ? 'bg-blue-100 text-blue-700' :
-                            isDark ? 'bg-slate-600 text-gray-300' : 'bg-gray-200 text-gray-700'
+                            isDark ? 'bg-slate-600 text-muted-foreground' : 'bg-muted text-muted-foreground'
                         }`}>
                             {order.orderStatus}
                         </span>
@@ -169,7 +169,7 @@ function CancelOrderModal({ isOpen, onClose, onSuccess, order, type = 'cancel' }
 
                 {/* Reason selection */}
                 <div className="mb-4">
-                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                         Select a reason *
                     </label>
                     <div className="space-y-2">
@@ -187,8 +187,8 @@ function CancelOrderModal({ isOpen, onClose, onSuccess, order, type = 'cancel' }
                                 className={`w-full text-left px-4 py-2 rounded-lg border transition ${
                                     reason === option
                                         ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20'
-                                        : isDark ? 'border-slate-600 hover:border-slate-500' : 'border-gray-200 hover:border-gray-300'
-                                } ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                                        : isDark ? 'border-border hover:border-border' : 'border-gray-200 hover:border-gray-300'
+                                } ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}
                             >
                                 {option}
                             </button>
@@ -198,7 +198,7 @@ function CancelOrderModal({ isOpen, onClose, onSuccess, order, type = 'cancel' }
 
                 {/* Custom reason input */}
                 <div className="mb-4">
-                    <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                    <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                         Additional comments (required)
                     </label>
                     <textarea
@@ -207,10 +207,10 @@ function CancelOrderModal({ isOpen, onClose, onSuccess, order, type = 'cancel' }
                         placeholder="Please provide details about your reason..."
                         rows={3}
                         className={`w-full px-4 py-2 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                            isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-gray-500' : 'bg-white border-gray-300 text-gray-800'
+                            isDark ? 'bg-muted border-border text-white placeholder-gray-500' : 'bg-white border-gray-300 text-foreground'
                         }`}
                     />
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                    <p className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                         {reason.length}/500 characters
                     </p>
                 </div>
@@ -221,7 +221,7 @@ function CancelOrderModal({ isOpen, onClose, onSuccess, order, type = 'cancel' }
                         type="button"
                         onClick={onClose}
                         className={`flex-1 py-3 rounded-lg font-medium transition ${
-                            isDark ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            isDark ? 'bg-muted text-muted-foreground hover:bg-slate-600' : 'bg-muted text-muted-foreground hover:bg-muted'
                         }`}
                     >
                         Keep Order

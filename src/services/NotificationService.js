@@ -124,9 +124,9 @@ const NotificationService = {
       case 'NORMAL':
         return 'bg-blue-500 text-white';
       case 'LOW':
-        return 'bg-gray-500 text-white';
+        return 'bg-muted/500 text-white';
       default:
-        return 'bg-gray-500 text-white';
+        return 'bg-muted/500 text-white';
     }
   }
 };

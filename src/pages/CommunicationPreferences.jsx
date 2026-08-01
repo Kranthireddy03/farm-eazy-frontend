@@ -139,16 +139,16 @@ function CommunicationPreferences() {
         )}
 
         {/* SMS Consent Section */}
-        <div className={`mb-6 p-6 rounded-xl glass-card interactive-card ${isDark ? 'border border-slate-700' : 'border border-amber-100'}`}>
+        <div className={`mb-6 p-6 rounded-xl ops-panel interactive-card ${isDark ? 'border border-border' : 'border border-amber-100'}`}>
           <div className="flex items-start gap-4">
             <div className={`p-3 rounded-full ${isDark ? 'bg-amber-900/30' : 'bg-amber-100'}`}>
               <span className="text-2xl">📱</span>
             </div>
             <div className="flex-1">
-              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                 SMS Notifications
               </h3>
-              <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+              <p className={`text-sm mb-4 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 Enable SMS to receive instant alerts on your phone.
               </p>
               
@@ -162,15 +162,15 @@ function CommunicationPreferences() {
                   />
                   <div className={`w-12 h-6 rounded-full transition-colors ${
                     preferences.smsConsent 
-                      ? 'bg-green-500' 
-                      : isDark ? 'bg-slate-600' : 'bg-gray-300'
+                      ? 'bg-primary' 
+                      : isDark ? 'bg-muted' : 'bg-border'
                   }`}>
-                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${
+                    <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-background rounded-full transition-transform shadow ${
                       preferences.smsConsent ? 'translate-x-6' : 'translate-x-0'
                     }`}></div>
                   </div>
                 </div>
-                <span className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                <span className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
                   I consent to receive SMS notifications (charges apply)
                 </span>
               </label>
@@ -185,22 +185,22 @@ function CommunicationPreferences() {
               key={type.key}
               className={`p-6 rounded-xl transition-all ${
                 isDark 
-                  ? 'glass-card border border-slate-700 hover:border-slate-600' 
-                  : 'glass-card border border-indigo-100 hover:border-indigo-200'
+                  ? 'ops-panel border border-border hover:border-border' 
+                  : 'ops-panel border border-indigo-100 hover:border-indigo-200'
               } shadow-lg`}
             >
               <div className="flex items-start gap-4">
                 <div className={`p-3 rounded-full ${
                   type.critical 
                     ? isDark ? 'bg-red-900/30' : 'bg-red-100'
-                    : isDark ? 'bg-slate-700' : 'bg-gray-100'
+                    : isDark ? 'bg-muted' : 'bg-muted'
                 }`}>
                   <span className="text-2xl">{type.icon}</span>
                 </div>
                 
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>
+                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
                       {type.title}
                     </h3>
                     {type.critical && (
@@ -209,7 +209,7 @@ function CommunicationPreferences() {
                       </span>
                     )}
                   </div>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+                  <p className={`text-sm mb-4 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     {type.description}
                   </p>
                   
@@ -226,14 +226,14 @@ function CommunicationPreferences() {
                           disabled={isDisabled}
                           className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
                             isSelected
-                              ? 'bg-green-500 text-white shadow-lg'
+                              ? 'bg-primary text-white shadow-lg'
                               : isDisabled
                                 ? isDark 
-                                  ? 'bg-slate-700/50 text-slate-500 cursor-not-allowed' 
-                                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                  ? 'bg-muted/50 text-muted-foreground cursor-not-allowed' 
+                                  : 'bg-muted text-muted-foreground cursor-not-allowed'
                                 : isDark
-                                  ? 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                                  ? 'bg-muted text-muted-foreground hover:bg-muted'
+                                  : 'bg-muted text-foreground hover:bg-muted'
                           }`}
                         >
                           <span className="mr-2">{option.icon}</span>
@@ -257,8 +257,8 @@ function CommunicationPreferences() {
             disabled={saving || !hasChanges}
             className={`px-8 py-3 rounded-xl font-bold text-lg transition-all transform ${
               saving || !hasChanges
-                ? 'bg-gray-500 text-gray-300 cursor-not-allowed scale-100'
-                : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-green-500/25 hover:scale-105'
+                ? 'bg-muted/500 text-muted-foreground cursor-not-allowed scale-100'
+                : 'bg-gradient-to-r from-primary to-primary text-white hover:from-primary/90 hover:to-primary/90 shadow-lg hover:shadow-primary/20 hover:scale-105'
             }`}
           >
             {saving ? (
@@ -278,8 +278,8 @@ function CommunicationPreferences() {
         </div>
 
         {/* Info Note */}
-        <div className={`mt-8 p-4 rounded-xl ${isDark ? 'bg-slate-800/50 border border-slate-700' : 'bg-slate-100 border border-slate-200'}`}>
-          <p className={`text-sm text-center ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+        <div className={`mt-8 p-4 rounded-xl ${isDark ? 'bg-muted/50 border border-border' : 'bg-muted border border-border'}`}>
+          <p className={`text-sm text-center ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             <span className="mr-2">ℹ️</span>
             Your preferences are synced across all devices. Critical security notifications may still be sent via multiple channels for your protection.
           </p>

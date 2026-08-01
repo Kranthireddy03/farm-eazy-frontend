@@ -208,7 +208,7 @@ export default function OnboardingTour({ onFinish }) {
 
       <div
         ref={coachRef}
-        className={`${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} fixed border rounded-xl shadow-2xl p-5 sm:p-6 w-[min(380px,calc(100vw-1.5rem))] text-left`}
+        className={`${isDark ? "bg-muted border-border" : "bg-white border-border"} fixed border rounded-xl shadow-2xl p-5 sm:p-6 w-[min(380px,calc(100vw-1.5rem))] text-left`}
         style={{
           top: coachPosition.top ?? 20,
           left: coachPosition.left ?? 12,
@@ -218,7 +218,7 @@ export default function OnboardingTour({ onFinish }) {
       >
         {targetRect && (
           <div
-            className={`tour-pointer absolute w-3 h-3 rotate-45 ${isDark ? "bg-slate-800 border-slate-700" : "bg-white border-slate-200"} border-l border-t`}
+            className={`tour-pointer absolute w-3 h-3 rotate-45 ${isDark ? "bg-muted border-border" : "bg-white border-border"} border-l border-t`}
             style={
               coachPosition.placement === "bottom"
                 ? {
@@ -234,15 +234,15 @@ export default function OnboardingTour({ onFinish }) {
           />
         )}
 
-        <button className={`${isDark ? "text-slate-400 hover:text-white" : "text-slate-500 hover:text-slate-900"} absolute top-2 right-3 text-xl`} onClick={close} aria-label="Close tour">×</button>
-        <h2 className={`${isDark ? "text-white" : "text-slate-900"} text-lg font-bold mb-1 pr-6`}>{steps[step].title}</h2>
-        <p className={`${isDark ? "text-slate-300" : "text-slate-700"} mb-4 text-sm leading-relaxed`}>{steps[step].content}</p>
+        <button className={`${isDark ? "text-muted-foreground hover:text-white" : "text-muted-foreground hover:text-foreground"} absolute top-2 right-3 text-xl`} onClick={close} aria-label="Close tour">×</button>
+        <h2 className={`${isDark ? "text-white" : "text-foreground"} text-lg font-bold mb-1 pr-6`}>{steps[step].title}</h2>
+        <p className={`${isDark ? "text-muted-foreground" : "text-foreground"} mb-4 text-sm leading-relaxed`}>{steps[step].content}</p>
         <div className="flex items-center justify-between gap-3 mb-4">
-          <p className={`${isDark ? "text-slate-400" : "text-slate-500"} text-xs`}>Step {step + 1} of {steps.length}</p>
+          <p className={`${isDark ? "text-muted-foreground" : "text-muted-foreground"} text-xs`}>Step {step + 1} of {steps.length}</p>
           <button
             type="button"
             onClick={toggleTheme}
-            className={`${isDark ? "bg-slate-700 text-yellow-300 hover:bg-slate-600" : "bg-slate-100 text-slate-700 hover:bg-slate-200"} px-3 py-1.5 rounded-full text-xs font-medium`}
+            className={`${isDark ? "bg-muted text-yellow-300 hover:bg-slate-600" : "bg-muted text-foreground hover:bg-slate-200"} px-3 py-1.5 rounded-full text-xs font-medium`}
             aria-label="Toggle theme from tour"
             title="Toggle theme"
           >
@@ -262,7 +262,7 @@ export default function OnboardingTour({ onFinish }) {
                   ? "w-6 bg-cyan-400"
                   : index < step
                     ? "w-2.5 bg-emerald-400/80 hover:bg-emerald-300"
-                    : `${isDark ? "bg-slate-600 hover:bg-slate-500" : "bg-slate-300 hover:bg-slate-400"} w-2.5`
+                    : `${isDark ? "bg-slate-600 hover:bg-muted/300" : "bg-slate-300 hover:bg-slate-400"} w-2.5`
               }`}
             />
           ))}
@@ -270,7 +270,7 @@ export default function OnboardingTour({ onFinish }) {
 
         <div className="flex justify-between gap-2">
           <button
-            className={`${isDark ? "bg-slate-700 text-slate-200 hover:bg-slate-600" : "bg-slate-200 text-slate-800 hover:bg-slate-300"} px-4 py-2 rounded`}
+            className={`${isDark ? "bg-muted text-muted-foreground hover:bg-slate-600" : "bg-slate-200 text-foreground hover:bg-slate-300"} px-4 py-2 rounded`}
             onClick={prev}
             disabled={step === 0}
           >
@@ -284,7 +284,7 @@ export default function OnboardingTour({ onFinish }) {
           </button>
         </div>
         <button
-          className="mt-3 px-4 py-2 rounded bg-gray-500 text-white hover:bg-gray-400 w-full"
+          className="mt-3 px-4 py-2 rounded bg-muted/500 text-white hover:bg-gray-400 w-full"
           onClick={skip}
         >
           Skip Tour

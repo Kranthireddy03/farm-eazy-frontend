@@ -88,7 +88,7 @@ const Activities = () => {
             'Earned': isDark ? 'bg-yellow-900/50 text-yellow-400 border-yellow-700' : 'bg-yellow-100 text-yellow-700 border-yellow-300',
             'Spent': isDark ? 'bg-pink-900/50 text-pink-400 border-pink-700' : 'bg-pink-100 text-pink-700 border-pink-300'
         };
-        return colors[type] || (isDark ? 'bg-slate-700 text-slate-300 border-slate-600' : 'bg-gray-100 text-gray-700 border-gray-300');
+        return colors[type] || (isDark ? 'bg-muted text-muted-foreground border-border' : 'bg-muted text-muted-foreground border-border');
     };
 
     const getCategoryColor = (category) => {
@@ -102,7 +102,7 @@ const Activities = () => {
             'Security': isDark ? 'bg-red-900/40 text-red-400 border-red-700' : 'bg-red-100 text-red-700 border-red-300',
             'Account': isDark ? 'bg-indigo-900/40 text-indigo-400 border-indigo-700' : 'bg-indigo-100 text-indigo-700 border-indigo-300'
         };
-        return colors[category] || (isDark ? 'bg-slate-700 text-slate-300 border-slate-600' : 'bg-gray-100 text-gray-700 border-gray-300');
+        return colors[category] || (isDark ? 'bg-muted text-muted-foreground border-border' : 'bg-muted text-muted-foreground border-border');
     };
 
     const formatDateTime = (dateString) => {
@@ -149,7 +149,7 @@ const Activities = () => {
             </Card>
 
                 {loading ? (
-                    <div className={`flex items-center justify-center h-96 rounded-xl shadow-md border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                    <div className={`flex items-center justify-center h-96 rounded-xl shadow-md border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
                         <div className="text-center">
                             <div className="spinner text-green-500 mb-4">
                                 <svg className="animate-spin w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -157,7 +157,7 @@ const Activities = () => {
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
                             </div>
-                            <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Loading your activities...</p>
+                            <p className={`text-lg ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Loading your activities...</p>
                         </div>
                     </div>
                 ) : (
@@ -165,32 +165,32 @@ const Activities = () => {
                         {filteredActivities.length > 0 ? (
                             <>
                                 {/* Desktop Table View */}
-                                <div className={`interactive-card hidden lg:block rounded-2xl shadow-lg overflow-hidden border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
+                                <div className={`interactive-card hidden lg:block rounded-2xl shadow-lg overflow-hidden border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
                                     <div className="overflow-x-auto">
-                                        <table className={`min-w-full divide-y ${isDark ? 'divide-slate-700' : 'divide-gray-200'}`}>
-                                            <thead className={isDark ? 'bg-gradient-to-r from-slate-700 to-slate-600' : 'bg-gradient-to-r from-gray-100 to-gray-50'}>
+                                        <table className={`min-w-full divide-y ${isDark ? 'divide-border' : 'divide-border'}`}>
+                                            <thead className={isDark ? 'bg-gradient-to-r from-muted to-muted/80' : 'bg-gradient-to-r from-muted to-muted/50'}>
                                                 <tr>
-                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                         Icon
                                                     </th>
-                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                         Category
                                                     </th>
-                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                         Activity Description
                                                     </th>
-                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                         Action Type
                                                     </th>
-                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                         Date
                                                     </th>
-                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                         Time
                                                     </th>
                                                 </tr>
                                             </thead>
-                                            <tbody className={`divide-y ${isDark ? 'bg-slate-800 divide-slate-700' : 'bg-white divide-gray-200'}`}>
+                                            <tbody className={`divide-y ${isDark ? 'bg-muted divide-border' : 'bg-background divide-border'}`}>
                                                 {filteredActivities.map((activity, idx) => {
                                                     const category = getActivityCategory(activity.description);
                                                     const type = getActivityType(activity.description);
@@ -199,7 +199,7 @@ const Activities = () => {
                                                     return (
                                                         <tr
                                                             key={activity.id}
-                                                            className={`transition-colors ${isDark ? 'hover:bg-slate-700' : 'hover:bg-gray-50'} ${idx % 2 === 0 ? (isDark ? 'bg-slate-800' : 'bg-white') : (isDark ? 'bg-slate-750' : 'bg-gray-50')}`}
+                                                            className={`transition-colors ${isDark ? 'hover:bg-muted' : 'hover:bg-muted/50'} ${idx % 2 === 0 ? (isDark ? 'bg-muted' : 'bg-background') : (isDark ? 'bg-muted' : 'bg-muted/50')}`}
                                                         >
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 <div className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm ${isDark ? 'bg-gradient-to-br from-green-900/50 to-green-800/50' : 'bg-gradient-to-br from-green-100 to-green-200'}`}>
@@ -212,11 +212,11 @@ const Activities = () => {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4">
-                                                                <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                                                <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
                                                                     {activity.description}
                                                                 </div>
                                                                 {activity.details && (
-                                                                    <div className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                                                                    <div className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                                         {activity.details}
                                                                     </div>
                                                                 )}
@@ -227,13 +227,13 @@ const Activities = () => {
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                                     <span className="text-lg">📅</span>
                                                                     <span className="font-mono font-medium">{dateTime.date}</span>
                                                                 </div>
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
-                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                                     <span className="text-lg">⏰</span>
                                                                     <span className="font-mono font-medium">{dateTime.time}</span>
                                                                 </div>
@@ -254,7 +254,7 @@ const Activities = () => {
                                         const dateTime = formatDateTime(activity.createdAt);
 
                                         return (
-                                                            <div key={activity.id} className={`interactive-card rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
+                                                            <div key={activity.id} className={`interactive-card rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
                                                 <div className="p-5 space-y-4">
                                                     {/* Header */}
                                                     <div className="flex items-start justify-between">
@@ -277,23 +277,23 @@ const Activities = () => {
 
                                                     {/* Description */}
                                                     <div>
-                                                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
                                                             {activity.description}
                                                         </p>
                                                         {activity.details && (
-                                                            <p className={`text-xs mt-1 p-2 rounded ${isDark ? 'text-slate-400 bg-slate-700' : 'text-gray-500 bg-gray-100'}`}>
+                                                            <p className={`text-xs mt-1 p-2 rounded ${isDark ? 'text-muted-foreground bg-muted' : 'text-muted-foreground bg-muted'}`}>
                                                                 {activity.details}
                                                             </p>
                                                         )}
                                                     </div>
 
                                                     {/* Date & Time */}
-                                                    <div className={`flex items-center justify-between pt-3 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
-                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                                                    <div className={`flex items-center justify-between pt-3 border-t ${isDark ? 'border-border' : 'border-border'}`}>
+                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                             <span>📅</span>
                                                             <span className="font-mono font-medium">{dateTime.date}</span>
                                                         </div>
-                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                             <span>⏰</span>
                                                             <span className="font-mono font-medium">{dateTime.time}</span>
                                                         </div>
@@ -305,10 +305,10 @@ const Activities = () => {
                                 </div>
 
                                 {/* Pagination */}
-                                <div className={`interactive-card rounded-2xl shadow-md p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
+                                <div className={`interactive-card rounded-2xl shadow-md p-6 border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
                                     <div className="flex justify-between items-center">
                                         <button
-                                            className={`px-6 py-3 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-slate-300' : 'bg-gray-200 hover:bg-gray-300 text-gray-700'}`}
+                                            className={`px-6 py-3 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${isDark ? 'bg-muted hover:bg-muted text-muted-foreground' : 'bg-muted hover:bg-border text-muted-foreground'}`}
                                             onClick={() => setPage(page - 1)}
                                             disabled={page === 0}
                                         >
@@ -316,8 +316,8 @@ const Activities = () => {
                                             Previous
                                         </button>
                                         <div className="text-center">
-                                            <div className={`text-sm font-medium ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Page {page + 1}</div>
-                                            <div className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{filteredActivities.length} activities</div>
+                                            <div className={`text-sm font-medium ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Page {page + 1}</div>
+                                            <div className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{filteredActivities.length} activities</div>
                                         </div>
                                         <button
                                             className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
@@ -331,15 +331,15 @@ const Activities = () => {
                                 </div>
                             </>
                         ) : (
-                            <div className={`interactive-card rounded-2xl shadow-lg p-12 text-center border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
+                            <div className={`interactive-card rounded-2xl shadow-lg p-12 text-center border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
                                 <div className="text-8xl mb-6">📭</div>
-                                <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No Activities Found</h3>
-                                <p className={`mb-1 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
+                                <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-foreground'}`}>No Activities Found</h3>
+                                <p className={`mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                     {filter !== 'all'
                                         ? `No ${filter} activities to display.`
                                         : 'Start using FarmEazy to see your activities here!'}
                                 </p>
-                                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                                <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                     Activities like creating farms, adding crops, or placing orders will appear here.
                                 </p>
                             </div>

@@ -112,31 +112,31 @@ function VendorOnboarding() {
 
   if (loading) {
     return (
-      <div className={`premium-shell min-h-[18rem] flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-emerald-50'}`}>
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
+      <div className={`premium-shell min-h-[18rem] flex items-center justify-center ${isDark ? 'bg-background' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`}>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     )
   }
 
   return (
-    <div className={`premium-shell min-h-screen -m-6 p-6 space-y-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-emerald-50'}`}>
-      <section className={`rounded-3xl border p-6 md:p-8 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-lg'}`}>
-        <p className={`text-xs font-bold uppercase tracking-[0.18em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Vendor Onboarding</p>
-        <h1 className={`mt-2 text-3xl md:text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Complete Required Profile Details</h1>
-        <p className={`mt-3 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
+    <div className={`premium-shell min-h-screen -m-6 p-6 space-y-6 ${isDark ? 'bg-background' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`}>
+      <section className={`rounded-3xl border p-6 md:p-8 ${isDark ? 'bg-card border-border' : 'bg-background border-border shadow-lg'}`}>
+        <p className={`text-xs font-bold uppercase tracking-[0.18em] ${isDark ? 'text-primary' : 'text-primary'}`}>Vendor Onboarding</p>
+        <h1 className={`mt-2 text-3xl md:text-4xl font-black ${isDark ? 'text-white' : 'text-foreground'}`}>Complete Required Profile Details</h1>
+        <p className={`mt-3 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
           Vendor dashboard unlock requires email, phone, address, bank details and manual penny-drop confirmation.
         </p>
         <div className="mt-5 flex gap-3 flex-wrap">
           <button
             type="button"
             onClick={() => navigate('/vendor-dashboard')}
-            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold"
+            className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold"
           >
             Check Vendor Dashboard
           </button>
           <Link
             to="/vendor-verification"
-            className={`px-4 py-2 rounded-lg text-sm font-semibold ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-slate-900 text-white hover:bg-slate-800'}`}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold ${isDark ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-card text-white hover:bg-muted'}`}
           >
             Open Bank Verification
           </Link>
@@ -146,20 +146,20 @@ function VendorOnboarding() {
       {message.text && (
         <div className={`rounded-xl border px-4 py-3 text-sm ${message.type === 'error'
           ? (isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700')
-          : (isDark ? 'bg-emerald-950/30 border-emerald-800 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-700')}`}>
+          : (isDark ? 'bg-emerald-950/30 border-emerald-800 text-primary' : 'bg-primary/5 border-border text-primary')}`}>
           {message.text}
         </div>
       )}
 
-      <section className={`rounded-2xl border p-5 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
-        <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Verification Steps</h2>
+      <section className={`rounded-2xl border p-5 ${isDark ? 'bg-card border-border' : 'bg-background border-border shadow-sm'}`}>
+        <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Verification Steps</h2>
         <div className="mt-4 grid gap-3 sm:grid-cols-2">
           {onboardingSteps.map((step) => (
-            <div key={step.key} className={`rounded-xl border p-4 ${isDark ? 'border-slate-700 bg-slate-800' : 'border-slate-200 bg-slate-50'}`}>
+            <div key={step.key} className={`rounded-xl border p-4 ${isDark ? 'border-border bg-muted' : 'border-border bg-muted/30'}`}>
               <div className="flex items-center justify-between gap-2">
-                <p className={`text-sm font-semibold ${isDark ? 'text-slate-100' : 'text-slate-900'}`}>{step.title}</p>
+                <p className={`text-sm font-semibold ${isDark ? 'text-foreground' : 'text-foreground'}`}>{step.title}</p>
                 <span className={`text-xs px-2 py-1 rounded-full font-semibold ${step.completed
-                  ? 'bg-emerald-100 text-emerald-700'
+                  ? 'bg-primary/10 text-primary'
                   : 'bg-amber-100 text-amber-700'}`}>
                   {step.completed ? 'Completed' : 'Pending'}
                 </span>
@@ -176,42 +176,42 @@ function VendorOnboarding() {
         </div>
       </section>
 
-      <form onSubmit={handleSubmit} className={`rounded-2xl border p-5 grid grid-cols-1 md:grid-cols-2 gap-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-sm'}`}>
+      <form onSubmit={handleSubmit} className={`rounded-2xl border p-5 grid grid-cols-1 md:grid-cols-2 gap-4 ${isDark ? 'bg-card border-border' : 'bg-background border-border shadow-sm'}`}>
         <div className="md:col-span-2">
-          <label className={`block text-sm mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Email (from account)</label>
-          <input value={form.email} disabled className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-slate-300' : 'bg-slate-100 border-slate-300 text-slate-700'}`} />
+          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Email (from account)</label>
+          <input value={form.email} disabled className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-muted border-border text-foreground'}`} />
         </div>
 
         <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Phone *</label>
-          <input name="phone" value={form.phone} onChange={handleChange} placeholder="10-digit phone" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Phone *</label>
+          <input name="phone" value={form.phone} onChange={handleChange} placeholder="10-digit phone" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
         </div>
 
         <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Pin Code</label>
-          <input name="pinCode" value={form.pinCode} onChange={handleChange} placeholder="Postal code" className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Pin Code</label>
+          <input name="pinCode" value={form.pinCode} onChange={handleChange} placeholder="Postal code" className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
         </div>
 
         <div className="md:col-span-2">
-          <label className={`block text-sm mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Address *</label>
-          <input name="address" value={form.address} onChange={handleChange} placeholder="Street address" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Address *</label>
+          <input name="address" value={form.address} onChange={handleChange} placeholder="Street address" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
         </div>
 
         <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>City *</label>
-          <input name="city" value={form.city} onChange={handleChange} placeholder="City" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>City *</label>
+          <input name="city" value={form.city} onChange={handleChange} placeholder="City" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
         </div>
 
         <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>State *</label>
-          <input name="state" value={form.state} onChange={handleChange} placeholder="State" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-white border-slate-300 text-slate-900'}`} />
+          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>State *</label>
+          <input name="state" value={form.state} onChange={handleChange} placeholder="State" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
         </div>
 
         <div className="md:col-span-2 flex gap-3">
-          <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold disabled:opacity-60">
+          <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold disabled:opacity-60">
             {saving ? 'Saving...' : 'Save Profile Details'}
           </button>
-          <Link to="/vendor-verification" className={`px-5 py-2 rounded-lg text-sm font-semibold ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+          <Link to="/vendor-verification" className={`px-5 py-2 rounded-lg text-sm font-semibold ${isDark ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-muted text-foreground hover:bg-muted'}`}>
             Continue to Bank Verification
           </Link>
         </div>

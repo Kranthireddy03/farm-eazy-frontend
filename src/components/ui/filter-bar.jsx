@@ -1,6 +1,5 @@
 import { Search, X } from 'lucide-react';
 import { Input } from './input';
-import { Button } from './button';
 import { cn } from '../../lib/utils';
 
 export function FilterBar({
@@ -14,7 +13,7 @@ export function FilterBar({
   onClear,
 }) {
   return (
-    <div className={cn('flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between', className)}>
+    <div className={cn('ops-panel p-3 flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between', className)}>
       <div className="relative flex-1 max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden />
         <Input
@@ -38,15 +37,14 @@ export function FilterBar({
       {filters.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {filters.map((f) => (
-            <Button
+            <button
               key={f.value}
               type="button"
-              size="sm"
-              variant={activeFilter === f.value ? 'default' : 'outline'}
+              className={cn('ops-chip', activeFilter === f.value && 'ops-chip-active')}
               onClick={() => onFilterChange?.(f.value)}
             >
               {f.label}
-            </Button>
+            </button>
           ))}
         </div>
       )}

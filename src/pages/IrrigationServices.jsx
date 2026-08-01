@@ -520,9 +520,9 @@ function IrrigationServices() {
       case 'COMPLETED':
         return 'bg-blue-900/50 text-blue-400 border-blue-600'
       case 'CANCELLED':
-        return 'bg-slate-700 text-slate-400 border-slate-600'
+        return 'bg-muted text-muted-foreground border-border'
       default:
-        return 'bg-slate-700 text-slate-400 border-slate-600'
+        return 'bg-muted text-muted-foreground border-border'
     }
   }
 
@@ -548,11 +548,11 @@ function IrrigationServices() {
     if (!attachments.length) return null;
 
     return (
-      <div className={`mt-3 rounded-xl p-3 border ${isDark ? 'bg-slate-900/50 border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-        <p className={`text-xs font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Service Attachments</p>
+      <div className={`mt-3 rounded-xl p-3 border ${isDark ? 'bg-card/50 border-border' : 'bg-muted/30 border-border'}`}>
+        <p className={`text-xs font-semibold mb-2 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Service Attachments</p>
         <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
           {attachments.map((url, index) => (
-            <div key={`${url}-${index}`} className="snap-start flex-shrink-0 w-28 h-20 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600 bg-black">
+            <div key={`${url}-${index}`} className="snap-start flex-shrink-0 w-28 h-20 rounded-lg overflow-hidden border border-border dark:border-border bg-black">
               {isVideoAttachment(url) ? (
                 <video className="w-full h-full object-cover" controls preload="metadata" playsInline>
                   <source src={url} type={getVideoType(url)} />
@@ -585,13 +585,13 @@ function IrrigationServices() {
       >
       <div className="space-y-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-cyan-500/30 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>My Listings</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{listings.length}</p>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-primary/30 bg-primary/10' : 'border-primary/20 bg-primary/5'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-primary' : 'text-primary'}`}>My Listings</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-primary' : 'text-primary'}`}>{listings.length}</p>
               </div>
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-emerald-500/30 bg-emerald-900/20' : 'border-emerald-200 bg-emerald-50/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Browse Pool</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{allListings.length}</p>
+              <div className={`rounded-2xl border p-4 ${isDark ? 'border-primary/30 bg-primary/10' : 'border-border bg-primary/5/80'}`}>
+                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-primary' : 'text-primary'}`}>Browse Pool</p>
+                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-primary/80' : 'text-primary'}`}>{allListings.length}</p>
               </div>
               <div className={`rounded-2xl border p-4 ${isDark ? 'border-violet-500/30 bg-violet-900/20' : 'border-violet-200 bg-violet-50/80'}`}>
                 <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>My Bookings</p>
@@ -604,13 +604,13 @@ function IrrigationServices() {
         </div>
 
         {/* Tab Navigation */}
-        <div className={`glass-card interactive-card flex flex-wrap gap-2 border p-2 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+        <div className={`ops-panel interactive-card flex flex-wrap gap-2 border p-2 ${isDark ? 'border-border' : 'border-border'}`}>
           <button
             onClick={() => setActiveTab('listings')}
             className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'listings'
-                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
+                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
+                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             My Service Listings
@@ -619,8 +619,8 @@ function IrrigationServices() {
             onClick={() => setActiveTab('browse')}
             className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'browse'
-                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
+                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
+                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             Browse & Book Services
@@ -629,8 +629,8 @@ function IrrigationServices() {
             onClick={() => setActiveTab('bookings')}
             className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'bookings'
-                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
+                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
+                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             My Booking Requests
@@ -639,8 +639,8 @@ function IrrigationServices() {
             onClick={() => setActiveTab('provider-requests')}
             className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
               activeTab === 'provider-requests'
-                ? isDark ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                : isDark ? 'text-slate-400 hover:text-white hover:bg-slate-800/60' : 'text-gray-500 hover:text-gray-800 hover:bg-slate-100'
+                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
+                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             Provider Requests
@@ -651,7 +651,7 @@ function IrrigationServices() {
         {activeTab === 'listings' && (
           <>
             {!eligibilityLoading && !listingEligibility?.eligible && (
-              <div className={`rounded-2xl border p-6 mb-4 ${isDark ? 'bg-slate-800 border-slate-700 text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}>
+              <div className={`rounded-2xl border p-6 mb-4 ${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-background border-border text-foreground'}`}>
                 <h2 className="text-xl font-bold">Vendor verification required</h2>
                 <p className="mt-2 text-sm">
                   {listingEligibility?.verificationMessage || 'Complete vendor verification first to access paid service listing tools.'}
@@ -670,7 +670,7 @@ function IrrigationServices() {
                   </button>
                   <button
                     onClick={fetchListingEligibility}
-                    className="px-4 py-2 rounded-lg border border-slate-400 text-sm hover:bg-slate-700/10"
+                    className="px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/10"
                   >
                     Refresh Status
                   </button>
@@ -691,12 +691,12 @@ function IrrigationServices() {
 
             {/* Post Service Form */}
             {showPostForm && (
-              <div className={`rounded-xl shadow-2xl overflow-hidden border ${isDark ? 'bg-gradient-to-br from-slate-800 to-slate-900 border-slate-700' : 'bg-white border-gray-200'}`}>
+              <div className={`rounded-xl shadow-2xl overflow-hidden border ${isDark ? 'bg-gradient-to-br from-card to-background border-border' : 'bg-background border-border'}`}>
                 {/* Form Header */}
                 <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-8 py-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="bg-slate-700/50 rounded-lg p-3">
+                      <div className="bg-muted/50 rounded-lg p-3">
                         <span className="text-3xl">🚜</span>
                       </div>
                       <div>
@@ -710,14 +710,14 @@ function IrrigationServices() {
                 {/* Form Body */}
                 <form onSubmit={handlePostSubmit} className="p-8 space-y-6">
                   {/* Service Type Section */}
-                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
-                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-muted border-border' : 'bg-muted/50 border-border'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-foreground'}`}>
                       <span className="text-2xl">📋</span>
                       Service Details
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Type <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -734,12 +734,12 @@ function IrrigationServices() {
                             <option value="IRRIGATION">💧 Irrigation Equipment</option>
                           </select>
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">⚙️</span>
+                            <span className="text-muted-foreground">⚙️</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Title <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -752,23 +752,23 @@ function IrrigationServices() {
                             required
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">✏️</span>
+                            <span className="text-muted-foreground">✏️</span>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Be specific about model/capacity</p>
+                        <p className="text-xs text-muted-foreground mt-1">Be specific about model/capacity</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Location & Pricing Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
+                  <div className="bg-muted rounded-xl p-6 border border-border">
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <span className="text-2xl">📍</span>
                       Location & Pricing
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Location <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -781,12 +781,12 @@ function IrrigationServices() {
                             required
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">🗺️</span>
+                            <span className="text-muted-foreground">🗺️</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Serviceable Locations
                         </label>
                         <div className="relative">
@@ -798,13 +798,13 @@ function IrrigationServices() {
                             placeholder="e.g., Guntur, Vijayawada, Tenali"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">🧭</span>
+                            <span className="text-muted-foreground">🧭</span>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Tell users where this service can be delivered.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Tell users where this service can be delivered.</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Hourly Rate <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -818,13 +818,13 @@ function IrrigationServices() {
                             required
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">₹</span>
+                            <span className="text-muted-foreground">₹</span>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Enter amount per hour</p>
+                        <p className="text-xs text-muted-foreground mt-1">Enter amount per hour</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Radius (KM)
                         </label>
                         <div className="flex flex-wrap gap-2 mb-3">
@@ -834,8 +834,8 @@ function IrrigationServices() {
                               type="button"
                               onClick={() => setPostForm((prev) => ({ ...prev, serviceRadiusKm: radius }))}
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${Number(postForm.serviceRadiusKm || 20) === radius
-                                ? 'bg-emerald-600 text-white border-emerald-600'
-                                : 'bg-slate-800 text-slate-200 border-slate-600 hover:border-emerald-500'}`}
+                                ? 'bg-primary text-white border-primary'
+                                : 'bg-muted text-muted-foreground border-border hover:border-primary'}`}
                             >
                               {radius} km
                             </button>
@@ -853,16 +853,16 @@ function IrrigationServices() {
                             placeholder="20"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">📡</span>
+                            <span className="text-muted-foreground">📡</span>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Nearby users inside this radius can discover your service.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Nearby users inside this radius can discover your service.</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
-                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-muted border-border' : 'bg-muted/50 border-border'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-foreground'}`}>
                       <span className="text-2xl">🖼️</span>
                       Optional Showcase Attachments
                     </h3>
@@ -873,7 +873,7 @@ function IrrigationServices() {
                       onChange={handleAttachmentFilesChange}
                       className="form-input"
                     />
-                    <p className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>
+                    <p className={`text-xs mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                       Select up to 8 files (images/videos). Files upload automatically on save.
                     </p>
                     {attachmentFiles.length > 0 && (
@@ -881,7 +881,7 @@ function IrrigationServices() {
                         {attachmentFiles.map((file, index) => (
                           <span
                             key={`${file.name}-${index}`}
-                            className={`text-xs px-2 py-1 rounded-full border ${isDark ? 'bg-slate-800 border-slate-600 text-slate-200' : 'bg-white border-slate-200 text-slate-700'}`}
+                            className={`text-xs px-2 py-1 rounded-full border ${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-background border-border text-foreground'}`}
                           >
                             {file.name}
                           </span>
@@ -891,15 +891,15 @@ function IrrigationServices() {
                   </div>
 
                   {/* Contact Information Section */}
-                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
-                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-muted border-border' : 'bg-muted/50 border-border'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-foreground'}`}>
                       <span className="text-2xl">📞</span>
                       Contact Information
-                      <span className={`text-xs font-normal ml-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>(Optional - uses profile info if blank)</span>
+                      <span className={`text-xs font-normal ml-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>(Optional - uses profile info if blank)</span>
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Contact Name
                         </label>
                         <div className="relative">
@@ -911,12 +911,12 @@ function IrrigationServices() {
                             placeholder="Your name"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">👤</span>
+                            <span className="text-muted-foreground">👤</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Phone Number
                         </label>
                         <div className="relative">
@@ -929,12 +929,12 @@ function IrrigationServices() {
                             maxLength="10"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">📱</span>
+                            <span className="text-muted-foreground">📱</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Email Address
                         </label>
                         <div className="relative">
@@ -947,7 +947,7 @@ function IrrigationServices() {
                             placeholder="your@email.com"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">✉️</span>
+                            <span className="text-muted-foreground">✉️</span>
                           </div>
                         </div>
                       </div>
@@ -955,7 +955,7 @@ function IrrigationServices() {
                   </div>
 
                   {/* Availability Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
+                  <div className="bg-muted rounded-xl p-6 border border-border">
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <span className="text-2xl">⏰</span>
                       Availability Status
@@ -972,7 +972,7 @@ function IrrigationServices() {
                         <option value="Booked">⛔ Fully Booked</option>
                       </select>
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                        <span className="text-slate-400">📅</span>
+                        <span className="text-muted-foreground">📅</span>
                       </div>
                     </div>
                   </div>
@@ -999,7 +999,7 @@ function IrrigationServices() {
                     <button
                       type="button"
                       onClick={() => setShowPostForm(false)}
-                      className={`px-8 py-4 border-2 font-semibold rounded-xl transition-all duration-300 ${isDark ? 'border-slate-600 hover:border-slate-500 text-slate-300 hover:bg-slate-700' : 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100'}`}
+                      className={`px-8 py-4 border-2 font-semibold rounded-xl transition-all duration-300 ${isDark ? 'border-border hover:border-border text-muted-foreground hover:bg-muted' : 'border-border hover:border-border text-muted-foreground hover:bg-muted'}`}
                     >
                       Cancel
                     </button>
@@ -1023,12 +1023,12 @@ function IrrigationServices() {
 
             {/* Edit Service Form */}
             {editingListing && (
-              <div className={`rounded-xl shadow-2xl border-2 border-blue-400 overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'}`}>
+              <div className={`rounded-xl shadow-2xl border-2 border-primary/40 overflow-hidden ${isDark ? 'bg-gradient-to-br from-card to-background' : 'bg-background'}`}>
                 {/* Form Header */}
                 <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-8 py-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="bg-slate-700/50 rounded-lg p-3">
+                      <div className="bg-muted/50 rounded-lg p-3">
                         <span className="text-3xl">✏️</span>
                       </div>
                       <div>
@@ -1038,7 +1038,7 @@ function IrrigationServices() {
                     </div>
                     <button
                       onClick={handleCancelEdit}
-                      className="text-white hover:text-blue-100 transition-colors p-2 hover:bg-slate-700/50 rounded-lg"
+                      className="text-white hover:text-blue-100 transition-colors p-2 hover:bg-muted/50 rounded-lg"
                       title="Cancel editing"
                     >
                       <span className="text-2xl">✕</span>
@@ -1049,14 +1049,14 @@ function IrrigationServices() {
                 {/* Form Body */}
                 <form onSubmit={handleUpdateListing} className="p-8 space-y-6">
                   {/* Service Type Section */}
-                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-50 border-gray-200'}`}>
-                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                  <div className={`rounded-xl p-6 border ${isDark ? 'bg-muted border-border' : 'bg-muted/50 border-border'}`}>
+                    <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-foreground'}`}>
                       <span className="text-2xl">📋</span>
                       Service Details
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Type <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -1064,7 +1064,7 @@ function IrrigationServices() {
                             name="type"
                             value={postForm.type}
                             onChange={handlePostChange}
-                            className="form-input pl-10 appearance-none cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 appearance-none cursor-pointer hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             required
                           >
                             <option value="TRACTOR">🚜 Tractor</option>
@@ -1073,12 +1073,12 @@ function IrrigationServices() {
                             <option value="IRRIGATION">💧 Irrigation Equipment</option>
                           </select>
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">⚙️</span>
+                            <span className="text-muted-foreground">⚙️</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Title <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -1086,28 +1086,28 @@ function IrrigationServices() {
                             name="title"
                             value={postForm.title}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="e.g., Mahindra Tractor 575 DI"
                             required
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">✏️</span>
+                            <span className="text-muted-foreground">✏️</span>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Be specific about model/capacity</p>
+                        <p className="text-xs text-muted-foreground mt-1">Be specific about model/capacity</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Location & Pricing Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
+                  <div className="bg-muted rounded-xl p-6 border border-border">
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <span className="text-2xl">📍</span>
                       Location & Pricing
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Location <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -1115,17 +1115,17 @@ function IrrigationServices() {
                             name="location"
                             value={postForm.location}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="City / Village / District"
                             required
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">🗺️</span>
+                            <span className="text-muted-foreground">🗺️</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Serviceable Locations
                         </label>
                         <div className="relative">
@@ -1133,16 +1133,16 @@ function IrrigationServices() {
                             name="serviceableLocations"
                             value={postForm.serviceableLocations}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="e.g., Guntur, Vijayawada, Tenali"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">🧭</span>
+                            <span className="text-muted-foreground">🧭</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Hourly Rate <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
@@ -1151,18 +1151,18 @@ function IrrigationServices() {
                             type="number"
                             value={postForm.rate}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="1200"
                             required
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">₹</span>
+                            <span className="text-muted-foreground">₹</span>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Enter amount per hour</p>
+                        <p className="text-xs text-muted-foreground mt-1">Enter amount per hour</p>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Service Radius (KM)
                         </label>
                         <div className="flex flex-wrap gap-2 mb-3">
@@ -1172,8 +1172,8 @@ function IrrigationServices() {
                               type="button"
                               onClick={() => setPostForm((prev) => ({ ...prev, serviceRadiusKm: radius }))}
                               className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${Number(postForm.serviceRadiusKm || 20) === radius
-                                ? 'bg-emerald-600 text-white border-emerald-600'
-                                : 'bg-slate-800 text-slate-200 border-slate-600 hover:border-emerald-500'}`}
+                                ? 'bg-primary text-white border-primary'
+                                : 'bg-muted text-muted-foreground border-border hover:border-primary'}`}
                             >
                               {radius} km
                             </button>
@@ -1187,19 +1187,19 @@ function IrrigationServices() {
                             max="500"
                             value={postForm.serviceRadiusKm}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="20"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">📡</span>
+                            <span className="text-muted-foreground">📡</span>
                           </div>
                         </div>
-                        <p className="text-xs text-slate-500 mt-1">Nearby users inside this radius can discover your service.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Nearby users inside this radius can discover your service.</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
+                  <div className="bg-muted rounded-xl p-6 border border-border">
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <span className="text-2xl">🖼️</span>
                       Optional Showcase Attachments
@@ -1211,7 +1211,7 @@ function IrrigationServices() {
                       onChange={handleAttachmentFilesChange}
                       className="form-input"
                     />
-                    <p className="text-xs mt-2 text-slate-400">
+                    <p className="text-xs mt-2 text-muted-foreground">
                       Select up to 8 files (images/videos). Files upload automatically on save.
                     </p>
                     {attachmentFiles.length > 0 && (
@@ -1219,7 +1219,7 @@ function IrrigationServices() {
                         {attachmentFiles.map((file, index) => (
                           <span
                             key={`${file.name}-${index}`}
-                            className="text-xs px-2 py-1 rounded-full border bg-slate-800 border-slate-600 text-slate-200"
+                            className="text-xs px-2 py-1 rounded-full border bg-muted border-border text-muted-foreground"
                           >
                             {file.name}
                           </span>
@@ -1229,15 +1229,15 @@ function IrrigationServices() {
                   </div>
 
                   {/* Contact Information Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
+                  <div className="bg-muted rounded-xl p-6 border border-border">
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <span className="text-2xl">📞</span>
                       Contact Information
-                      <span className="text-xs font-normal text-slate-400 ml-2">(Optional)</span>
+                      <span className="text-xs font-normal text-muted-foreground ml-2">(Optional)</span>
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Contact Name
                         </label>
                         <div className="relative">
@@ -1245,16 +1245,16 @@ function IrrigationServices() {
                             name="contactName"
                             value={postForm.contactName}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="Your name"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">👤</span>
+                            <span className="text-muted-foreground">👤</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Phone Number
                         </label>
                         <div className="relative">
@@ -1262,17 +1262,17 @@ function IrrigationServices() {
                             name="contactPhone"
                             value={postForm.contactPhone}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="10-digit mobile"
                             maxLength="10"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">📱</span>
+                            <span className="text-muted-foreground">📱</span>
                           </div>
                         </div>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-slate-300 mb-2">
+                        <label className="block text-sm font-semibold text-muted-foreground mb-2">
                           Email Address
                         </label>
                         <div className="relative">
@@ -1281,11 +1281,11 @@ function IrrigationServices() {
                             type="email"
                             value={postForm.contactEmail}
                             onChange={handlePostChange}
-                            className="form-input pl-10 hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                            className="form-input pl-10 hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                             placeholder="your@email.com"
                           />
                           <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                            <span className="text-slate-400">✉️</span>
+                            <span className="text-muted-foreground">✉️</span>
                           </div>
                         </div>
                       </div>
@@ -1293,7 +1293,7 @@ function IrrigationServices() {
                   </div>
 
                   {/* Availability Section */}
-                  <div className="bg-slate-700 rounded-xl p-6 border border-slate-600">
+                  <div className="bg-muted rounded-xl p-6 border border-border">
                     <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                       <span className="text-2xl">⏰</span>
                       Availability Status
@@ -1303,14 +1303,14 @@ function IrrigationServices() {
                         name="availability"
                         value={postForm.availability}
                         onChange={handlePostChange}
-                        className="form-input pl-10 appearance-none cursor-pointer hover:border-blue-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                        className="form-input pl-10 appearance-none cursor-pointer hover:border-primary/40 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                       >
                         <option value="Available">✅ Available Now</option>
                         <option value="Limited">⚠️ Limited Availability</option>
                         <option value="Booked">⛔ Fully Booked</option>
                       </select>
                       <div className="absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                        <span className="text-slate-400">📅</span>
+                        <span className="text-muted-foreground">📅</span>
                       </div>
                     </div>
                   </div>
@@ -1337,7 +1337,7 @@ function IrrigationServices() {
                     <button
                       type="button"
                       onClick={handleCancelEdit}
-                      className={`px-8 py-4 border-2 font-semibold rounded-xl transition-all duration-300 ${isDark ? 'border-slate-600 hover:border-slate-500 text-slate-300 hover:bg-slate-700' : 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100'}`}
+                      className={`px-8 py-4 border-2 font-semibold rounded-xl transition-all duration-300 ${isDark ? 'border-border hover:border-border text-muted-foreground hover:bg-muted' : 'border-border hover:border-border text-muted-foreground hover:bg-muted'}`}
                     >
                       Cancel
                     </button>
@@ -1361,34 +1361,34 @@ function IrrigationServices() {
 
             {/* Services Listings Grid */}
             {listings.length === 0 ? (
-              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
                 <div className="text-6xl mb-4">🔧</div>
-                <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>No service listings yet</p>
-                <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Post the first service to enable booking requests!</p>
+                <p className={`text-lg font-semibold ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>No service listings yet</p>
+                <p className={`text-sm mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Post the first service to enable booking requests!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {listings.map((listing) => (
-                  <div key={listing.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                  <div key={listing.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{listing.title || listing.serviceName || 'Untitled Listing'}</h3>
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>📍 {listing.location || 'Location not specified'}</p>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>{listing.title || listing.serviceName || 'Untitled Listing'}</h3>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>📍 {listing.location || 'Location not specified'}</p>
                       </div>
                       <span className="text-2xl">{getServiceIcon(listing.type)}</span>
                     </div>
 
-                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-border' : 'border-border'}`}>
                       <div className="flex justify-between items-center">
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Type</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Type</p>
                         <span className={`text-xs px-2 py-1 rounded-full font-semibold ${isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'}`}>{listing.type}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Rate</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Rate</p>
                         <p className="text-sm text-orange-500 font-semibold">{listing.rate || listing.price || 'Rate not set'}</p>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Status</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Status</p>
                         <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
                           listing.availability === 'Available' ? (isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700') :
                           listing.availability === 'Limited' ? (isDark ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700') :
@@ -1399,20 +1399,20 @@ function IrrigationServices() {
 
                     <div className="space-y-1">
                       {listing.contactName && (
-                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>👤 {listing.contactName}</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>👤 {listing.contactName}</p>
                       )}
                       {listing.contactPhone && (
-                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>📞 {listing.contactPhone}</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>📞 {listing.contactPhone}</p>
                       )}
                       {listing.contactEmail && (
-                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>✉️ {listing.contactEmail}</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>✉️ {listing.contactEmail}</p>
                       )}
                     </div>
 
                     {renderAttachmentShowcase(listing)}
 
                     {/* Edit and Delete Buttons */}
-                    <div className={`flex gap-2 mt-4 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                    <div className={`flex gap-2 mt-4 pt-4 border-t ${isDark ? 'border-border' : 'border-border'}`}>
                       <button
                         onClick={() => handleEditClick(listing)}
                         className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
@@ -1438,34 +1438,34 @@ function IrrigationServices() {
           <>
             {/* Browse Services Grid - Filters out user's own services */}
             {allListings.filter(listing => !myListingIds.has(listing.id)).length === 0 ? (
-              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
                 <div className="text-6xl mb-4">🔍</div>
-                <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>No services available yet</p>
-                <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Check back later for available services!</p>
+                <p className={`text-lg font-semibold ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>No services available yet</p>
+                <p className={`text-sm mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Check back later for available services!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {allListings.filter(listing => !myListingIds.has(listing.id)).map((listing) => (
-                  <div key={listing.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border-2 ${isDark ? 'bg-slate-800 border-slate-600' : 'bg-white border-gray-300'}`}>
+                  <div key={listing.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border-2 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div>
-                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{listing.serviceName || listing.title || 'Untitled Service'}</h3>
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>📍 {listing.location || 'Location not specified'}</p>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>{listing.serviceName || listing.title || 'Untitled Service'}</h3>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>📍 {listing.location || 'Location not specified'}</p>
                       </div>
                       <span className="text-3xl">{getServiceIcon(listing.type)}</span>
                     </div>
 
-                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-border' : 'border-border'}`}>
                       <div className="flex justify-between items-center">
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Type</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Type</p>
                         <span className={`text-xs px-3 py-1 rounded-full font-semibold ${isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700'}`}>{listing.type}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Hourly Rate</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Hourly Rate</p>
                         <p className="text-lg text-green-500 font-bold">₹{listing.price || listing.rate || 'N/A'}/hr</p>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Availability</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Availability</p>
                         <span className={`text-xs px-3 py-1 rounded-full font-semibold ${
                           listing.availability === 'Available' ? (isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-700') :
                           listing.availability === 'Limited' ? (isDark ? 'bg-yellow-900/50 text-yellow-400' : 'bg-yellow-100 text-yellow-700') :
@@ -1476,8 +1476,8 @@ function IrrigationServices() {
 
                     {listing.description && (
                       <div className="mb-4">
-                        <p className={`text-xs mb-1 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>Description:</p>
-                        <p className={`text-sm line-clamp-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{listing.description}</p>
+                        <p className={`text-xs mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Description:</p>
+                        <p className={`text-sm line-clamp-3 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{listing.description}</p>
                       </div>
                     )}
 
@@ -1485,13 +1485,13 @@ function IrrigationServices() {
 
                     <div className="space-y-1 mb-4">
                       {listing.contactName && (
-                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>👤 {listing.contactName}</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>👤 {listing.contactName}</p>
                       )}
                       {listing.contactPhone && (
-                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>📞 {listing.contactPhone}</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>📞 {listing.contactPhone}</p>
                       )}
                       {listing.contactEmail && (
-                        <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>✉️ {listing.contactEmail}</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>✉️ {listing.contactEmail}</p>
                       )}
                     </div>
 
@@ -1500,7 +1500,7 @@ function IrrigationServices() {
                       disabled={listing.availability === 'Booked' || myListingIds.has(listing.id)}
                       className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${
                         listing.availability === 'Booked' || myListingIds.has(listing.id)
-                          ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
+                          ? 'bg-muted text-muted-foreground cursor-not-allowed'
                           : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white transform hover:scale-105 active:scale-95'
                       }`}
                     >
@@ -1530,7 +1530,7 @@ function IrrigationServices() {
 
             {/* Booking Form */}
             {showBookingForm && (
-              <div className={`rounded-xl shadow-2xl border-2 border-green-500 overflow-hidden ${isDark ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-white'}`}>
+              <div className={`rounded-xl shadow-2xl border-2 border-primary overflow-hidden ${isDark ? 'bg-gradient-to-br from-card to-background' : 'bg-background'}`}>
                 {/* Form Header */}
                 <div className="bg-gradient-to-r from-green-600 to-green-700 px-8 py-6">
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
@@ -1538,7 +1538,7 @@ function IrrigationServices() {
                     Request a Service
                   </h2>
                   {selectedService && (
-                    <div className="mt-2 bg-slate-700/50 rounded-lg p-3 text-white">
+                    <div className="mt-2 bg-muted/50 rounded-lg p-3 text-white">
                       <p className="text-sm font-semibold">Booking: {selectedService.serviceName || selectedService.title}</p>
                       <p className="text-xs">Rate: ₹{selectedService.price || selectedService.rate}/hr • {selectedService.type}</p>
                     </div>
@@ -1683,7 +1683,7 @@ function IrrigationServices() {
                         setShowBookingForm(false)
                         setSelectedService(null)
                       }}
-                      className={`px-8 py-3 border-2 font-semibold rounded-lg transition-all duration-300 ${isDark ? 'border-slate-600 hover:border-slate-500 text-slate-300 hover:bg-slate-700' : 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-100'}`}
+                      className={`px-8 py-3 border-2 font-semibold rounded-lg transition-all duration-300 ${isDark ? 'border-border hover:border-border text-muted-foreground hover:bg-muted' : 'border-border hover:border-border text-muted-foreground hover:bg-muted'}`}
                     >
                       Cancel
                     </button>
@@ -1708,21 +1708,21 @@ function IrrigationServices() {
 
             {/* Booking Requests Grid */}
             {bookings.length === 0 ? (
-              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+              <div className={`rounded-xl shadow-lg p-6 text-center py-12 border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
                 <div className="text-6xl mb-4">📋</div>
-                <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>No booking requests yet</p>
-                <p className={`text-sm mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Browse available services and make your first booking!</p>
+                <p className={`text-lg font-semibold ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>No booking requests yet</p>
+                <p className={`text-sm mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Browse available services and make your first booking!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {bookings.map((booking) => (
-                  <div key={booking.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
+                  <div key={booking.id} className={`rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
-                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.serviceType} Service</h3>
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>📍 {booking.location || 'Location not specified'}</p>
+                        <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>{booking.serviceType} Service</h3>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>📍 {booking.location || 'Location not specified'}</p>
                         {booking.providerName && (
-                          <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Provider: {booking.providerName}</p>
+                          <p className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Provider: {booking.providerName}</p>
                         )}
                       </div>
                       <span className="text-2xl">{getServiceIcon(booking.serviceType)}</span>
@@ -1734,33 +1734,33 @@ function IrrigationServices() {
                       </span>
                     </div>
 
-                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                    <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-border' : 'border-border'}`}>
                       {booking.farmName && (
                         <div className="flex justify-between items-center">
-                          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Farm</p>
-                          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.farmName}</p>
+                          <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Farm</p>
+                          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{booking.farmName}</p>
                         </div>
                       )}
                       {booking.cropName && (
                         <div className="flex justify-between items-center">
-                          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Crop</p>
-                          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.cropName}</p>
+                          <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Crop</p>
+                          <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{booking.cropName}</p>
                         </div>
                       )}
                       <div className="flex justify-between items-center">
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Hours</p>
-                        <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{booking.hours}hrs</p>
+                        <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Hours</p>
+                        <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{booking.hours}hrs</p>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">People</p>
+                        <p className="text-sm text-muted-foreground">People</p>
                         <p className="text-sm font-semibold text-white">{booking.peopleCount}</p>
                       </div>
                     </div>
 
                     {booking.notes && (
                       <div className="space-y-1">
-                        <p className="text-xs text-slate-500">Notes:</p>
-                        <p className="text-sm text-slate-300 bg-slate-700 p-2 rounded">{booking.notes}</p>
+                        <p className="text-xs text-muted-foreground">Notes:</p>
+                        <p className="text-sm text-muted-foreground bg-muted p-2 rounded">{booking.notes}</p>
                       </div>
                     )}
                   </div>
@@ -1777,8 +1777,8 @@ function IrrigationServices() {
             {providerRequests.length === 0 ? (
               <div className="card text-center py-12">
                 <div className="text-6xl mb-4">📬</div>
-                <p className="text-slate-300 text-lg font-semibold">No booking requests yet</p>
-                <p className="text-slate-400 text-sm mt-2">When customers book your services, they will appear here!</p>
+                <p className="text-muted-foreground text-lg font-semibold">No booking requests yet</p>
+                <p className="text-muted-foreground text-sm mt-2">When customers book your services, they will appear here!</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1787,7 +1787,7 @@ function IrrigationServices() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className="text-lg font-bold text-white">{request.serviceType} Service Request</h3>
-                        <p className="text-slate-400 text-sm">📍 {request.location || 'Location not specified'}</p>
+                        <p className="text-muted-foreground text-sm">📍 {request.location || 'Location not specified'}</p>
                         {request.customerName && (
                           <p className="text-blue-400 text-sm font-semibold mt-1">Customer: {request.customerName}</p>
                         )}
@@ -1801,38 +1801,38 @@ function IrrigationServices() {
                       </span>
                     </div>
 
-                    <div className="space-y-2 mb-4 pb-4 border-b border-slate-700">
+                    <div className="space-y-2 mb-4 pb-4 border-b border-border">
                       {request.farmName && (
                         <div className="flex justify-between items-center">
-                          <p className="text-sm text-slate-400">Farm</p>
+                          <p className="text-sm text-muted-foreground">Farm</p>
                           <p className="text-sm font-semibold text-white">{request.farmName}</p>
                         </div>
                       )}
                       {request.cropName && (
                         <div className="flex justify-between items-center">
-                          <p className="text-sm text-slate-400">Crop</p>
+                          <p className="text-sm text-muted-foreground">Crop</p>
                           <p className="text-sm font-semibold text-white">{request.cropName}</p>
                         </div>
                       )}
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">Hours Requested</p>
+                        <p className="text-sm text-muted-foreground">Hours Requested</p>
                         <p className="text-sm font-semibold text-white">{request.hours}hrs</p>
                       </div>
                       <div className="flex justify-between items-center">
-                        <p className="text-sm text-slate-400">People Count</p>
+                        <p className="text-sm text-muted-foreground">People Count</p>
                         <p className="text-sm font-semibold text-white">{request.peopleCount}</p>
                       </div>
                     </div>
 
                     {request.notes && (
                       <div className="mb-4">
-                        <p className="text-xs text-slate-500 mb-1">Customer Notes:</p>
-                        <p className="text-sm text-slate-300 bg-blue-900/30 p-3 rounded border border-blue-700">{request.notes}</p>
+                        <p className="text-xs text-muted-foreground mb-1">Customer Notes:</p>
+                        <p className="text-sm text-muted-foreground bg-blue-900/30 p-3 rounded border border-blue-700">{request.notes}</p>
                       </div>
                     )}
 
                     {request.status === 'PENDING' && (
-                      <div className="flex gap-2 mt-4 pt-4 border-t border-slate-700">
+                      <div className="flex gap-2 mt-4 pt-4 border-t border-border">
                         <button
                           onClick={() => handleApproveBooking(request.id)}
                           disabled={loading}
@@ -1851,8 +1851,8 @@ function IrrigationServices() {
                     )}
 
                     {request.status !== 'PENDING' && (
-                      <div className="mt-4 pt-4 border-t border-slate-700 text-center">
-                        <p className="text-sm text-slate-400 font-semibold">
+                      <div className="mt-4 pt-4 border-t border-border text-center">
+                        <p className="text-sm text-muted-foreground font-semibold">
                           {request.status === 'APPROVED' && '✅ You approved this request'}
                           {request.status === 'DECLINED' && '❌ You declined this request'}
                           {request.status === 'COMPLETED' && '✓ Request completed'}

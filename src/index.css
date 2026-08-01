@@ -195,9 +195,27 @@ body {
   @apply block text-sm font-medium text-foreground mb-1.5;
 }
 
-/* Card — theme aware */
+/* Card — theme aware (legacy + premium) */
 .card {
-  @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6;
+  border-radius: var(--ops-radius-lg);
+  border: 1px solid var(--ops-border);
+  background: var(--ops-surface);
+  color: hsl(var(--card-foreground));
+  box-shadow: 0 1px 2px hsl(222 47% 11% / 0.04), 0 8px 24px -12px hsl(222 47% 11% / 0.12);
+  padding: 1.5rem;
+}
+
+.glass-card {
+  border-radius: var(--ops-radius-lg);
+  border: 1px solid var(--ops-border);
+  background: var(--ops-surface);
+  color: hsl(var(--card-foreground));
+  box-shadow: 0 1px 2px hsl(222 47% 11% / 0.04), 0 8px 24px -12px hsl(222 47% 11% / 0.12);
+}
+
+.dark .glass-card {
+  background: var(--ops-surface);
+  border-color: var(--ops-border);
 }
 
 /* Primary button */
@@ -403,14 +421,6 @@ select:-webkit-autofill:active {
 
 .premium-button-secondary {
   @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors;
-}
-
-.glass-card {
-  @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm;
-}
-
-.dark .glass-card {
-  @apply bg-card border-border;
 }
 
 .interactive-card {

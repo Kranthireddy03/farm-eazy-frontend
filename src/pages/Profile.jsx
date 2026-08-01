@@ -1,11 +1,9 @@
 import React, { useState } from 'react';
 import AvatarCropper from '../components/AvatarCropper';
-import { useTheme } from '../context/ThemeContext';
 import AppPage from '../components/layout/AppPage';
+import { Button } from '../components/ui/button';
 
 function Profile() {
-  const { isDark } = useTheme();
-  // Example user data, replace with real API/user context
   const [user, setUser] = useState({
     username: 'john_doe',
     email: 'john@example.com',
@@ -48,15 +46,12 @@ function Profile() {
   const handleCrop = (croppedDataUrl) => {
     setAvatarPreview(croppedDataUrl);
     setCropMode(false);
-    // Save cropped avatar to backend here
   };
 
   const handleSave = () => {
     setEditMode(false);
-    // Save user details to backend here
   };
 
-  // Drag-and-drop avatar upload
   const handleDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
@@ -70,6 +65,7 @@ function Profile() {
       reader.readAsDataURL(file);
     }
   };
+
   const handleDragOver = (e) => {
     e.preventDefault();
   };
@@ -77,98 +73,80 @@ function Profile() {
   return (
     <AppPage title="Profile" description="Manage your account details and avatar.">
       <div className="flex justify-center">
-      <div className={`glass-card interactive-card w-full max-w-md p-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-        <div className="flex flex-col items-center mb-6">
-          <label htmlFor="avatar-upload" className="cursor-pointer">
-            <img
-              src={avatarPreview || 'https://ui-avatars.com/api/?name=' + user.username + '&background=374151&color=fff'}
-              alt="User avatar"
-              className="w-24 h-24 rounded-full border-2 border-green-500 object-cover mb-2"
-              onDrop={handleDrop}
-              onDragOver={handleDragOver}
-              aria-label="Drag and drop avatar image"
-            />
-            <input
-              id="avatar-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-              aria-label="Upload avatar"
-            />
-          </label>
-          {cropMode && avatarPreview && <AvatarCropper src={avatarPreview} onCrop={handleCrop} />}
-          {uploadProgress > 0 && uploadProgress < 100 && (
-            <div className={`w-full rounded-full h-2 mt-2 ${isDark ? 'bg-slate-600' : 'bg-gray-200'}`}>
-              <div className="bg-green-500 h-2 rounded-full" style={{ width: `${uploadProgress}%` }}></div>
+        <div className="ops-panel w-full max-w-md p-8">
+          <div className="flex flex-col items-center mb-6">
+            <label htmlFor="avatar-upload" className="cursor-pointer">
+              <img
+                src={avatarPreview || `https://ui-avatars.com/api/?name=${user.username}&background=374151&color=fff`}
+                alt="User avatar"
+                className="w-24 h-24 rounded-full border-2 border-primary object-cover mb-2"
+                onDrop={handleDrop}
+                onDragOver={handleDragOver}
+              />
+              <input
+                id="avatar-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
+            </label>
+            {cropMode && avatarPreview && <AvatarCropper src={avatarPreview} onCrop={handleCrop} />}
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div className="w-full rounded-full h-2 mt-2 bg-muted">
+                <div className="bg-primary h-2 rounded-full transition-all" style={{ width: `${uploadProgress}%` }} />
+              </div>
+            )}
+            {uploadError && <p className="text-destructive text-sm mt-2">{uploadError}</p>}
+            <span className="font-medium text-foreground">@{user.username}</span>
+            <span className="text-xs mt-1 text-muted-foreground">Drag and drop image to upload</span>
+          </div>
+          <form className="space-y-4">
+            <div>
+              <label className="form-label" htmlFor="username">Username</label>
+              <input
+                type="text"
+                name="username"
+                id="username"
+                value={user.username}
+                onChange={handleChange}
+                className="form-input disabled:opacity-60"
+                disabled={!editMode}
+              />
             </div>
-          )}
-          {uploadError && (
-            <div className="text-red-400 text-sm mt-2">{uploadError}</div>
-          )}
-          <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>@{user.username}</span>
-          <span className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Drag and drop image to upload</span>
+            <div>
+              <label className="form-label" htmlFor="email">Email</label>
+              <input
+                type="email"
+                name="email"
+                id="email"
+                value={user.email}
+                onChange={handleChange}
+                className="form-input disabled:opacity-60"
+                disabled={!editMode}
+              />
+            </div>
+            <div>
+              <label className="form-label" htmlFor="phone">Phone</label>
+              <input
+                type="tel"
+                name="phone"
+                id="phone"
+                value={user.phone}
+                onChange={handleChange}
+                className="form-input disabled:opacity-60"
+                disabled={!editMode}
+              />
+            </div>
+            {editMode ? (
+              <Button type="button" className="w-full" onClick={handleSave}>Save</Button>
+            ) : (
+              <Button type="button" variant="outline" className="w-full" onClick={() => setEditMode(true)}>
+                Edit profile
+              </Button>
+            )}
+          </form>
         </div>
-        <form className="space-y-4" aria-label="Profile form">
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="username">Username</label>
-            <input
-              type="text"
-              name="username"
-              id="username"
-              value={user.username}
-              onChange={handleChange}
-              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-              disabled={!editMode}
-              aria-label="Username"
-            />
-          </div>
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="email">Email</label>
-            <input
-              type="email"
-              name="email"
-              id="email"
-              value={user.email}
-              onChange={handleChange}
-              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-              disabled={!editMode}
-              aria-label="Email"
-            />
-          </div>
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="phone">Phone</label>
-            <input
-              type="tel"
-              name="phone"
-              id="phone"
-              value={user.phone}
-              onChange={handleChange}
-              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-              disabled={!editMode}
-              aria-label="Phone"
-            />
-          </div>
-          <div>
-            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`} htmlFor="username">Username</label>
-            <input
-              type="text"
-              name="username"
-              id="username"
-              value={user.username}
-              onChange={handleChange}
-              className={`form-input w-full px-4 py-2 disabled:opacity-60 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-              disabled={!editMode}
-              aria-label="Username"
-            />
-          </div>
-          {editMode ? (
-            <button type="button" className="premium-button w-full py-3 px-4" onClick={handleSave} aria-label="Save profile">Save</button>
-          ) : (
-            <button type="button" className={`premium-button-secondary w-full py-3 px-4 ${isDark ? 'text-white' : 'text-slate-800'}`} onClick={() => setEditMode(true)} aria-label="Edit profile">Edit</button>
-          )}
-        </form>
-      </div>
       </div>
     </AppPage>
   );

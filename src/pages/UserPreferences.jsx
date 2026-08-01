@@ -98,15 +98,15 @@ const UserPreferences = () => {
           </div>
         )}
 
-        <div className={`mb-6 glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-cyan-100'}`}>
-          <div className="bg-gradient-to-r from-cyan-500 to-blue-500 px-6 py-4 text-white">
+        <div className={`mb-6 ops-panel interactive-card overflow-hidden ${isDark ? 'border border-border' : 'border border-cyan-100'}`}>
+          <div className="bg-gradient-to-r from-primary/50 to-blue-500 px-6 py-4 text-white">
             <h2 className="text-lg font-bold flex items-center gap-2">
               <span>🧭</span> Quick Help Guide
             </h2>
           </div>
           <div className="p-6 space-y-3">
-            <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>Choose settings based on your goal:</p>
-            <ul className={`text-sm space-y-2 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+            <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Choose settings based on your goal:</p>
+            <ul className={`text-sm space-y-2 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
               <li>• Theme: Choose Light, Dark, or System. This preference is also carried to Support Portal redirects.</li>
               <li>• Notifications: Turn on email and push alerts so you do not miss important farm updates.</li>
               <li>• Language: Pick your preferred language for easier day-to-day usage.</li>
@@ -122,7 +122,7 @@ const UserPreferences = () => {
               </button>
               <Link
                 to="/dashboard"
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-slate-200 text-slate-800 hover:bg-slate-300'}`}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${isDark ? 'bg-muted text-foreground hover:bg-muted' : 'bg-muted text-foreground hover:bg-muted'}`}
               >
                 Go to Dashboard
               </Link>
@@ -133,7 +133,7 @@ const UserPreferences = () => {
         {/* Preference Groups */}
         <div className="space-y-6">
           {preferenceGroups.map((group) => (
-            <div key={group.title} className={`glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-indigo-100'}`}>
+            <div key={group.title} className={`ops-panel interactive-card overflow-hidden ${isDark ? 'border border-border' : 'border border-indigo-100'}`}>
               <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-4 text-white">
                 <h2 className="text-lg font-bold flex items-center gap-2">
                   <span>{group.icon}</span> {group.title}
@@ -141,11 +141,11 @@ const UserPreferences = () => {
               </div>
               <div className="p-6 space-y-4">
                 {group.items.map((item) => (
-                  <div key={item.name} className={`flex items-center justify-between py-3 border-b last:border-0 ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+                  <div key={item.name} className={`flex items-center justify-between py-3 border-b last:border-0 ${isDark ? 'border-border' : 'border-border'}`}>
                     <div className="flex-1">
-                      <label className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>{item.label}</label>
+                      <label className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>{item.label}</label>
                       {item.description && (
-                        <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{item.description}</p>
+                        <p className={`text-sm mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{item.description}</p>
                       )}
                     </div>
                     <div className="ml-4">
@@ -158,7 +158,7 @@ const UserPreferences = () => {
                             onChange={handleChange}
                             className="sr-only peer"
                           />
-                          <div className={`w-11 h-6 peer-focus:outline-none peer-focus:ring-4 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 ${isDark ? 'bg-slate-600 peer-focus:ring-indigo-700 peer-checked:after:border-slate-600 after:bg-slate-300 after:border-slate-500' : 'bg-slate-300 peer-focus:ring-indigo-300 peer-checked:after:border-white after:bg-white after:border-slate-200'}`}></div>
+                          <div className={`w-11 h-6 peer-focus:outline-none peer-focus:ring-4 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600 ${isDark ? 'bg-muted peer-focus:ring-indigo-700 peer-checked:after:border-border after:bg-muted after:border-border' : 'bg-muted peer-focus:ring-indigo-300 peer-checked:after:border-white after:bg-background after:border-border'}`}></div>
                         </label>
                       ) : (
                         <div className="space-y-1">
@@ -166,14 +166,14 @@ const UserPreferences = () => {
                             name={item.name}
                             value={prefs[item.name]}
                             onChange={handleChange}
-                            className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'border-slate-600 bg-slate-700 text-white' : 'border-slate-300 bg-white text-slate-900'}`}
+                            className={`px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'border-border bg-muted text-white' : 'border-border bg-background text-foreground'}`}
                           >
                             {item.options?.map((opt) => (
                               <option key={opt.value} value={opt.value}>{opt.label}</option>
                             ))}
                           </select>
                           {item.name === 'theme' && (
-                            <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Tip: Use System to follow your device mode automatically.</p>
+                            <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Tip: Use System to follow your device mode automatically.</p>
                           )}
                         </div>
                       )}
@@ -185,22 +185,22 @@ const UserPreferences = () => {
           ))}
 
           {/* Payment & Refund Section */}
-          <div className={`glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-emerald-100'}`}>
-            <div className="bg-gradient-to-r from-green-500 to-teal-500 px-6 py-4 text-white">
+          <div className={`ops-panel interactive-card overflow-hidden ${isDark ? 'border border-border' : 'border border-border/60'}`}>
+            <div className="bg-gradient-to-r from-primary to-primary px-6 py-4 text-white">
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <span>💳</span> Payment & Refunds
               </h2>
             </div>
             <div className="p-6 space-y-4">
-              <div className={`flex items-center justify-between py-3 border-b ${isDark ? 'border-slate-700' : 'border-slate-200'}`}>
+              <div className={`flex items-center justify-between py-3 border-b ${isDark ? 'border-border' : 'border-border'}`}>
                 <div className="flex-1">
-                  <span className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>Refund Details</span>
-                  <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Manage your bank/UPI details for refunds</p>
+                  <span className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>Refund Details</span>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Manage your bank/UPI details for refunds</p>
                 </div>
                 <div className="ml-4">
                   <Link 
                     to="/refund-details" 
-                    className="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                    className="px-4 py-2 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
                   >
                     Manage
                   </Link>
@@ -208,8 +208,8 @@ const UserPreferences = () => {
               </div>
               <div className="flex items-center justify-between py-3">
                 <div className="flex-1">
-                  <span className={`font-medium ${isDark ? 'text-white' : 'text-slate-900'}`}>My Orders</span>
-                  <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>View orders, cancellations and refund status</p>
+                  <span className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>My Orders</span>
+                  <p className={`text-sm mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>View orders, cancellations and refund status</p>
                 </div>
                 <div className="ml-4">
                   <Link 
@@ -234,7 +234,7 @@ const UserPreferences = () => {
               setSaved(true);
               setTimeout(() => setSaved(false), 2000);
             }}
-            className={`px-6 py-3 rounded-lg font-medium transition-colors ${isDark ? 'bg-slate-700 text-slate-100 hover:bg-slate-600' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`}
+            className={`px-6 py-3 rounded-lg font-medium transition-colors ${isDark ? 'bg-muted text-foreground hover:bg-muted' : 'bg-muted text-foreground hover:bg-muted'}`}
           >
             Reset to Defaults
           </button>

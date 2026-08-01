@@ -43,29 +43,29 @@ export default function ContactSettings() {
   }
 
   return (
-    <div className={`min-h-screen px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
+    <div className={`min-h-screen px-4 py-8 ${isDark ? 'bg-background' : 'bg-background'}`}>
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-3 text-slate-900 dark:text-slate-100">Contact Details</h1>
-        <p className="mb-6 max-w-2xl text-sm text-slate-600 dark:text-slate-300">
+        <h1 className="text-3xl font-bold mb-3 text-foreground dark:text-foreground">Contact Details</h1>
+        <p className="mb-6 max-w-2xl text-sm text-muted-foreground dark:text-muted-foreground">
           Existing values are shown below. The first OTP is sent to your current contact to confirm ownership, and a second OTP is sent to the new contact before the change is finalized.
         </p>
 
-        {statusMessage && <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800 dark:border-emerald-600/40 dark:bg-emerald-950/40 dark:text-emerald-200">{statusMessage}</div>}
+        {statusMessage && <div className="mb-4 rounded-xl border border-border bg-primary/5 px-4 py-3 text-sm text-foreground dark:border-primary/40 dark:bg-primary/10 dark:text-primary/80">{statusMessage}</div>}
         {errorMessage && <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-600/40 dark:bg-red-950/40 dark:text-red-200">{errorMessage}</div>}
 
         {loading ? (
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400">Loading contact details…</div>
+          <div className="rounded-3xl border border-border bg-muted/30 p-6 text-muted-foreground shadow-sm dark:border-border dark:bg-card dark:text-muted-foreground">Loading contact details…</div>
         ) : (
           <div className="space-y-5">
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-3xl border border-border bg-muted/30 p-6 shadow-sm dark:border-border dark:bg-card">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Primary email</p>
-                  <p className="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100 break-words">{contact.email || 'Not set'}</p>
+                  <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">Primary email</p>
+                  <p className="mt-2 text-base font-semibold text-foreground dark:text-foreground break-words">{contact.email || 'Not set'}</p>
                 </div>
                 <button
                   onClick={() => setActiveChange(activeChange === 'email' ? null : 'email')}
-                  className="inline-flex items-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+                  className="inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/90"
                 >
                   {activeChange === 'email' ? 'Cancel' : 'Change email'}
                 </button>
@@ -78,11 +78,11 @@ export default function ContactSettings() {
               )}
             </div>
 
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+            <div className="rounded-3xl border border-border bg-muted/30 p-6 shadow-sm dark:border-border dark:bg-card">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Primary phone</p>
-                  <p className="mt-2 text-base font-semibold text-slate-900 dark:text-slate-100 break-words">{contact.phone || 'Not set'}</p>
+                  <p className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">Primary phone</p>
+                  <p className="mt-2 text-base font-semibold text-foreground dark:text-foreground break-words">{contact.phone || 'Not set'}</p>
                 </div>
                 <button
                   onClick={() => setActiveChange(activeChange === 'phone' ? null : 'phone')}

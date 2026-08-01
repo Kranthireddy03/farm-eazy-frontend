@@ -31,10 +31,10 @@ function DashboardCharts({ stats }) {
     <div className="my-8">
       <h3 className="text-xl font-bold mb-4 text-white">Farm Overview Analytics</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-slate-800 border border-slate-700 rounded-xl shadow p-4">
+        <div className="bg-muted border border-border rounded-xl shadow p-4">
           <Bar data={barData} options={{ responsive: true, plugins: { legend: { display: false } } }} aria-label="Farm stats bar chart" />
         </div>
-        <div className="bg-slate-800 border border-slate-700 rounded-xl shadow p-4">
+        <div className="bg-muted border border-border rounded-xl shadow p-4">
           <Pie data={pieData} options={{ responsive: true }} aria-label="Farm stats pie chart" />
         </div>
       </div>

@@ -42,7 +42,7 @@ export default function AddressSettings() {
   }
 
   return (
-    <div className={`min-h-screen px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-white'}`}>
+    <div className={`min-h-screen px-4 py-8 ${isDark ? 'bg-background' : 'bg-background'}`}>
       <div className="max-w-3xl mx-auto">
         <h1 className="text-2xl font-bold mb-3">Manage Addresses</h1>
         <div className="mb-4">Saved addresses are used for deliveries and location-based services.</div>
@@ -58,7 +58,7 @@ export default function AddressSettings() {
             </div>
             <input name="phone" value={form.phone} onChange={handleChange} placeholder="Phone" className="w-full px-3 py-2 rounded-lg border" />
             <div className="flex gap-2">
-              <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg bg-emerald-600 text-white">{saving ? 'Saving...' : 'Add address'}</button>
+              <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg bg-primary text-white">{saving ? 'Saving...' : 'Add address'}</button>
             </div>
           </form>
         </div>
@@ -69,9 +69,9 @@ export default function AddressSettings() {
             addresses.length ? addresses.map(a => (
               <div key={a.id} className="p-3 border rounded-lg">
                 <div className="font-medium">{a.fullName}</div>
-                <div className="text-sm text-gray-600">{a.addressLine1}{a.city ? ', ' + a.city : ''} {a.pincode ? ' - ' + a.pincode : ''}</div>
+                <div className="text-sm text-muted-foreground">{a.addressLine1}{a.city ? ', ' + a.city : ''} {a.pincode ? ' - ' + a.pincode : ''}</div>
               </div>
-            )) : <div className="text-sm text-gray-500">No saved addresses</div>
+            )) : <div className="text-sm text-muted-foreground">No saved addresses</div>
           )}
         </div>
       </div>

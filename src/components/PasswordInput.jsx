@@ -26,7 +26,7 @@ function PasswordInput({
 
   return (
     <div className="mb-4">
-      <label htmlFor={name} className="block text-sm font-medium text-slate-300">{label}</label>
+      <label htmlFor={name} className="block text-sm font-medium text-muted-foreground">{label}</label>
       <div className="flex items-center mt-1">
         <input
           type={visible ? 'text' : 'password'}
@@ -44,7 +44,7 @@ function PasswordInput({
           type="button"
           onClick={() => setVisible((v) => !v)}
           aria-label={visible ? 'Hide password' : 'Show password'}
-          className="ml-2 px-3 py-1 rounded-full border-2 border-green-500 bg-gradient-to-r from-slate-700 to-slate-600 hover:from-slate-600 hover:to-slate-500 transition flex items-center focus:outline-none focus:ring-2 focus:ring-green-500"
+          className="ml-2 px-3 py-1 rounded-full border-2 border-green-500 bg-gradient-to-r from-muted to-muted/80 hover:from-slate-600 hover:to-slate-500 transition flex items-center focus:outline-none focus:ring-2 focus:ring-green-500"
           style={{ fontWeight: 'bold', fontSize: '1.1em' }}
         >
           <span style={{ marginRight: 4 }}>{visible ? '👁️' : '🌱'}</span>

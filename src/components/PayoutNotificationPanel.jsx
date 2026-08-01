@@ -75,7 +75,7 @@ export function PayoutNotificationPanel() {
 
   return (
     <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-md`}>
-      <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-foreground'}`}>
         💰 Payout Information
       </h2>
 
@@ -129,8 +129,8 @@ export function PayoutNotificationPanel() {
             />
           ))
         ) : (
-          <div className={`p-4 text-center ${isDark ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg`}>
-            <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className={`p-4 text-center ${isDark ? 'bg-gray-700' : 'bg-muted/50'} rounded-lg`}>
+            <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               No payout notifications yet
             </p>
           </div>
@@ -139,7 +139,7 @@ export function PayoutNotificationPanel() {
 
       {/* Footer Info */}
       <div className={`mt-6 pt-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-        <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+        <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
           💡 Payouts are processed daily. You'll receive notifications for each batch status update.
           For more details, visit the <a href="/transactions" className="text-green-600 hover:underline">Transactions</a> page.
         </p>
@@ -165,7 +165,7 @@ export function PayoutNotificationItem({ notification, isDark, onMarkAsRead }) {
     } else if (message?.includes('retry')) {
       return { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: '🔄' }
     }
-    return { bg: 'bg-gray-100', text: 'text-gray-800', icon: 'ℹ️' }
+    return { bg: 'bg-muted', text: 'text-foreground', icon: 'ℹ️' }
   }
 
   const statusBadge = getStatusBadgeColor(notification.message?.toLowerCase())
@@ -180,7 +180,7 @@ export function PayoutNotificationItem({ notification, isDark, onMarkAsRead }) {
       className={`p-4 rounded-lg border-l-4 flex items-start justify-between ${
         isDark 
           ? `bg-gray-700 border-l-blue-500 ${!notification.isRead ? 'opacity-100' : 'opacity-75'}` 
-          : `bg-gray-50 border-l-blue-500 ${!notification.isRead ? 'opacity-100' : 'opacity-75'}`
+          : `bg-muted/50 border-l-blue-500 ${!notification.isRead ? 'opacity-100' : 'opacity-75'}`
       }`}
       onClick={() => !notification.isRead && onMarkAsRead(notification.id)}
     >
@@ -194,11 +194,11 @@ export function PayoutNotificationItem({ notification, isDark, onMarkAsRead }) {
           )}
         </div>
 
-        <p className={`text-sm ${isDark ? 'text-gray-200' : 'text-gray-700'}`}>
+        <p className={`text-sm ${isDark ? 'text-gray-200' : 'text-muted-foreground'}`}>
           {notification.message}
         </p>
 
-        <div className={`flex gap-4 mt-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+        <div className={`flex gap-4 mt-2 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
           <span>📅 {formattedDate}</span>
           <span>⏰ {formattedTime}</span>
         </div>
@@ -226,15 +226,15 @@ export function PayoutNotificationItem({ notification, isDark, onMarkAsRead }) {
  */
 function SummaryCard({ title, value, amount, icon, isDark }) {
   return (
-    <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-50'} text-center`}>
+    <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-700' : 'bg-muted/50'} text-center`}>
       <div className="text-2xl mb-2">{icon}</div>
-      <p className={`text-sm font-semibold ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+      <p className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
         {title}
       </p>
-      <p className={`text-xl font-bold mt-1 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      <p className={`text-xl font-bold mt-1 ${isDark ? 'text-white' : 'text-foreground'}`}>
         {value}
       </p>
-      <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+      <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
         {amount}
       </p>
     </div>

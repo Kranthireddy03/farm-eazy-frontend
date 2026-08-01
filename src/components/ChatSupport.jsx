@@ -564,7 +564,7 @@ export default function ChatSupport({ className = '' }) {
     <div className={`fixed bottom-24 left-2 right-2 sm:left-auto sm:right-6 z-50 flex justify-end ${className}`}>
       {!open && (
         <button
-          className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-3 shadow-2xl shadow-cyan-900/20 ring-1 ring-white/20 hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
+          className="group flex items-center gap-2 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-3 shadow-2xl shadow-cyan-900/20 ring-1 ring-white/20 hover:from-primary/50 hover:to-blue-500 transition-all duration-300"
           onClick={() => setOpen(true)}
           aria-label="Open live chat"
         >
@@ -573,7 +573,7 @@ export default function ChatSupport({ className = '' }) {
         </button>
       )}
       {open && (
-        <div className="w-full sm:w-[24rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-3xl border border-slate-700 bg-slate-900/95 shadow-2xl shadow-slate-950/30 backdrop-blur-xl flex flex-col animate-[slideInRight_180ms_ease-out]">
+        <div className="w-full sm:w-[24rem] max-w-[calc(100vw-1rem)] overflow-hidden rounded-3xl border border-border bg-card/95 shadow-2xl shadow-slate-950/30 backdrop-blur-xl flex flex-col animate-[slideInRight_180ms_ease-out]">
           <div className="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-3">
             <div>
               <span className="font-bold block">FarmEazy Live Chat</span>
@@ -587,20 +587,20 @@ export default function ChatSupport({ className = '' }) {
             </div>
           </div>
 
-          <div className="px-4 pt-3 text-xs text-slate-300 flex items-center justify-between gap-2">
+          <div className="px-4 pt-3 text-xs text-muted-foreground flex items-center justify-between gap-2">
             <span>{liveStatus === 'available' ? 'Support executives are available now.' : 'Support executives are offline right now.'}</span>
             {ticketId && <span className="text-cyan-300">Ticket polling on</span>}
           </div>
 
           <div className="px-3 pt-2">
-            <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-2">
-              <div className="text-[11px] font-semibold text-slate-300 mb-2">Recent Tickets</div>
+            <div className="rounded-xl border border-border bg-slate-950/60 p-2">
+              <div className="text-[11px] font-semibold text-muted-foreground mb-2">Recent Tickets</div>
               <div className="flex gap-2 overflow-x-auto pb-1">
                 {historyLoading && (
-                  <span className="text-[11px] text-slate-400">Loading...</span>
+                  <span className="text-[11px] text-muted-foreground">Loading...</span>
                 )}
                 {!historyLoading && ticketHistory.length === 0 && (
-                  <span className="text-[11px] text-slate-400">No previous tickets</span>
+                  <span className="text-[11px] text-muted-foreground">No previous tickets</span>
                 )}
                 {!historyLoading && ticketHistory.map((ticket) => {
                   const id = ticket?.displayId;
@@ -611,7 +611,7 @@ export default function ChatSupport({ className = '' }) {
                       key={id}
                       type="button"
                       onClick={() => handleSelectTicket(id)}
-                      className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] border ${isActive ? 'bg-cyan-600/25 text-cyan-200 border-cyan-500/50' : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'}`}
+                      className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] border ${isActive ? 'bg-cyan-600/25 text-cyan-200 border-cyan-500/50' : 'bg-muted text-muted-foreground border-border hover:bg-muted'}`}
                       disabled={loading}
                     >
                       {id}
@@ -644,7 +644,7 @@ export default function ChatSupport({ className = '' }) {
                 const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '')
               return (
                 <div key={idx} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
-                  <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-sm leading-5 ${msg.sender === 'user' ? 'bg-emerald-500/15 text-emerald-200 border border-emerald-500/20' : 'bg-slate-800 text-slate-200 border border-slate-700'}`}>
+                  <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-sm leading-5 ${msg.sender === 'user' ? 'bg-primary/50/15 text-primary/80 border border-primary/20' : 'bg-muted text-muted-foreground border border-border'}`}>
                     {bubbleText}
                   </span>
                   {attachments.length > 0 && (
@@ -654,7 +654,7 @@ export default function ChatSupport({ className = '' }) {
                           <button
                             type="button"
                             onClick={() => openAttachment(attachment.url)}
-                            className="rounded-full bg-slate-700 text-slate-100 px-2 py-1 text-[11px] hover:bg-slate-600"
+                            className="rounded-full bg-muted text-slate-100 px-2 py-1 text-[11px] hover:bg-slate-600"
                           >
                             Open {attachment.fileName}
                           </button>
@@ -675,16 +675,16 @@ export default function ChatSupport({ className = '' }) {
           </div>
 
             {faqLoading && (
-              <div className="text-xs text-slate-400">Loading help articles...</div>
+              <div className="text-xs text-muted-foreground">Loading help articles...</div>
             )}
 
             {attachment && (
               <div className="text-xs text-cyan-200">Attachment selected: {attachment.name}</div>
             )}
 
-          <div className="flex gap-2 p-3 border-t border-slate-700 bg-slate-950/80">
+          <div className="flex gap-2 p-3 border-t border-border bg-slate-950/80">
             <input
-              className="flex-1 bg-slate-800 border border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+              className="flex-1 bg-muted border border-border text-foreground dark:text-white placeholder-slate-400 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
               type="text"
               value={input}
               onChange={(event) => setInput(event.target.value)}
@@ -700,8 +700,8 @@ export default function ChatSupport({ className = '' }) {
               id="chat-file-upload"
               onChange={handleFileUpload}
             />
-            <label htmlFor="chat-file-upload" className="bg-slate-800 text-slate-300 px-3 py-2 rounded-xl cursor-pointer hover:bg-slate-700 border border-slate-700">📎</label>
-            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-cyan-500 hover:to-blue-500 disabled:opacity-60" onClick={handleSend} aria-label="Send message" disabled={loading}>
+            <label htmlFor="chat-file-upload" className="bg-muted text-muted-foreground px-3 py-2 rounded-xl cursor-pointer hover:bg-muted border border-border">📎</label>
+            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-primary/50 hover:to-blue-500 disabled:opacity-60" onClick={handleSend} aria-label="Send message" disabled={loading}>
               Send
             </button>
           </div>

@@ -513,10 +513,10 @@ export function SessionWarningModal() {
       <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl p-6 max-w-md mx-4 animate-fadeIn">
         <div className="text-center">
           <div className="text-5xl mb-4">⏰</div>
-          <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">
+          <h2 className="text-xl font-bold text-foreground dark:text-white mb-2">
             Session Expiring Soon
           </h2>
-          <p className="text-gray-600 dark:text-slate-300 mb-4">
+          <p className="text-muted-foreground dark:text-slate-300 mb-4">
             Your session will expire in{' '}
             <span className="font-bold text-orange-500">
               {minutes}:{seconds.toString().padStart(2, '0')}
@@ -526,13 +526,13 @@ export function SessionWarningModal() {
           <div className="flex gap-3 justify-center">
             <button
               onClick={extendSession}
-              className="px-6 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+              className="px-6 py-2 bg-gradient-to-r from-primary to-primary text-white rounded-lg font-semibold hover:shadow-lg transition-all"
             >
               Stay Logged In
             </button>
             <button
               onClick={() => logout('user')}
-              className="px-6 py-2 bg-gray-200 dark:bg-slate-700 text-gray-700 dark:text-slate-300 rounded-lg font-semibold hover:bg-gray-300 dark:hover:bg-slate-600 transition-all"
+              className="px-6 py-2 bg-muted dark:bg-slate-700 text-muted-foreground dark:text-slate-300 rounded-lg font-semibold hover:bg-border dark:hover:bg-slate-600 transition-all"
             >
               Logout
             </button>

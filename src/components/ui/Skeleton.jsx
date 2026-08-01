@@ -5,7 +5,7 @@
 export function Skeleton({ className = '' }) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-slate-200/80 dark:bg-slate-700/60 ${className}`}
+      className={`animate-pulse rounded-lg bg-slate-200/80 dark:bg-muted/60 ${className}`}
       aria-hidden="true"
     />
   );
@@ -26,7 +26,7 @@ export function SkeletonText({ lines = 3, className = '' }) {
 
 export function SkeletonKpiCard() {
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white/80 dark:bg-slate-900/60 p-5 shadow-sm">
+    <div className="rounded-2xl border border-border/80 dark:border-border/80 bg-white/80 dark:bg-muted/40 p-5 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="space-y-3 flex-1">
           <Skeleton className="h-3 w-24" />
@@ -41,7 +41,7 @@ export function SkeletonKpiCard() {
 
 export function SkeletonChart({ className = 'h-64' }) {
   return (
-    <div className={`rounded-2xl border border-slate-200/80 dark:border-slate-700/80 bg-white/80 dark:bg-slate-900/60 p-5 ${className}`}>
+    <div className={`rounded-2xl border border-border/80 dark:border-border/80 bg-white/80 dark:bg-muted/40 p-5 ${className}`}>
       <Skeleton className="h-4 w-40 mb-4" />
       <Skeleton className="h-full min-h-[12rem] w-full rounded-xl" />
     </div>
@@ -50,12 +50,12 @@ export function SkeletonChart({ className = 'h-64' }) {
 
 export function SkeletonTable({ rows = 5 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 overflow-hidden">
-      <div className="p-4 border-b border-slate-200/80 dark:border-slate-700/80">
+    <div className="rounded-2xl border border-border/80 dark:border-border/80 overflow-hidden">
+      <div className="p-4 border-b border-border/80 dark:border-border/80">
         <Skeleton className="h-4 w-48" />
       </div>
       {Array.from({ length: rows }).map((_, i) => (
-        <div key={i} className="flex items-center gap-4 p-4 border-b border-slate-100 dark:border-slate-800 last:border-0">
+        <div key={i} className="flex items-center gap-4 p-4 border-b border-border dark:border-slate-800 last:border-0">
           <Skeleton className="h-10 w-10 rounded-full shrink-0" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-3 w-3/4" />
@@ -85,7 +85,7 @@ export function PageSkeleton({ variant = 'dashboard' }) {
           {Array.from({ length: 4 }).map((_, i) => <SkeletonKpiCard key={i} />)}
         </div>
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} className="rounded-2xl border border-slate-200/80 dark:border-slate-700/80 p-5 space-y-4">
+          <div key={i} className="rounded-2xl border border-border/80 dark:border-border/80 p-5 space-y-4">
             <Skeleton className="h-4 w-48" />
             <Skeleton className="h-20 w-full rounded-xl" />
             <Skeleton className="h-8 w-32 rounded-lg" />

@@ -182,7 +182,7 @@ function RefundDetails() {
         return (
             <AppPage title="Refund Details" description="Manage your bank/UPI details for receiving refunds.">
                 <div className="flex items-center justify-center h-64">
-                    <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading...</p>
+                    <p className={`text-lg ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Loading...</p>
                 </div>
             </AppPage>
         )
@@ -203,7 +203,7 @@ function RefundDetails() {
                     </div>
                 )}
 
-                <div className={`glass-card interactive-card rounded-xl shadow-lg p-6 border ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
+                <div className={`ops-panel interactive-card rounded-xl shadow-lg p-6 border ${isDark ? 'border-border' : 'border-border'}`}>
                     {/* View mode */}
                     {hasDetails && !isEditing && (
                         <div className="space-y-4">
@@ -218,7 +218,7 @@ function RefundDetails() {
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => setIsEditing(true)}
-                                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-lg text-sm transition"
+                                        className="px-4 py-2 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg text-sm transition"
                                     >
                                         Edit
                                     </button>
@@ -233,39 +233,39 @@ function RefundDetails() {
                                 </div>
                             </div>
 
-                            <div className={`p-4 rounded-lg ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
+                            <div className={`p-4 rounded-lg ${isDark ? 'bg-muted/50' : 'bg-muted/50'}`}>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Account Holder</p>
-                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>{accountHolderName}</p>
+                                        <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Account Holder</p>
+                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>{accountHolderName}</p>
                                     </div>
                                     <div>
-                                        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Preferred Method</p>
-                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                                        <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Preferred Method</p>
+                                        <p className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
                                             {preferredMethod === 'UPI' ? '📱 UPI' : '🏦 Bank Transfer'}
                                         </p>
                                     </div>
                                     {preferredMethod === 'UPI' ? (
                                         <div className="col-span-2">
-                                            <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>UPI ID</p>
-                                            <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>{upiId}</p>
+                                            <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>UPI ID</p>
+                                            <p className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>{upiId}</p>
                                         </div>
                                     ) : (
                                         <>
                                             <div>
-                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>Bank</p>
-                                                <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>{bankName || '—'}</p>
+                                                <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Bank</p>
+                                                <p className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>{bankName || '—'}</p>
                                             </div>
                                             <div>
-                                                <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>IFSC</p>
-                                                <p className={`font-medium ${isDark ? 'text-white' : 'text-gray-800'}`}>{ifscCode}</p>
+                                                <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>IFSC</p>
+                                                <p className={`font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>{ifscCode}</p>
                                             </div>
                                         </>
                                     )}
                                 </div>
                             </div>
 
-                            <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
+                            <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                 These details will be used for all your refunds. Make sure they are correct.
                             </p>
                         </div>
@@ -276,7 +276,7 @@ function RefundDetails() {
                         <form onSubmit={handleSubmit} className="space-y-4">
                             {/* Method toggle */}
                             <div>
-                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                     Preferred Refund Method
                                 </label>
                                 <div className="flex gap-2">
@@ -285,8 +285,8 @@ function RefundDetails() {
                                         onClick={() => setPreferredMethod('UPI')}
                                         className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
                                             preferredMethod === 'UPI'
-                                                ? 'bg-emerald-600 text-white'
-                                                : isDark ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                                                ? 'bg-primary text-white'
+                                                : isDark ? 'bg-muted text-muted-foreground' : 'bg-muted text-muted-foreground'
                                         }`}
                                     >
                                         📱 UPI
@@ -296,8 +296,8 @@ function RefundDetails() {
                                         onClick={() => setPreferredMethod('BANK')}
                                         className={`flex-1 py-3 px-4 rounded-lg font-medium transition ${
                                             preferredMethod === 'BANK'
-                                                ? 'bg-emerald-600 text-white'
-                                                : isDark ? 'bg-slate-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                                                ? 'bg-primary text-white'
+                                                : isDark ? 'bg-muted text-muted-foreground' : 'bg-muted text-muted-foreground'
                                         }`}
                                     >
                                         🏦 Bank Account
@@ -307,7 +307,7 @@ function RefundDetails() {
 
                             {/* Account holder name */}
                             <div>
-                                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                     Account Holder Name *
                                 </label>
                                 <input
@@ -316,7 +316,7 @@ function RefundDetails() {
                                     onChange={(e) => setAccountHolderName(e.target.value)}
                                     placeholder="Enter name as per bank account"
                                     className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                                        isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                                        isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                                     }`}
                                     required
                                 />
@@ -325,7 +325,7 @@ function RefundDetails() {
                             {/* UPI Fields */}
                             {preferredMethod === 'UPI' && (
                                 <div>
-                                    <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                    <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                         UPI ID *
                                     </label>
                                     <input
@@ -334,11 +334,11 @@ function RefundDetails() {
                                         onChange={(e) => setUpiId(e.target.value.toLowerCase())}
                                         placeholder="yourname@upi"
                                         className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                                            isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                                            isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                                         }`}
                                         required={preferredMethod === 'UPI'}
                                     />
-                                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                                    <p className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                         Example: yourname@okhdfcbank, mobile@paytm
                                     </p>
                                 </div>
@@ -348,7 +348,7 @@ function RefundDetails() {
                             {preferredMethod === 'BANK' && (
                                 <>
                                     <div>
-                                        <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                             Account Number *
                                         </label>
                                         <input
@@ -357,14 +357,14 @@ function RefundDetails() {
                                             onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, ''))}
                                             placeholder="Enter account number"
                                             className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                                                isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                                                isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                                             }`}
                                             required={preferredMethod === 'BANK'}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                             Confirm Account Number *
                                         </label>
                                         <input
@@ -373,14 +373,14 @@ function RefundDetails() {
                                             onChange={(e) => setConfirmAccountNumber(e.target.value.replace(/\D/g, ''))}
                                             placeholder="Re-enter account number"
                                             className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                                                isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                                                isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                                             } ${accountNumber && confirmAccountNumber && accountNumber !== confirmAccountNumber ? 'border-red-500' : ''}`}
                                             required={preferredMethod === 'BANK'}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                        <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                             IFSC Code *
                                         </label>
                                         <input
@@ -390,7 +390,7 @@ function RefundDetails() {
                                             placeholder="SBIN0001234"
                                             maxLength={11}
                                             className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                                                isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                                                isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                                             }`}
                                             required={preferredMethod === 'BANK'}
                                         />
@@ -398,7 +398,7 @@ function RefundDetails() {
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <div>
-                                            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                 Bank Name
                                             </label>
                                             <input
@@ -407,12 +407,12 @@ function RefundDetails() {
                                                 onChange={(e) => setBankName(e.target.value)}
                                                 placeholder="SBI, HDFC..."
                                                 className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                                                    isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                                                    isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                                                 }`}
                                             />
                                         </div>
                                         <div>
-                                            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                                            <label className={`block text-sm font-medium mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                                                 Branch
                                             </label>
                                             <input
@@ -421,7 +421,7 @@ function RefundDetails() {
                                                 onChange={(e) => setBranchName(e.target.value)}
                                                 placeholder="Branch name"
                                                 className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-orange-500 outline-none ${
-                                                    isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+                                                    isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'
                                                 }`}
                                             />
                                         </div>
@@ -439,7 +439,7 @@ function RefundDetails() {
                                             fetchRefundDetails() // Reset form
                                         }}
                                         className={`flex-1 py-3 rounded-lg font-medium transition ${
-                                            isDark ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                            isDark ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-muted text-muted-foreground hover:bg-muted'
                                         }`}
                                     >
                                         Cancel
@@ -448,7 +448,7 @@ function RefundDetails() {
                                 <button
                                     type="submit"
                                     disabled={saving}
-                                    className={`${hasDetails ? 'flex-1' : 'w-full'} py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition disabled:opacity-50`}
+                                    className={`${hasDetails ? 'flex-1' : 'w-full'} py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg transition disabled:opacity-50`}
                                 >
                                     {saving ? 'Saving...' : hasDetails ? 'Update Details' : 'Save Details'}
                                 </button>

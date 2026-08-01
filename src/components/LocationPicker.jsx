@@ -275,16 +275,16 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+    <div className="bg-muted rounded-lg border border-border overflow-hidden">
       {/* Tab Switcher */}
-      <div className="flex border-b border-slate-700">
+      <div className="flex border-b border-border">
         <button
           type="button"
           onClick={() => setLocationMode('map')}
           className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
             locationMode === 'map'
               ? 'bg-orange-500 text-white'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              : 'bg-muted text-muted-foreground hover:bg-slate-600'
           }`}
         >
           <span>📍</span> Select on Map
@@ -295,7 +295,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
           className={`flex-1 py-3 px-4 text-sm font-semibold transition-colors flex items-center justify-center gap-2 ${
             locationMode === 'manual'
               ? 'bg-orange-500 text-white'
-              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              : 'bg-muted text-muted-foreground hover:bg-slate-600'
           }`}
         >
           <span>✍️</span> Enter Manually
@@ -315,7 +315,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
                 onKeyDown={(e) => e.key === 'Enter' && searchLocation()}
                 onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
                 placeholder="Search for a location... (type at least 3 characters)"
-                className="flex-1 px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+                className="flex-1 px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
               />
               <button
                 type="button"
@@ -329,8 +329,8 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
             
             {/* Search Results Dropdown - Shows multiple locations */}
             {showDropdown && searchResults.length > 0 && (
-              <div className="absolute z-50 w-full mt-1 bg-slate-700 border border-slate-600 rounded-lg shadow-xl max-h-72 overflow-y-auto">
-                <div className="sticky top-0 bg-slate-600 px-3 py-2 text-xs text-slate-300 font-medium border-b border-slate-500">
+              <div className="absolute z-50 w-full mt-1 bg-muted border border-border rounded-lg shadow-xl max-h-72 overflow-y-auto">
+                <div className="sticky top-0 bg-slate-600 px-3 py-2 text-xs text-muted-foreground font-medium border-b border-border">
                   📍 {searchResults.length} location{searchResults.length > 1 ? 's' : ''} found - Select one
                 </div>
                 {searchResults.map((result, index) => (
@@ -338,10 +338,10 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
                     key={index}
                     type="button"
                     onClick={() => selectSearchResult(result)}
-                    className="w-full px-4 py-3 text-left text-sm text-slate-200 hover:bg-orange-600/30 border-b border-slate-600/50 last:border-0 transition-colors"
+                    className="w-full px-4 py-3 text-left text-sm text-muted-foreground hover:bg-orange-600/30 border-b border-border/50 last:border-0 transition-colors"
                   >
                     <div className="font-medium text-white">{result.display_name.split(',')[0]}</div>
-                    <div className="text-xs text-slate-400 mt-1 truncate">{result.display_name}</div>
+                    <div className="text-xs text-muted-foreground mt-1 truncate">{result.display_name}</div>
                   </button>
                 ))}
               </div>
@@ -385,7 +385,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
           )}
 
           {/* Map Container */}
-          <div className="rounded-lg overflow-hidden border border-slate-600" style={{ height: '300px' }}>
+          <div className="rounded-lg overflow-hidden border border-border" style={{ height: '300px' }}>
             <MapContainer
               center={position}
               zoom={15}
@@ -410,7 +410,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
           </div>
 
           {/* Instruction */}
-          <p className="text-center text-sm text-slate-400">
+          <p className="text-center text-sm text-muted-foreground">
             🎯 Drag the pin or tap on map to set your delivery location
           </p>
 
@@ -420,7 +420,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
               <div className="flex items-start gap-3">
                 <span className="text-2xl">📍</span>
                 <div className="flex-1">
-                  <p className="text-sm text-slate-300 font-semibold mb-1">Selected Location:</p>
+                  <p className="text-sm text-muted-foreground font-semibold mb-1">Selected Location:</p>
                   <p className="text-sm text-green-300">
                     {isLoadingAddress ? 'Loading address...' : addressFromMap}
                   </p>
@@ -443,10 +443,10 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           {/* Show map preview if location was selected */}
           {manualAddress.latitude && manualAddress.longitude && (
-            <div className="bg-slate-700/50 rounded-lg p-3 flex items-center gap-3">
+            <div className="bg-muted/50 rounded-lg p-3 flex items-center gap-3">
               <span className="text-xl">📍</span>
               <div className="flex-1">
-                <p className="text-xs text-slate-400">Location from map</p>
+                <p className="text-xs text-muted-foreground">Location from map</p>
                 <p className="text-sm text-green-400 truncate">{addressFromMap || 'Location selected'}</p>
               </div>
               <button
@@ -466,7 +466,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
               placeholder="Full Name (as per ID proof) *"
               value={manualAddress.fullName}
               onChange={handleManualAddressChange}
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
               required
             />
             <input
@@ -475,7 +475,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
               placeholder="Email Address *"
               value={manualAddress.email}
               onChange={handleManualAddressChange}
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
               required
             />
           </div>
@@ -487,7 +487,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
             pattern="[0-9]{10}"
             value={manualAddress.phoneNumber}
             onChange={handleManualAddressChange}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
             required
           />
 
@@ -497,7 +497,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
             placeholder="Flat, House no., Building, Company, Apartment *"
             value={manualAddress.addressLine1}
             onChange={handleManualAddressChange}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
             required
           />
 
@@ -507,7 +507,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
             placeholder="Area, Street, Sector, Village (optional)"
             value={manualAddress.addressLine2}
             onChange={handleManualAddressChange}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
           />
 
           <input
@@ -516,14 +516,14 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
             placeholder="Landmark (e.g. near temple, school)"
             value={manualAddress.landmark}
             onChange={handleManualAddressChange}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
           />
 
           <select
             name="addressType"
             value={manualAddress.addressType}
             onChange={handleManualAddressChange}
-            className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+            className="w-full px-4 py-3 bg-muted border border-border text-white rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
             required
           >
             <option value="">Select Address Type *</option>
@@ -539,7 +539,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
               placeholder="City / Town *"
               value={manualAddress.city}
               onChange={handleManualAddressChange}
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
               required
             />
             <input
@@ -548,7 +548,7 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
               placeholder="State *"
               value={manualAddress.state}
               onChange={handleManualAddressChange}
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
               required
             />
             <input
@@ -558,14 +558,14 @@ function LocationPicker({ onLocationSelect, onAddressSubmit, initialAddress = nu
               pattern="[0-9]{6}"
               value={manualAddress.postalCode}
               onChange={handleManualAddressChange}
-              className="w-full px-4 py-3 bg-slate-700 border border-slate-600 text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
+              className="w-full px-4 py-3 bg-muted border border-border text-white placeholder-slate-400 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none"
               required
             />
           </div>
 
           <button
             type="submit"
-            className="w-full py-4 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold rounded-lg transition shadow-lg"
+            className="w-full py-4 bg-gradient-to-r from-primary to-green-600 hover:from-primary/90 hover:to-primary/90 text-white font-bold rounded-lg transition shadow-lg"
           >
             ✓ Save Address
           </button>

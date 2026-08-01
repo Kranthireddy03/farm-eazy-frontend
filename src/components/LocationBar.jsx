@@ -6,13 +6,13 @@ export default function LocationBar() {
   const { selectedLocationLabel, hasSelectedLocation, openSelector } = useLocationContext();
 
   return (
-    <div className="border-b border-border bg-muted/40">
+    <div className="border-b border-border/70 bg-muted/30">
       <div className="max-w-screen-2xl mx-auto px-4 py-2">
         <button
           type="button"
           onClick={openSelector}
           className={cn(
-            'w-full flex items-center justify-between gap-3 rounded-md border border-border bg-background px-3 py-2 text-left text-sm transition-colors hover:bg-muted/60',
+            'w-full flex items-center justify-between gap-3 ops-panel !p-3 text-left text-sm transition-colors hover:border-primary/30',
           )}
         >
           <div className="flex items-center gap-2 min-w-0">

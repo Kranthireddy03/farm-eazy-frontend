@@ -77,12 +77,12 @@ export default function ChangeContact({ type, currentValue, onSuccess }) {
 
   return (
     <div className="p-4 rounded bg-white dark:bg-gray-800">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Change {type}</h3>
+      <h3 className="text-lg font-semibold text-foreground dark:text-gray-100">Change {type}</h3>
       <div className="mt-3">
-        <p className="text-sm text-gray-600 dark:text-gray-300">
+        <p className="text-sm text-muted-foreground dark:text-muted-foreground">
           The first OTP will be sent to your current {isEmail ? 'email' : 'phone'}: <span className="font-semibold">{currentValue || 'not set'}</span>
         </p>
-        <label className="mt-3 block text-sm text-gray-700 dark:text-gray-200">New {type}</label>
+        <label className="mt-3 block text-sm text-muted-foreground dark:text-gray-200">New {type}</label>
         <input
           className="mt-1 block w-full p-2 border rounded bg-white dark:bg-gray-900 dark:text-gray-100"
           placeholder={isEmail ? 'Enter new email address' : 'Enter new phone number'}
@@ -93,14 +93,14 @@ export default function ChangeContact({ type, currentValue, onSuccess }) {
 
       {step >= 2 && (
         <div className="mt-3">
-          <label className="block text-sm text-gray-700 dark:text-gray-200">Old OTP</label>
+          <label className="block text-sm text-muted-foreground dark:text-gray-200">Old OTP</label>
           <input className="mt-1 block w-full p-2 border rounded bg-white dark:bg-gray-900 dark:text-gray-100" value={oldOtp} onChange={e => setOldOtp(e.target.value)} />
         </div>
       )}
 
       {step >= 4 && (
         <div className="mt-3">
-          <label className="block text-sm text-gray-700 dark:text-gray-200">New OTP</label>
+          <label className="block text-sm text-muted-foreground dark:text-gray-200">New OTP</label>
           <input className="mt-1 block w-full p-2 border rounded bg-white dark:bg-gray-900 dark:text-gray-100" value={newOtp} onChange={e => setNewOtp(e.target.value)} />
         </div>
       )}
@@ -112,7 +112,7 @@ export default function ChangeContact({ type, currentValue, onSuccess }) {
         {step === 4 && <button className="px-4 py-2 bg-green-600 text-white rounded" onClick={confirm}>Confirm Change</button>}
       </div>
 
-      {message && <p className="mt-3 text-sm text-gray-700 dark:text-gray-300">{message}</p>}
+      {message && <p className="mt-3 text-sm text-muted-foreground dark:text-muted-foreground">{message}</p>}
     </div>
   );
 }

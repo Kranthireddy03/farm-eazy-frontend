@@ -269,25 +269,25 @@ function IrrigationSchedules() {
       <div className="space-y-8">
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
-            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Schedules</p>
-            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{schedules.length}</p>
+          <div className={`ops-panel interactive-card p-4 border ${isDark ? 'border-border' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Total Schedules</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-foreground'}`}>{schedules.length}</p>
           </div>
-          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
-            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Today</p>
-            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{todaySchedules}</p>
+          <div className={`ops-panel interactive-card p-4 border ${isDark ? 'border-border' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Today</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-foreground'}`}>{todaySchedules}</p>
           </div>
-          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
-            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Planned Water</p>
-            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{plannedWater.toFixed(0)} L</p>
+          <div className={`ops-panel interactive-card p-4 border ${isDark ? 'border-border' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Planned Water</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-foreground'}`}>{plannedWater.toFixed(0)} L</p>
           </div>
-          <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
-            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Crops Linked</p>
-            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{crops.length}</p>
+          <div className={`ops-panel interactive-card p-4 border ${isDark ? 'border-border' : 'border-cyan-100'}`}>
+            <p className={`text-xs uppercase tracking-[0.18em] ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Crops Linked</p>
+            <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-foreground'}`}>{crops.length}</p>
           </div>
         </div>
 
-        <div className={`glass-card rounded-2xl border px-4 py-3 ${isDark ? 'bg-amber-900/20 border-amber-700 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
+        <div className={`ops-panel rounded-2xl border px-4 py-3 ${isDark ? 'bg-amber-900/20 border-amber-700 text-amber-300' : 'bg-amber-50 border-amber-200 text-amber-900'}`}>
           <p className="font-semibold">Smart Irrigation Pilot Scope</p>
           <p className="text-sm mt-1">
             Currently enabled only for Ananthapur, Andhra Pradesh and the crops: Groundnut, Sunflower, Maize, Cotton, Paddy, Millet.
@@ -295,14 +295,14 @@ function IrrigationSchedules() {
         </div>
 
       {error && (
-        <div className={`glass-card px-4 py-3 rounded-2xl ${isDark ? 'bg-red-900/30 border border-red-700 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
+        <div className={`ops-panel px-4 py-3 rounded-2xl ${isDark ? 'bg-red-900/30 border border-red-700 text-red-400' : 'bg-red-50 border border-red-200 text-red-600'}`}>
           {error}
         </div>
       )}
 
       {showAddForm && (
-        <div className="glass-card interactive-card p-6 border">
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Create New Schedule</h2>
+        <div className="ops-panel interactive-card p-6 border">
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-foreground'}`}>Create New Schedule</h2>
           <form onSubmit={handleAddSchedule} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -415,8 +415,8 @@ function IrrigationSchedules() {
       )}
 
       {editingSchedule && (
-        <div className="glass-card interactive-card p-6 border">
-          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Edit Irrigation Schedule</h2>
+        <div className="ops-panel interactive-card p-6 border">
+          <h2 className={`text-xl font-bold mb-4 ${isDark ? 'text-white' : 'text-foreground'}`}>Edit Irrigation Schedule</h2>
           <form onSubmit={handleUpdateSchedule} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -534,14 +534,14 @@ function IrrigationSchedules() {
       )}
 
       {schedules.length === 0 ? (
-        <div className="glass-card interactive-card rounded-2xl text-center py-12 border">
+        <div className="ops-panel interactive-card rounded-2xl text-center py-12 border">
           <span className="text-5xl mb-4 block">🌱</span>
-          <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No schedules yet. Create your first irrigation schedule!</p>
+          <p className={`text-lg ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>No schedules yet. Create your first irrigation schedule!</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {schedules.map((schedule) => (
-            <div key={schedule.id} className="glass-card interactive-card rounded-2xl hover:shadow-xl transition-all duration-300 overflow-hidden border">
+            <div key={schedule.id} className="ops-panel interactive-card rounded-2xl hover:shadow-xl transition-all duration-300 overflow-hidden border">
               <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-4 text-white">
                 <div className="flex items-start justify-between">
                   <div>
@@ -556,8 +556,8 @@ function IrrigationSchedules() {
                 <div className="flex items-center gap-2">
                   <span className="text-blue-400">📅</span>
                   <div>
-                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Date</p>
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                    <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Date</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>
                       {new Date(schedule.scheduleDate).toLocaleDateString()}
                     </p>
                   </div>
@@ -565,15 +565,15 @@ function IrrigationSchedules() {
                 <div className="flex items-center gap-2">
                   <span className="text-blue-400">⏱️</span>
                   <div>
-                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Duration</p>
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{schedule.duration} minutes</p>
+                    <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Duration</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{schedule.duration} minutes</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-blue-400">💦</span>
                   <div>
-                    <p className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>Water Amount</p>
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{schedule.waterAmount} liters</p>
+                    <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Water Amount</p>
+                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{schedule.waterAmount} liters</p>
                   </div>
                 </div>
               </div>
@@ -587,7 +587,7 @@ function IrrigationSchedules() {
                 </button>
                 <button
                   onClick={() => handleDeleteSchedule(schedule.id)}
-                  className={`flex-1 py-2 rounded-lg font-medium transition-colors text-sm ${isDark ? 'bg-slate-700 text-slate-300 hover:bg-red-900/50 hover:text-red-400' : 'bg-gray-200 text-gray-700 hover:bg-red-100 hover:text-red-600'}`}
+                  className={`flex-1 py-2 rounded-lg font-medium transition-colors text-sm ${isDark ? 'bg-muted text-muted-foreground hover:bg-red-900/50 hover:text-red-400' : 'bg-muted text-muted-foreground hover:bg-red-100 hover:text-red-600'}`}
                 >
                   Delete
                 </button>

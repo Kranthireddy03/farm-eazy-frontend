@@ -105,7 +105,7 @@ export default function Contact() {
               <SectionTitle eyebrow="Why this page exists" title="A direct path to the right conversation" />
               <div className="mt-5 space-y-3">
                 {reasons.map((reason) => (
-                  <div key={reason} className={`rounded-2xl px-4 py-3 text-sm ${isDark ? 'bg-white/5 text-slate-200' : 'bg-white/75 text-slate-700'}`}>
+                  <div key={reason} className={`rounded-2xl px-4 py-3 text-sm ${isDark ? 'bg-background/5 text-muted-foreground' : 'bg-background/75 text-foreground'}`}>
                     {reason}
                   </div>
                 ))}
@@ -117,36 +117,36 @@ export default function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-7">
           <div className="space-y-5">
             <GlassPanel className="p-6">
-              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>Need an immediate answer?</h2>
-              <p className={`mt-3 text-sm ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Need an immediate answer?</h2>
+              <p className={`mt-3 text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
                 Browse FAQ entries or raise a guided query through the support flow. These options are the fastest way to get help.
               </p>
               <div className="mt-5 flex flex-col sm:flex-row gap-3">
-                <Link to="/faq" className="w-full sm:w-auto text-center px-4 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold transition">
+                <Link to="/faq" className="w-full sm:w-auto text-center px-4 py-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold transition">
                   Open FAQ
                 </Link>
-                <Link to="/support" className={`w-full sm:w-auto text-center px-4 py-3 rounded-xl border font-semibold transition ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-700' : 'border-emerald-200 text-emerald-800 hover:bg-white'}`}>
+                <Link to="/support" className={`w-full sm:w-auto text-center px-4 py-3 rounded-xl border font-semibold transition ${isDark ? 'border-border text-muted-foreground hover:bg-muted' : 'border-border text-foreground hover:bg-background'}`}>
                   Support Center
                 </Link>
               </div>
             </GlassPanel>
 
             <GlassPanel className="p-6">
-              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>Common questions</h2>
+              <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Common questions</h2>
               <div className="mt-4 space-y-3">
                 {commonQuestions.map((item, index) => (
-                  <div key={item.question} className={`rounded-2xl border p-4 ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white/80'}`}>
+                  <div key={item.question} className={`rounded-2xl border p-4 ${isDark ? 'border-white/10 bg-background/5' : 'border-border bg-background/80'}`}>
                     <button
                       type="button"
                       onClick={() => toggleQuestion(index)}
                       className="w-full flex items-start justify-between gap-3 text-left"
                       aria-expanded={Boolean(expandedQuestions[index])}
                     >
-                      <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-950'}`}>{item.question}</span>
-                      <span className={`text-xl transition ${expandedQuestions[index] ? 'rotate-45 text-emerald-400' : 'text-emerald-500'}`}>{expandedQuestions[index] ? '−' : '+'}</span>
+                      <span className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-foreground'}`}>{item.question}</span>
+                      <span className={`text-xl transition ${expandedQuestions[index] ? 'rotate-45 text-primary' : 'text-primary'}`}>{expandedQuestions[index] ? '−' : '+'}</span>
                     </button>
                     {expandedQuestions[index] && (
-                      <p className={`mt-3 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.answer}</p>
+                      <p className={`mt-3 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{item.answer}</p>
                     )}
                   </div>
                 ))}
@@ -155,18 +155,18 @@ export default function Contact() {
           </div>
 
           <div className="space-y-5">
-            <section className={`interactive-card rounded-2xl border p-6 md:p-8 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-100 shadow-lg'}`}>
-              <div className={`rounded-2xl border p-4 mb-5 ${isDark ? 'border-slate-700 bg-slate-800/70' : 'border-slate-200 bg-slate-50'}`}>
+            <section className={`interactive-card rounded-2xl border p-6 md:p-8 ${isDark ? 'bg-card border-border' : 'bg-background border-border shadow-lg'}`}>
+              <div className={`rounded-2xl border p-4 mb-5 ${isDark ? 'border-border bg-muted/70' : 'border-border bg-muted/30'}`}>
                 <div className="flex items-center justify-between text-sm">
-                  <span className={isDark ? 'text-slate-300' : 'text-slate-700'}>Form completion</span>
-                  <span className={isDark ? 'text-emerald-300 font-semibold' : 'text-emerald-700 font-semibold'}>{completion}%</span>
+                  <span className={isDark ? 'text-muted-foreground' : 'text-foreground'}>Form completion</span>
+                  <span className={isDark ? 'text-primary font-semibold' : 'text-primary font-semibold'}>{completion}%</span>
                 </div>
-                <div className={`mt-2 h-2 rounded-full overflow-hidden ${isDark ? 'bg-slate-700' : 'bg-slate-200'}`}>
-                  <div className="h-full bg-gradient-to-r from-emerald-500 to-cyan-500 transition-all duration-500" style={{ width: `${completion}%` }} />
+                <div className={`mt-2 h-2 rounded-full overflow-hidden ${isDark ? 'bg-muted' : 'bg-muted'}`}>
+                  <div className="h-full bg-gradient-to-r from-primary/50 to-cyan-500 transition-all duration-500" style={{ width: `${completion}%` }} />
                 </div>
               </div>
               {submitted && (
-                <div className={`mt-5 rounded-lg border px-4 py-3 text-sm ${isDark ? 'bg-emerald-900/30 border-emerald-700 text-emerald-200' : 'bg-emerald-50 border-emerald-200 text-emerald-700'}`}>
+                <div className={`mt-5 rounded-lg border px-4 py-3 text-sm ${isDark ? 'bg-primary/10 border-primary/40 text-primary/80' : 'bg-primary/5 border-border text-primary'}`}>
                   Message sent successfully. We will get back to you shortly.
                 </div>
               )}
@@ -185,7 +185,7 @@ export default function Contact() {
                     onChange={handleChange}
                     required
                     placeholder="Your name"
-                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800/90' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-muted border-border text-white placeholder:text-muted-foreground focus:bg-muted/90' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                   <input
                     type="email"
@@ -194,7 +194,7 @@ export default function Contact() {
                     onChange={handleChange}
                     required
                     placeholder="Email address"
-                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800/90' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                    className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-muted border-border text-white placeholder:text-muted-foreground focus:bg-muted/90' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
                   />
                 </div>
 
@@ -205,7 +205,7 @@ export default function Contact() {
                   required
                   maxLength={200}
                   placeholder="Subject"
-                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800/90' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                  className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-muted border-border text-white placeholder:text-muted-foreground focus:bg-muted/90' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
 
                 <textarea
@@ -216,13 +216,13 @@ export default function Contact() {
                   rows={6}
                   maxLength={5000}
                   placeholder="Tell us about your request"
-                  className={`w-full px-4 py-3 rounded-xl border resize-none transition-all duration-300 ${isDark ? 'bg-slate-800 border-slate-700 text-white placeholder-slate-400 focus:bg-slate-800/90' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} focus:outline-none focus:ring-2 focus:ring-emerald-500`}
+                  className={`w-full px-4 py-3 rounded-xl border resize-none transition-all duration-300 ${isDark ? 'bg-muted border-border text-white placeholder:text-muted-foreground focus:bg-muted/90' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
                 />
 
                 <button
                   type="submit"
                   disabled={completion !== 100}
-                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 text-white font-semibold transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Send Message
                 </button>
@@ -233,7 +233,7 @@ export default function Contact() {
               <SectionTitle eyebrow="Support Channels" title="Choose the quickest route to the right team" />
               <div className="mt-4 space-y-3">
                 {channels.map((item) => (
-                  <div key={item.label} className={`rounded-lg border p-4 ${isDark ? 'border-border bg-card' : 'border-slate-200 bg-white'}`}>
+                  <div key={item.label} className={`rounded-lg border p-4 ${isDark ? 'border-border bg-card' : 'border-border bg-background'}`}>
                     <p className="text-sm flex items-center gap-2">
                       <item.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
                       <span className="font-semibold">{item.label}</span>
@@ -243,7 +243,7 @@ export default function Contact() {
                         {item.value}
                       </a>
                     ) : (
-                      <p className={`text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>{item.value}</p>
+                      <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{item.value}</p>
                     )}
                   </div>
                 ))}
@@ -251,14 +251,14 @@ export default function Contact() {
             </StrongPanel>
 
             <GlassPanel className="p-6">
-              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-emerald-900'}`}>Response Timeline</h3>
+              <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Response Timeline</h3>
               <div className="mt-4 space-y-3">
                 {[
                   'Auto-acknowledgement: immediate',
                   'First support response: within business hours',
                   'Escalation for account/order issues: priority queue'
                 ].map((item) => (
-                  <div key={item} className={`rounded-xl px-4 py-3 text-sm ${isDark ? 'bg-white/5 text-slate-300' : 'bg-white/80 text-slate-700'}`}>
+                  <div key={item} className={`rounded-xl px-4 py-3 text-sm ${isDark ? 'bg-background/5 text-muted-foreground' : 'bg-background/80 text-foreground'}`}>
                     {item}
                   </div>
                 ))}

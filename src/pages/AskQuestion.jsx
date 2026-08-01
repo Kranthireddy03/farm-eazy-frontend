@@ -82,8 +82,8 @@ export default function AskQuestion() {
 
         <div className="grid lg:grid-cols-[1.02fr_0.98fr] gap-6 items-start">
           <StrongPanel className="w-full max-w-none p-6 md:p-8">
-            <h1 className={`text-2xl md:text-3xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>Ask a Question</h1>
-            <p className={`mb-4 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+            <h1 className={`text-2xl md:text-3xl font-black mb-4 ${isDark ? 'text-white' : 'text-foreground'}`}>Ask a Question</h1>
+            <p className={`mb-4 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
               If your question is not answered in the FAQ, submit it below. Our admin team will reply via email. If your question is valuable, it may be added to the FAQ for others.
             </p>
 
@@ -110,14 +110,14 @@ export default function AskQuestion() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
                 type="email"
-                className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-950/60 border-white/10 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-500'}`}
+                className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:ring-primary ${isDark ? 'bg-background/60 border-white/10 text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                 placeholder="Your email address"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 required
               />
               <textarea
-                className={`w-full px-4 py-3 rounded-lg resize-none border focus:ring-2 focus:ring-emerald-500 ${isDark ? 'bg-slate-950/60 border-white/10 text-white placeholder-slate-400' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-500'}`}
+                className={`w-full px-4 py-3 rounded-lg resize-none border focus:ring-2 focus:ring-primary ${isDark ? 'bg-background/60 border-white/10 text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                 placeholder="Type your question here"
                 value={question}
                 onChange={e => setQuestion(e.target.value)}
@@ -126,10 +126,10 @@ export default function AskQuestion() {
                 maxLength={1000}
                 required
               />
-              <button type="submit" className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950">Submit Question</button>
+              <button type="submit" className="w-full py-3 rounded-lg font-semibold bg-gradient-to-r from-primary/50 to-cyan-500 hover:from-primary hover:to-primary/80 text-foreground">Submit Question</button>
             </form>
 
-            <div className={`mt-6 text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
+            <div className={`mt-6 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               If you need further help,{' '}
               <button className="text-blue-600 dark:text-blue-400 underline" onClick={() => navigate('/support/ticket')}>
                 raise a support ticket
@@ -147,7 +147,7 @@ export default function AskQuestion() {
               ].map((item) => (
                 <div
                   key={item}
-                  className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-white/10 bg-white/5 text-slate-200' : 'border-slate-200 bg-white/80 text-slate-700'}`}
+                  className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-white/10 bg-background/5 text-muted-foreground' : 'border-border bg-background/80 text-foreground'}`}
                 >
                   {item}
                 </div>

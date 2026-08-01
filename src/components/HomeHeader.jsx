@@ -9,7 +9,7 @@ export default function HomeHeader({ onSupport }) {
         <Link to="/" className="text-2xl font-bold">
           FarmEazy
         </Link>
-        <p className="text-sm text-slate-500">Smart Farm Management</p>
+        <p className="text-sm text-muted-foreground">Smart Farm Management</p>
       </div>
 
       <nav className="flex items-center gap-4 text-sm">

@@ -108,14 +108,14 @@ function ForgotPassword() {
           )}
 
           <div className="space-y-2">
-            <label className={`${isDark ? 'text-slate-200' : 'text-foreground'} text-sm font-medium flex items-center gap-2`}>
+            <label className={`${isDark ? 'text-muted-foreground' : 'text-foreground'} text-sm font-medium flex items-center gap-2`}>
               <Mail className="h-4 w-4" /> Email Address
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => { setEmail(e.target.value); if (errors.email) setErrors({}) }}
-              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-background border-input'}`}
+              className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-input'}`}
               placeholder="farmer@example.com"
             />
             {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
@@ -141,11 +141,11 @@ function ForgotPassword() {
         </form>
       ) : (
         <div className="text-center py-4">
-          <h2 className={`text-xl font-semibold ${isDark ? 'text-slate-100' : 'text-foreground'} mb-3`}>Check Your Email!</h2>
-          <p className={`${isDark ? 'text-slate-300' : 'text-muted-foreground'} mb-6 text-sm`}>
+          <h2 className={`text-xl font-semibold ${isDark ? 'text-foreground' : 'text-foreground'} mb-3`}>Check Your Email!</h2>
+          <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} mb-6 text-sm`}>
             We've sent a password reset link to <span className="font-semibold">{email}</span>
           </p>
-          <div className={`rounded-lg p-4 border ${isDark ? 'bg-slate-800 border-slate-600' : 'bg-muted border-border'}`}>
+          <div className={`rounded-lg p-4 border ${isDark ? 'bg-muted border-border' : 'bg-muted border-border'}`}>
             <p className="text-sm text-muted-foreground">
               Redirecting to login in <span className="font-bold text-primary">{countdown}</span> seconds...
             </p>
@@ -161,9 +161,9 @@ function ForgotPassword() {
       )}
 
       <div className="flex items-center gap-4 my-6">
-        <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-border'}`} />
+        <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-border'}`} />
         <span className="text-muted-foreground text-sm">or</span>
-        <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-border'}`} />
+        <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-border'}`} />
       </div>
 
       <div className="text-center">

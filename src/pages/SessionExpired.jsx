@@ -91,9 +91,9 @@ function SessionExpired() {
     },
     emerald: {
       bg: isDark ? 'from-emerald-900/50 via-teal-900/30' : 'from-emerald-100 via-teal-50',
-      iconBg: 'from-emerald-500 to-teal-500',
-      badge: isDark ? 'bg-emerald-900/50 text-emerald-300' : 'bg-emerald-100 text-emerald-700',
-      border: isDark ? 'border-emerald-700' : 'border-emerald-200'
+      iconBg: 'from-primary/50 to-primary',
+      badge: isDark ? 'bg-primary/10 text-primary' : 'bg-primary/10 text-primary',
+      border: isDark ? 'border-primary/40' : 'border-border'
     }
   };
 
@@ -103,21 +103,21 @@ function SessionExpired() {
     <AppPage title={title} description={message}>
     <div className={`premium-shell min-h-screen flex items-center justify-center px-4 ${
       isDark 
-        ? `bg-gradient-to-br ${colors.bg} to-slate-900` 
+        ? `bg-gradient-to-br ${colors.bg} to-background` 
         : `bg-gradient-to-br ${colors.bg} to-white`
     }`}>
       {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-emerald-800/20' : 'bg-emerald-200/30'} rounded-full mix-blend-multiply filter blur-xl`}></div>
+        <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-primary/30/20' : 'bg-primary/20/30'} rounded-full mix-blend-multiply filter blur-xl`}></div>
         <div className={`absolute -bottom-8 right-20 w-72 h-72 ${isDark ? 'bg-teal-900/20' : 'bg-teal-200/30'} rounded-full mix-blend-multiply filter blur-xl`}></div>
       </div>
 
       <div className="relative z-10 w-full max-w-lg">
         {/* Card */}
-        <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 ${
+        <div className={`ops-panel interactive-card rounded-3xl shadow-2xl border p-8 ${
           isDark 
-            ? `bg-slate-800/90 ${colors.border}` 
-            : `bg-white/90 ${colors.border}`
+            ? `bg-muted/90 ${colors.border}` 
+            : `bg-background/90 ${colors.border}`
         }`}>
           {/* Icon */}
           <div className={`w-24 h-24 bg-gradient-to-br ${colors.iconBg} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
@@ -126,7 +126,7 @@ function SessionExpired() {
 
           {/* Message */}
           <p className={`text-center text-lg mb-4 ${
-            isDark ? 'text-slate-300' : 'text-gray-600'
+            isDark ? 'text-muted-foreground' : 'text-muted-foreground'
           }`}>
             {message}
           </p>
@@ -141,12 +141,12 @@ function SessionExpired() {
           {/* Session Info (for inactivity) */}
           {reason === 'inactivity' && (
             <div className={`rounded-xl p-4 mb-6 ${
-              isDark ? 'bg-slate-700/50' : 'bg-gray-50'
+              isDark ? 'bg-muted/50' : 'bg-muted/50'
             }`}>
-              <h3 className={`font-semibold mb-2 ${isDark ? 'text-slate-200' : 'text-gray-700'}`}>
+              <h3 className={`font-semibold mb-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 What happened?
               </h3>
-              <ul className={`text-sm space-y-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
+              <ul className={`text-sm space-y-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                 <li>• You were inactive for 120 seconds (2 minutes)</li>
                 <li>• A 30-second warning was displayed</li>
                 <li>• No response was received during the countdown</li>
@@ -159,7 +159,7 @@ function SessionExpired() {
           <div className="space-y-3">
             <button
               onClick={() => navigate('/login')}
-              className="w-full py-4 px-6 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
+              className="w-full py-4 px-6 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white font-bold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
             >
               <span>🔑</span>
               <span>Log In Again</span>
@@ -169,8 +169,8 @@ function SessionExpired() {
               onClick={() => navigate('/')}
               className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 ${
                 isDark 
-                  ? 'bg-slate-700 hover:bg-slate-600 text-slate-200' 
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                  ? 'bg-muted hover:bg-muted text-muted-foreground' 
+                  : 'bg-muted hover:bg-muted text-muted-foreground'
               }`}
             >
               Go to Home
@@ -178,7 +178,7 @@ function SessionExpired() {
           </div>
 
           {/* Footer */}
-          <p className={`text-center text-xs mt-6 ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>
+          <p className={`text-center text-xs mt-6 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
             🌾 FarmEazy - Smart Farm Management
           </p>
         </div>

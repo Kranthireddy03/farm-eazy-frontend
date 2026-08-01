@@ -77,18 +77,18 @@ function ChangePassword() {
   // Success Screen
   if (success) {
     return (
-      <div className={`premium-shell min-h-screen px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className="max-w-2xl mx-auto bg-gradient-to-br from-emerald-500 to-green-600 rounded-3xl shadow-2xl p-8 text-center">
-          <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+      <div className={`premium-shell min-h-screen px-4 py-8 ${isDark ? 'bg-background' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`}>
+        <div className="max-w-2xl mx-auto bg-gradient-to-br from-primary to-primary rounded-3xl shadow-2xl p-8 text-center">
+          <div className="w-20 h-20 bg-background/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
             <span className="text-5xl">✅</span>
           </div>
           <h1 className="text-3xl font-extrabold text-white mb-4">Password Changed!</h1>
-          <p className="text-emerald-100 mb-6">
+          <p className="text-primary-foreground mb-6">
             Your password has been successfully updated. A confirmation email has been sent.
           </p>
           <button
             onClick={() => setSuccess(false)}
-            className="px-8 py-3 bg-emerald-600 text-white font-bold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:bg-emerald-500"
+            className="px-8 py-3 bg-primary text-white font-bold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105 hover:bg-primary/50"
           >
             Done ✓
           </button>
@@ -101,7 +101,7 @@ function ChangePassword() {
     <AppPage title="Change Password" description="Keep your account secure with a strong password.">
       <div className="max-w-2xl mx-auto">
       {/* Form Card */}
-      <div className={`glass-card interactive-card rounded-3xl shadow-2xl p-8 border ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+      <div className={`ops-panel interactive-card rounded-3xl shadow-2xl p-8 border ${isDark ? 'border-border' : 'border-border'}`}>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error Display */}
           {apiError && (
@@ -128,7 +128,7 @@ function ChangePassword() {
 
           {/* Current Password */}
           <div className="space-y-2">
-            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               <span>🔒</span> Current Password
             </label>
             <div className="relative">
@@ -137,13 +137,13 @@ function ChangePassword() {
                 name="currentPassword"
                 value={formData.currentPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
+                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-muted border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                 placeholder="Enter current password"
               />
               <button
                 type="button"
                 onClick={() => setShowCurrent(!showCurrent)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-muted-foreground hover:text-muted-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
               >
                 {showCurrent ? '👁️' : '👁️‍🗨️'}
               </button>
@@ -153,14 +153,14 @@ function ChangePassword() {
 
           {/* Divider */}
           <div className="flex items-center gap-4">
-            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
-            <span className={`text-sm ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>New Password</span>
-            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-gray-300'}`}></div>
+            <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-border'}`}></div>
+            <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>New Password</span>
+            <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-border'}`}></div>
           </div>
 
           {/* New Password */}
           <div className="space-y-2">
-            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               <span>🔐</span> New Password
             </label>
             <div className="relative">
@@ -169,26 +169,26 @@ function ChangePassword() {
                 name="newPassword"
                 value={formData.newPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
+                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-muted border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                 placeholder="Enter new password"
               />
               <button
                 type="button"
                 onClick={() => setShowNew(!showNew)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-muted-foreground hover:text-muted-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
               >
                 {showNew ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
             {errors.newPassword && <p className="text-red-400 text-sm flex items-center gap-1"><span>❌</span> {errors.newPassword}</p>}
             {formData.newPassword && formData.newPassword.length >= 6 && !errors.newPassword && (
-              <p className="text-emerald-400 text-sm flex items-center gap-1"><span>✅</span> Password strength: Good</p>
+              <p className="text-primary text-sm flex items-center gap-1"><span>✅</span> Password strength: Good</p>
             )}
           </div>
 
           {/* Confirm Password */}
           <div className="space-y-2">
-            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+            <label className={`text-sm font-semibold flex items-center gap-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               <span>🔐</span> Confirm New Password
             </label>
             <div className="relative">
@@ -197,20 +197,20 @@ function ChangePassword() {
                 name="confirmPassword"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
+                className={`w-full px-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 pr-12 ${isDark ? 'bg-muted border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'}`}
                 placeholder="Confirm new password"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirm(!showConfirm)}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-gray-400 hover:text-gray-600'}`}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-muted-foreground hover:text-muted-foreground' : 'text-muted-foreground hover:text-muted-foreground'}`}
               >
                 {showConfirm ? '👁️' : '👁️‍🗨️'}
               </button>
             </div>
             {errors.confirmPassword && <p className="text-red-400 text-sm flex items-center gap-1"><span>❌</span> {errors.confirmPassword}</p>}
             {formData.confirmPassword && formData.newPassword === formData.confirmPassword && !errors.confirmPassword && (
-              <p className="text-emerald-400 text-sm flex items-center gap-1"><span>✅</span> Passwords match!</p>
+              <p className="text-primary text-sm flex items-center gap-1"><span>✅</span> Passwords match!</p>
             )}
           </div>
 
@@ -218,7 +218,7 @@ function ChangePassword() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+            className="w-full py-4 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -238,7 +238,7 @@ function ChangePassword() {
       </div>
 
       {/* Footer Note */}
-      <div className={`text-center mt-6 text-sm ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
+      <div className={`text-center mt-6 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
         <p>🔒 Your password is encrypted and secure</p>
       </div>
       </div>

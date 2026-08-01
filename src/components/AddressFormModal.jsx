@@ -58,7 +58,7 @@ export default function AddressFormModal({ address, onClose, onSaved }) {
           <input value={form.fullName} onChange={change('fullName')} placeholder="Full name" className="px-3 py-2 border rounded" />
           <div className="flex gap-2">
             <input value={form.addressLine1} onChange={change('addressLine1')} placeholder="Address line 1" className="flex-1 px-3 py-2 border rounded" />
-            <button type="button" onClick={() => setShowMap(true)} className="px-3 py-2 rounded bg-slate-100">Pick on map</button>
+            <button type="button" onClick={() => setShowMap(true)} className="px-3 py-2 rounded bg-muted">Pick on map</button>
           </div>
           {errors.addressLine1 && <div className="text-xs text-red-500">{errors.addressLine1}</div>}
           <div className="grid grid-cols-2 gap-3">

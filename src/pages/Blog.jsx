@@ -62,7 +62,7 @@ export default function Blog() {
   ]
 
   return (
-    <div className={`min-h-screen ${isDark ? 'text-white' : 'text-gray-900'}`}>
+    <div className={`min-h-screen ${isDark ? 'text-white' : 'text-foreground'}`}>
       <section className="px-4 py-10 md:py-12">
         <HeroFrame
           eyebrow="Knowledge Feed"
@@ -80,15 +80,15 @@ export default function Blog() {
             <GlassPanel className="p-5 md:p-6">
               <div className="grid grid-cols-3 gap-3">
                 {stats.map((stat) => (
-                  <div key={stat.label} className={`rounded-2xl px-4 py-4 text-center ${isDark ? 'bg-white/5' : 'bg-white/75'}`}>
-                    <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-slate-950'}`}>{stat.value}</div>
-                    <div className={`mt-1 text-[11px] uppercase tracking-[0.22em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{stat.label}</div>
+                  <div key={stat.label} className={`rounded-2xl px-4 py-4 text-center ${isDark ? 'bg-background/5' : 'bg-background/75'}`}>
+                    <div className={`text-2xl font-black ${isDark ? 'text-white' : 'text-foreground'}`}>{stat.value}</div>
+                    <div className={`mt-1 text-[11px] uppercase tracking-[0.22em] ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{stat.label}</div>
                   </div>
                 ))}
               </div>
-              <div className={`mt-5 rounded-2xl p-4 ${isDark ? 'bg-slate-950/70' : 'bg-slate-900 text-white'}`}>
-                <p className="text-xs uppercase tracking-[0.26em] text-emerald-300">Publishing flow</p>
-                <p className="mt-2 text-sm text-slate-200">Drafts are reviewed, curated, and then surfaced here for public reading.</p>
+              <div className={`mt-5 rounded-2xl p-4 ${isDark ? 'bg-background/70' : 'bg-card text-white'}`}>
+                <p className="text-xs uppercase tracking-[0.26em] text-primary">Publishing flow</p>
+                <p className="mt-2 text-sm text-muted-foreground">Drafts are reviewed, curated, and then surfaced here for public reading.</p>
               </div>
             </GlassPanel>
           )}
@@ -98,7 +98,7 @@ export default function Blog() {
       <section className="max-w-6xl mx-auto px-4 pb-14 space-y-6">
         <StrongPanel className="p-5 md:p-6">
           <SectionTitle eyebrow="How it works" title="A controlled publishing surface with clear permissions" />
-          <ol className={`mt-3 text-sm md:text-base space-y-1 ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
+          <ol className={`mt-3 text-sm md:text-base space-y-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
             <li>1. Users or admins can draft blog posts.</li>
             <li>2. Admin reviews and can edit before publishing.</li>
             <li>3. If no article is published yet, this page will show a data-unavailable message.</li>
@@ -113,10 +113,10 @@ export default function Blog() {
                 onClick={() => setSelectedCategory(cat)}
                 className={`px-4 py-2 rounded-full text-sm font-semibold border transition ${
                   selectedCategory === cat
-                    ? 'bg-emerald-600 border-emerald-600 text-white'
+                    ? 'bg-primary border-primary text-white'
                     : isDark
-                      ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'
-                      : 'bg-white border-emerald-200 text-emerald-700 hover:bg-emerald-50'
+                      ? 'bg-muted border-border text-muted-foreground hover:bg-muted'
+                      : 'bg-background border-border text-primary hover:bg-primary/5'
                 }`}
               >
                 {cat}
@@ -127,14 +127,14 @@ export default function Blog() {
 
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
           </div>
         ) : error ? (
           <div className={`${isDark ? 'bg-red-900/30 border-red-700 text-red-200' : 'bg-red-50 border-red-200 text-red-700'} border rounded-xl p-4`}>
             {error}
           </div>
         ) : visiblePosts.length === 0 ? (
-          <div className={`${isDark ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-white border-emerald-100 text-emerald-700'} border rounded-xl p-6`}>
+          <div className={`${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-background border-border/60 text-primary'} border rounded-xl p-6`}>
             <p className="font-semibold">No published blog articles are available at the moment.</p>
             <p className="mt-1 text-sm opacity-90">Our team is preparing practical guides and updates. Please check back shortly.</p>
           </div>
@@ -143,18 +143,18 @@ export default function Blog() {
             {visiblePosts.map((post) => (
               <article
                 key={post.id}
-                className={`${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-emerald-100'} border rounded-2xl p-5 shadow-sm hover:shadow-lg transition`}
+                className={`${isDark ? 'bg-muted border-border' : 'bg-background border-border/60'} border rounded-2xl p-5 shadow-sm hover:shadow-lg transition`}
               >
                 <div className="flex items-center justify-between mb-3 text-xs">
-                  <span className={`px-2 py-1 rounded-full ${isDark ? 'bg-emerald-900/40 text-emerald-300' : 'bg-emerald-100 text-emerald-700'}`}>
+                  <span className={`px-2 py-1 rounded-full ${isDark ? 'bg-emerald-900/40 text-primary' : 'bg-primary/10 text-primary'}`}>
                     {post.category}
                   </span>
-                  <span className={isDark ? 'text-slate-400' : 'text-gray-500'}>{post.readTime}</span>
+                  <span className={isDark ? 'text-muted-foreground' : 'text-muted-foreground'}>{post.readTime}</span>
                 </div>
-                <h2 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-emerald-900'}`}>{post.title}</h2>
-                <p className={`text-sm line-clamp-4 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{post.excerpt}</p>
+                <h2 className={`text-lg font-bold mb-2 ${isDark ? 'text-white' : 'text-foreground'}`}>{post.title}</h2>
+                <p className={`text-sm line-clamp-4 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{post.excerpt}</p>
                 <div className="mt-4 flex items-center justify-between gap-2">
-                  <div className={`text-xs ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
+                  <div className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
                     <div>{post.date}</div>
                     <div>By {post.authorName} • {post.source === 'USER_PORTAL' ? 'Community Contributor' : 'Editorial Team'}</div>
                     <div>{post.averageRating > 0 ? `${post.averageRating}/5` : 'No ratings yet'} ({post.ratingCount || 0})</div>

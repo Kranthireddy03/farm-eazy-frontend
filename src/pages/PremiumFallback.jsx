@@ -161,7 +161,7 @@ export default function PremiumFallback() {
         ? value
         : { status: value };
       const normalized = String(statusObj.status || 'UNKNOWN').toUpperCase();
-      const tone = normalized === 'UP' ? 'border-emerald-300/40 bg-emerald-900/20 text-emerald-100'
+      const tone = normalized === 'UP' ? 'border-primary/40 bg-primary/10 text-primary-foreground'
         : normalized === 'DEGRADED' ? 'border-amber-300/40 bg-amber-900/20 text-amber-100'
           : 'border-rose-300/40 bg-rose-900/20 text-rose-100';
 
@@ -205,7 +205,7 @@ export default function PremiumFallback() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_12%_18%,#294f2f_0%,#173227_36%,#101a14_78%)] text-slate-100 px-4 py-6 sm:p-8">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_12%_18%,#294f2f_0%,#173227_36%,#101a14_78%)] text-foreground px-4 py-6 sm:p-8">
       <style>{`\n        @keyframes drift {\n          0% { transform: translateY(0px); }\n          50% { transform: translateY(-8px); }\n          100% { transform: translateY(0px); }\n        }\n        @keyframes glow {\n          0% { box-shadow: 0 0 0 0 rgba(132, 204, 22, 0.25); }\n          100% { box-shadow: 0 0 0 18px rgba(132, 204, 22, 0); }\n        }\n      `}</style>
 
       <div className="max-w-6xl mx-auto space-y-5">
@@ -214,7 +214,7 @@ export default function PremiumFallback() {
             <div>
               <p className="text-xs uppercase tracking-[0.24em] text-lime-300/70">Farmeazy Resilience Mode</p>
               <h1 className="text-2xl sm:text-4xl font-black mt-2">Keeping your farm session alive</h1>
-              <p className="text-sm sm:text-base text-slate-200/80 mt-2 max-w-2xl">
+              <p className="text-sm sm:text-base text-muted-foreground/80 mt-2 max-w-2xl">
                 Instead of dropping you out, we switched to a smart fallback experience while services recover.
               </p>
             </div>
@@ -226,12 +226,12 @@ export default function PremiumFallback() {
                 />
                 <span className="text-sm font-semibold">Live Recovery Watch</span>
               </div>
-              <p className="text-xs text-slate-300 mt-3">Auto retry in {retryCountdown}s</p>
+              <p className="text-xs text-muted-foreground mt-3">Auto retry in {retryCountdown}s</p>
               <p className="text-xs text-lime-200 mt-1">{retryStatus}</p>
               <button
                 onClick={pingHealth}
                 disabled={isRetrying}
-                className="mt-3 w-full rounded-xl px-3 py-2 text-sm font-semibold bg-lime-400 text-slate-900 hover:bg-lime-300 disabled:opacity-60"
+                className="mt-3 w-full rounded-xl px-3 py-2 text-sm font-semibold bg-lime-400 text-foreground hover:bg-lime-300 disabled:opacity-60"
               >
                 {isRetrying ? 'Checking...' : 'Retry Now'}
               </button>
@@ -245,9 +245,9 @@ export default function PremiumFallback() {
               <h2 className="text-xl font-bold">Mini Farm Loop</h2>
               <span className="text-xs text-lime-200/90">Harvests: {harvests}</span>
             </div>
-            <div className="mt-4 rounded-2xl border border-white/10 bg-gradient-to-b from-lime-900/30 to-emerald-950/30 p-6 min-h-[190px] flex items-center justify-center">
+            <div className="mt-4 rounded-2xl border border-white/10 bg-gradient-to-b from-lime-900/30 to-primary/10 p-6 min-h-[190px] flex items-center justify-center">
               {cropStage === 'empty' && (
-                <button onClick={handlePlant} className="rounded-2xl bg-lime-300/90 text-slate-900 px-6 py-3 font-bold hover:bg-lime-200">
+                <button onClick={handlePlant} className="rounded-2xl bg-lime-300/90 text-foreground px-6 py-3 font-bold hover:bg-lime-200">
                   Plant Seed
                 </button>
               )}
@@ -258,7 +258,7 @@ export default function PremiumFallback() {
                 </div>
               )}
               {cropStage === 'ready' && (
-                <button onClick={handleHarvest} className="rounded-2xl bg-amber-300 text-slate-900 px-6 py-3 font-bold hover:bg-amber-200">
+                <button onClick={handleHarvest} className="rounded-2xl bg-amber-300 text-foreground px-6 py-3 font-bold hover:bg-amber-200">
                   Harvest Crop
                 </button>
               )}
@@ -269,14 +269,14 @@ export default function PremiumFallback() {
               <p className="mt-2 text-sm text-cyan-50">{TIPS[pulseStep]}</p>
             </div>
 
-            <div className="mt-5 rounded-2xl border border-white/10 bg-slate-900/40 p-4">
+            <div className="mt-5 rounded-2xl border border-white/10 bg-muted/30 p-4">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs uppercase tracking-widest text-lime-200/80">Live System Health</p>
-                <span className="text-[11px] text-slate-300">Updated {formatDateTime(statusUpdatedAt)}</span>
+                <span className="text-[11px] text-muted-foreground">Updated {formatDateTime(statusUpdatedAt)}</span>
               </div>
               <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {statusCards.length === 0 && (
-                  <div className="text-xs text-slate-300">Loading system status...</div>
+                  <div className="text-xs text-muted-foreground">Loading system status...</div>
                 )}
                 {statusCards.map((item) => (
                   <div key={item.key} className={`rounded-xl border px-3 py-3 ${item.tone}`}>
@@ -299,13 +299,13 @@ export default function PremiumFallback() {
             <h2 className="text-xl font-bold">Crop Quick Quiz</h2>
             {!quizDone ? (
               <>
-                <p className="text-sm text-slate-200">{currentQuestion.q}</p>
+                <p className="text-sm text-muted-foreground">{currentQuestion.q}</p>
                 <div className="space-y-2">
                   {currentQuestion.options.map((option) => (
                     <button
                       key={option}
                       onClick={() => answerQuiz(option)}
-                      className="w-full text-left rounded-xl border border-slate-500/40 bg-slate-800/40 hover:bg-slate-700/60 px-3 py-2 text-sm"
+                      className="w-full text-left rounded-xl border border-border/40 bg-muted/40 hover:bg-muted/60 px-3 py-2 text-sm"
                     >
                       {option}
                     </button>
@@ -313,12 +313,12 @@ export default function PremiumFallback() {
                 </div>
               </>
             ) : (
-              <div className="rounded-xl bg-emerald-900/30 border border-emerald-300/30 p-4 text-sm">
+              <div className="rounded-xl bg-primary/10 border border-primary/30 p-4 text-sm">
                 Quiz complete. Score: {quizScore}/{QUIZ.length}
               </div>
             )}
 
-            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 text-sm space-y-2">
+            <div className="rounded-2xl border border-white/10 bg-muted/30 p-4 text-sm space-y-2">
               <p className="font-semibold">Offline Snapshot</p>
               <p>Last successful sync: {formatDateTime(lastSync)}</p>
               <p>Cart items cached: {cartItems.length}</p>

@@ -17,7 +17,7 @@ export function PremiumHero({
       initial={reduce ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-      className={cn('fe-surface-hero fe-gradient-border p-6 sm:p-8 lg:p-10', className)}
+      className={cn('fe-surface-hero fe-gradient-border ops-page-hero p-6 sm:p-8 lg:p-10', className)}
     >
       <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
         <div className="space-y-5">

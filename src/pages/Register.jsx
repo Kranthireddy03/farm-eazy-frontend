@@ -423,40 +423,40 @@ function Register() {
     return (
       <div className="premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
         {/* Background */}
-        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900' : 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100'}`}>
+        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-background via-card to-background' : 'bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10'}`}>
           <div className="absolute inset-0 opacity-30">
-            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-emerald-800' : 'bg-yellow-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
+            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-primary/30' : 'bg-yellow-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
             <div className={`absolute -bottom-8 right-20 w-72 h-72 ${isDark ? 'bg-teal-900' : 'bg-green-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
           </div>
           <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none"></div>
         </div>
 
         <div className="relative z-10 text-center">
-          <div className={`backdrop-blur-xl ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-emerald-200'} rounded-3xl shadow-2xl border p-12`}>
-            <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+          <div className={`backdrop-blur-xl ${isDark ? 'bg-muted/90 border-border' : 'bg-background/90 border-border'} rounded-3xl shadow-2xl border p-12`}>
+            <div className="w-24 h-24 bg-gradient-to-br from-primary to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
               <span className="text-5xl">🎉</span>
             </div>
-            <h1 className={`text-4xl font-extrabold ${isDark ? 'text-slate-100' : 'text-emerald-800'} mb-4`}>Welcome to FarmEazy!</h1>
-            <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} text-lg mb-4`}>Your account has been created successfully.</p>
+            <h1 className={`text-4xl font-extrabold ${isDark ? 'text-foreground' : 'text-foreground'} mb-4`}>Welcome to FarmEazy!</h1>
+            <p className={`${isDark ? 'text-primary' : 'text-primary'} text-lg mb-4`}>Your account has been created successfully.</p>
             {(location.state?.socialSignupSource === 'google' || location.state?.signupPrompt) && (
-              <p className={`${isDark ? 'text-slate-300' : 'text-emerald-700'} text-sm mb-4`}>
+              <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm mb-4`}>
                 You can finish sign-up with the Google email that was detected in the login flow.
               </p>
             )}
-            <p className={`${isDark ? 'text-slate-400' : 'text-emerald-500'} text-xs mb-4`}>
+            <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-xs mb-4`}>
               After sign-up, you will receive the same welcome notification, email, and SMS as every other new account.
             </p>
             
             {/* Display User ID */}
-            <div className={`${isDark ? 'bg-slate-700/80 border-slate-500' : 'bg-emerald-50 border-emerald-200'} border-2 rounded-2xl p-6 mb-6`}>
-              <p className={`${isDark ? 'text-slate-300' : 'text-emerald-700'} text-sm font-medium mb-2`}>Your User ID</p>
-              <div className={`text-4xl font-bold font-mono ${isDark ? 'text-emerald-400' : 'text-emerald-600'}`}>
+            <div className={`${isDark ? 'bg-muted/80 border-border' : 'bg-primary/5 border-border'} border-2 rounded-2xl p-6 mb-6`}>
+              <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-medium mb-2`}>Your User ID</p>
+              <div className={`text-4xl font-bold font-mono ${isDark ? 'text-primary' : 'text-primary'}`}>
                 #{registeredUserId ? String(registeredUserId).padStart(5, '0') : '-----'}
               </div>
-              <p className={`${isDark ? 'text-slate-400' : 'text-emerald-500'} text-xs mt-2`}>Remember this ID for quick reference</p>
+              <p className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-xs mt-2`}>Remember this ID for quick reference</p>
             </div>
             
-            <div className={`flex items-center justify-center gap-2 ${isDark ? 'text-slate-400' : 'text-emerald-500'}`}>
+            <div className={`flex items-center justify-center gap-2 ${isDark ? 'text-muted-foreground' : 'text-primary'}`}>
               <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
@@ -474,27 +474,27 @@ function Register() {
     return (
       <div className="premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8">
         {/* Background */}
-        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-gray-900' : 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100'}`}>
+        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-background via-card to-background' : 'bg-gradient-to-br from-primary/10 via-primary/5 to-primary/10'}`}>
           <div className="absolute inset-0 opacity-30">
-            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-emerald-800' : 'bg-yellow-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
+            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-primary/30' : 'bg-yellow-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
             <div className={`absolute -bottom-8 right-20 w-72 h-72 ${isDark ? 'bg-teal-900' : 'bg-green-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
           </div>
           <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none"></div>
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <div className={`backdrop-blur-xl ${isDark ? 'bg-slate-800/90 border-slate-600' : 'bg-white/90 border-emerald-200'} rounded-3xl shadow-2xl border p-8`}>
+          <div className={`backdrop-blur-xl ${isDark ? 'bg-muted/90 border-border' : 'bg-background/90 border-border'} rounded-3xl shadow-2xl border p-8`}>
             
             {/* Header */}
             <div className="text-center mb-6">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <div className="w-20 h-20 bg-gradient-to-br from-primary to-green-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
                 <span className="text-4xl">📧</span>
               </div>
-              <h1 className={`text-2xl font-bold ${isDark ? 'text-slate-100' : 'text-emerald-800'}`}>Verify Your Email</h1>
-              <p className={`${isDark ? 'text-slate-400' : 'text-slate-600'} mt-2`}>
+              <h1 className={`text-2xl font-bold ${isDark ? 'text-foreground' : 'text-foreground'}`}>Verify Your Email</h1>
+              <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} mt-2`}>
                 We've sent a 6-digit OTP to
               </p>
-              <p className={`${isDark ? 'text-emerald-400' : 'text-emerald-600'} font-semibold`}>{formData.email}</p>
+              <p className={`${isDark ? 'text-primary' : 'text-primary'} font-semibold`}>{formData.email}</p>
             </div>
 
             {/* Error */}
@@ -519,8 +519,8 @@ function Register() {
                   onKeyDown={(e) => handleOtpKeyDown(index, e)}
                   className={`w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 focus:outline-none focus:ring-2 transition-all ${
                     isDark 
-                      ? 'bg-slate-700 border-slate-600 text-white focus:border-emerald-400 focus:ring-emerald-400/30' 
-                      : 'bg-white border-emerald-200 text-emerald-800 focus:border-emerald-500 focus:ring-emerald-500/30'
+                      ? 'bg-muted border-border text-white focus:border-primary focus:ring-primary/30' 
+                      : 'bg-background border-border text-foreground focus:border-primary focus:ring-primary/30'
                   }`}
                 />
               ))}
@@ -529,14 +529,14 @@ function Register() {
             {/* Timer */}
             <div className="text-center mb-6">
               {timer > 0 ? (
-                <p className={`${isDark ? 'text-slate-400' : 'text-slate-500'} text-sm`}>
+                <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} text-sm`}>
                   OTP expires in <span className="text-orange-500 font-semibold">{Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}</span>
                 </p>
               ) : (
                 <button
                   onClick={handleResendOtp}
                   disabled={loading}
-                  className={`${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-emerald-600 hover:text-emerald-700'} font-semibold text-sm transition`}
+                  className={`${isDark ? 'text-primary hover:text-primary' : 'text-primary hover:text-primary'} font-semibold text-sm transition`}
                 >
                   Didn't receive OTP? Resend
                 </button>
@@ -547,7 +547,7 @@ function Register() {
             <button
               onClick={handleVerifyOtp}
               disabled={otpVerifying || otpCode.join('').length !== 6}
-              className="w-full py-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-bold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 bg-gradient-to-r from-primary to-primary hover:from-primary/90 hover:to-primary/90 text-white font-bold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {otpVerifying ? (
                 <>
@@ -568,7 +568,7 @@ function Register() {
             <button
               onClick={handleBackToForm}
               className={`w-full mt-3 py-3 rounded-xl font-semibold transition ${
-                isDark ? 'text-slate-400 hover:text-slate-200 hover:bg-slate-700' : 'text-slate-500 hover:text-slate-700 hover:bg-gray-100'
+                isDark ? 'text-muted-foreground hover:text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
               }`}
             >
               ← Back to form
@@ -592,10 +592,10 @@ function Register() {
         />
       }
     >
-          <div className={`mb-5 rounded-lg border p-4 ${isDark ? 'border-slate-600 bg-slate-900/40' : 'border-emerald-100 bg-emerald-50/70'}`}>
-            <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-emerald-800'}`}>Continue with Google sign-up</p>
+          <div className={`mb-5 rounded-lg border p-4 ${isDark ? 'border-border bg-muted/30' : 'border-border/60 bg-primary/5'}`}>
+            <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Continue with Google sign-up</p>
             <div ref={googleButtonRef} className="flex items-center justify-center min-h-[48px] min-w-[48px]" />
-            <p className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-emerald-600'}`}>
+            <p className={`mt-3 text-xs ${isDark ? 'text-muted-foreground' : 'text-primary'}`}>
               Google sign-up is for new FarmEazy accounts. If this email already exists, please use the Login page instead. After you complete setup, FarmEazy will send the standard welcome email, SMS, and notification.
             </p>
             {googleStatus && (
@@ -605,8 +605,8 @@ function Register() {
                     ? 'border-amber-700/60 bg-amber-900/30 text-amber-200'
                     : 'border-amber-200 bg-amber-50 text-amber-700'
                   : isDark
-                    ? 'border-slate-600 bg-slate-800/80 text-slate-300'
-                    : 'border-slate-200 bg-white text-slate-600'}`}
+                    ? 'border-border bg-muted/80 text-muted-foreground'
+                    : 'border-border bg-background text-muted-foreground'}`}
               >
                 {googleStatus}
               </div>
@@ -624,7 +624,7 @@ function Register() {
 
             {/* Username */}
             <div className="space-y-1">
-              <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+              <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                 <span>👤</span> Username
               </label>
               <input
@@ -632,18 +632,18 @@ function Register() {
                 name="username"
                 value={formData.username}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+                className={`w-full px-4 py-3 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
                 placeholder="farmer_john"
               />
               {errors.username && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-xs flex items-center gap-1`}><span>❌</span> {errors.username}</p>}
               {formData.username && !errors.username && (
-                <p className={`${isDark ? 'text-emerald-400' : 'text-emerald-600'} text-xs`}>✓ You'll be known as @{formData.username}</p>
+                <p className={`${isDark ? 'text-primary' : 'text-primary'} text-xs`}>✓ You'll be known as @{formData.username}</p>
               )}
             </div>
 
             {/* Email */}
             <div className="space-y-1">
-              <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+              <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                 <span>📧</span> Email Address
               </label>
               <input
@@ -651,7 +651,7 @@ function Register() {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+                className={`w-full px-4 py-3 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
                 placeholder="farmer@example.com"
               />
               {errors.email && <p className={`${isDark ? 'text-red-400' : 'text-red-500'} text-xs flex items-center gap-1`}><span>❌</span> {errors.email}</p>}
@@ -659,7 +659,7 @@ function Register() {
 
             {/* Phone */}
             <div className="space-y-1">
-              <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+              <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                 <span>📱</span> Phone Number
               </label>
               <input
@@ -667,7 +667,7 @@ function Register() {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
+                className={`w-full px-4 py-3 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 backdrop-blur-sm`}
                 placeholder="9876543210"
                 maxLength="10"
               />
@@ -676,7 +676,7 @@ function Register() {
 
             {/* Password */}
             <div className="space-y-1">
-              <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+              <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                 <span>🔐</span> Password
               </label>
               <div className="relative">
@@ -685,13 +685,13 @@ function Register() {
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12`}
+                  className={`w-full px-4 py-3 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12`}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-emerald-500 hover:text-emerald-700'} transition-colors`}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-muted-foreground hover:text-muted-foreground' : 'text-primary hover:text-primary'} transition-colors`}
                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
                 </button>
@@ -701,7 +701,7 @@ function Register() {
 
             {/* Confirm Password */}
             <div className="space-y-1">
-              <label className={`${isDark ? 'text-slate-200' : 'text-emerald-700'} text-sm font-semibold flex items-center gap-2`}>
+              <label className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm font-semibold flex items-center gap-2`}>
                 <span>🔒</span> Confirm Password
               </label>
               <div className="relative">
@@ -710,13 +710,13 @@ function Register() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 ${isDark ? 'bg-slate-700/80 border-slate-500 text-white placeholder-slate-400' : 'bg-white border-emerald-200 text-emerald-900 placeholder-emerald-400'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12`}
+                  className={`w-full px-4 py-3 ${isDark ? 'bg-muted/80 border-border text-white placeholder:text-muted-foreground' : 'bg-background border-border text-foreground placeholder:text-muted-foreground'} border rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12`}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-slate-400 hover:text-slate-200' : 'text-emerald-500 hover:text-emerald-700'} transition-colors`}
+                  className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-muted-foreground hover:text-muted-foreground' : 'text-primary hover:text-primary'} transition-colors`}
                 >
                   {showPassword ? '👁️' : '👁️‍🗨️'}
                 </button>
@@ -728,7 +728,7 @@ function Register() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-6"
+              className="w-full py-4 bg-gradient-to-r from-teal-500 to-primary hover:from-teal-600 hover:to-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 mt-6"
             >
               {loading ? (
                 <>
@@ -748,30 +748,30 @@ function Register() {
 
           {/* Progress Highlights */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 my-5 text-sm">
-            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
-              <p className="uppercase tracking-[0.18em] text-xs text-slate-500">Step 1</p>
+            <div className={`rounded-3xl border p-4 ${isDark ? 'border-border bg-muted/40' : 'border-border bg-primary/5'}`}>
+              <p className="uppercase tracking-[0.18em] text-xs text-muted-foreground">Step 1</p>
               <p className="mt-2 font-bold">Create account</p>
             </div>
-            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-white'}`}>
-              <p className="uppercase tracking-[0.18em] text-xs text-slate-500">Step 2</p>
+            <div className={`rounded-3xl border p-4 ${isDark ? 'border-border bg-muted/40' : 'border-border bg-background'}`}>
+              <p className="uppercase tracking-[0.18em] text-xs text-muted-foreground">Step 2</p>
               <p className="mt-2 font-bold">Verify email</p>
             </div>
-            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
-              <p className="uppercase tracking-[0.18em] text-xs text-slate-500">Step 3</p>
+            <div className={`rounded-3xl border p-4 ${isDark ? 'border-border bg-muted/40' : 'border-border bg-primary/5'}`}>
+              <p className="uppercase tracking-[0.18em] text-xs text-muted-foreground">Step 3</p>
               <p className="mt-2 font-bold">Start farming</p>
             </div>
           </div>
 
           {/* Divider */}
           <div className="flex items-center gap-4 my-5">
-            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-emerald-200'}`}></div>
-            <span className={`${isDark ? 'text-slate-400' : 'text-emerald-400'} text-sm`}>or</span>
-            <div className={`flex-1 h-px ${isDark ? 'bg-slate-600' : 'bg-emerald-200'}`}></div>
+            <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-primary/20'}`}></div>
+            <span className={`${isDark ? 'text-muted-foreground' : 'text-primary'} text-sm`}>or</span>
+            <div className={`flex-1 h-px ${isDark ? 'bg-muted' : 'bg-primary/20'}`}></div>
           </div>
 
           {/* Login Link */}
           <div className="text-center">
-            <p className={`${isDark ? 'text-slate-300' : 'text-muted-foreground'}`}>
+            <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
               Already have an account?{' '}
               <Link to="/login" className="font-medium text-primary hover:underline">
                 Sign in here
