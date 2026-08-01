@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 
 function VendorDashboard() {
   const { isDark } = useTheme()
@@ -242,23 +243,18 @@ function VendorDashboard() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen -m-6 p-6 space-y-8 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-emerald-50'}`}>
-      <section className={`page-hero rounded-3xl overflow-hidden border ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-white border-slate-200 shadow-xl'}`}>
-        <div className={`p-8 md:p-10 ${isDark ? 'bg-gradient-to-r from-emerald-950 via-cyan-950 to-slate-900' : 'bg-gradient-to-r from-emerald-100 via-cyan-100 to-slate-50'}`}>
-          <div className="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-6">
-            <div>
-              <p className={`text-xs font-bold uppercase tracking-[0.18em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Vendor Command Center</p>
-              <h1 className={`mt-2 text-3xl md:text-5xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Scale Your Marketplace Ops</h1>
-              <p className={`mt-3 max-w-2xl ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-                Monitor catalog velocity, booking performance, and demand signals from one advanced workspace.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link to="/selling" className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Manage Products</Link>
-              <Link to="/irrigation-services" className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold">Manage Services</Link>
-            </div>
-          </div>
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+    <AppPage
+      title="Vendor Dashboard"
+      description="Monitor catalog velocity, booking performance, and demand signals."
+      actions={(
+        <>
+          <Link to="/selling" className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Manage Products</Link>
+          <Link to="/irrigation-services" className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-semibold">Manage Services</Link>
+        </>
+      )}
+    >
+      <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className={`rounded-xl p-4 border ${isDark ? 'bg-slate-900/60 border-slate-700 text-slate-100' : 'bg-white/80 border-slate-200 text-slate-800'}`}>
               <p className="text-xs uppercase tracking-wide text-cyan-500 font-semibold">Market Presence Score</p>
               <p className="text-2xl font-black mt-1">{marketPresence}</p>
@@ -272,8 +268,6 @@ function VendorDashboard() {
               <p className="text-2xl font-black mt-1">{stats.activeProducts + stats.services}</p>
             </div>
           </div>
-        </div>
-      </section>
 
       {eligibility?.vendorDashboardEligible && !hasListings && (
         <div className={`glass-card interactive-card rounded-2xl border p-6 ${isDark ? 'border-slate-700 text-slate-200' : 'border-slate-100 text-slate-700 shadow-sm'}`}>
@@ -333,7 +327,8 @@ function VendorDashboard() {
           <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Track buyer orders, booking approvals, and business alerts.</p>
         </Link>
       </section>
-    </div>
+      </div>
+    </AppPage>
   )
 }
 

@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
+import AppPage from '../components/layout/AppPage'
 import { sendNotification } from '../components/NotificationCenter'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -184,26 +185,20 @@ function Buying() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-      <div className="max-w-7xl mx-auto space-y-8">
-        <section className="page-hero interactive-card">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-orange-500 dark:text-orange-300">Marketplace</p>
-              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Buying Center</h1>
-              <p className={`mt-2 max-w-2xl text-lg ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                Browse quality agricultural products from verified sellers and move from discovery to checkout faster.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate('/cart')}
-              className="premium-button"
-            >
-              View Cart
-            </button>
-          </div>
-          <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+    <AppPage
+      title="Buying Center"
+      description="Browse quality agricultural products from verified sellers."
+      actions={
+        <button
+          onClick={() => navigate('/cart')}
+          className="premium-button"
+        >
+          View Cart
+        </button>
+      }
+    >
+      <div className="space-y-8">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
             <div className={`rounded-2xl border p-3 ${isDark ? 'border-slate-600 bg-slate-900/55' : 'border-slate-200 bg-white/80'}`}>
               <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Live Products</p>
               <p className={`mt-1 text-2xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{products.length}</p>
@@ -221,7 +216,6 @@ function Buying() {
               <p className={`mt-1 text-sm font-bold truncate ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{searchTerm || 'All products'}</p>
             </div>
           </div>
-        </section>
 
         {/* Search and Filter */}
         <div className="glass-card interactive-card p-6">
@@ -535,7 +529,7 @@ function Buying() {
           </div>
         )}
       </div>
-    </div>
+    </AppPage>
   )
 }
 

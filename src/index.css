@@ -180,41 +180,30 @@ body {
   max-width: 1400px;
 }
 
-/* Primary button - works in both themes */
-.btn-primary {
-  @apply text-white font-semibold py-2.5 px-4 rounded-xl transition-all duration-300;
-  background: linear-gradient(90deg, #0f766e 0%, #0ea5a4 52%, #0ea5e9 100%);
-  box-shadow: 0 12px 30px rgba(14, 165, 233, 0.25);
-}
-
-/* Secondary button - theme aware */
-.btn-secondary {
-  @apply font-semibold py-2.5 px-4 rounded-xl transition-all duration-300;
-  @apply dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-200;
-  @apply bg-gray-200 hover:bg-gray-300 text-slate-700;
-}
-
-/* Form input - theme aware */
+/* Form input — production tokens */
 .form-input {
-  @apply w-full px-4 py-2.5 rounded-xl transition-all duration-300;
-  @apply focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent;
-  @apply dark:bg-slate-700 dark:border-slate-600 dark:text-white dark:placeholder-slate-400;
-  @apply bg-white border border-gray-300 text-slate-800 placeholder-gray-400;
+  @apply w-full h-9 px-3 py-2 rounded-md border border-input bg-background text-foreground text-sm shadow-sm transition-colors;
+  @apply placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
 }
 
-/* Form label - theme aware */
+/* Form label */
 .form-label {
-  @apply block text-sm font-semibold mb-2;
-  @apply dark:text-slate-300;
-  @apply text-slate-700;
+  @apply block text-sm font-medium text-foreground mb-1.5;
 }
 
-/* Card - theme aware */
+/* Card — theme aware */
 .card {
-  @apply rounded-2xl shadow-md p-6 border transition-all duration-300;
-  @apply dark:bg-slate-800 dark:border-slate-700;
-  @apply bg-white border-gray-200;
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.10);
+  @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm p-6;
+}
+
+/* Primary button */
+.btn-primary {
+  @apply inline-flex items-center justify-center h-9 px-4 rounded-md text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 transition-colors;
+}
+
+/* Secondary button */
+.btn-secondary {
+  @apply inline-flex items-center justify-center h-9 px-4 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors;
 }
 
 /* Custom scrollbar for dropdowns */
@@ -401,61 +390,31 @@ select:-webkit-autofill:active {
 }
 
 .premium-button {
-  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition-all duration-300;
-  box-shadow: 0 10px 30px rgba(16,185,129,0.22);
+  @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-md text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 transition-colors;
 }
 
 .premium-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 16px 38px rgba(16,185,129,0.28);
+  @apply bg-primary/90;
 }
 
-.hover-lift {
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
-}
-
-.hover-lift:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 20px 44px rgba(15, 23, 42, 0.16);
-}
-
-.page-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.5rem;
-  padding: 1.25rem 1.4rem;
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: linear-gradient(120deg, rgba(255,255,255,0.92), rgba(236,253,245,0.78));
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.12);
-}
-
-.dark .page-hero {
-  background: linear-gradient(120deg, rgba(15,23,42,0.9), rgba(15,23,42,0.75));
-  border-color: rgba(71,85,105,0.6);
+.premium-button-secondary {
+  @apply inline-flex items-center justify-center gap-2 h-10 px-5 rounded-md text-sm font-medium border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors;
 }
 
 .glass-card {
-  border: 1px solid rgba(148, 163, 184, 0.28);
-  background: rgba(255, 255, 255, 0.72);
-  -webkit-backdrop-filter: blur(14px);
-  backdrop-filter: blur(14px);
-  border-radius: 1.25rem;
-  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.12);
+  @apply rounded-lg border border-border bg-card text-card-foreground shadow-sm;
 }
 
 .dark .glass-card {
-  border-color: rgba(71, 85, 105, 0.6);
-  background: rgba(15, 23, 42, 0.72);
-  box-shadow: 0 22px 54px rgba(2, 6, 23, 0.35);
+  @apply bg-card border-border;
 }
 
 .interactive-card {
-  transform-style: preserve-3d;
-  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+  @apply transition-colors;
 }
 
 .interactive-card:hover {
-  transform: translateY(-5px) rotateX(1.5deg);
+  @apply bg-accent/50;
 }
 
 .flip-card {

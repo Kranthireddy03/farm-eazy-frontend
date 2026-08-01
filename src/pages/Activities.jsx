@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../config/api';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../context/ThemeContext';
-import Toast from '../components/Toast';
+import AppPage from '../components/layout/AppPage';
+import { Card, CardContent } from '../components/ui/card';
+import { Badge } from '../components/ui/badge';
 
 const Activities = () => {
     const { isDark } = useTheme();
@@ -10,8 +12,8 @@ const Activities = () => {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(0);
     const [hasMore, setHasMore] = useState(false);
-    const [filter, setFilter] = useState('all'); // all, coins, farm, product, service, order
-    const { toast, showToast, closeToast } = useToast();
+    const [filter, setFilter] = useState('all');
+    const { showToast } = useToast();
 
     useEffect(() => {
         const fetchActivities = async () => {
@@ -123,47 +125,28 @@ const Activities = () => {
         : activities.filter(a => getActivityCategory(a.description).toLowerCase() === filter.toLowerCase());
 
     return (
-        <>
-            {toast && (
-                <Toast message={toast.message} type={toast.type} onClose={closeToast} />
-            )}
-            <div className={`premium-shell min-h-screen p-4 md:p-6 space-y-6 ${isDark ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-                <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-                {/* Page Header */}
-                <div className="page-hero interactive-card bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 rounded-2xl shadow-xl p-8 text-white">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h1 className="text-4xl font-bold mb-2 flex items-center gap-3">
-                                <span className="text-5xl">📊</span>
-                                Activity Timeline
-                            </h1>
-                            <p className="text-green-100 text-lg">Track your farming operations and transactions</p>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-3xl font-bold">{filteredActivities.length}</div>
-                            <div className="text-green-100 text-sm">Total Activities</div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Filter Tabs */}
-                <div className={`interactive-card rounded-2xl shadow-md p-2 overflow-x-auto border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
-                    <div className="flex gap-2">
-                        {['all', 'coins', 'farm', 'crop', 'product', 'service', 'order'].map((filterType) => (
-                            <button
-                                key={filterType}
-                                onClick={() => setFilter(filterType)}
-                                className={`px-6 py-3 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${
-                                    filter === filterType
-                                        ? 'bg-gradient-to-r from-green-600 to-green-700 text-white shadow-lg scale-105'
-                                        : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                                }`}
-                            >
-                                {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
-                            </button>
-                        ))}
-                    </div>
-                </div>
+        <AppPage
+            title="Activity timeline"
+            description="Track farming operations, orders, and account events."
+            actions={<Badge variant="secondary">{filteredActivities.length} activities</Badge>}
+        >
+            <Card className="p-2">
+                <CardContent className="p-2 flex gap-2 overflow-x-auto">
+                    {['all', 'coins', 'farm', 'crop', 'product', 'service', 'order'].map((filterType) => (
+                        <button
+                            key={filterType}
+                            onClick={() => setFilter(filterType)}
+                            className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
+                                filter === filterType
+                                    ? 'bg-primary text-primary-foreground'
+                                    : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                            }`}
+                        >
+                            {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
+                        </button>
+                    ))}
+                </CardContent>
+            </Card>
 
                 {loading ? (
                     <div className={`flex items-center justify-center h-96 rounded-xl shadow-md border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
@@ -363,8 +346,7 @@ const Activities = () => {
                         )}
                     </>
                 )}
-            </div>
-        </>
+        </AppPage>
     );
 };
 

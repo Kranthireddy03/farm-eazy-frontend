@@ -13,6 +13,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { useEffect } from 'react';
+import AppPage from '../components/layout/AppPage';
 
 function SessionExpired() {
   const navigate = useNavigate();
@@ -99,6 +100,7 @@ function SessionExpired() {
   const colors = colorClasses[color];
 
   return (
+    <AppPage title={title} description={message}>
     <div className={`premium-shell min-h-screen flex items-center justify-center px-4 ${
       isDark 
         ? `bg-gradient-to-br ${colors.bg} to-slate-900` 
@@ -121,13 +123,6 @@ function SessionExpired() {
           <div className={`w-24 h-24 bg-gradient-to-br ${colors.iconBg} rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg`}>
             <span className="text-5xl">{icon}</span>
           </div>
-
-          {/* Title */}
-          <h1 className={`text-3xl font-extrabold text-center mb-4 ${
-            isDark ? 'text-white' : 'text-gray-800'
-          }`}>
-            {title}
-          </h1>
 
           {/* Message */}
           <p className={`text-center text-lg mb-4 ${
@@ -189,6 +184,7 @@ function SessionExpired() {
         </div>
       </div>
     </div>
+    </AppPage>
   );
 }
 

@@ -5,6 +5,9 @@ import apiClient from '../services/apiClient'
 import { useTheme } from '../context/ThemeContext';
 import LocationPicker from '../components/LocationPicker'
 import { sendNotification } from '../components/NotificationCenter'
+import AppPage from '../components/layout/AppPage'
+import { Card, CardContent } from '../components/ui/card'
+import { Button } from '../components/ui/button'
 
 // Razorpay script loader
 function loadRazorpayScript() {
@@ -635,28 +638,19 @@ function Checkout() {
 
   if (cartItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-8 px-4">
-        <div className="max-w-2xl mx-auto text-center py-16">
-          <p className="text-6xl mb-4">🛒</p>
-          <h1 className="text-3xl font-bold text-white mb-2">Your Cart is Empty</h1>
-          <p className="text-slate-400 mb-8">Add products to proceed with checkout</p>
-          <button
-            onClick={() => navigate('/buying')}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-lg transition"
-          >
-            Continue Shopping
-          </button>
-        </div>
-      </div>
+      <AppPage title="Checkout" description="Your cart is empty.">
+        <Card className="text-center py-12">
+          <CardContent>
+            <p className="text-muted-foreground mb-6">Add products to proceed with checkout.</p>
+            <Button onClick={() => navigate('/buying')}>Continue shopping</Button>
+          </CardContent>
+        </Card>
+      </AppPage>
     )
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}> 
-      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-      <div className="max-w-6xl mx-auto">
-        <h1 className={`text-4xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>🛍️ Checkout</h1>
-        <p className={`${isDark ? 'text-slate-400' : 'text-gray-600'} mb-8`}>Complete your order securely</p>
+    <AppPage title="Checkout" description="Complete your order securely.">
 
         {hasOutOfAreaItems && (
           <div className={`mb-6 rounded-2xl border p-4 ${isDark ? 'border-red-800 bg-red-950/20 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
@@ -991,8 +985,7 @@ function Checkout() {
             </button>
           </div>
         </div>
-      </div>
-    </div>
+    </AppPage>
   )
 }
 

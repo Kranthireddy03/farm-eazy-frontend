@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import AvatarCropper from '../components/AvatarCropper';
 import { useTheme } from '../context/ThemeContext';
+import AppPage from '../components/layout/AppPage';
 
 function Profile() {
   const { isDark } = useTheme();
@@ -74,9 +75,9 @@ function Profile() {
   };
 
   return (
-    <div className={`premium-shell min-h-screen flex items-center justify-center px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+    <AppPage title="Profile" description="Manage your account details and avatar.">
+      <div className="flex justify-center">
       <div className={`glass-card interactive-card w-full max-w-md p-8 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-        <h2 className={`text-2xl font-black mb-6 ${isDark ? 'text-white' : 'text-slate-900'}`}>Profile</h2>
         <div className="flex flex-col items-center mb-6">
           <label htmlFor="avatar-upload" className="cursor-pointer">
             <img
@@ -168,7 +169,8 @@ function Profile() {
           )}
         </form>
       </div>
-    </div>
+      </div>
+    </AppPage>
   );
 }
 

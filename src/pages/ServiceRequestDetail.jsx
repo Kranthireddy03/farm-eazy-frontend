@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
 
 const STATUS_COLORS = {
@@ -145,9 +146,8 @@ function ServiceRequestDetail() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <AppPage title={`Request #${request.requestNumber}`} description={request.subject || 'Service request details'}>
       <div className="max-w-7xl mx-auto">
-        {/* Back Button */}
         <button
           onClick={() => navigate('/service-requests')}
           className={`mb-6 flex items-center gap-2 ${isDark ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-800'} transition`}
@@ -376,7 +376,7 @@ function ServiceRequestDetail() {
           </div>
         )}
       </div>
-    </div>
+    </AppPage>
   )
 }
 

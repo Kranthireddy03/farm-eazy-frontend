@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
 
 const CATEGORIES = [
@@ -123,27 +124,19 @@ function ServiceRequests() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <AppPage
+      title="Service Requests"
+      description="Raise and track your support tickets."
+      actions={
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-teal-700 transition shadow-lg"
+        >
+          {showForm ? '✕ Cancel' : '+ New Request'}
+        </button>
+      }
+    >
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="page-hero interactive-card flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-          <div>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-              Service Requests
-            </h1>
-            <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-              Raise and track your support tickets
-            </p>
-          </div>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-teal-700 transition shadow-lg"
-          >
-            {showForm ? '✕ Cancel' : '+ New Request'}
-          </button>
-        </div>
-
-        {/* Message */}
         {message.text && (
           <div className={`mb-6 p-4 rounded-lg ${
             message.type === 'success' 
@@ -409,7 +402,7 @@ function ServiceRequests() {
           </div>
         </div>
       </div>
-    </div>
+    </AppPage>
   )
 }
 

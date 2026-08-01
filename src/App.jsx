@@ -26,14 +26,16 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-emerald-950 text-slate-100 px-6">
-          <h1 className="text-3xl font-black text-lime-300 mb-4">Unexpected UI error</h1>
-          <p className="text-slate-200 mb-4 text-center max-w-xl">We preserved your session. Move to Resilience Mode to keep using the app while recovery checks continue.</p>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground px-6">
+          <h1 className="text-2xl font-semibold mb-3">Something went wrong</h1>
+          <p className="text-muted-foreground mb-4 text-center max-w-xl">
+            Your session is preserved. You can retry or open resilience mode.
+          </p>
           <button
             onClick={() => window.location.assign('/fallback')}
-            className="mb-4 rounded-xl px-4 py-2 bg-lime-400 text-slate-900 font-bold hover:bg-lime-300"
+            className="mb-4 rounded-md px-4 py-2 bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
           >
-            Open Resilience Mode
+            Open resilience mode
           </button>
           <details className="text-xs text-gray-500 whitespace-pre-wrap max-w-xl mx-auto">
             {this.state.error && this.state.error.toString()}

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 
 /**
  * RefundDetails - Page to view/manage refund details (bank/UPI info)
@@ -179,33 +180,17 @@ function RefundDetails() {
 
     if (loading) {
         return (
-            <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-                <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading...</p>
-            </div>
+            <AppPage title="Refund Details" description="Manage your bank/UPI details for receiving refunds.">
+                <div className="flex items-center justify-center h-64">
+                    <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Loading...</p>
+                </div>
+            </AppPage>
         )
     }
 
     return (
-        <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+        <AppPage title="Refund Details" description="Manage your bank/UPI details for receiving refunds.">
             <div className="max-w-2xl mx-auto">
-                {/* Header */}
-                <div className="page-hero interactive-card flex items-center gap-4 mb-6">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className={`p-2 rounded-lg ${isDark ? 'bg-slate-700 hover:bg-slate-600' : 'bg-slate-100 hover:bg-slate-200'} transition`}
-                    >
-                        ←
-                    </button>
-                    <div>
-                        <h1 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>
-                            💳 Refund Details
-                        </h1>
-                        <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>
-                            Manage your bank/UPI details for receiving refunds
-                        </p>
-                    </div>
-                </div>
-
                 {/* Success/Error messages */}
                 {error && (
                     <div className={`p-4 rounded-lg mb-4 ${isDark ? 'bg-red-900/30 text-red-400 border border-red-800' : 'bg-red-50 text-red-700 border border-red-200'}`}>
@@ -483,7 +468,7 @@ function RefundDetails() {
                     </ul>
                 </div>
             </div>
-        </div>
+        </AppPage>
     )
 }
 

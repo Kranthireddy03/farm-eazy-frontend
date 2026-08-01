@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
+import AppPage from '../components/layout/AppPage';
 
 const defaultPrefs = {
   notifications: true,
@@ -88,15 +89,8 @@ const UserPreferences = () => {
   ];
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'}`}>
+    <AppPage title="User Preferences" description="Customize your FarmEazy experience.">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <section className="page-hero interactive-card text-center mb-8">
-          <span className="text-5xl mb-4 block">⚙️</span>
-          <h1 className={`text-3xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>User Preferences</h1>
-          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Customize your FarmEazy experience</p>
-        </section>
-
         {/* Saved Toast */}
         {saved && (
           <div className="mb-6 p-4 bg-green-900/30 border border-green-700 text-green-400 rounded-lg text-center animate-pulse">
@@ -246,7 +240,7 @@ const UserPreferences = () => {
           </button>
         </div>
       </div>
-    </div>
+    </AppPage>
   );
 };
 

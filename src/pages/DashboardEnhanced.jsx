@@ -11,11 +11,10 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import ActivityTimeline from '../components/ui/ActivityTimeline';
 import { PageSkeleton } from '../components/ui/Skeleton';
-import Toast from '../components/Toast';
 
 function DashboardEnhanced() {
   const navigate = useNavigate();
-  const { toast, showToast, closeToast } = useToast();
+  const { showToast } = useToast();
   const { coins } = useCoin();
 
   const [serviceFilter, setServiceFilter] = useState('');
@@ -183,7 +182,6 @@ function DashboardEnhanced() {
 
   return (
     <div className="space-y-8">
-      {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
 
       <PageHeader
         title="Dashboard"

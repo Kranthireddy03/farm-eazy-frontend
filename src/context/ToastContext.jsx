@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { toast as sonnerToast } from 'sonner';
 import Toast from '../components/Toast';
 
 /**
@@ -31,6 +32,11 @@ export function ToastProvider({ children }) {
 
   // Add a new toast
   const showToast = useCallback((message, type = 'success', duration = 4000) => {
+    if (type === 'error') sonnerToast.error(message);
+    else if (type === 'warning') sonnerToast.warning(message);
+    else if (type === 'info') sonnerToast.info(message);
+    else sonnerToast.success(message);
+
     const id = Date.now() + Math.random();
     const newToast = { id, message, type, duration };
     

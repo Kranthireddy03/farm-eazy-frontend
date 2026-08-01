@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
 
 const SENSOR_TYPES = {
@@ -193,33 +194,24 @@ function IrrigationSensorDashboard() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <AppPage
+      title="Irrigation Sensors"
+      description="Monitor your farm conditions and manage automation rules."
+      actions={
+        <select
+          value={selectedFarm}
+          onChange={(e) => setSelectedFarm(e.target.value)}
+          className={`px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 ${
+            isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
+          }`}
+        >
+          {farms.map(farm => (
+            <option key={farm.id} value={farm.id}>{farm.farmName || farm.name}</option>
+          ))}
+        </select>
+      }
+    >
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="page-hero interactive-card flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
-          <div>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-              Irrigation Sensors
-            </h1>
-            <p className={`mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-              Monitor your farm conditions and manage automation rules
-            </p>
-          </div>
-          
-          {/* Farm Selector */}
-          <select
-            value={selectedFarm}
-            onChange={(e) => setSelectedFarm(e.target.value)}
-            className={`px-4 py-3 rounded-lg border focus:ring-2 focus:ring-green-500 ${
-              isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'
-            }`}
-          >
-            {farms.map(farm => (
-              <option key={farm.id} value={farm.id}>{farm.farmName || farm.name}</option>
-            ))}
-          </select>
-        </div>
-
         {/* Message */}
         {message.text && (
           <div className={`mb-6 p-4 rounded-lg ${
@@ -499,7 +491,7 @@ function IrrigationSensorDashboard() {
           </button>
         </div>
       </div>
-    </div>
+    </AppPage>
   )
 }
 

@@ -12,13 +12,13 @@
 import { useState, useEffect } from 'react'
 import { useToast } from '../hooks/useToast'
 import { useTheme } from '../context/ThemeContext'
-import Toast from '../components/Toast'
+import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 
 function Crops() {
   const { isDark } = useTheme()
-  const { toast, showToast, closeToast } = useToast()
+  const { showToast } = useToast()
   const [crops, setCrops] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -194,45 +194,39 @@ function Crops() {
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center h-96 ${isDark ? 'bg-slate-900' : ''}`}>
-        <div className="text-center">
-          <div className="spinner text-green-600 mb-4">
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-            </svg>
+      <AppPage title="Crops" description="Track planting, growth, and harvest across your farms.">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="spinner text-green-600 mb-4">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+              </svg>
+            </div>
+            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading crops...</p>
           </div>
-          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading crops...</p>
         </div>
-      </div>
+      </AppPage>
     )
   }
 
   return (
-    <>
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
-      )}
-      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <section className="page-hero interactive-card">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.22em] text-cyan-600 dark:text-cyan-300">Crop lifecycle</p>
-              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Crops</h1>
-              <p className={`mt-2 max-w-2xl ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Track planting, growth, readiness, and harvest in a cleaner, more tactile control surface.</p>
-            </div>
-            <button
-              onClick={() => {
-                setShowAddForm(!showAddForm)
-                setEditingCrop(null)
-                setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
-              }}
-              className="premium-button"
-            >
-              {showAddForm ? 'Close Form' : '+ Add Crop'}
-            </button>
-          </div>
-        </section>
-
+    <AppPage
+      title="Crops"
+      description="Track planting, growth, and harvest across your farms."
+      actions={
+        <button
+          onClick={() => {
+            setShowAddForm(!showAddForm)
+            setEditingCrop(null)
+            setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
+          }}
+          className="premium-button"
+        >
+          {showAddForm ? 'Close Form' : '+ Add Crop'}
+        </button>
+      }
+    >
+      <div className="space-y-8">
         {/* Error Message */}
         {error && (
           <div className={`glass-card px-4 py-3 border ${isDark ? 'border-red-700/40 bg-red-950/40 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
@@ -517,7 +511,7 @@ function Crops() {
           </div>
         )}
       </div>
-    </>
+    </AppPage>
   )
 }
 

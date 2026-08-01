@@ -1,15 +1,12 @@
-import { useState } from 'react';
+import { toast as sonnerToast } from 'sonner';
 
 export function useToast() {
-  const [toast, setToast] = useState(null);
-
   const showToast = (message, type = 'success') => {
-    setToast({ message, type });
+    if (type === 'error') sonnerToast.error(message);
+    else if (type === 'warning') sonnerToast.warning(message);
+    else if (type === 'info') sonnerToast.info(message);
+    else sonnerToast.success(message);
   };
 
-  const closeToast = () => {
-    setToast(null);
-  };
-
-  return { toast, showToast, closeToast };
+  return { toast: null, showToast, closeToast: () => {} };
 }

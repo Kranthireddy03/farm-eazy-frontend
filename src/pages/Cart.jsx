@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import ProductMediaCarousel from '../components/ProductMediaCarousel'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
+import AppPage from '../components/layout/AppPage'
 import { useTheme } from '../context/ThemeContext'
 import apiClient from '../services/apiClient'
 import ProductService from '../services/ProductService'
@@ -167,10 +168,8 @@ function Cart() {
 
   if (cartItems.length === 0) {
     return (
-      <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-        <div className="max-w-4xl mx-auto">
-          <div className={`interactive-card text-center py-16 rounded-3xl border ${isDark ? 'border-slate-700 bg-slate-800/80' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
+      <AppPage title="Shopping Cart" description="Review items before checkout.">
+        <div className={`interactive-card text-center py-16 rounded-3xl border ${isDark ? 'border-slate-700 bg-slate-800/80' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
             <div className="text-6xl mb-4">🛒</div>
             <h1 className={`text-3xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Your Cart is Empty</h1>
             <p className={`mb-8 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Start adding products to your cart to place an order</p>
@@ -185,29 +184,26 @@ function Cart() {
             >
               Continue Shopping
             </button>
-          </div>
         </div>
-      </div>
+      </AppPage>
     )
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-      <div className="max-w-6xl mx-auto space-y-8">
-        <section className="page-hero interactive-card">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <button
-                onClick={() => navigate('/buying')}
-                className="text-orange-500 hover:text-orange-400 font-semibold mb-4 flex items-center gap-2"
-              >
-                ← Back to Shopping
-              </button>
-              <h1 className={`text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Shopping Cart</h1>
-              <p className={`mt-2 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>{cartItems.length} item(s) in your cart</p>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+    <AppPage
+      title="Shopping Cart"
+      description={`${cartItems.length} item(s) in your cart`}
+      actions={
+        <button
+          onClick={() => navigate('/buying')}
+          className="text-orange-500 hover:text-orange-400 font-semibold flex items-center gap-2"
+        >
+          ← Back to Shopping
+        </button>
+      }
+    >
+      <div className="space-y-8">
+        <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
               <div className="glass-card p-3 text-center">
                 <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Subtotal</p>
                 <p className={`mt-1 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{subtotal.toFixed(2)}</p>
@@ -225,8 +221,6 @@ function Cart() {
                 <p className={`mt-1 font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>₹{savings.toFixed(2)}</p>
               </div>
             </div>
-          </div>
-        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
@@ -415,7 +409,7 @@ function Cart() {
           </div>
         </div>
       </div>
-    </div>
+    </AppPage>
   )
 }
 

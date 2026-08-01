@@ -3,6 +3,7 @@ import ProductMediaCarousel from '../components/ProductMediaCarousel'
 import { useParams, useNavigate } from 'react-router-dom'
 import ProductService from '../services/ProductService'
 import { useToast } from '../hooks/useToast'
+import AppPage from '../components/layout/AppPage'
 import { sendNotification } from '../components/NotificationCenter'
 import { useTheme } from '../context/ThemeContext'
 
@@ -150,9 +151,8 @@ function ProductDetail() {
   }
   // ...existing main product JSX...
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+    <AppPage title={product.productName} description="Product details and seller information.">
       <div className="max-w-6xl mx-auto">
-        {/* Back Button */}
         <button
           onClick={() => navigate('/buying')}
           className={`mb-6 flex items-center gap-2 font-semibold transition-colors ${isDark ? 'text-orange-400 hover:text-orange-300' : 'text-orange-600 hover:text-orange-500'}`}
@@ -380,9 +380,7 @@ function ProductDetail() {
                       </div>
                     </div>
                   )}
-      </div>
-                  {/* Cart Prompt Modal */}
-                  {showCartPrompt && (
+      {showCartPrompt && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
                       <div className={`border-2 border-green-500/50 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center transform animate-pulse-once ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
                         <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -427,7 +425,8 @@ function ProductDetail() {
                       </div>
                     </div>
                   )}
-    </div>
+      </div>
+    </AppPage>
   );
 }
 

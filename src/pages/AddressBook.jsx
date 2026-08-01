@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useTheme } from '../context/ThemeContext'
 import { useLocationContext } from '../context/LocationContext'
+import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
 
 const EMPTY_FORM = {
@@ -162,15 +163,11 @@ function AddressBook() {
   const uniqueCities = new Set(addresses.map((address) => address.city).filter(Boolean)).size
 
   return (
-    <div className={`premium-shell min-h-screen -m-6 p-6 space-y-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
-      <section className="page-hero interactive-card">
-        <p className={`text-xs font-semibold uppercase tracking-wide ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Profile Location</p>
-        <h1 className={`text-3xl font-black mt-1 ${isDark ? 'text-white' : 'text-slate-900'}`}>Manage Address</h1>
-        <p className={`mt-2 text-sm ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-          Save your address with city and state so vendor profile location requirements can be completed.
-        </p>
-      </section>
-
+    <AppPage
+      title="Address Book"
+      description="Save delivery addresses for orders and vendor profile requirements."
+    >
+      <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className={`glass-card interactive-card rounded-xl border p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
           <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Saved</p>
@@ -265,7 +262,8 @@ function AddressBook() {
           </div>
         )}
       </div>
-    </div>
+      </div>
+    </AppPage>
   )
 }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { Mail, Phone, Clock, MapPin } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import apiClient from '../services/apiClient'
 import { GlassPanel, HeroFrame, PillButton, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
@@ -38,10 +39,10 @@ export default function Contact() {
   }
 
   const channels = [
-    { label: 'Email', value: 'support@farm-eazy.com', href: 'mailto:support@farm-eazy.com', icon: '📧' },
-    { label: 'Phone', value: '+91 6301630368', href: 'tel:+916301630368', icon: '📞' },
-    { label: 'Hours', value: 'Mon-Sat, 9 AM - 6 PM IST', href: '', icon: '🕐' },
-    { label: 'Location', value: 'Ananthapur, Andhra Pradesh, India', href: '', icon: '📍' },
+    { label: 'Email', value: 'support@farm-eazy.com', href: 'mailto:support@farm-eazy.com', icon: Mail },
+    { label: 'Phone', value: '+91 6301630368', href: 'tel:+916301630368', icon: Phone },
+    { label: 'Hours', value: 'Mon-Sat, 9 AM - 6 PM IST', href: '', icon: Clock },
+    { label: 'Location', value: 'Ananthapur, Andhra Pradesh, India', href: '', icon: MapPin },
   ]
 
   const reasons = [
@@ -232,8 +233,11 @@ export default function Contact() {
               <SectionTitle eyebrow="Support Channels" title="Choose the quickest route to the right team" />
               <div className="mt-4 space-y-3">
                 {channels.map((item) => (
-                  <div key={item.label} className={`rounded-2xl border p-4 ${isDark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-white/80'}`}>
-                    <p className="text-sm">{item.icon} <span className="font-semibold">{item.label}</span></p>
+                  <div key={item.label} className={`rounded-lg border p-4 ${isDark ? 'border-border bg-card' : 'border-slate-200 bg-white'}`}>
+                    <p className="text-sm flex items-center gap-2">
+                      <item.icon className="h-4 w-4 text-primary" strokeWidth={1.75} />
+                      <span className="font-semibold">{item.label}</span>
+                    </p>
                     {item.href ? (
                       <a href={item.href} className={`text-sm ${isDark ? 'text-cyan-300 hover:text-cyan-200' : 'text-cyan-700 hover:text-cyan-800'} underline`}>
                         {item.value}

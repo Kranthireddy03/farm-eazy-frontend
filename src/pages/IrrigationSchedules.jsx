@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 
 function IrrigationSchedules() {
     const { isDark } = useTheme()
@@ -218,45 +219,40 @@ function IrrigationSchedules() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading schedules...</p>
-      </div>
+      <AppPage title="Irrigation Schedules" description="Plan and track irrigation for your crops.">
+        <div className="flex items-center justify-center h-96">
+          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading schedules...</p>
+        </div>
+      </AppPage>
     )
   }
 
   return (
-    <div className={`min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <AppPage
+      title="Irrigation Schedules"
+      description="Plan and track irrigation for your crops."
+      actions={
+        <button
+          onClick={() => {
+            setShowAddForm(!showAddForm)
+            setEditingSchedule(null)
+            setFormData({
+              cropId: '',
+              farmId: '',
+              irrigationDate: '',
+              startTime: '06:00',
+              duration: '',
+              waterAmount: '',
+              notes: '',
+            })
+          }}
+          className={`px-5 py-2.5 rounded-xl font-semibold transition ${isDark ? 'bg-slate-900/60 text-white hover:bg-slate-900/80' : 'bg-white text-cyan-700 hover:bg-cyan-50 border border-cyan-200'}`}
+        >
+          {showAddForm ? 'Cancel' : '+ New Schedule'}
+        </button>
+      }
+    >
       <div className="space-y-8">
-        {/* Header Section */}
-        <div className="page-hero interactive-card text-white bg-gradient-to-r from-blue-600 via-cyan-500 to-teal-500">
-          <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center">
-            <div className="flex items-center gap-4">
-              <span className="text-5xl">💧</span>
-              <div>
-                <h1 className="text-3xl font-black">Irrigation Schedules</h1>
-                <p className="text-blue-100 mt-1">Plan and track irrigation for your crops</p>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                setShowAddForm(!showAddForm)
-                setEditingSchedule(null)
-                setFormData({
-                  cropId: '',
-                  farmId: '',
-                  irrigationDate: '',
-                  startTime: '06:00',
-                  duration: '',
-                  waterAmount: '',
-                  notes: '',
-                })
-              }}
-              className={`px-5 py-2.5 rounded-xl font-semibold transition ${isDark ? 'bg-slate-900/60 text-white hover:bg-slate-900/80' : 'bg-white text-cyan-700 hover:bg-cyan-50'}`}
-            >
-              {showAddForm ? 'Cancel' : '+ New Schedule'}
-            </button>
-          </div>
-        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <div className={`glass-card interactive-card p-4 border ${isDark ? 'border-slate-700' : 'border-cyan-100'}`}>
@@ -587,7 +583,7 @@ function IrrigationSchedules() {
         </div>
       )}
       </div>
-    </div>
+    </AppPage>
   )
 }
 

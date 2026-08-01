@@ -3,6 +3,7 @@ import ProductMediaCarousel from '../components/ProductMediaCarousel'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 import CancelOrderModal from '../components/CancelOrderModal'
 import RefundDetailsModal from '../components/RefundDetailsModal'
 
@@ -105,15 +106,17 @@ function Orders() {
 
   if (loading) {
     return (
-      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-        <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Loading your orders...</p>
-      </div>
+      <AppPage title="My Orders" description="View and manage your order history.">
+        <div className="flex items-center justify-center h-64">
+          <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Loading your orders...</p>
+        </div>
+      </AppPage>
     )
   }
 
   if (error) {
     return (
-      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
+      <AppPage title="My Orders" description="View and manage your order history.">
         <div className="glass-card interactive-card p-8 text-center">
           <p className="text-red-400 mb-4">{error}</p>
           <button
@@ -123,47 +126,41 @@ function Orders() {
             Back to shop
           </button>
         </div>
-      </div>
+      </AppPage>
     )
   }
 
   if (orders.length === 0) {
     return (
-      <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className="max-w-4xl mx-auto">
-          <div className="glass-card interactive-card p-8 text-center">
-            <div className="text-6xl mb-4">📦</div>
-            <h1 className={`text-3xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>My Orders</h1>
-            <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Your order history will appear here.</p>
-            <button
-              onClick={() => navigate('/buying')}
-              className="premium-button"
-            >
-              Start Shopping
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return (
-    <div className={`min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div className="page-hero interactive-card flex items-center justify-between gap-4">
-          <div>
-            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Order history</p>
-            <h1 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>My Orders</h1>
-          </div>
+      <AppPage title="My Orders" description="View and manage your order history.">
+        <div className="glass-card interactive-card p-8 text-center">
+          <div className="text-6xl mb-4">📦</div>
+          <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Your order history will appear here.</p>
           <button
             onClick={() => navigate('/buying')}
             className="premium-button"
           >
-            Continue shopping
+            Start Shopping
           </button>
         </div>
+      </AppPage>
+    )
+  }
 
-        {/* Success message */}
+  return (
+    <AppPage
+      title="My Orders"
+      description="View and manage your order history."
+      actions={
+        <button
+          onClick={() => navigate('/buying')}
+          className="premium-button"
+        >
+          Continue shopping
+        </button>
+      }
+    >
+      <div className="space-y-6">
         {successMessage && (
           <div className={`glass-card p-4 rounded-2xl ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-green-50 text-green-700 border border-green-200'}`}>
             ✓ {successMessage}
@@ -357,7 +354,7 @@ function Orders() {
         onSuccess={handleRefundDetailsSuccess}
         orderId={selectedOrder?.id}
       />
-    </div>
+    </AppPage>
   )
 }
 

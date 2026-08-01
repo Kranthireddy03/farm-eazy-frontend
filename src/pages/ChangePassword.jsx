@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 
 function ChangePassword() {
   const navigate = useNavigate()
@@ -97,23 +98,10 @@ function ChangePassword() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
+    <AppPage title="Change Password" description="Keep your account secure with a strong password.">
       <div className="max-w-2xl mx-auto">
-      {/* Header Card */}
-      <div className="page-hero interactive-card bg-gradient-to-r from-emerald-600 via-green-600 to-teal-600 rounded-t-3xl p-6 shadow-lg">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center">
-            <span className="text-3xl">🔐</span>
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Change Password</h1>
-            <p className="text-emerald-100 text-sm">Keep your account secure with a strong password</p>
-          </div>
-        </div>
-      </div>
-
       {/* Form Card */}
-      <div className={`glass-card interactive-card rounded-b-3xl shadow-2xl p-8 border ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+      <div className={`glass-card interactive-card rounded-3xl shadow-2xl p-8 border ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Error Display */}
           {apiError && (
@@ -254,7 +242,7 @@ function ChangePassword() {
         <p>🔒 Your password is encrypted and secure</p>
       </div>
       </div>
-    </div>
+    </AppPage>
   )
 }
 

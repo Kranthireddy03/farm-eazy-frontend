@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { useToast } from '../hooks/useToast';
-import Toast from '../components/Toast';
+import AppPage from '../components/layout/AppPage';
 import { 
   getPreferences, 
   updatePreferences, 
@@ -11,7 +11,7 @@ import {
 
 function CommunicationPreferences() {
   const { isDark } = useTheme();
-  const { toast, showToast, closeToast } = useToast();
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
@@ -120,39 +120,17 @@ function CommunicationPreferences() {
 
   if (loading) {
     return (
-      <div className={`premium-shell min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'} flex items-center justify-center`}>
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-      </div>
+      <AppPage title="Communication Preferences" description="Choose how you want to receive notifications.">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+        </div>
+      </AppPage>
     );
   }
 
   return (
-    <div className={`premium-shell min-h-screen ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'} py-8 px-4`}>
-      {/* Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-[100]">
-          <Toast
-            message={toast.message}
-            type={toast.type}
-            onClose={closeToast}
-          />
-        </div>
-      )}
-      
+    <AppPage title="Communication Preferences" description="Choose how you want to receive notifications.">
       <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <section className="page-hero interactive-card text-center mb-8">
-          <span className="text-5xl mb-4 block">📬</span>
-          <h1 className={`text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'} mb-2`}>
-            Communication Preferences
-          </h1>
-          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>
-            Choose how you want to receive notifications
-          </p>
-        </section>
-
-
-
         {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-900/30 border border-red-700 text-red-400 rounded-xl flex items-center gap-2">
@@ -307,7 +285,7 @@ function CommunicationPreferences() {
           </p>
         </div>
       </div>
-    </div>
+    </AppPage>
   );
 }
 

@@ -14,6 +14,7 @@ import { useState, useEffect } from 'react'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 import { useTheme } from '../context/ThemeContext'
+import AppPage from '../components/layout/AppPage'
 
 function FarmDetail() {
   const { farmId } = useParams()
@@ -93,20 +94,17 @@ function FarmDetail() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
+    <AppPage title={farm.farmName} description={farm.location}>
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => navigate('/farms')}
-            className={`flex items-center gap-2 font-semibold mb-4 transition-colors ${isDark ? 'text-green-400 hover:text-green-300' : 'text-emerald-700 hover:text-emerald-600'}`}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            Back to Farms
-          </button>
-        </div>
+        <button
+          onClick={() => navigate('/farms')}
+          className={`flex items-center gap-2 font-semibold mb-4 transition-colors ${isDark ? 'text-green-400 hover:text-green-300' : 'text-emerald-700 hover:text-emerald-600'}`}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Farms
+        </button>
 
         {error && (
           <div className={`mb-6 px-4 py-3 rounded-lg border ${isDark ? 'bg-red-900/30 border-red-700 text-red-400' : 'bg-red-50 border-red-200 text-red-600'}`}>
@@ -208,7 +206,7 @@ function FarmDetail() {
           )}
         </div>
       </div>
-    </div>
+    </AppPage>
   )
 }
 

@@ -9,6 +9,7 @@ import LocationPicker from '../components/LocationPicker';
 import { useGlobalToast } from '../context/ToastContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import AppPage from '../components/layout/AppPage';
 
 function Selling() {
   const navigate = useNavigate();
@@ -1165,16 +1166,19 @@ function Selling() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <section className="page-hero interactive-card mb-6">
-          <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-sky-500 dark:text-sky-300">Vendor Cockpit</p>
-              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Selling Control Deck</h1>
-              <p className={`mt-3 max-w-2xl ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                Publish, optimize, and manage your entire product inventory from one high-clarity workspace.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+        <AppPage
+          title="Selling"
+          description="Publish, optimize, and manage your product inventory."
+          actions={
+            <button
+              onClick={() => setShowForm(true)}
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
+            >
+              ➕ List New Product
+            </button>
+          }
+        >
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-6">
               <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/55' : 'border-slate-200 bg-white/80'}`}>
                 <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Listings</p>
                 <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{sellingStats.totalListings}</p>
@@ -1192,10 +1196,8 @@ function Selling() {
                 <p className={`mt-2 text-3xl font-black ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{sellingStats.listedUnits}</p>
               </div>
             </div>
-          </div>
-        </section>
 
-        <h1 className={`text-3xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>My Products</h1>
+        <h2 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>My Products</h2>
         
         {myProducts.length === 0 ? (
           <div className={`interactive-card rounded-2xl p-12 text-center shadow-lg border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
@@ -1280,6 +1282,7 @@ function Selling() {
             ))}
           </div>
         )}
+        </AppPage>
       </div>
     </div>
   );

@@ -2,16 +2,16 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useToast } from '../hooks/useToast'
-import Toast from '../components/Toast'
+import AppPage from '../components/layout/AppPage'
 import { useAuth } from '../context/AuthContext'
 import apiClient from '../services/apiClient'
 import { buildSupportPortalUrl, getSupportPortalBaseUrl, prepareSupportPortalHandoff } from '../utils/supportPortal'
-import { HeroFrame, PillButton } from '../components/ui/PremiumSurface'
-import { PublicPageContainer, PublicNotePanel } from '../components/public/PublicPagePrimitives'
+import { PillButton } from '../components/ui/PremiumSurface'
+import { PublicPageContainer } from '../components/public/PublicPagePrimitives'
 
 function Support() {
   const { isDark } = useTheme()
-  const { toast, showToast, closeToast } = useToast()
+  const { showToast } = useToast()
   const { isAuthenticated } = useAuth()
   const supportDashboardBaseUrl = getSupportPortalBaseUrl()
 
@@ -154,15 +154,8 @@ function Support() {
 
   return (
     <PublicPageContainer>
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-[100]">
-          <Toast message={toast.message} type={toast.type} onClose={closeToast} />
-        </div>
-      )}
-
-      <HeroFrame
-        eyebrow="Support Center"
-        title="Clear answers first, ticket flow when needed"
+      <AppPage
+        title="Support"
         description="Browse approved FAQs and escalate quickly when your issue needs personal support."
         actions={(
           <>
@@ -170,18 +163,7 @@ function Support() {
             <PillButton to="/support/ticket">Raise a ticket</PillButton>
           </>
         )}
-        side={(
-          <PublicNotePanel
-            eyebrow="Readability"
-            title="Designed for quick scanning"
-            items={[
-              'Category filters reduce search friction',
-              'Core answers are expanded inline',
-              'Extra questions load by category on demand',
-            ]}
-          />
-        )}
-      />
+      >
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <section className="lg:col-span-2">
@@ -321,6 +303,7 @@ function Support() {
           )}
         </section>
       </div>
+      </AppPage>
     </PublicPageContainer>
   )
 }

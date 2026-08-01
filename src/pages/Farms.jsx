@@ -14,7 +14,7 @@ import { useLoader } from '../context/LoaderContext'
 import { useTheme } from '../context/ThemeContext'
 import { useLocationContext } from '../context/LocationContext'
 import { useToast } from '../hooks/useToast';
-import Toast from '../components/Toast';
+import AppPage from '../components/layout/AppPage';
 import LocationPicker from '../components/LocationPicker'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
@@ -30,7 +30,7 @@ function Farms() {
         dashboardWindow.fetchStats();
       }
     };
-  const { toast, showToast, closeToast } = useToast();
+  const { showToast } = useToast();
   const [farms, setFarms] = useState([])
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -244,46 +244,40 @@ function Farms() {
 
   if (loading) {
     return (
-      <div className={`flex items-center justify-center h-96 ${isDark ? 'bg-slate-900' : ''}`}>
-        <div className="text-center">
-          <div className="spinner text-green-600 mb-4">
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-            </svg>
+      <AppPage title="Farms" description="Manage your farm locations and land parcels.">
+        <div className="flex items-center justify-center h-96">
+          <div className="text-center">
+            <div className="spinner text-green-600 mb-4">
+              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+              </svg>
+            </div>
+            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading farms...</p>
           </div>
-          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading farms...</p>
         </div>
-      </div>
+      </AppPage>
     )
   }
 
   return (
-    <>
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
-      )}
-      <div className={`space-y-8 min-h-screen -m-6 p-6 ${isDark ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-      <section className="page-hero interactive-card">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-xs uppercase tracking-[0.22em] text-emerald-600 dark:text-emerald-300">Farm workspace</p>
-            <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Farms</h1>
-            <p className={`mt-2 max-w-2xl ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Manage your land parcels with a richer workflow, better visual hierarchy, and faster action access.</p>
-          </div>
-          <button
-            onClick={() => {
-              setShowAddForm(!showAddForm)
-              setEditingFarm(null)
-              setFormData({ farmName: '', location: '', areaSize: '', latitude: null, longitude: null })
-              setShowLocationPicker(false)
-            }}
-            className="premium-button"
-          >
-            {showAddForm ? 'Close Form' : '+ Add Farm'}
-          </button>
-        </div>
-      </section>
-
+    <AppPage
+      title="Farms"
+      description="Manage your farm locations and land parcels."
+      actions={
+        <button
+          onClick={() => {
+            setShowAddForm(!showAddForm)
+            setEditingFarm(null)
+            setFormData({ farmName: '', location: '', areaSize: '', latitude: null, longitude: null })
+            setShowLocationPicker(false)
+          }}
+          className="premium-button"
+        >
+          {showAddForm ? 'Close Form' : '+ Add Farm'}
+        </button>
+      }
+    >
+      <div className="space-y-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
           <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Farms</p>
@@ -556,7 +550,7 @@ function Farms() {
         </div>
       )}
       </div>
-    </>
+    </AppPage>
   )
 }
 

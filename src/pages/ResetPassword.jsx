@@ -1,12 +1,14 @@
 /**
- * Reset Password Page Component - Modern FarmEazy Design
- * Features elegant glass morphism, animated backgrounds, and farming theme
+ * Reset Password Page Component
  */
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
+import { Lock } from 'lucide-react'
 import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
+import { AuthPageLayout, AuthSidePanel } from '../components/layout/AuthPageLayout'
+import AppPage from '../components/layout/AppPage'
 
 function ResetPassword() {
   const navigate = useNavigate()
@@ -75,206 +77,151 @@ function ResetPassword() {
     }
   }
 
-  // Invalid Token Screen
   if (invalidToken) {
     return (
-      <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-rose-50 via-white to-pink-50'}`}>
-        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-red-900 via-rose-800 to-pink-900' : 'bg-gradient-to-br from-rose-100 via-red-50 to-pink-100'}`}>
-          <div className="absolute inset-0 opacity-30">
-            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-red-400' : 'bg-rose-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-          </div>
-        </div>
-
-        <div className="relative z-10 w-full max-w-md">
-          <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-rose-200'}`}>
-            <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl">⚠️</span>
-            </div>
-            <h1 className={`text-3xl font-extrabold mb-4 ${isDark ? 'text-white' : 'text-rose-800'}`}>Invalid Link</h1>
-            <p className={`mb-6 ${isDark ? 'text-rose-200' : 'text-rose-700'}`}>
-              This password reset link is invalid or has expired. Please request a new one.
-            </p>
-            <Link
-              to="/forgot-password"
-              className="inline-block w-full py-4 bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-600 hover:to-red-700 text-white font-bold rounded-xl shadow-lg transform transition-all duration-300 hover:scale-[1.02]"
-            >
-              Request New Link →
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AppPage title="Reset Password" description="This password reset link is invalid or has expired.">
+      <AuthPageLayout
+        title="Invalid Link"
+        description="This password reset link is invalid or has expired. Please request a new one."
+        side={
+          <AuthSidePanel
+            title="Secure password recovery"
+            description="Reset links expire for your security. Request a fresh link and complete the reset within the time window."
+          />
+        }
+      >
+        <Link
+          to="/forgot-password"
+          className="inline-block w-full py-3 text-center bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg"
+        >
+          Request New Link
+        </Link>
+      </AuthPageLayout>
+      </AppPage>
     )
   }
 
-  // Success Screen
   if (success) {
     return (
-      <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-emerald-900 via-green-800 to-teal-900' : 'bg-gradient-to-br from-emerald-100 via-green-50 to-teal-100'}`}>
-          <div className="absolute inset-0 opacity-30">
-            <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-emerald-400' : 'bg-emerald-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-          </div>
+      <AppPage title="Reset Password" description="Your password has been successfully reset.">
+      <AuthPageLayout
+        title="Password Reset!"
+        description="Your password has been successfully reset. You can now login with your new password."
+        side={
+          <AuthSidePanel
+            title="You're all set"
+            description="Use your new password on the login page. If you run into issues, contact support from the help center."
+          />
+        }
+      >
+        <div className={`flex items-center justify-center gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-muted-foreground'}`}>
+          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+          </svg>
+          <span>Redirecting to login...</span>
         </div>
-
-        <div className="relative z-10 w-full max-w-md">
-          <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 text-center ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-emerald-200'}`}>
-            <div className="w-24 h-24 bg-gradient-to-br from-emerald-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
-              <span className="text-5xl">✅</span>
-            </div>
-            <h1 className={`text-3xl font-extrabold mb-4 ${isDark ? 'text-white' : 'text-emerald-800'}`}>Password Reset!</h1>
-            <p className={`mb-6 ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>
-              Your password has been successfully reset. You can now login with your new password.
-            </p>
-            <div className={`flex items-center justify-center gap-2 ${isDark ? 'text-white/60' : 'text-emerald-700/70'}`}>
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span>Redirecting to login...</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      </AuthPageLayout>
+      </AppPage>
     )
   }
 
   return (
-    <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-6 ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-cyan-50 via-white to-indigo-50'}`}>
-      {/* Animated Background */}
-      <div className={`absolute inset-0 ${isDark ? 'bg-gradient-to-br from-cyan-900 via-blue-800 to-indigo-900' : 'bg-gradient-to-br from-cyan-100 via-blue-50 to-indigo-100'}`}>
-        <div className="absolute inset-0 opacity-30">
-          <div className={`absolute top-0 -left-4 w-72 h-72 ${isDark ? 'bg-cyan-400' : 'bg-cyan-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`}></div>
-          <div className={`absolute top-0 -right-4 w-72 h-72 ${isDark ? 'bg-blue-400' : 'bg-blue-300'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '2s'}}></div>
-          <div className={`absolute -bottom-8 left-20 w-72 h-72 ${isDark ? 'bg-indigo-300' : 'bg-indigo-200'} rounded-full mix-blend-multiply filter blur-xl animate-pulse`} style={{animationDelay: '4s'}}></div>
-        </div>
-        <div className={`absolute inset-0 ${isDark ? 'opacity-5' : 'opacity-10'}`} style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23${isDark ? 'ffffff' : '1e3a8a'}' fill-opacity='0.35'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}></div>
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-20 left-10 text-6xl opacity-20 animate-bounce" style={{animationDuration: '3s'}}>🔒</div>
-        <div className="absolute top-40 right-20 text-5xl opacity-20 animate-bounce" style={{animationDuration: '4s', animationDelay: '1s'}}>🔑</div>
-        <div className="absolute bottom-32 left-1/4 text-4xl opacity-20 animate-bounce" style={{animationDuration: '5s', animationDelay: '2s'}}>✨</div>
-        <div className="absolute bottom-20 right-1/3 text-5xl opacity-20 animate-bounce" style={{animationDuration: '3.5s'}}>🌾</div>
-      </div>
-
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-md">
-        <div className={`glass-card interactive-card rounded-3xl shadow-2xl border p-8 transform transition-all duration-500 hover:scale-[1.02] ${isDark ? 'bg-white/10 border-white/20' : 'bg-white/90 border-blue-200'}`}>
-          
-          {/* Logo & Header */}
-          <div className="text-center mb-8">
-            <div className="relative inline-block">
-              <div className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl rotate-3 absolute -top-1 -left-1 opacity-50"></div>
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-indigo-600 rounded-2xl flex items-center justify-center relative shadow-lg">
-                <span className="text-4xl">🔒</span>
-              </div>
-            </div>
-            <h1 className={`text-3xl font-extrabold mt-6 tracking-tight ${isDark ? 'text-white' : 'text-indigo-800'}`}>Reset Password</h1>
-            <p className={`mt-2 text-sm ${isDark ? 'text-blue-200' : 'text-indigo-600'}`}>Create a strong new password</p>
+    <AppPage title="Reset Password" description="Create a strong new password for your account.">
+    <AuthPageLayout
+      title="Reset Password"
+      description="Create a strong new password"
+      side={
+        <AuthSidePanel
+          title="Secure your farm account"
+          description="Choose a password you haven't used elsewhere. After resetting, sign in with your new credentials."
+        />
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {apiError && (
+          <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} border px-4 py-3 rounded-xl`}>
+            <p className="font-medium text-sm">{apiError}</p>
           </div>
+        )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Error Display */}
-            {apiError && (
-              <div className={`${isDark ? 'bg-red-500/20 border-red-400/30 text-red-100' : 'bg-red-100 border-red-300 text-red-700'} backdrop-blur-sm border px-4 py-3 rounded-xl flex items-center gap-3`}>
-                <span className="text-xl">⚠️</span>
-                <p className="font-medium">{apiError}</p>
-              </div>
-            )}
-
-            {/* New Password */}
-            <div className="space-y-2">
-              <label className={`${isDark ? 'text-white/90' : 'text-indigo-700'} text-sm font-semibold flex items-center gap-2`}>
-                <span>🔐</span> New Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12 ${isDark ? 'bg-white/10 border border-white/20 text-white placeholder-white/40' : 'bg-white border border-indigo-200 text-indigo-900 placeholder-indigo-400'}`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-white/60 hover:text-white' : 'text-indigo-500 hover:text-indigo-700'}`}
-                >
-                  {showPassword ? '👁️' : '👁️‍🗨️'}
-                </button>
-              </div>
-              {errors.password && <p className={`${isDark ? 'text-red-300' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.password}</p>}
-            </div>
-
-            {/* Confirm Password */}
-            <div className="space-y-2">
-              <label className={`${isDark ? 'text-white/90' : 'text-indigo-700'} text-sm font-semibold flex items-center gap-2`}>
-                <span>🔐</span> Confirm Password
-              </label>
-              <div className="relative">
-                <input
-                  type={showConfirm ? 'text' : 'password'}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 backdrop-blur-sm pr-12 ${isDark ? 'bg-white/10 border border-white/20 text-white placeholder-white/40' : 'bg-white border border-indigo-200 text-indigo-900 placeholder-indigo-400'}`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className={`absolute right-3 top-1/2 -translate-y-1/2 transition-colors ${isDark ? 'text-white/60 hover:text-white' : 'text-indigo-500 hover:text-indigo-700'}`}
-                >
-                  {showConfirm ? '👁️' : '👁️‍🗨️'}
-                </button>
-              </div>
-              {errors.confirmPassword && <p className={`${isDark ? 'text-red-300' : 'text-red-500'} text-sm flex items-center gap-1`}><span>❌</span> {errors.confirmPassword}</p>}
-              {formData.confirmPassword && formData.password === formData.confirmPassword && !errors.confirmPassword && (
-                <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} text-sm flex items-center gap-1`}><span>✅</span> Passwords match!</p>
-              )}
-            </div>
-
-            {/* Submit Button */}
+        <div className="space-y-2">
+          <label className={`${isDark ? 'text-slate-200' : 'text-foreground'} text-sm font-medium flex items-center gap-2`}>
+            <Lock className="h-4 w-4" /> New Password
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary pr-12 ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-background border-input'}`}
+              placeholder="••••••••"
+            />
             <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transform transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${isDark ? 'text-slate-400' : 'text-muted-foreground'}`}
             >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Resetting...
-                </>
-              ) : (
-                <>
-                  <span>🔄</span> Reset Password
-                </>
-              )}
+              {showPassword ? 'Hide' : 'Show'}
             </button>
-          </form>
-
-          {/* Back to Login */}
-          <div className="text-center mt-6">
-            <Link to="/login" className={`${isDark ? 'text-blue-300 hover:text-white' : 'text-indigo-600 hover:text-indigo-800'} transition-colors text-sm font-medium`}>
-              ← Back to Login
-            </Link>
           </div>
+          {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
         </div>
 
-        {/* Bottom Decoration */}
-        <div className={`text-center mt-6 text-sm ${isDark ? 'text-white/40' : 'text-indigo-500'}`}>
-          <p>🌾 Secure your farm account 🌾</p>
+        <div className="space-y-2">
+          <label className={`${isDark ? 'text-slate-200' : 'text-foreground'} text-sm font-medium flex items-center gap-2`}>
+            <Lock className="h-4 w-4" /> Confirm Password
+          </label>
+          <div className="relative">
+            <input
+              type={showConfirm ? 'text' : 'password'}
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary pr-12 ${isDark ? 'bg-slate-800 border-slate-600 text-white' : 'bg-background border-input'}`}
+              placeholder="••••••••"
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirm(!showConfirm)}
+              className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${isDark ? 'text-slate-400' : 'text-muted-foreground'}`}
+            >
+              {showConfirm ? 'Hide' : 'Show'}
+            </button>
+          </div>
+          {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
+          {formData.confirmPassword && formData.password === formData.confirmPassword && !errors.confirmPassword && (
+            <p className="text-emerald-600 text-sm">Passwords match</p>
+          )}
         </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {loading ? (
+            <>
+              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              Resetting...
+            </>
+          ) : (
+            'Reset Password'
+          )}
+        </button>
+      </form>
+
+      <div className="text-center mt-6">
+        <Link to="/login" className="text-sm font-medium text-primary hover:underline">
+          Back to Login
+        </Link>
       </div>
-    </div>
+    </AuthPageLayout>
+    </AppPage>
   )
 }
 

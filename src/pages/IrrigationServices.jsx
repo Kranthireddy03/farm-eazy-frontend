@@ -4,13 +4,13 @@ import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
 import { useTheme } from '../context/ThemeContext'
 import { useLocationContext } from '../context/LocationContext'
-import Toast from '../components/Toast'
+import AppPage from '../components/layout/AppPage'
 
 function IrrigationServices() {
   const { isDark } = useTheme()
   const { selectedLocation } = useLocationContext()
   const navigate = useNavigate()
-  const { toast, showToast, closeToast } = useToast()
+  const { showToast } = useToast()
   const [activeTab, setActiveTab] = useState('listings') // 'listings', 'browse', 'bookings', or 'provider-requests'
 
   const [postForm, setPostForm] = useState({
@@ -566,23 +566,12 @@ function IrrigationServices() {
   }
 
   return (
-    <>
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
-      )}
-      <div className={`premium-shell space-y-8 min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-        {/* Page Header */}
-        <section className="page-hero interactive-card">
-          <div className="grid gap-5 lg:grid-cols-[1.35fr_1fr]">
-            <div>
-              <p className="text-xs uppercase tracking-[0.24em] text-cyan-500 dark:text-cyan-300">Service Exchange</p>
-              <h1 className={`mt-2 text-4xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>Irrigation Operations Hub</h1>
-              <p className={`mt-3 max-w-2xl ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
-                Post services, accept requests, and book farm operations from one advanced service command center.
-              </p>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
+      <AppPage
+        title="Irrigation Services"
+        description="Post services, accept requests, and book farm operations."
+      >
+      <div className="space-y-8">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               <div className={`rounded-2xl border p-4 ${isDark ? 'border-cyan-500/30 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/80'}`}>
                 <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>My Listings</p>
                 <p className={`mt-2 text-3xl font-black ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{listings.length}</p>
@@ -599,9 +588,7 @@ function IrrigationServices() {
                 <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Provider Queue</p>
                 <p className={`mt-2 text-3xl font-black ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>{providerRequests.length}</p>
               </div>
-            </div>
-          </div>
-        </section>
+        </div>
 
         {/* Tab Navigation */}
         <div className={`glass-card interactive-card flex flex-wrap gap-2 border p-2 ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
@@ -1867,7 +1854,7 @@ function IrrigationServices() {
           </>
         )}
       </div>
-    </>
+    </AppPage>
   )
 }
 
