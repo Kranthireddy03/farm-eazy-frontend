@@ -296,17 +296,17 @@ function Home() {
               <CardDescription>Three steps to get the most from FarmEazy.</CardDescription>
             </CardHeader>
             <CardContent className="grid md:grid-cols-3 gap-6 text-sm">
-              <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+              <div className="ops-panel p-4">
                 <p className="font-semibold text-foreground">1. Build farm data</p>
-                <p className="text-muted-foreground mt-1">Keep farms and crop records current for accurate planning.</p>
+                <p className="text-muted-foreground mt-1 text-sm">Keep farms and crop records current for accurate planning.</p>
               </div>
-              <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+              <div className="ops-panel p-4">
                 <p className="font-semibold text-foreground">2. Activate commerce</p>
-                <p className="text-muted-foreground mt-1">List products and services for your service area.</p>
+                <p className="text-muted-foreground mt-1 text-sm">List products and services for your service area.</p>
               </div>
-              <div className="rounded-lg border border-border/60 bg-muted/30 p-4">
+              <div className="ops-panel p-4">
                 <p className="font-semibold text-foreground">3. Optimize returns</p>
-                <p className="text-muted-foreground mt-1">Use analytics and coins to compound growth.</p>
+                <p className="text-muted-foreground mt-1 text-sm">Use analytics and coins to compound growth.</p>
               </div>
             </CardContent>
           </Card>

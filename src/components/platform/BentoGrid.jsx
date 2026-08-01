@@ -35,8 +35,8 @@ export function BentoCell({
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className={cn(
         spanClass,
-        'fe-surface p-5 sm:p-6',
-        interactive && 'fe-surface-interactive cursor-pointer',
+        'ops-panel p-5 sm:p-6',
+        interactive && 'ops-panel-interactive cursor-pointer',
         className,
       )}
     >

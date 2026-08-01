@@ -12,3 +12,4 @@ export { FeatureGrid, FeatureGridItem } from './FeatureGrid';
 export { PremiumHero } from './PremiumHero';
 export { BentoGrid, BentoCell } from './BentoGrid';
 export { QuickActionTile } from './QuickActionTile';
+export { FeLiveBadge, FeSectionTitle, FePanel, FeChip } from './FeOpsPrimitives';

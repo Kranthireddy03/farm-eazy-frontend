@@ -19,7 +19,7 @@ export function QuickActionTile({
       whileHover={reduce ? undefined : { y: -3 }}
       whileTap={reduce ? undefined : { scale: 0.98 }}
       className={cn(
-        'fe-surface fe-surface-interactive w-full text-left p-5 sm:p-6 group',
+        'ops-panel ops-panel-interactive w-full text-left p-5 sm:p-6 group',
         className,
       )}
     >

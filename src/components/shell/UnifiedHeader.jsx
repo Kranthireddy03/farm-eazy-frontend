@@ -18,12 +18,12 @@ export default function UnifiedHeader() {
   useEffect(() => setMenuOpen(false), [location.pathname]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
+    <header className="sticky top-0 z-40 border-b border-border/70 bg-background/85 backdrop-blur-xl supports-[backdrop-filter]:bg-background/75 shadow-sm">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-3">
-        <Link to="/" className="flex items-center gap-2.5 shrink-0">
+        <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
           <div className="fe-logo-mark">FE</div>
           <div className="leading-tight">
-            <p className="font-semibold text-sm">FarmEazy</p>
+            <p className="font-semibold text-sm group-hover:text-primary transition-colors">FarmEazy</p>
             <p className="text-[10px] text-muted-foreground hidden sm:block">Farm operations platform</p>
           </div>
         </Link>
@@ -36,8 +36,8 @@ export default function UnifiedHeader() {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
-                  active ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                  'px-3 py-1.5 rounded-full text-sm font-medium transition-colors',
+                  active ? 'ops-chip-active ops-chip' : 'ops-chip hover:text-foreground',
                 )}
               >
                 {item.label}

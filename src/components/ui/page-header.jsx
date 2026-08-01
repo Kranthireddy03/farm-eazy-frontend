@@ -9,11 +9,11 @@ export function PageHeader({
   className,
 }) {
   return (
-    <header className={cn('space-y-4 mb-6', className)}>
+    <header className={cn('ops-page-hero mb-6', className)}>
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-1 min-w-0">
           {title && (
-            <h1 className="fe-display text-2xl sm:text-3xl text-foreground leading-tight">
+            <h1 className="ops-page-title fe-display text-foreground">
               {title}
             </h1>
           )}

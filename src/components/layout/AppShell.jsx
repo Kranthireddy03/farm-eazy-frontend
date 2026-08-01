@@ -108,8 +108,8 @@ export default function AppShell({ children, onShowTour }) {
     <div className="min-h-screen bg-background text-foreground flex fe-premium-canvas">
       <aside
         className={cn(
-          'hidden lg:flex flex-col border-r border-border/70 bg-card/80 backdrop-blur-md transition-[width] duration-200 shrink-0',
-          collapsed ? 'w-[4.5rem]' : 'w-60',
+          'hidden lg:flex flex-col border-r border-border/70 bg-card/80 backdrop-blur-md transition-[width] duration-200 shrink-0 shadow-sm',
+          collapsed ? 'w-[4.5rem]' : 'w-64',
         )}
       >
         <div className="h-14 flex items-center gap-2.5 px-3 border-b border-border/70">
@@ -122,10 +122,10 @@ export default function AppShell({ children, onShowTour }) {
               key={path}
               to={path}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+                'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 isActive(path)
-                  ? 'fe-nav-active'
-                  : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground',
+                  ? 'bg-primary/12 text-primary border border-primary/25 shadow-sm'
+                  : 'text-muted-foreground hover:bg-muted/80 hover:text-foreground border border-transparent',
               )}
             >
               <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
@@ -190,7 +190,7 @@ export default function AppShell({ children, onShowTour }) {
                   <span className="truncate">{userUsername || 'Account'}</span>
                 </Button>
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-md border border-border bg-popover shadow-md z-50 py-1 text-sm">
+                  <div className="absolute right-0 mt-2 w-56 ops-panel z-50 py-1 text-sm shadow-lg">
                     <div className="px-3 py-2 border-b border-border">
                       <p className="font-medium truncate">{userUsername}</p>
                       <p className="text-xs text-muted-foreground truncate">{userEmail}</p>

@@ -11,6 +11,7 @@ import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import { cn } from '../lib/utils'
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 const GOOGLE_ALLOWED_ORIGINS = (import.meta.env.VITE_GOOGLE_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
@@ -463,72 +464,49 @@ function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] bg-background flex items-center justify-center px-4 py-10">
+    <div className="min-h-[calc(100vh-3.5rem)] fe-premium-canvas flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
         <div className="hidden lg:block space-y-6">
-          <div className="rounded-lg border border-border overflow-hidden bg-card">
+          <div className="ops-panel overflow-hidden">
             <img src="/auth-login.png" alt="FarmEazy login illustration" className="w-full object-cover" />
           </div>
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">FarmEazy</p>
-            <h2 className="mt-2 text-3xl font-semibold text-foreground leading-tight">Welcome back</h2>
+          <div className="ops-panel p-6">
+            <p className="text-xs font-semibold uppercase tracking-wider text-primary">FarmEazy</p>
+            <h2 className="mt-2 ops-page-title text-foreground">Welcome back</h2>
             <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
               Access farms, crops, marketplace, and support tools for your selected service location.
             </p>
           </div>
         </div>
 
-        <div className="w-full rounded-lg border border-border bg-card shadow-sm p-6 sm:p-8">
+        <div className="w-full ops-auth-card p-6 sm:p-8">
           <div className="mb-6">
-            <div className="h-10 w-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">FE</div>
-            <h1 className="text-2xl font-semibold text-foreground mt-4">Sign in</h1>
+            <div className="fe-logo-mark text-xs">FE</div>
+            <h1 className="ops-page-title text-foreground mt-4">Sign in</h1>
             <p className="text-sm text-muted-foreground mt-1">Use your FarmEazy account credentials</p>
           </div>
           {/* Login Mode Tabs */}
-          <div className={`flex mb-6 rounded-2xl overflow-hidden border ${isDark ? 'border-slate-600' : 'border-emerald-200'}`}>
+          <div className="flex gap-2 mb-6">
             <button
               type="button"
               onClick={() => switchLoginMode('password')}
-              className={`flex-1 py-3 px-4 font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                loginMode === 'password'
-                  ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
-                  : isDark
-                    ? 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
-                    : 'bg-gray-50 text-emerald-700 hover:bg-emerald-50'
-              }`}
+              className={cn('ops-chip flex-1 justify-center', loginMode === 'password' && 'ops-chip-active')}
             >
-              <span>🔐</span> Password
+              Password
             </button>
             <button
               type="button"
               onClick={() => switchLoginMode('otp')}
-              className={`flex-1 py-3 px-4 font-semibold transition-all duration-300 flex items-center justify-center gap-2 ${
-                loginMode === 'otp'
-                  ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-white'
-                  : isDark
-                    ? 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
-                    : 'bg-gray-50 text-emerald-700 hover:bg-emerald-50'
-              }`}
+              className={cn('ops-chip flex-1 justify-center', loginMode === 'otp' && 'ops-chip-active')}
             >
-              <span>📱</span> OTP
+              OTP
             </button>
           </div>
 
-          <div className={`grid grid-cols-2 gap-3 mb-6 text-xs font-semibold ${isDark ? 'text-slate-300' : 'text-emerald-700'}`}>
-            <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
-              <p className="uppercase tracking-[0.2em]">Quick access</p>
-              <p className="mt-2 text-lg font-black">Field-ready</p>
-            </div>
-            <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-white'}`}>
-              <p className="uppercase tracking-[0.2em]">Secure session</p>
-              <p className="mt-2 text-lg font-black">2FA built in</p>
-            </div>
-          </div>
-
-          <div className={`glass-card mb-5 rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/40' : 'border-emerald-100 bg-emerald-50/70'}`}>
-            <p className={`text-sm font-semibold mb-3 ${isDark ? 'text-slate-200' : 'text-emerald-800'}`}>Continue sign in with Google</p>
+          <div className="ops-panel p-4 mb-5">
+            <p className="text-sm font-semibold text-foreground mb-3">Continue with Google</p>
             <div ref={googleButtonRef} className="flex items-center justify-center min-h-[48px] min-w-[48px]" />
-            <p className={`mt-3 text-xs ${isDark ? 'text-slate-400' : 'text-emerald-600'}`}>
+            <p className="mt-3 text-xs text-muted-foreground">
               Google sign-in is for existing FarmEazy accounts only. If this email is new, use Register so FarmEazy can create your account and send the usual welcome email, SMS, and notification after setup.
             </p>
             {googleStatus && (

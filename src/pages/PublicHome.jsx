@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Sprout, Droplets, ShoppingCart, Wrench, ArrowRight, BarChart3 } from 'lucide-react';
+import { Sprout, Droplets, ShoppingCart, Wrench, ArrowRight } from 'lucide-react';
 import { PillButton, FeatureCard, StrongPanel, SectionTitle } from '../components/ui/PremiumSurface';
 import { PremiumHero, BentoGrid, BentoCell } from '../components/platform';
+import { FeLiveBadge } from '../components/platform/FeOpsPrimitives';
+import { useEffect, useState } from 'react';
+import { getPublicStats } from '../services/publicStatsService';
 
 const focusAreas = [
   { title: 'Farm management', text: 'Create farms, plot fields, and track crop details from one dashboard.', icon: Sprout },
@@ -17,6 +20,23 @@ const steps = [
 ];
 
 export default function PublicHome() {
+  const [stats, setStats] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    getPublicStats()
+      .then((data) => { if (active) setStats(data); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, []);
+
+  const statItems = [
+    { label: 'Active farmers', value: stats?.activeFarmers },
+    { label: 'Farms managed', value: stats?.farms },
+    { label: 'States covered', value: stats?.states },
+    { label: 'Products sold', value: stats?.products },
+  ];
+
   return (
     <main className="space-y-12">
       <PremiumHero
@@ -30,27 +50,20 @@ export default function PublicHome() {
           </>
         }
         media={
-          <div className="fe-surface fe-gradient-border p-6 space-y-4">
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-foreground">Operations snapshot</span>
-              <span className="text-muted-foreground">Live sync</span>
+          <div className="ops-panel p-6 space-y-4">
+            <div className="flex items-center justify-between gap-2">
+              <span className="ops-section-title text-foreground">Platform reach</span>
+              <FeLiveBadge />
             </div>
-            <div className="rounded-xl border border-border/70 bg-muted/30 p-4 flex items-center gap-3">
-              <BarChart3 className="h-8 w-8 text-primary shrink-0" />
-              <div>
-                <p className="text-2xl font-semibold text-foreground tabular-nums">3 workflows</p>
-                <p className="text-sm text-muted-foreground">Farm, marketplace, support</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-xl border border-border/70 p-3 bg-background/50">
-                <p className="text-lg font-semibold text-foreground">85%</p>
-                <p className="text-muted-foreground">Schedule compliance</p>
-              </div>
-              <div className="rounded-xl border border-border/70 p-3 bg-background/50">
-                <p className="text-lg font-semibold text-foreground">24/7</p>
-                <p className="text-muted-foreground">Support access</p>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
+              {statItems.map((item) => (
+                <div key={item.label} className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                  <p className="text-xl font-bold tabular-nums text-foreground">
+                    {item.value ?? '—'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{item.label}</p>
+                </div>
+              ))}
             </div>
           </div>
         }
@@ -59,7 +72,7 @@ export default function PublicHome() {
       <BentoGrid>
         {focusAreas.map((item) => (
           <BentoCell key={item.title} span={3} interactive className="!p-0">
-            <FeatureCard icon={item.icon} title={item.title} description={item.text} className="border-0 shadow-none h-full" />
+            <FeatureCard icon={item.icon} title={item.title} description={item.text} className="border-0 shadow-none h-full bg-transparent" />
           </BentoCell>
         ))}
       </BentoGrid>
@@ -80,7 +93,7 @@ export default function PublicHome() {
             <Link
               key={link.to}
               to={link.to}
-              className="fe-surface fe-surface-interactive flex items-center justify-between p-4 group"
+              className="ops-panel ops-panel-interactive flex items-center justify-between p-4 group"
             >
               <div>
                 <p className="font-medium text-foreground">{link.label}</p>
