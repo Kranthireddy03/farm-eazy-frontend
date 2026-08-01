@@ -173,6 +173,7 @@ export function useLiveSupportChat({ enabled, sessionKey = 0, onFallback }) {
     bootstrapLive();
 
     return () => {
+      bootstrapInFlightRef.current = false;
       if (subscriptionRef.current) {
         subscriptionRef.current.unsubscribe();
         subscriptionRef.current = null;
