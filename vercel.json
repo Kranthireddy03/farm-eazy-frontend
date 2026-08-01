@@ -1,33 +1,15 @@
-
-
 {
   "buildCommand": "node node_modules/vite/bin/vite.js build",
   "outputDirectory": "dist",
   "installCommand": "npm install",
-  "env": {
-    "VITE_API_URL": "https://api.farm-eazy.com",
-    "VITE_SUPPORT_BASE_URL": "https://support.farm-eazy.com",
-    "VITE_SUPPORT_DASHBOARD_URL": "https://support.farm-eazy.com",
-    "VITE_GOOGLE_ALLOWED_ORIGINS": "https://www.farm-eazy.com,https://farm-eazy.com,https://support.farm-eazy.com",
-    "VITE_API_ENCRYPTION_ENABLED": "true",
-    "VITE_API_ENCRYPTION_SECRET": "FarmEazyUatApiEncryptionSecret2026",
-    "VITE_API_GATEWAY_ENABLED": "true",
-    "VITE_API_GATEWAY_CLIENT": "farmeazy-frontend",
-    "VITE_API_GATEWAY_SECRET": "FarmEazyUatGatewaySecret2026",
-    "VITE_GOOGLE_CLIENT_ID": "1034508002249-ms9o9tpqd0cs4jrkubhicg36oskot3a1.apps.googleusercontent.com",
-    "VITE_PAYMENT_SIMULATION_ENABLED": "true"
-  },
   "rewrites": [
     {
       "source": "/(.*)",
       "destination": "/index.html"
     }
   ],
-
-  
   "headers": [
     {
-      
       "source": "/api/:path*",
       "headers": [
         {
@@ -37,7 +19,6 @@
       ]
     },
     {
-      
       "source": "/assets/:path*",
       "headers": [
         {
@@ -45,15 +26,6 @@
           "value": "public, max-age=31536000, immutable"
         }
       ]
-    }
-  ],
-
-  
-  "redirects": [
-    {
-      "source": "/old-path",
-      "destination": "/new-path",
-      "permanent": true
     }
   ]
 }

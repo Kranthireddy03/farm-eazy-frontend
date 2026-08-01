@@ -2,7 +2,7 @@
 
 **Date:** 2026-08-01  
 **Environment:** Local dev (frontend `:3000`, backend `:8080`, H2 file DB `./data/farmeazy_db`)  
-**Credentials:** `support@farm-eazy.com` / `DevAdmin123!`
+**Credentials:** Set `REGRESSION_EMAIL` and `REGRESSION_PASSWORD` environment variables (not stored in repo).
 
 ## Executive summary
 

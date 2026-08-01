@@ -1,2 +1,0 @@
-import{D as c}from"./vendor-CIBu4acD.js";import{d as l}from"./index-DAu9ZfoD.js";function e({children:r,className:i,columns:s=4}){const o=s===3?"sm:grid-cols-2 xl:grid-cols-3":s===2?"sm:grid-cols-2":"sm:grid-cols-2 xl:grid-cols-4";return c.jsx("section",{"aria-label":"Key metrics",className:l("grid grid-cols-1 gap-4",o,i),children:r})}export{e as K};
-//# sourceMappingURL=KpiSection-Dh3o5a1-.js.map

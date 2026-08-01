@@ -3,7 +3,7 @@
 **Date:** 2026-08-01  
 **Environment:** Local dev (`http://localhost:3000`, backend `http://localhost:8080`)  
 **Tester:** Cloud agent (browser + API)  
-**Credentials:** `support@farm-eazy.com` / `DevAdmin123!`
+**Credentials:** Set `REGRESSION_EMAIL` and `REGRESSION_PASSWORD` environment variables (not stored in repo).
 
 ## Summary
 

@@ -327,9 +327,16 @@ async function run() {
   record('GET /api/system/full-status', system.ok, `status=${system.status}`);
 
   // Auth
+  const regressionEmail = process.env.REGRESSION_EMAIL || 'support@farm-eazy.com';
+  const regressionPassword = process.env.REGRESSION_PASSWORD || '';
+  if (!regressionPassword) {
+    console.error('Set REGRESSION_PASSWORD env var for authenticated regression tests.');
+    process.exit(1);
+  }
+
   const login = await apiRequest('/auth/login', {
     method: 'POST',
-    body: { email: 'support@farm-eazy.com', password: 'DevAdmin123!' },
+    body: { identifier: regressionEmail, password: regressionPassword },
   });
   const token = login.data?.token;
   record('POST /api/auth/login', login.ok && token, `status=${login.status}`);
