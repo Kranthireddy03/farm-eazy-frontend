@@ -8,6 +8,7 @@ import { IrrigationPageAside } from '../components/irrigation/IrrigationPageAsid
 import { buttonVariants } from '../components/ui/button'
 import { cn } from '../lib/utils'
 import apiClient from '../services/apiClient'
+import { unwrapApiList } from '../utils/apiResponse'
 
 const SENSOR_TYPES = {
   SOIL_MOISTURE: { label: 'Soil Moisture', icon: '💧', unit: '%', color: 'blue' },
@@ -57,10 +58,10 @@ function IrrigationSensorDashboard() {
 
   const fetchFarms = async () => {
     try {
-      const response = await apiClient.get('/api/farms')
-      setFarms(response.data.content || response.data || [])
-      if (response.data.content?.length > 0 || response.data?.length > 0) {
-        const farmList = response.data.content || response.data
+      const response = await apiClient.get('/farms')
+      const farmList = unwrapApiList(response?.data)
+      setFarms(farmList)
+      if (farmList.length > 0) {
         setSelectedFarm(farmList[0].id)
       }
     } catch (error) {

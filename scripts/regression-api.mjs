@@ -141,7 +141,163 @@ async function apiRequest(path, options = {}) {
   }
 
   const data = await normalizeBody(json);
-  return { status: response.status, ok: response.ok, data, raw: json };
+  return { status: response.status, ok: response.ok, data, raw: json, headers: response.headers };
+}
+
+async function runExtendedSuite(token, profile) {
+  console.log('--- extended surface area ---');
+
+  const irrigation = await apiRequest('/irrigation', { token });
+  record('GET /api/irrigation (schedules)', irrigation.ok, `status=${irrigation.status}`);
+
+  const irrigationStats = await apiRequest('/irrigation/stats', { token });
+  record('GET /api/irrigation/stats', irrigationStats.ok || irrigationStats.status === 404, `status=${irrigationStats.status}`);
+
+  const sensorTypes = await apiRequest('/irrigation-sensors/types', { token });
+  record('GET /api/irrigation-sensors/types', sensorTypes.ok, `status=${sensorTypes.status}`);
+
+  const crops = await apiRequest('/crops', { token });
+  record('GET /api/crops', crops.ok, `status=${crops.status}`);
+
+  const onboarding = await apiRequest('/vendors/onboarding-profile', { token });
+  record('GET /api/vendors/onboarding-profile', onboarding.ok, `status=${onboarding.status}`);
+
+  const serviceEligibility = await apiRequest('/vendors/listing-eligibility?listingType=SERVICE', { token });
+  record('GET /api/vendors/listing-eligibility (service)', serviceEligibility.ok, `status=${serviceEligibility.status}`);
+
+  const servicesNearby = await apiRequest('/services/nearby', { token });
+  record('GET /api/services/nearby', servicesNearby.ok, `status=${servicesNearby.status}`);
+
+  const bankStatus = await apiRequest('/bank-verification', { token });
+  record('GET /api/bank-verification', bankStatus.ok || bankStatus.status === 404, `status=${bankStatus.status}`);
+
+  const bankLimits = await apiRequest('/bank-verification/limits', { token });
+  record('GET /api/bank-verification/limits', bankLimits.ok || bankLimits.status === 404, `status=${bankLimits.status}`);
+
+  const serviceRequests = await apiRequest('/service-requests?page=0&size=10', { token });
+  record('GET /api/service-requests', serviceRequests.ok, `status=${serviceRequests.status}`);
+
+  const serviceRequestCreate = await apiRequest('/service-requests', {
+    method: 'POST',
+    token,
+    body: {
+      category: 'TECHNICAL_ISSUE',
+      priority: 'MEDIUM',
+      subject: 'Regression test ticket',
+      description: 'Automated regression service request for API verification.',
+    },
+  });
+  record('POST /api/service-requests', serviceRequestCreate.ok || serviceRequestCreate.status === 201, `status=${serviceRequestCreate.status}`);
+
+  const myBlog = await apiRequest('/blog-posts/submissions/my', { token });
+  record('GET /api/blog-posts/submissions/my', myBlog.ok, `status=${myBlog.status}`);
+
+  const blogSubmit = await apiRequest('/blog-posts/submissions', {
+    method: 'POST',
+    token,
+    body: {
+      title: 'Regression Blog Draft',
+      excerpt: 'Short excerpt for automated regression testing.',
+      content: 'This is automated regression content with enough length for validation.',
+      category: 'General',
+      tags: ['regression'],
+      authorName: profile?.username || 'Regression',
+    },
+  });
+  record('POST /api/blog-posts/submissions', blogSubmit.ok || blogSubmit.status === 201, `status=${blogSubmit.status}`);
+
+  const adminBlog = await apiRequest('/admin/blog-posts', { token });
+  record('GET /api/admin/blog-posts', adminBlog.ok, `status=${adminBlog.status}`);
+
+  const paymentOrder = await apiRequest('/payment/create-order', {
+    method: 'POST',
+    token,
+    body: {
+      amount: 10000,
+      email: profile?.email || 'support@farm-eazy.com',
+      phone: '9876543210',
+    },
+  });
+  record(
+    'POST /api/payment/create-order',
+    paymentOrder.ok || paymentOrder.status === 503,
+    `status=${paymentOrder.status}`
+  );
+
+  const farmsList = await apiRequest('/farms', { token });
+  const farms = Array.isArray(farmsList.data) ? farmsList.data : [];
+  if (farms.length > 0 && farms[0]?.id) {
+    const farmId = farms[0].id;
+    const sensors = await apiRequest(`/irrigation-sensors/farm/${farmId}/latest`, { token });
+    record('GET /api/irrigation-sensors/farm/{id}/latest', sensors.ok, `status=${sensors.status}, farmId=${farmId}`);
+  } else {
+    record('GET /api/irrigation-sensors/farm/{id}/latest', true, 'skipped — no farms in DB');
+  }
+
+  const productsMy = await apiRequest('/products/my-products', { token });
+  record('GET /api/products/my-products', productsMy.ok, `status=${productsMy.status}`);
+
+  const currentAddr = await apiRequest('/addresses/current', { token });
+  const addressId = currentAddr.data?.id;
+  if (addressId) {
+    const orderAttempt = await apiRequest('/orders', {
+      method: 'POST',
+      token,
+      body: {
+        items: [],
+        subtotal: 1,
+        taxAmount: 0,
+        totalAmount: 1,
+        coinsUsed: 0,
+        finalAmount: 1,
+        paymentMethod: 'CASH_ON_DELIVERY',
+        addressId,
+      },
+    });
+    record(
+      'POST /api/orders (empty cart — expect validation)',
+      orderAttempt.status === 400 || orderAttempt.status === 422,
+      `status=${orderAttempt.status}`
+    );
+  } else {
+    record('POST /api/orders (validation)', true, 'skipped — no current address');
+  }
+}
+
+async function testRefreshToken(loginHeaders) {
+  const raw = loginHeaders?.get?.('set-cookie') || '';
+  const match = raw.match(/farmEazy_refresh_token=([^;]+)/i);
+  if (!match || !match[1]) {
+    record(
+      'POST /api/auth/refresh',
+      true,
+      'skipped — refresh cookie not issued (backend may clear cookie in dev; use HttpOnly cookie flow in browser)'
+    );
+    return;
+  }
+  const cookie = `farmEazy_refresh_token=${match[1]}`;
+  const refresh = await fetch(`${API_ROOT}/auth/refresh`, {
+    method: 'POST',
+    headers: {
+      Accept: 'application/json',
+      Cookie: cookie,
+      'X-Gateway-Client': GATEWAY_CLIENT,
+      'X-Gateway-Timestamp': nextGatewayTimestamp(),
+      'X-Request-Nonce': randomUUID(),
+    },
+  });
+  let data = null;
+  try {
+    const json = await refresh.json();
+    data = await normalizeBody(json);
+  } catch {
+    // ignore
+  }
+  record(
+    'POST /api/auth/refresh',
+    refresh.ok && Boolean(data?.token),
+    `status=${refresh.status}`
+  );
 }
 
 const results = [];
@@ -177,6 +333,8 @@ async function run() {
   });
   const token = login.data?.token;
   record('POST /api/auth/login', login.ok && token, `status=${login.status}`);
+
+  await testRefreshToken(login.headers);
 
   if (!token) {
     console.log('Cannot continue authenticated tests without token.');
@@ -253,7 +411,9 @@ async function run() {
   record('GET /api/activities', activities.ok && Array.isArray(activities.data), `status=${activities.status}, count=${Array.isArray(activities.data) ? activities.data.length : 'n/a'}`);
 
   const listingEligibility = await apiRequest('/vendors/listing-eligibility?listingType=PRODUCT', { token });
-  record('GET /api/vendors/listing-eligibility', listingEligibility.ok, `status=${listingEligibility.status}`);
+  record('GET /api/vendors/listing-eligibility (product)', listingEligibility.ok, `status=${listingEligibility.status}`);
+
+  await runExtendedSuite(token, me.data);
 
   // Extra mutation test when we created a fresh address above
   if (!hasLocation && addrId) {

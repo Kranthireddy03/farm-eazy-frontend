@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
+import AppPage from '../components/layout/AppPage'
 import { PageScaffold } from '../components/app/PageScaffold'
 import { DetailPanel } from '../components/platform/DetailPanel'
 import { InfoPanel } from '../components/platform/InfoPanel'
 import apiClient from '../services/apiClient'
+import { unwrapApiList } from '../utils/apiResponse'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
 import { FormField } from '../components/ui/form-field'
@@ -78,8 +80,12 @@ function ServiceRequests() {
     try {
       setLoading(true)
       const response = await apiClient.get(`/service-requests?page=${page}&size=10&sort=createdAt,desc`)
-      setRequests(response.data.content || [])
-      setTotalPages(response.data.totalPages || 0)
+      const pageData = response?.data
+      const list = Array.isArray(pageData?.content)
+        ? pageData.content
+        : unwrapApiList(pageData)
+      setRequests(list)
+      setTotalPages(pageData?.totalPages || 0)
     } catch (error) {
       console.error('Failed to fetch service requests:', error)
       showToast('Failed to load service requests', 'error')
