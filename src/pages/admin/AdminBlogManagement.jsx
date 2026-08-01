@@ -1,9 +1,23 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useTheme } from '../../context/ThemeContext'
+import { Link } from 'react-router-dom'
+import { FileText, PenLine } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../hooks/useToast'
 import Toast from '../../components/Toast'
 import AdminBlogService from '../../services/AdminBlogService'
+import AppPage from '../../components/layout/AppPage'
+import { PageScaffold } from '../../components/app/PageScaffold'
+import { KpiSection } from '../../components/app/KpiSection'
+import { KpiCard } from '../../components/ui/kpi-card'
+import { DetailPanel } from '../../components/platform/DetailPanel'
+import { InfoPanel } from '../../components/platform/InfoPanel'
+import { FePanel } from '../../components/platform/FeOpsPrimitives'
+import { Button, buttonVariants } from '../../components/ui/button'
+import { Input } from '../../components/ui/input'
+import { Badge } from '../../components/ui/badge'
+import { EmptyState } from '../../components/ui/empty-state'
+import { PageSkeleton } from '../../components/ui/Skeleton'
+import { cn } from '../../lib/utils'
 
 const EMPTY_FORM = {
   title: '',
@@ -16,6 +30,24 @@ const EMPTY_FORM = {
   status: 'DRAFT',
 }
 
+const FILTER_CHIPS = [
+  { value: 'ALL', label: 'All' },
+  { value: 'DRAFT', label: 'Draft' },
+  { value: 'PENDING_APPROVAL', label: 'Pending' },
+  { value: 'PUBLISHED', label: 'Published' },
+  { value: 'ARCHIVED', label: 'Archived' },
+]
+
+const STATUS_VARIANT = {
+  PUBLISHED: 'success',
+  PENDING_APPROVAL: 'warning',
+  ARCHIVED: 'muted',
+  DRAFT: 'muted',
+}
+
+const selectClass =
+  'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
 function normalizeForm(form) {
   return {
     title: form.title.trim(),
@@ -24,7 +56,7 @@ function normalizeForm(form) {
     category: form.category.trim(),
     tags: form.tagsInput
       .split(',')
-      .map(tag => tag.trim())
+      .map((tag) => tag.trim())
       .filter(Boolean),
     coverImageUrl: form.coverImageUrl.trim(),
     authorName: form.authorName.trim(),
@@ -33,7 +65,6 @@ function normalizeForm(form) {
 }
 
 export default function AdminBlogManagement() {
-  const { isDark } = useTheme()
   const { isAdmin, getUserName } = useAuth()
   const { toast, showToast, closeToast } = useToast()
 
@@ -45,36 +76,24 @@ export default function AdminBlogManagement() {
   const [form, setForm] = useState({ ...EMPTY_FORM, authorName: getUserName() || '' })
 
   const selectedPost = useMemo(
-    () => posts.find(item => item.id === selectedPostId) || null,
-    [posts, selectedPostId]
+    () => posts.find((item) => item.id === selectedPostId) || null,
+    [posts, selectedPostId],
   )
 
   const visiblePosts = useMemo(() => {
     if (filter === 'ALL') return posts
-    return posts.filter(item => (item.status || 'DRAFT') === filter)
+    return posts.filter((item) => (item.status || 'DRAFT') === filter)
   }, [posts, filter])
 
-  const postStats = useMemo(() => ({
-    total: posts.length,
-    draft: posts.filter(item => (item.status || 'DRAFT') === 'DRAFT').length,
-    pending: posts.filter(item => item.status === 'PENDING_APPROVAL').length,
-    published: posts.filter(item => item.status === 'PUBLISHED').length,
-  }), [posts])
-
-  const surfaceClass = isDark
-    ? 'bg-card border-border'
-    : 'bg-background border-border shadow-sm'
-
-  const fieldClass = isDark
-    ? 'w-full px-3 py-2 rounded-lg border bg-muted border-border text-white placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary'
-    : 'w-full px-3 py-2 rounded-lg border bg-background border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary'
-
-  const statusBadgeClass = (status) => {
-    if (status === 'PUBLISHED') return 'bg-primary text-white'
-    if (status === 'PENDING_APPROVAL') return isDark ? 'bg-indigo-900/60 text-indigo-200' : 'bg-indigo-100 text-indigo-700'
-    if (status === 'ARCHIVED') return isDark ? 'bg-muted text-muted-foreground' : 'bg-muted text-foreground'
-    return isDark ? 'bg-muted text-muted-foreground' : 'bg-muted text-foreground'
-  }
+  const postStats = useMemo(
+    () => ({
+      total: posts.length,
+      draft: posts.filter((item) => (item.status || 'DRAFT') === 'DRAFT').length,
+      pending: posts.filter((item) => item.status === 'PENDING_APPROVAL').length,
+      published: posts.filter((item) => item.status === 'PUBLISHED').length,
+    }),
+    [posts],
+  )
 
   const loadPosts = async () => {
     try {
@@ -186,202 +205,191 @@ export default function AdminBlogManagement() {
   }
 
   if (!isAdmin()) {
-    return <div className="p-8 text-center text-red-600">Access denied</div>
+    return (
+      <AppPage title="Blog management" description="Admin access required.">
+        <InfoPanel variant="destructive" title="Access denied" description="You do not have permission to manage blog posts." />
+      </AppPage>
+    )
   }
 
   return (
-    <div className="p-4 md:p-6">
+    <AppPage
+      title="Admin blog management"
+      description="Create drafts, submit for approval, and publish approved blogs to the public site."
+      actions={
+        <Link to="/blog" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+          View public blog
+        </Link>
+      }
+    >
       {toast && (
         <div className="fixed bottom-6 right-6 z-[100]">
           <Toast message={toast.message} type={toast.type} onClose={closeToast} />
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>
-            Admin Blog Management
-          </h1>
-          <p className={`mt-2 text-sm md:text-base ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-            Create drafts, submit for approval, and publish only approved blogs to public users.
-          </p>
-          <div className={`mt-3 rounded-xl border p-3 text-sm ${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-primary/5 border-border/60 text-foreground'}`}>
-            Workflow: Draft -&gt; Pending Approval -&gt; Approved (Published). Only approved posts are displayed on the public blog page.
-          </div>
+      <div className="space-y-6">
+        <InfoPanel
+          title="Publishing workflow"
+          description="Draft → Pending approval → Published. Only approved posts appear on the public blog page."
+        />
 
-          <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Total Posts</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>{postStats.total}</p>
-            </div>
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Draft</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>{postStats.draft}</p>
-            </div>
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Pending</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-indigo-300' : 'text-indigo-700'}`}>{postStats.pending}</p>
-            </div>
-            <div className={`rounded-xl border p-3 ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Published</p>
-              <p className={`text-xl font-bold ${isDark ? 'text-primary' : 'text-primary'}`}>{postStats.published}</p>
-            </div>
-          </div>
-        </div>
+        <KpiSection>
+          <KpiCard title="Total posts" value={postStats.total} icon={FileText} />
+          <KpiCard title="Draft" value={postStats.draft} hint="In progress" />
+          <KpiCard title="Pending" value={postStats.pending} hint="Awaiting review" />
+          <KpiCard title="Published" value={postStats.published} hint="Live on blog" />
+        </KpiSection>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          <section className={`xl:col-span-2 rounded-2xl border p-4 md:p-6 ${surfaceClass}`}>
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <h2 className={`text-lg md:text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Published Flow</h2>
-              <select
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                className={`w-full sm:w-auto px-3 py-2 rounded-lg border text-sm ${isDark ? 'bg-muted border-border text-foreground' : 'bg-background border-border text-foreground'}`}
-              >
-                <option value="ALL">All</option>
-                <option value="DRAFT">Draft</option>
-                <option value="PENDING_APPROVAL">Pending Approval</option>
-                <option value="PUBLISHED">Published</option>
-                <option value="ARCHIVED">Archived</option>
-              </select>
-            </div>
-
-            {loading ? (
-              <div className="py-16 flex justify-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-primary"></div>
-              </div>
-            ) : visiblePosts.length === 0 ? (
-              <p className={`mt-6 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>No posts found for selected filter.</p>
-            ) : (
-              <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
-                {visiblePosts.map((post) => (
-                  <article key={post.id} className={`rounded-xl border p-4 ${isDark ? 'bg-muted border-border' : 'bg-muted/30 border-border'}`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className={`font-bold text-base line-clamp-2 ${isDark ? 'text-white' : 'text-foreground'}`}>{post.title}</h3>
-                      <span className={`text-xs px-2 py-1 rounded-full ${statusBadgeClass(post.status)}`}>
-                        {post.status}
-                      </span>
-                    </div>
-                    <p className={`mt-2 text-sm line-clamp-3 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{post.excerpt}</p>
-                    <div className={`mt-3 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-                      {post.category || 'General'} • {post.authorName || 'Admin'} • {post.source || 'ADMIN_PORTAL'}
-                    </div>
-                    <div className={`mt-1 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-                      Rating: {post.averageRating > 0 ? `${post.averageRating}/5` : 'No ratings yet'} ({post.ratingCount || 0})
-                    </div>
-                    <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2">
-                      <button onClick={() => startEdit(post)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-cyan-600 hover:bg-cyan-700 text-white">Edit</button>
-                      {post.status === 'DRAFT' && (
-                        <button onClick={() => handleSubmitApproval(post.id)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">
-                          Submit Approval
-                        </button>
-                      )}
-                      {post.status === 'PENDING_APPROVAL' && (
-                        <button onClick={() => handleApprove(post.id)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-primary hover:bg-primary/90 text-white">
-                          Approve & Publish
-                        </button>
-                      )}
-                      {post.status === 'PUBLISHED' && (
-                        <button onClick={() => handlePublishToggle(post)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-amber-600 hover:bg-amber-700 text-white">
-                          Unpublish
-                        </button>
-                      )}
-                      {post.status === 'ARCHIVED' && (
-                        <button onClick={() => startEdit(post)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-muted hover:bg-muted text-white">
-                          Review
-                        </button>
-                      )}
-                      <button onClick={() => handleDelete(post.id)} className="px-3 py-2 rounded-lg text-sm font-semibold bg-rose-600 hover:bg-rose-700 text-white">Delete</button>
-                    </div>
-                  </article>
+        <PageScaffold
+          main={
+            <DetailPanel
+              title="Post library"
+              description="Filter by status and manage the approval pipeline."
+            >
+              <div className="flex flex-wrap gap-2">
+                {FILTER_CHIPS.map((chip) => (
+                  <button
+                    key={chip.value}
+                    type="button"
+                    onClick={() => setFilter(chip.value)}
+                    className={cn('ops-chip', filter === chip.value && 'ops-chip-active')}
+                  >
+                    {chip.label}
+                  </button>
                 ))}
               </div>
-            )}
-          </section>
 
-          <section className={`rounded-2xl border p-4 md:p-6 ${surfaceClass}`}>
-            <div className="flex items-center justify-between gap-3">
-              <h2 className={`text-lg md:text-xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
-                {selectedPost ? 'Edit Post' : 'Create Post'}
-              </h2>
-              {selectedPost && (
-                <button onClick={resetForm} className={`text-xs px-2 py-1 rounded-md border ${isDark ? 'border-border text-muted-foreground' : 'border-border text-foreground'}`}>
-                  New Post
-                </button>
+              {loading ? (
+                <PageSkeleton variant="cards" className="mt-4" />
+              ) : visiblePosts.length === 0 ? (
+                <EmptyState
+                  icon={PenLine}
+                  title="No posts for this filter"
+                  description="Create a draft or switch to another status filter."
+                  className="mt-4"
+                />
+              ) : (
+                <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {visiblePosts.map((post) => (
+                    <FePanel key={post.id} className="p-4 space-y-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="font-semibold text-base line-clamp-2 text-foreground">{post.title}</h3>
+                        <Badge variant={STATUS_VARIANT[post.status] || 'muted'}>{post.status}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>
+                      <div className="text-xs text-muted-foreground">
+                        {post.category || 'General'} • {post.authorName || 'Admin'} • {post.source || 'ADMIN_PORTAL'}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Rating: {post.averageRating > 0 ? `${post.averageRating}/5` : 'No ratings yet'} ({post.ratingCount || 0})
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Button type="button" size="sm" variant="secondary" onClick={() => startEdit(post)}>
+                          Edit
+                        </Button>
+                        {post.status === 'DRAFT' && (
+                          <Button type="button" size="sm" onClick={() => handleSubmitApproval(post.id)}>
+                            Submit approval
+                          </Button>
+                        )}
+                        {post.status === 'PENDING_APPROVAL' && (
+                          <Button type="button" size="sm" onClick={() => handleApprove(post.id)}>
+                            Approve & publish
+                          </Button>
+                        )}
+                        {post.status === 'PUBLISHED' && (
+                          <Button type="button" size="sm" variant="outline" onClick={() => handlePublishToggle(post)}>
+                            Unpublish
+                          </Button>
+                        )}
+                        {post.status === 'ARCHIVED' && (
+                          <Button type="button" size="sm" variant="outline" onClick={() => startEdit(post)}>
+                            Review
+                          </Button>
+                        )}
+                        <Button type="button" size="sm" variant="destructive" onClick={() => handleDelete(post.id)}>
+                          Delete
+                        </Button>
+                      </div>
+                    </FePanel>
+                  ))}
+                </div>
               )}
-            </div>
-
-            <form className="mt-4 space-y-3" onSubmit={handleSubmit}>
-              <input
-                value={form.title}
-                onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Blog title (e.g. 7 Irrigation Mistakes Farmers Should Avoid This Summer)"
-                className={fieldClass}
-              />
-              <input
-                value={form.authorName}
-                onChange={(e) => setForm(prev => ({ ...prev, authorName: e.target.value }))}
-                placeholder="Author display name (e.g. FarmEazy Agronomy Team)"
-                className={fieldClass}
-              />
-              <input
-                value={form.category}
-                onChange={(e) => setForm(prev => ({ ...prev, category: e.target.value }))}
-                placeholder="Category (e.g. Crop Advisory, Irrigation, Market Insights)"
-                className={fieldClass}
-              />
-              <input
-                value={form.tagsInput}
-                onChange={(e) => setForm(prev => ({ ...prev, tagsInput: e.target.value }))}
-                placeholder="Tags separated by comma (e.g. drip, water-saving, kharif)"
-                className={fieldClass}
-              />
-              <input
-                value={form.coverImageUrl}
-                onChange={(e) => setForm(prev => ({ ...prev, coverImageUrl: e.target.value }))}
-                placeholder="Cover image URL (optional, recommended 16:9 image)"
-                className={fieldClass}
-              />
-              <textarea
-                rows={3}
-                value={form.excerpt}
-                onChange={(e) => setForm(prev => ({ ...prev, excerpt: e.target.value }))}
-                placeholder="Write a clear 2-3 line summary so farmers quickly understand why this blog is useful."
-                className={`${fieldClass} resize-none`}
-              />
-              <textarea
-                rows={8}
-                value={form.content}
-                onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
-                placeholder="Write full content with practical steps, local context, clear headings, and farmer-friendly language."
-                className={`${fieldClass} resize-y`}
-              />
-
-              <select
-                value={form.status}
-                onChange={(e) => setForm(prev => ({ ...prev, status: e.target.value }))}
-                className={fieldClass}
-              >
-                <option value="DRAFT">DRAFT</option>
-                <option value="PENDING_APPROVAL">PENDING APPROVAL</option>
-                <option value="ARCHIVED">ARCHIVED</option>
-              </select>
-
-              <p className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-                Tip: Use Draft while writing, then set Pending Approval. Approved posts are published to the public blog.
-              </p>
-
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full px-4 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white font-semibold disabled:opacity-60"
-              >
-                {saving ? 'Saving...' : selectedPost ? 'Update Blog Post' : 'Create Blog Post'}
-              </button>
-            </form>
-          </section>
-        </div>
+            </DetailPanel>
+          }
+          aside={
+            <DetailPanel
+              title={selectedPost ? 'Edit post' : 'Create post'}
+              description={selectedPost ? 'Update content and workflow status.' : 'Start a new admin-authored article.'}
+              actions={
+                selectedPost ? (
+                  <Button type="button" variant="ghost" size="sm" onClick={resetForm}>
+                    New post
+                  </Button>
+                ) : null
+              }
+            >
+              <form className="space-y-3" onSubmit={handleSubmit}>
+                <Input
+                  value={form.title}
+                  onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder="Blog title"
+                />
+                <Input
+                  value={form.authorName}
+                  onChange={(e) => setForm((prev) => ({ ...prev, authorName: e.target.value }))}
+                  placeholder="Author display name"
+                />
+                <Input
+                  value={form.category}
+                  onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                  placeholder="Category"
+                />
+                <Input
+                  value={form.tagsInput}
+                  onChange={(e) => setForm((prev) => ({ ...prev, tagsInput: e.target.value }))}
+                  placeholder="Tags (comma separated)"
+                />
+                <Input
+                  value={form.coverImageUrl}
+                  onChange={(e) => setForm((prev) => ({ ...prev, coverImageUrl: e.target.value }))}
+                  placeholder="Cover image URL (optional)"
+                />
+                <textarea
+                  rows={3}
+                  value={form.excerpt}
+                  onChange={(e) => setForm((prev) => ({ ...prev, excerpt: e.target.value }))}
+                  placeholder="Short summary for farmers"
+                  className={cn(selectClass, 'min-h-[80px] py-2 resize-none')}
+                />
+                <textarea
+                  rows={8}
+                  value={form.content}
+                  onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
+                  placeholder="Full article content"
+                  className={cn(selectClass, 'min-h-[160px] py-2 resize-y')}
+                />
+                <select
+                  value={form.status}
+                  onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value }))}
+                  className={selectClass}
+                >
+                  <option value="DRAFT">DRAFT</option>
+                  <option value="PENDING_APPROVAL">PENDING APPROVAL</option>
+                  <option value="ARCHIVED">ARCHIVED</option>
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Use Draft while writing, then Pending Approval. Approved posts are published to the public blog.
+                </p>
+                <Button type="submit" disabled={saving} className="w-full">
+                  {saving ? 'Saving…' : selectedPost ? 'Update blog post' : 'Create blog post'}
+                </Button>
+              </form>
+            </DetailPanel>
+          }
+        />
       </div>
-    </div>
+    </AppPage>
   )
 }

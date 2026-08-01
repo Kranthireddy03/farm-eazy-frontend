@@ -1,7 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
 import apiClient from '../services/apiClient'
+import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { DetailPanel } from '../components/platform/DetailPanel'
+import { InfoPanel } from '../components/platform/InfoPanel'
+import { FePanel } from '../components/platform/FeOpsPrimitives'
+import { Button, buttonVariants } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { PageSkeleton } from '../components/ui/Skeleton'
+import { Badge } from '../components/ui/badge'
 
 const EMPTY_FORM = {
   email: '',
@@ -9,11 +17,10 @@ const EMPTY_FORM = {
   address: '',
   city: '',
   state: '',
-  pinCode: ''
+  pinCode: '',
 }
 
-function VendorOnboarding() {
-  const { isDark } = useTheme()
+export default function VendorOnboarding() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -28,7 +35,7 @@ function VendorOnboarding() {
         apiClient.get('/vendors/onboarding-profile'),
         apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT', {
           validateStatus: (status) => status < 500,
-        })
+        }),
       ])
 
       const profile = profileRes?.data || {}
@@ -38,10 +45,10 @@ function VendorOnboarding() {
         address: profile.address || '',
         city: profile.city || '',
         state: profile.state || '',
-        pinCode: profile.pinCode || ''
+        pinCode: profile.pinCode || '',
       })
       setEligibility(eligibilityRes?.data || null)
-    } catch (_error) {
+    } catch {
       setMessage({ type: 'error', text: 'Unable to load onboarding details right now.' })
       setEligibility(null)
     } finally {
@@ -76,9 +83,11 @@ function VendorOnboarding() {
       { key: 'phone', title: 'Phone ready', completed: hasPhone, actionPath: '/vendor-onboarding', actionLabel: 'Update phone' },
       { key: 'address', title: 'Address and location ready', completed: hasAddress, actionPath: '/vendor-onboarding', actionLabel: 'Update address' },
       { key: 'bankDetails', title: 'Bank details submitted', completed: hasBankDetails, actionPath: '/vendor-verification', actionLabel: 'Complete bank details' },
-      { key: 'pennyDrop', title: 'Manual penny-drop confirmed', completed: hasManualPennyDrop, actionPath: '/vendor-verification', actionLabel: 'Confirm INR 1 receipt' }
+      { key: 'pennyDrop', title: 'Manual penny-drop confirmed', completed: hasManualPennyDrop, actionPath: '/vendor-verification', actionLabel: 'Confirm INR 1 receipt' },
     ]
   }, [eligibility])
+
+  const completedCount = onboardingSteps.filter((s) => s.completed).length
 
   const handleChange = (event) => {
     const { name, value } = event.target
@@ -96,14 +105,16 @@ function VendorOnboarding() {
         address: form.address,
         city: form.city,
         state: form.state,
-        pinCode: form.pinCode
+        pinCode: form.pinCode,
       })
 
       setMessage({ type: 'success', text: 'Profile details saved. Complete bank verification to unlock vendor dashboard.' })
       await loadData()
     } catch (error) {
       const apiMessage = error?.response?.data?.message
-      const validationErrors = Array.isArray(error?.response?.data?.errors) ? error.response.data.errors.join(' | ') : ''
+      const validationErrors = Array.isArray(error?.response?.data?.errors)
+        ? error.response.data.errors.join(' | ')
+        : ''
       setMessage({ type: 'error', text: validationErrors || apiMessage || 'Unable to save profile details.' })
     } finally {
       setSaving(false)
@@ -112,112 +123,114 @@ function VendorOnboarding() {
 
   if (loading) {
     return (
-      <div className={`premium-shell min-h-[18rem] flex items-center justify-center ${isDark ? 'bg-background' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`}>
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-      </div>
+      <AppPage title="Vendor onboarding" description="Loading profile requirements…">
+        <PageSkeleton variant="cards" />
+      </AppPage>
     )
   }
 
   return (
-    <div className={`premium-shell min-h-screen -m-6 p-6 space-y-6 ${isDark ? 'bg-background' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`}>
-      <section className={`rounded-3xl border p-6 md:p-8 ${isDark ? 'bg-card border-border' : 'bg-background border-border shadow-lg'}`}>
-        <p className={`text-xs font-bold uppercase tracking-[0.18em] ${isDark ? 'text-primary' : 'text-primary'}`}>Vendor Onboarding</p>
-        <h1 className={`mt-2 text-3xl md:text-4xl font-black ${isDark ? 'text-white' : 'text-foreground'}`}>Complete Required Profile Details</h1>
-        <p className={`mt-3 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-          Vendor dashboard unlock requires email, phone, address, bank details and manual penny-drop confirmation.
-        </p>
-        <div className="mt-5 flex gap-3 flex-wrap">
-          <button
-            type="button"
-            onClick={() => navigate('/vendor-dashboard')}
-            className="px-4 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold"
-          >
-            Check Vendor Dashboard
-          </button>
-          <Link
-            to="/vendor-verification"
-            className={`px-4 py-2 rounded-lg text-sm font-semibold ${isDark ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-card text-white hover:bg-muted'}`}
-          >
-            Open Bank Verification
+    <AppPage
+      title="Vendor onboarding"
+      description="Complete profile, bank verification, and penny-drop confirmation to unlock the seller workspace."
+      actions={
+        <>
+          <Button variant="outline" size="sm" onClick={() => navigate('/vendor-dashboard')}>
+            Vendor dashboard
+          </Button>
+          <Link to="/vendor-verification" className={buttonVariants({ size: 'sm' })}>
+            Bank verification
           </Link>
-        </div>
-      </section>
-
+        </>
+      }
+      meta={<Badge variant="muted">{completedCount}/{onboardingSteps.length} steps complete</Badge>}
+    >
       {message.text && (
-        <div className={`rounded-xl border px-4 py-3 text-sm ${message.type === 'error'
-          ? (isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700')
-          : (isDark ? 'bg-emerald-950/30 border-emerald-800 text-primary' : 'bg-primary/5 border-border text-primary')}`}>
-          {message.text}
-        </div>
+        <InfoPanel
+          variant={message.type === 'error' ? 'destructive' : 'success'}
+          title={message.type === 'error' ? 'Could not save' : 'Saved'}
+          description={message.text}
+          className="mb-6"
+        />
       )}
 
-      <section className={`rounded-2xl border p-5 ${isDark ? 'bg-card border-border' : 'bg-background border-border shadow-sm'}`}>
-        <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Verification Steps</h2>
-        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <PageScaffold
+        aside={
+          <InfoPanel title="Unlock checklist" description="Complete each step to list products and services.">
+            <div className="mt-4 space-y-3">
+              {onboardingSteps.map((step) => (
+                <div
+                  key={step.key}
+                  className="flex items-center justify-between gap-2 rounded-lg border border-border p-3"
+                >
+                  <span className="text-sm text-foreground">{step.title}</span>
+                  <Badge variant={step.completed ? 'success' : 'warning'}>
+                    {step.completed ? 'Done' : 'Pending'}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </InfoPanel>
+        }
+      >
+        <div className="grid gap-3 sm:grid-cols-2">
           {onboardingSteps.map((step) => (
-            <div key={step.key} className={`rounded-xl border p-4 ${isDark ? 'border-border bg-muted' : 'border-border bg-muted/30'}`}>
-              <div className="flex items-center justify-between gap-2">
-                <p className={`text-sm font-semibold ${isDark ? 'text-foreground' : 'text-foreground'}`}>{step.title}</p>
-                <span className={`text-xs px-2 py-1 rounded-full font-semibold ${step.completed
-                  ? 'bg-primary/10 text-primary'
-                  : 'bg-amber-100 text-amber-700'}`}>
+            <FePanel key={step.key} className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                <Badge variant={step.completed ? 'success' : 'warning'}>
                   {step.completed ? 'Completed' : 'Pending'}
-                </span>
+                </Badge>
               </div>
               {!step.completed && (
-                <div className="mt-3">
-                  <Link to={step.actionPath} className={`text-xs font-semibold underline ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>
-                    {step.actionLabel}
-                  </Link>
-                </div>
+                <Link
+                  to={step.actionPath}
+                  className="mt-3 text-xs font-medium text-primary hover:underline"
+                >
+                  {step.actionLabel}
+                </Link>
               )}
-            </div>
+            </FePanel>
           ))}
         </div>
-      </section>
 
-      <form onSubmit={handleSubmit} className={`rounded-2xl border p-5 grid grid-cols-1 md:grid-cols-2 gap-4 ${isDark ? 'bg-card border-border' : 'bg-background border-border shadow-sm'}`}>
-        <div className="md:col-span-2">
-          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Email (from account)</label>
-          <input value={form.email} disabled className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-muted border-border text-foreground'}`} />
-        </div>
-
-        <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Phone *</label>
-          <input name="phone" value={form.phone} onChange={handleChange} placeholder="10-digit phone" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
-        </div>
-
-        <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Pin Code</label>
-          <input name="pinCode" value={form.pinCode} onChange={handleChange} placeholder="Postal code" className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
-        </div>
-
-        <div className="md:col-span-2">
-          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Address *</label>
-          <input name="address" value={form.address} onChange={handleChange} placeholder="Street address" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
-        </div>
-
-        <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>City *</label>
-          <input name="city" value={form.city} onChange={handleChange} placeholder="City" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
-        </div>
-
-        <div>
-          <label className={`block text-sm mb-1 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>State *</label>
-          <input name="state" value={form.state} onChange={handleChange} placeholder="State" required className={`w-full px-3 py-2 rounded-lg border ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`} />
-        </div>
-
-        <div className="md:col-span-2 flex gap-3">
-          <button type="submit" disabled={saving} className="px-5 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold disabled:opacity-60">
-            {saving ? 'Saving...' : 'Save Profile Details'}
-          </button>
-          <Link to="/vendor-verification" className={`px-5 py-2 rounded-lg text-sm font-semibold ${isDark ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-muted text-foreground hover:bg-muted'}`}>
-            Continue to Bank Verification
-          </Link>
-        </div>
-      </form>
-    </div>
+        <DetailPanel title="Profile details" description="Phone and address are required for vendor listings.">
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium text-muted-foreground">Email (from account)</label>
+              <Input value={form.email} disabled className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">Phone *</label>
+              <Input name="phone" value={form.phone} onChange={handleChange} required className="mt-1" placeholder="10-digit phone" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">PIN code</label>
+              <Input name="pinCode" value={form.pinCode} onChange={handleChange} className="mt-1" />
+            </div>
+            <div className="md:col-span-2">
+              <label className="text-sm font-medium text-foreground">Address *</label>
+              <Input name="address" value={form.address} onChange={handleChange} required className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">City *</label>
+              <Input name="city" value={form.city} onChange={handleChange} required className="mt-1" />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-foreground">State *</label>
+              <Input name="state" value={form.state} onChange={handleChange} required className="mt-1" />
+            </div>
+            <div className="md:col-span-2 flex flex-wrap gap-3 pt-2">
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Saving…' : 'Save profile details'}
+              </Button>
+              <Link to="/vendor-verification" className={buttonVariants({ variant: 'outline' })}>
+                Continue to bank verification
+              </Link>
+            </div>
+          </form>
+        </DetailPanel>
+      </PageScaffold>
+    </AppPage>
   )
 }
-
-export default VendorOnboarding

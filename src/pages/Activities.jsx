@@ -3,8 +3,14 @@ import { api } from '../config/api';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../context/ThemeContext';
 import AppPage from '../components/layout/AppPage';
-import { Card, CardContent } from '../components/ui/card';
+import { PageScaffold } from '../components/app/PageScaffold';
+import { InfoPanel } from '../components/platform/InfoPanel';
+import { FePanel } from '../components/platform/FeOpsPrimitives';
+import { EmptyState } from '../components/ui/empty-state';
+import { PageSkeleton } from '../components/ui/Skeleton';
+import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
+import { cn } from '../lib/utils';
 
 const Activities = () => {
     const { isDark } = useTheme();
@@ -130,40 +136,34 @@ const Activities = () => {
             description="Track farming operations, orders, and account events."
             actions={<Badge variant="secondary">{filteredActivities.length} activities</Badge>}
         >
-            <Card className="p-2">
-                <CardContent className="p-2 flex gap-2 overflow-x-auto">
-                    {['all', 'coins', 'farm', 'crop', 'product', 'service', 'order'].map((filterType) => (
-                        <button
-                            key={filterType}
-                            onClick={() => setFilter(filterType)}
-                            className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                                filter === filterType
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                            }`}
-                        >
-                            {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
-                        </button>
-                    ))}
-                </CardContent>
-            </Card>
+            <PageScaffold
+                aside={
+                    <InfoPanel title="Activity feed" description="Filtered view of your recent farm operations.">
+                        <p className="text-sm text-muted-foreground mt-2">
+                            Login events are hidden. Use filters to focus on orders, crops, farms, and marketplace actions.
+                        </p>
+                    </InfoPanel>
+                }
+            >
+            <div className="flex flex-wrap gap-2 mb-4">
+                {['all', 'coins', 'farm', 'crop', 'product', 'service', 'order'].map((filterType) => (
+                    <button
+                        key={filterType}
+                        type="button"
+                        onClick={() => setFilter(filterType)}
+                        className={cn('ops-chip', filter === filterType && 'ops-chip-active')}
+                    >
+                        {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
+                    </button>
+                ))}
+            </div>
 
                 {loading ? (
-                    <div className={`flex items-center justify-center h-96 rounded-xl shadow-md border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-                        <div className="text-center">
-                            <div className="spinner text-green-500 mb-4">
-                                <svg className="animate-spin w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            </div>
-                            <p className={`text-lg ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Loading your activities...</p>
-                        </div>
-                    </div>
+                    <PageSkeleton variant="table" />
+                ) : filteredActivities.length === 0 ? (
+                    <EmptyState title="No activities" description="No events match this filter yet." />
                 ) : (
                     <>
-                        {filteredActivities.length > 0 ? (
-                            <>
                                 {/* Desktop Table View */}
                                 <div className={`interactive-card hidden lg:block rounded-2xl shadow-lg overflow-hidden border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
                                     <div className="overflow-x-auto">
@@ -329,23 +329,9 @@ const Activities = () => {
                                         </button>
                                     </div>
                                 </div>
-                            </>
-                        ) : (
-                            <div className={`interactive-card rounded-2xl shadow-lg p-12 text-center border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
-                                <div className="text-8xl mb-6">📭</div>
-                                <h3 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-foreground'}`}>No Activities Found</h3>
-                                <p className={`mb-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-                                    {filter !== 'all'
-                                        ? `No ${filter} activities to display.`
-                                        : 'Start using FarmEazy to see your activities here!'}
-                                </p>
-                                <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-                                    Activities like creating farms, adding crops, or placing orders will appear here.
-                                </p>
-                            </div>
-                        )}
                     </>
                 )}
+            </PageScaffold>
         </AppPage>
     );
 };

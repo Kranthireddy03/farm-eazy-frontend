@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
-import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { DetailPanel } from '../components/platform/DetailPanel'
+import { InfoPanel } from '../components/platform/InfoPanel'
 import apiClient from '../services/apiClient'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
@@ -200,21 +202,29 @@ function ServiceRequests() {
         </Button>
       }
     >
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <PageScaffold
+        aside={
+          <InfoPanel title="Need immediate help?" description="Reach our support team directly.">
+            <div className="flex flex-col gap-2 mt-4">
+              <a href="tel:+916301630368" className="inline-flex h-9 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
+                <Phone className="h-4 w-4" /> +91 63016 30368
+              </a>
+              <a href="mailto:support@farm-eazy.com" className="inline-flex h-9 items-center justify-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent">
+                <Mail className="h-4 w-4" /> support@farm-eazy.com
+              </a>
+            </div>
+          </InfoPanel>
+        }
+      >
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <KpiCard title="This page" value={requests.length} hint="Visible requests" icon={LifeBuoy} />
           <KpiCard title="Open / active" value={openCount} hint="Needs attention" icon={LifeBuoy} />
           <KpiCard title="Pages" value={totalPages || 1} hint="Server pagination" icon={LifeBuoy} />
         </div>
 
         {showForm && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Create service request</CardTitle>
-              <CardDescription>Describe your issue with as much detail as possible.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
+          <DetailPanel title="Create service request" description="Describe your issue with as much detail as possible.">
+            <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <FormField label="Category" id="category" required>
                     <select
@@ -290,8 +300,7 @@ function ServiceRequests() {
                   {submitting ? 'Submitting…' : 'Submit request'}
                 </Button>
               </form>
-            </CardContent>
-          </Card>
+          </DetailPanel>
         )}
 
         {loading ? (
@@ -329,21 +338,7 @@ function ServiceRequests() {
           />
         )}
 
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Need immediate help?</CardTitle>
-            <CardDescription>Reach our support team directly.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <a href="tel:+916301630368" className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              <Phone className="h-4 w-4" /> +91 63016 30368
-            </a>
-            <a href="mailto:support@farm-eazy.com" className="inline-flex h-9 items-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium hover:bg-accent">
-              <Mail className="h-4 w-4" /> support@farm-eazy.com
-            </a>
-          </CardContent>
-        </Card>
-      </div>
+      </PageScaffold>
     </AppPage>
   )
 }

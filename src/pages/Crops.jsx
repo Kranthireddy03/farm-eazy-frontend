@@ -6,6 +6,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { InfoPanel } from '../components/platform/InfoPanel'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 import { KpiCard } from '../components/ui/kpi-card'
@@ -316,25 +318,23 @@ function Crops() {
         </Button>
       }
     >
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+      <PageScaffold
+        aside={
+          <InfoPanel title="Crop operations" description="Link crops to farms and irrigation schedules.">
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Link to="/farms" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Manage farms</Link>
+              <Link to="/irrigation" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Irrigation</Link>
+              <Link to="/dashboard" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Dashboard</Link>
+            </div>
+          </InfoPanel>
+        }
+      >
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           <KpiCard title="Total crops" value={cropMetrics.total} hint="Across all farms" icon={Sprout} />
           <KpiCard title="Planted" value={cropMetrics.planted} hint="Recently sown" icon={Leaf} />
           <KpiCard title="Growing" value={cropMetrics.growing} hint="In progress" icon={Leaf} />
           <KpiCard title="Ready" value={cropMetrics.ready} hint="Near harvest" icon={Calendar} />
-        </div>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Quick actions</CardTitle>
-            <CardDescription>Connect crops to farms and irrigation.</CardDescription>
-          </CardHeader>
-          <CardContent className="flex flex-wrap gap-2">
-            <Link to="/farms" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Manage farms</Link>
-            <Link to="/irrigation" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Irrigation</Link>
-            <Link to="/dashboard" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Dashboard</Link>
-          </CardContent>
-        </Card>
+      </div>
 
         {error && (
           <ErrorState title="Something went wrong" description={error} onRetry={fetchCrops} showHome={false} />
@@ -401,7 +401,7 @@ function Crops() {
             </Card>
           )}
         />
-      </div>
+      </PageScaffold>
     </AppPage>
   )
 }

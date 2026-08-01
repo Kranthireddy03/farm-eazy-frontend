@@ -6,7 +6,18 @@ import { useTheme } from '../context/ThemeContext'
 import { useLocationContext } from '../context/LocationContext'
 import AppPage from '../components/layout/AppPage'
 import { PageScaffold } from '../components/app/PageScaffold'
+import { KpiSection } from '../components/app/KpiSection'
+import { KpiCard } from '../components/ui/kpi-card'
 import { IrrigationPageAside } from '../components/irrigation/IrrigationPageAside'
+import { FeChip } from '../components/platform/FeOpsPrimitives'
+import { cn } from '../lib/utils'
+
+const SERVICE_TABS = [
+  { value: 'listings', label: 'My listings' },
+  { value: 'browse', label: 'Browse & book' },
+  { value: 'bookings', label: 'My bookings' },
+  { value: 'provider-requests', label: 'Provider queue' },
+]
 
 function IrrigationServices() {
   const { isDark } = useTheme()
@@ -584,67 +595,24 @@ function IrrigationServices() {
         }
       >
       <div className="space-y-8">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-primary/30 bg-primary/10' : 'border-primary/20 bg-primary/5'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-primary' : 'text-primary'}`}>My Listings</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-primary' : 'text-primary'}`}>{listings.length}</p>
-              </div>
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-primary/30 bg-primary/10' : 'border-border bg-primary/5/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-primary' : 'text-primary'}`}>Browse Pool</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-primary/80' : 'text-primary'}`}>{allListings.length}</p>
-              </div>
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-violet-500/30 bg-violet-900/20' : 'border-violet-200 bg-violet-50/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-violet-300' : 'text-violet-700'}`}>My Bookings</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-violet-200' : 'text-violet-700'}`}>{bookings.length}</p>
-              </div>
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-amber-500/30 bg-amber-900/20' : 'border-amber-200 bg-amber-50/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Provider Queue</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>{providerRequests.length}</p>
-              </div>
-        </div>
+        <KpiSection>
+          <KpiCard title="My listings" value={listings.length} hint="Your service posts" />
+          <KpiCard title="Browse pool" value={allListings.length} hint="Available nearby" />
+          <KpiCard title="My bookings" value={bookings.length} hint="Requests you sent" />
+          <KpiCard title="Provider queue" value={providerRequests.length} hint="Incoming requests" />
+        </KpiSection>
 
-        {/* Tab Navigation */}
-        <div className={`ops-panel interactive-card flex flex-wrap gap-2 border p-2 ${isDark ? 'border-border' : 'border-border'}`}>
-          <button
-            onClick={() => setActiveTab('listings')}
-            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
-              activeTab === 'listings'
-                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
-                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            My Service Listings
-          </button>
-          <button
-            onClick={() => setActiveTab('browse')}
-            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
-              activeTab === 'browse'
-                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
-                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            Browse & Book Services
-          </button>
-          <button
-            onClick={() => setActiveTab('bookings')}
-            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
-              activeTab === 'bookings'
-                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
-                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            My Booking Requests
-          </button>
-          <button
-            onClick={() => setActiveTab('provider-requests')}
-            className={`px-5 py-2.5 rounded-xl font-semibold transition whitespace-nowrap ${
-              activeTab === 'provider-requests'
-                ? isDark ? 'bg-primary/50/20 text-primary border border-primary/30' : 'bg-primary/10 text-primary border border-border'
-                : isDark ? 'text-muted-foreground hover:text-white hover:bg-muted/60' : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            }`}
-          >
-            Provider Requests
-          </button>
+        <div className="ops-panel flex flex-wrap gap-2 border p-2">
+          {SERVICE_TABS.map((tab) => (
+            <FeChip
+              key={tab.value}
+              active={activeTab === tab.value}
+              onClick={() => setActiveTab(tab.value)}
+              className="px-4 py-2"
+            >
+              {tab.label}
+            </FeChip>
+          ))}
         </div>
 
         {/* LISTINGS TAB */}

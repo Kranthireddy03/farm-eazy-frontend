@@ -12,6 +12,10 @@ import AuthService from '../services/AuthService'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { cn } from '../lib/utils'
+import { AuthPageLayout, AuthSidePanel } from '../components/layout/AuthPageLayout'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { InfoPanel } from '../components/platform/InfoPanel'
 
 const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim()
 const GOOGLE_ALLOWED_ORIGINS = (import.meta.env.VITE_GOOGLE_ALLOWED_ORIGINS || 'http://localhost:3000,http://127.0.0.1:3000')
@@ -464,27 +468,18 @@ function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-3.5rem)] fe-premium-canvas flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-        <div className="hidden lg:block space-y-6">
-          <div className="ops-panel overflow-hidden">
-            <img src="/auth-login.png" alt="FarmEazy login illustration" className="w-full object-cover" />
-          </div>
-          <div className="ops-panel p-6">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">FarmEazy</p>
-            <h2 className="mt-2 ops-page-title text-foreground">Welcome back</h2>
-            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
-              Access farms, crops, marketplace, and support tools for your selected service location.
-            </p>
-          </div>
-        </div>
-
-        <div className="w-full ops-auth-card p-6 sm:p-8">
-          <div className="mb-6">
-            <div className="fe-logo-mark text-xs">FE</div>
-            <h1 className="ops-page-title text-foreground mt-4">Sign in</h1>
-            <p className="text-sm text-muted-foreground mt-1">Use your FarmEazy account credentials</p>
-          </div>
+    <AuthPageLayout
+      title="Sign in"
+      description="Use your FarmEazy account credentials"
+      side={
+        <AuthSidePanel
+          imageSrc="/auth-login.png"
+          imageAlt="FarmEazy login illustration"
+          title="Welcome back"
+          description="Access farms, crops, marketplace, and support tools for your selected service location."
+        />
+      }
+    >
           {/* Login Mode Tabs */}
           <div className="flex gap-2 mb-6">
             <button
@@ -822,9 +817,7 @@ function Login() {
               </Link>
             </p>
           </div>
-        </div>
-      </div>
-    </div>
+    </AuthPageLayout>
   )
 }
 
