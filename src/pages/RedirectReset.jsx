@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { api } from '../config/api';
+import { AuthPageLayout, AuthSidePanel } from '../components/layout/AuthPageLayout';
+import AppPage from '../components/layout/AppPage';
+import { InfoPanel } from '../components/platform/InfoPanel';
+
+const RESET_SHORT_CODE_KEY = 'farmeazy_reset_short_code';
 
 export default function RedirectReset() {
   const { shortCode } = useParams();
@@ -9,12 +14,12 @@ export default function RedirectReset() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchFullToken = async () => {
+    const resolveResetLink = async () => {
       try {
         const response = await api.get(`/auth/r/${shortCode}`);
-        const fullToken = response.data.token;
-
-        navigate(`/reset-password?token=${fullToken}`, { replace: true });
+        const resolvedShortCode = response.data.shortCode || shortCode;
+        sessionStorage.setItem(RESET_SHORT_CODE_KEY, resolvedShortCode);
+        navigate('/reset-password', { replace: true });
         return;
       } catch (error) {
         const status = error.response?.status;
@@ -27,7 +32,6 @@ export default function RedirectReset() {
           message = apiMessage || 'This reset link has expired. Please request a new password reset link.';
         }
 
-        console.error('Failed to resolve reset link:', apiMessage || error.message, error);
         setErrorMessage(message);
       } finally {
         setLoading(false);
@@ -35,7 +39,7 @@ export default function RedirectReset() {
     };
 
     if (shortCode) {
-      fetchFullToken();
+      resolveResetLink();
     } else {
       setErrorMessage('Missing reset link code. Please request a new password reset link.');
       setLoading(false);
@@ -44,41 +48,61 @@ export default function RedirectReset() {
 
   if (loading && !errorMessage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Redirecting to password reset...</p>
-        </div>
-      </div>
+      <AppPage title="Password Reset" description="Verifying your secure reset link.">
+        <AuthPageLayout
+          title="Verifying link"
+          description="Please wait while we validate your password reset link."
+          side={
+            <AuthSidePanel
+              title="Secure recovery"
+              description="Reset links are single-use and expire after one hour for your account security."
+            />
+          }
+        >
+          <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <span>Redirecting to password reset...</span>
+          </div>
+        </AuthPageLayout>
+      </AppPage>
     );
   }
 
   if (errorMessage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-muted px-4 py-8">
-        <div className="w-full max-w-xl bg-background rounded-3xl shadow-2xl border border-border p-8 text-center">
-          <div className="mb-6 text-5xl">🔒</div>
-          <h1 className="text-3xl font-bold mb-4 text-foreground">Reset Link Issue</h1>
-          <p className="text-muted-foreground mb-6">{errorMessage}</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <AppPage title="Reset Link Issue" description="This password reset link could not be used.">
+        <AuthPageLayout
+          title="Reset link issue"
+          description="We could not use this password reset link."
+          side={
+            <AuthSidePanel
+              title="What you can do"
+              description="Request a fresh reset link from the forgot password page. Links expire after one hour and can only be used once."
+            />
+          }
+        >
+          <InfoPanel variant="destructive" title="Unable to continue" description={errorMessage} />
+          <div className="mt-6 flex flex-col sm:flex-row gap-3">
             <Link
               to="/forgot-password"
-              className="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-primary/90"
+              className="inline-flex justify-center px-6 py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90"
             >
               Request a new link
             </Link>
             <button
               type="button"
               onClick={() => navigate('/login')}
-              className="px-6 py-3 bg-muted text-foreground rounded-xl font-semibold hover:bg-muted"
+              className="px-6 py-3 bg-muted text-foreground rounded-xl font-semibold hover:bg-muted/80"
             >
               Back to login
             </button>
           </div>
-        </div>
-      </div>
+        </AuthPageLayout>
+      </AppPage>
     );
   }
 
   return null;
 }
+
+export { RESET_SHORT_CODE_KEY };

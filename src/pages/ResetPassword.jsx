@@ -4,17 +4,19 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
-import { Lock } from 'lucide-react'
+import { Lock, AlertCircle } from 'lucide-react'
 import AuthService from '../services/AuthService'
-import { useTheme } from '../context/ThemeContext'
 import { AuthPageLayout, AuthSidePanel } from '../components/layout/AuthPageLayout'
 import AppPage from '../components/layout/AppPage'
+import { InfoPanel } from '../components/platform/InfoPanel'
+import { Input } from '../components/ui/input'
+import { Button } from '../components/ui/button'
+import { RESET_SHORT_CODE_KEY } from './RedirectReset'
 
 function ResetPassword() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { isDark } = useTheme()
-  
+
   const [formData, setFormData] = useState({
     password: '',
     confirmPassword: '',
@@ -22,6 +24,7 @@ function ResetPassword() {
   const [errors, setErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [token, setToken] = useState('')
+  const [shortCode, setShortCode] = useState('')
   const [invalidToken, setInvalidToken] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
@@ -29,12 +32,20 @@ function ResetPassword() {
   const [apiError, setApiError] = useState('')
 
   useEffect(() => {
-    const resetToken = searchParams.get('token')
-    if (!resetToken || resetToken.length < 8) {
-      setInvalidToken(true)
-    } else {
-      setToken(resetToken)
+    const storedShortCode = sessionStorage.getItem(RESET_SHORT_CODE_KEY)
+    const legacyToken = searchParams.get('token')
+
+    if (storedShortCode) {
+      setShortCode(storedShortCode)
+      return
     }
+
+    if (legacyToken && legacyToken.length >= 8) {
+      setToken(legacyToken)
+      return
+    }
+
+    setInvalidToken(true)
   }, [searchParams])
 
   const validateForm = () => {
@@ -55,22 +66,23 @@ function ResetPassword() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setApiError('')
     if (!validateForm()) return
-    
+
     setLoading(true)
     try {
-      await AuthService.resetPassword(token, formData.password)
+      await AuthService.resetPassword(token, formData.password, shortCode)
+      sessionStorage.removeItem(RESET_SHORT_CODE_KEY)
       setSuccess(true)
       setTimeout(() => navigate('/login'), 3000)
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to reset password. The link may have expired.'
+      const message = err.message || 'Failed to reset password. The link may have expired or already been used.'
       setApiError(message)
     } finally {
       setLoading(false)
@@ -80,23 +92,29 @@ function ResetPassword() {
   if (invalidToken) {
     return (
       <AppPage title="Reset Password" description="This password reset link is invalid or has expired.">
-      <AuthPageLayout
-        title="Invalid Link"
-        description="This password reset link is invalid or has expired. Please request a new one."
-        side={
-          <AuthSidePanel
-            title="Secure password recovery"
-            description="Reset links expire for your security. Request a fresh link and complete the reset within the time window."
-          />
-        }
-      >
-        <Link
-          to="/forgot-password"
-          className="inline-block w-full py-3 text-center bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg"
+        <AuthPageLayout
+          title="Invalid link"
+          description="This password reset link is invalid or has expired."
+          side={
+            <AuthSidePanel
+              title="Secure password recovery"
+              description="Reset links expire after one hour and work only once. Request a fresh link to continue."
+            />
+          }
         >
-          Request New Link
-        </Link>
-      </AuthPageLayout>
+          <InfoPanel
+            variant="warning"
+            title="Link not valid"
+            description="The reset link may have expired, already been used, or was opened on a different device without completing verification."
+            icon={AlertCircle}
+          />
+          <Link
+            to="/forgot-password"
+            className="mt-6 inline-block w-full py-3 text-center bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg"
+          >
+            Request new link
+          </Link>
+        </AuthPageLayout>
       </AppPage>
     )
   }
@@ -104,123 +122,112 @@ function ResetPassword() {
   if (success) {
     return (
       <AppPage title="Reset Password" description="Your password has been successfully reset.">
-      <AuthPageLayout
-        title="Password Reset!"
-        description="Your password has been successfully reset. You can now login with your new password."
-        side={
-          <AuthSidePanel
-            title="You're all set"
-            description="Use your new password on the login page. If you run into issues, contact support from the help center."
+        <AuthPageLayout
+          title="Password reset"
+          description="Your password has been successfully reset."
+          side={
+            <AuthSidePanel
+              title="You're all set"
+              description="Use your new password on the login page. If you run into issues, contact support from the help center."
+            />
+          }
+        >
+          <InfoPanel
+            variant="success"
+            title="Password updated"
+            description="You can now sign in with your new password. We are redirecting you to the login page."
           />
-        }
-      >
-        <div className={`flex items-center justify-center gap-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-          <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-          </svg>
-          <span>Redirecting to login...</span>
-        </div>
-      </AuthPageLayout>
+          <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground mt-4">
+            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <span>Redirecting to login...</span>
+          </div>
+        </AuthPageLayout>
       </AppPage>
     )
   }
 
   return (
     <AppPage title="Reset Password" description="Create a strong new password for your account.">
-    <AuthPageLayout
-      title="Reset Password"
-      description="Create a strong new password"
-      side={
-        <AuthSidePanel
-          title="Secure your farm account"
-          description="Choose a password you haven't used elsewhere. After resetting, sign in with your new credentials."
-        />
-      }
-    >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        {apiError && (
-          <div className={`${isDark ? 'bg-red-900/50 border-red-700 text-red-200' : 'bg-red-100 border-red-300 text-red-700'} border px-4 py-3 rounded-xl`}>
-            <p className="font-medium text-sm">{apiError}</p>
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <label className={`${isDark ? 'text-muted-foreground' : 'text-foreground'} text-sm font-medium flex items-center gap-2`}>
-            <Lock className="h-4 w-4" /> New Password
-          </label>
-          <div className="relative">
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary pr-12 ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-input'}`}
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}
-            >
-              {showPassword ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
-        </div>
-
-        <div className="space-y-2">
-          <label className={`${isDark ? 'text-muted-foreground' : 'text-foreground'} text-sm font-medium flex items-center gap-2`}>
-            <Lock className="h-4 w-4" /> Confirm Password
-          </label>
-          <div className="relative">
-            <input
-              type={showConfirm ? 'text' : 'password'}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-primary pr-12 ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-input'}`}
-              placeholder="••••••••"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirm(!showConfirm)}
-              className={`absolute right-3 top-1/2 -translate-y-1/2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}
-            >
-              {showConfirm ? 'Hide' : 'Show'}
-            </button>
-          </div>
-          {errors.confirmPassword && <p className="text-red-500 text-sm">{errors.confirmPassword}</p>}
-          {formData.confirmPassword && formData.password === formData.confirmPassword && !errors.confirmPassword && (
-            <p className="text-primary text-sm">Passwords match</p>
+      <AuthPageLayout
+        title="Reset password"
+        description="Create a strong new password"
+        side={
+          <AuthSidePanel
+            title="Secure your farm account"
+            description="Choose a password you haven't used elsewhere. After resetting, sign in with your new credentials."
+          />
+        }
+      >
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {apiError && (
+            <InfoPanel variant="destructive" title="Could not reset password" description={apiError} icon={AlertCircle} />
           )}
+
+          <div className="space-y-2">
+            <label className="text-foreground text-sm font-medium flex items-center gap-2">
+              <Lock className="h-4 w-4" /> New password
+            </label>
+            <div className="relative">
+              <Input
+                type={showPassword ? 'text' : 'password'}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className="pr-12"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.password && <p className="text-destructive text-sm">{errors.password}</p>}
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-foreground text-sm font-medium flex items-center gap-2">
+              <Lock className="h-4 w-4" /> Confirm password
+            </label>
+            <div className="relative">
+              <Input
+                type={showConfirm ? 'text' : 'password'}
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                className="pr-12"
+                placeholder="••••••••"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirm(!showConfirm)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground"
+              >
+                {showConfirm ? 'Hide' : 'Show'}
+              </button>
+            </div>
+            {errors.confirmPassword && <p className="text-destructive text-sm">{errors.confirmPassword}</p>}
+            {formData.confirmPassword && formData.password === formData.confirmPassword && !errors.confirmPassword && (
+              <p className="text-primary text-sm">Passwords match</p>
+            )}
+          </div>
+
+          <Button type="submit" disabled={loading} className="w-full">
+            {loading ? 'Resetting...' : 'Reset password'}
+          </Button>
+        </form>
+
+        <div className="text-center mt-6">
+          <Link to="/login" className="text-sm font-medium text-primary hover:underline">
+            Back to login
+          </Link>
         </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full py-3 bg-primary hover:bg-primary/90 text-primary-foreground font-medium rounded-lg disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Resetting...
-            </>
-          ) : (
-            'Reset Password'
-          )}
-        </button>
-      </form>
-
-      <div className="text-center mt-6">
-        <Link to="/login" className="text-sm font-medium text-primary hover:underline">
-          Back to Login
-        </Link>
-      </div>
-    </AuthPageLayout>
+      </AuthPageLayout>
     </AppPage>
   )
 }

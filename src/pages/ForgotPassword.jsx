@@ -70,18 +70,7 @@ function ForgotPassword() {
       setCountdown(30)
       setTimeout(() => navigate('/login'), 33000)
     } catch (error) {
-      if (error.status === 503 || error.message?.includes('email')) {
-        navigate('/email-error', {
-          state: {
-            title: 'Email Delivery Failed',
-            message: error.message || 'Unable to send the password reset email.',
-            email: email,
-            returnPath: '/forgot-password'
-          }
-        })
-      } else {
-        setApiError(error.message || 'Failed to process request. Please try again.')
-      }
+      setApiError(error.message || 'If an account exists for this email, we sent a reset link. Check your inbox and spam folder.')
     } finally {
       setLoading(false)
     }

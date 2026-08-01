@@ -174,6 +174,8 @@ export function AuthProvider({ children }) {
     setIsAuthenticated(false);
     setSessionWarning(false);
     setSessionTimeRemaining(null);
+
+    window.dispatchEvent(new CustomEvent('farmeazy:auth-logout'));
   }, []);
 
   /**
@@ -231,6 +233,7 @@ export function AuthProvider({ children }) {
 
     // Dispatch event for cross-tab sync
     window.dispatchEvent(new CustomEvent('authStateChange', { detail: { isAuthenticated: true } }));
+    window.dispatchEvent(new CustomEvent('farmeazy:auth-login'));
   }, [updateActivity]);
 
   /**
