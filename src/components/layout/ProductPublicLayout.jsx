@@ -16,7 +16,7 @@ export default function ProductPublicLayout({ children }) {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <UnifiedHeader />
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 md:py-8 min-h-[calc(100vh-10rem)]">
         <div className={cn('animate-in fade-in duration-300')}>
           {children || <Outlet />}
         </div>

@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { PageHeader } from '../ui/page-header';
 import { Breadcrumbs } from '../ui/breadcrumb';
 import { getBreadcrumbs } from '../../lib/breadcrumbs';
@@ -20,6 +20,7 @@ export default function AppPage({
   noMotion = false,
 }) {
   const location = useLocation();
+  const prefersReducedMotion = useReducedMotion();
   const crumbs = breadcrumbs ?? getBreadcrumbs(location.pathname);
 
   const content = (
@@ -38,7 +39,7 @@ export default function AppPage({
     </div>
   );
 
-  if (noMotion) return content;
+  if (noMotion || prefersReducedMotion) return content;
 
   return (
     <motion.div

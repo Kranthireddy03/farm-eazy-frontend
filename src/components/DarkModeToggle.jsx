@@ -17,7 +17,7 @@ function DarkModeToggle({ floating = false, className = '' }) {
         type="button"
         onClick={() => setThemeMode(isDarkMode ? 'light' : 'dark')}
         className={cn(
-          'fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg border border-border bg-card',
+          'fixed bottom-6 right-6 z-[60] p-3 rounded-full shadow-lg border border-border bg-card',
           'transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
           className,
         )}

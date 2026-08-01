@@ -74,6 +74,7 @@ import SessionWarningModal from './components/SessionWarningModal';
 import './i18n';
 import Layout from './components/layout/AppShell';
 import PublicLayout from './components/layout/ProductPublicLayout';
+import GlobalFloatingThemeToggle from './components/GlobalFloatingThemeToggle';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 const UserPreferences = lazy(() => import('./pages/UserPreferences'));
@@ -412,7 +413,13 @@ function AppContent() {
           path="/support"
           element={
             isAuthenticated
-              ? <SupportPortalRedirect portalPath="/user/dashboard" adminPortalPath="/dashboard" />
+              ? (
+                <ProtectedRoute>
+                  <Layout>
+                    <Support />
+                  </Layout>
+                </ProtectedRoute>
+              )
               : renderContextAwarePage(Support)
           }
         />
@@ -491,6 +498,10 @@ function AppContent() {
           <Route path="/admin/blog-posts" element={<AdminBlogManagement />} />
         </Route>
 
+        <Route path="/irrigation/schedules" element={<Navigate to="/irrigation" replace />} />
+        <Route path="/irrigation/sensors" element={<Navigate to="/irrigation-sensors" replace />} />
+        <Route path="/irrigation/services" element={<Navigate to="/irrigation-services" replace />} />
+
         {/* Catch-all redirect */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -518,6 +529,7 @@ function App() {
                   <ToastProvider>
                     <ShellProvider>
                       <AppContent />
+                      <GlobalFloatingThemeToggle />
                       <Toaster richColors closeButton position="top-right" theme="system" />
                     </ShellProvider>
                   </ToastProvider>

@@ -24,13 +24,13 @@ export function IrrigationPageAside({ summary }) {
         description="Schedules, services, and sensor data work together for water planning."
       >
         <div className="flex flex-wrap gap-2 mt-3">
-          <Link to="/irrigation/schedules" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+          <Link to="/irrigation" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
             Schedules
           </Link>
-          <Link to="/irrigation/services" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+          <Link to="/irrigation-services" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
             Services
           </Link>
-          <Link to="/irrigation/sensors" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+          <Link to="/irrigation-sensors" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
             Sensors
           </Link>
           <Link to="/farms" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>

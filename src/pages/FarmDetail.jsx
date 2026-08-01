@@ -133,7 +133,7 @@ function FarmDetail() {
                 <Link to="/crops" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
                   Manage crops
                 </Link>
-                <Link to="/irrigation/schedules" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
+                <Link to="/irrigation" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>
                   Irrigation schedules
                 </Link>
                 <Link to="/service-requests" className={cn(buttonVariants({ variant: 'outline', size: 'sm' }))}>

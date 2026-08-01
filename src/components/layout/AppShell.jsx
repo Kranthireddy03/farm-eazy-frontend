@@ -17,7 +17,6 @@ import ChatSupport from '../ChatSupport';
 import LocationBar from '../LocationBar';
 import AppOpenLocationModal from '../AppOpenLocationModal';
 import InactivityWarning from '../InactivityWarning';
-import DarkModeToggle from '../DarkModeToggle';
 import { useShell } from '../shell/ShellContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCoin } from '../../context/CoinContext';
@@ -167,8 +166,6 @@ export default function AppShell({ children, onShowTour }) {
                 <Settings className="h-4 w-4" />
               </Button>
 
-              <DarkModeToggle className="!shadow-none !border-border" />
-
               <NotificationBell />
 
               <Button variant="outline" size="icon" onClick={() => navigate('/cart')} className="relative" aria-label="Cart">
@@ -214,7 +211,7 @@ export default function AppShell({ children, onShowTour }) {
         <LocationBar />
         <AppOpenLocationModal />
 
-        <main className="flex-1 p-4 md:p-6 w-full max-w-screen-2xl mx-auto">
+        <main className="flex-1 p-4 md:p-6 w-full max-w-screen-2xl mx-auto min-h-[calc(100vh-12rem)]">
           {children || <Outlet />}
         </main>
 
