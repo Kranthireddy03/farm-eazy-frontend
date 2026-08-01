@@ -12,14 +12,19 @@
 
 import axios from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '../config/api';
+import {
+  isApiEncryptionEnabled,
+  isGatewayEnabled,
+  resolveEncryptionSecret,
+  resolveGatewayClient,
+} from '../config/securityEnv';
 import { getApiErrorCode, isLocationRequiredError, isRateLimitError } from '../utils/apiError';
 import { enqueueLocationRetry } from './locationApiBridge';
 
-const API_ENCRYPTION_ENABLED = import.meta.env.VITE_API_ENCRYPTION_ENABLED === 'true';
-const GATEWAY_ENABLED = import.meta.env.VITE_API_GATEWAY_ENABLED === 'true';
-// IMPORTANT: Do not store cryptographic secrets in VITE_* for production.
-const ENCRYPTION_SECRET = import.meta.env.VITE_API_ENCRYPTION_SECRET || '';
-const GATEWAY_CLIENT = import.meta.env.VITE_API_GATEWAY_CLIENT || '';
+const API_ENCRYPTION_ENABLED = isApiEncryptionEnabled();
+const GATEWAY_ENABLED = isGatewayEnabled();
+const ENCRYPTION_SECRET = resolveEncryptionSecret();
+const GATEWAY_CLIENT = resolveGatewayClient();
 
 function getNextGatewayTimestamp() {
   const now = Date.now();
@@ -210,11 +215,13 @@ function fromBase64(base64) {
 }
 
 function normalizeEncryptionKey(secret) {
-  const raw = textEncoder.encode(secret || '');
-  if (raw.length < 32) {
+  const secretBytes = textEncoder.encode(secret || '');
+  if (secretBytes.length < 32) {
     throw new Error('VITE_API_ENCRYPTION_SECRET must be at least 32 characters');
   }
-  return raw.slice(0, 32);
+  const keyBytes = new Uint8Array(32);
+  keyBytes.set(secretBytes.subarray(0, 32));
+  return keyBytes;
 }
 
 async function importAesKey() {
@@ -467,9 +474,6 @@ apiClient.interceptors.request.use(
     }
 
     if (GATEWAY_ENABLED) {
-      if (!GATEWAY_CLIENT) {
-        throw new Error('VITE_API_GATEWAY_CLIENT is required when gateway security is enabled');
-      }
       const timestamp = String(Date.now());
       config.headers['X-Gateway-Client'] = GATEWAY_CLIENT;
       config.headers['X-Gateway-Timestamp'] = timestamp;
@@ -499,7 +503,16 @@ apiClient.interceptors.response.use(
     }
 
     if (response?.data) {
-      response.data = await normalizeApiResponseBody(response.data);
+      try {
+        response.data = await normalizeApiResponseBody(response.data);
+      } catch (decryptError) {
+        const err = new Error(
+          'Could not read the API response. If encryption is enabled on the backend, set VITE_API_ENCRYPTION_SECRET to the same value as API_ENCRYPTION_SECRET.'
+        );
+        err.code = 'API_DECRYPT_FAILED';
+        err.cause = decryptError;
+        return Promise.reject(err);
+      }
     }
     // Development logging
     if (import.meta.env.DEV) {

@@ -50,7 +50,7 @@ export function FaqKnowledgeSection({
         setFaqList(mapApprovedFaqs(data))
         setApiLoaded(true)
       } catch {
-        setApiError('Unable to load approved FAQs from the server. Please try again.')
+        setApiError('Unable to load approved FAQs. If this persists, check API encryption settings or restart the backend after the latest update.')
         setFaqList([])
       } finally {
         setFaqLoading(false)

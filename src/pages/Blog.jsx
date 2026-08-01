@@ -39,8 +39,13 @@ export default function Blog() {
             }
           })
         setPosts(mappedBlogs)
-      } catch (_err) {
-        setError('Unable to load blog feed right now. Please try again soon.')
+      } catch (err) {
+        const message = err?.code === 'API_DECRYPT_FAILED'
+          ? 'Blog feed could not be read (API encryption mismatch). Check VITE_API_ENCRYPTION_SECRET or update the backend.'
+          : err?.response?.status === 401
+            ? 'Blog feed was blocked by API gateway headers. Restart the dev server after updating .env.local.'
+            : 'Unable to load blog feed right now. Please try again soon.'
+        setError(message)
         setPosts([])
       } finally {
         setLoading(false)
