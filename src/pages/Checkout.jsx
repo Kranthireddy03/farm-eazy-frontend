@@ -283,7 +283,7 @@ function Checkout() {
               signature: 'SIMULATED',
               email: paymentData.email,
               phone: paymentData.phone,
-              simulation: true
+              amount: order.amount
             });
 
             if (verifyResult.data.status === 'success') {
@@ -293,24 +293,26 @@ function Checkout() {
                 step: 2
               }));
 
-              const orderData = {
-                items: cartItems.map(item => {
-                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
-                  return {
-                    productId: item.id,
-                    quantity: item.quantity,
-                    price: itemPrice
-                  };
-                }),
-                subtotal: subtotal,
-                taxAmount: tax,
-                totalAmount: total,
-                coinsUsed: coinsApplied,
-                finalAmount: finalAmount,
-                paymentMethod: 'RAZORPAY',
-                addressId: selectedAddress,
-                paymentId: order.simulation_payment_id || `pay_sim_${Date.now()}`
-              };
+                const orderData = {
+                  items: cartItems.map(item => {
+                    const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price;
+                    return {
+                      productId: item.id,
+                      quantity: item.quantity,
+                      price: itemPrice
+                    };
+                  }),
+                  subtotal: subtotal,
+                  taxAmount: tax,
+                  totalAmount: total,
+                  coinsUsed: coinsApplied,
+                  finalAmount: finalAmount,
+                  paymentMethod: 'RAZORPAY',
+                  addressId: selectedAddress,
+                  razorpayOrderId: order.id,
+                  razorpayPaymentId: order.simulation_payment_id || `pay_sim_${Date.now()}`,
+                  razorpaySignature: 'SIMULATED'
+                };
 
               const placedOrder = await apiClient.post('/orders', orderData);
               localStorage.removeItem('farmeazy_cart');
@@ -364,7 +366,8 @@ function Checkout() {
                 paymentId: response.razorpay_payment_id,
                 signature: response.razorpay_signature,
                 email: paymentData.email,
-                phone: paymentData.phone
+                phone: paymentData.phone,
+                amount: order.amount
               });
               
               // Only after payment is verified, place the order
@@ -391,7 +394,9 @@ function Checkout() {
                   finalAmount: finalAmount,
                   paymentMethod: 'RAZORPAY',
                   addressId: selectedAddress,
-                  paymentId: response.razorpay_payment_id
+                  razorpayOrderId: order.id,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpaySignature: response.razorpay_signature
                 };
                 try {
                   const placedOrder = await apiClient.post('/orders', orderData);
