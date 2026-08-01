@@ -669,56 +669,27 @@ function Login() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen relative overflow-hidden flex items-center justify-center px-4 py-8 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-      <div className={`absolute inset-0 ${isDark ? 'bg-slate-950' : 'bg-slate-900'}`}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,197,94,0.12),transparent_24%),radial-gradient(circle_at_bottom_right,_rgba(56,189,248,0.14),transparent_26%)]" />
-        <div className="absolute inset-0 opacity-20" style={{ backgroundSize: '24px 24px', backgroundImage: `radial-gradient(circle, ${isDark ? 'rgba(148,163,184,0.16)' : 'rgba(255,255,255,0.08)'} 1px, transparent 1px)` }} />
-      </div>
-
-      {/* Login Experience Grid */}
-      <div className="relative z-10 w-full max-w-[1200px] grid grid-cols-1 lg:grid-cols-[0.95fr_1.05fr] gap-6 items-stretch">
-        <div className={`flex flex-col justify-between rounded-[2rem] border border-slate-700 overflow-hidden shadow-[0_25px_90px_rgba(0,0,0,0.3)] ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
-          <div className="relative overflow-hidden rounded-[2rem] border border-transparent shadow-2xl">
-            <img src="/auth-login.png" alt="FarmEazy login illustration" className="w-full h-full object-cover rounded-[2rem]" />
+    <div className="min-h-[calc(100vh-3.5rem)] bg-background flex items-center justify-center px-4 py-10">
+      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div className="hidden lg:block space-y-6">
+          <div className="rounded-lg border border-border overflow-hidden bg-card">
+            <img src="/auth-login.png" alt="FarmEazy login illustration" className="w-full object-cover" />
           </div>
-          <div className="mt-8">
-            <p className={`text-xs uppercase tracking-[0.24em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>FarmEazy login</p>
-            <h2 className="mt-3 text-4xl font-black leading-tight">Welcome back to your farm dashboard</h2>
-            <p className={`mt-4 text-sm leading-relaxed ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>
-              Securely access your fields, crop advice, and marketplace tools from one vibrant farm view.
+          <div>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">FarmEazy</p>
+            <h2 className="mt-2 text-3xl font-semibold text-foreground leading-tight">Welcome back</h2>
+            <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+              Access farms, crops, marketplace, and support tools for your selected service location.
             </p>
-          </div>
-          <div className={`mt-6 rounded-3xl border p-5 ${isDark ? 'border-slate-700 bg-slate-900/90' : 'border-slate-200 bg-white/95'} shadow-sm`}> 
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <p className={`text-xs uppercase tracking-[0.28em] font-semibold ${isDark ? 'text-emerald-300' : 'text-emerald-600'}`}>Quick questions</p>
-              <button type="button" onClick={refreshLoginCards} className={`text-xs font-semibold transition ${isDark ? 'text-emerald-300 hover:text-emerald-100' : 'text-emerald-700 hover:text-emerald-900'}`}>
-                Refresh
-              </button>
-            </div>
-            <div className="space-y-4">
-              {displayLoginCards.map((card, index) => (
-                <HoverQuestionCard key={`${card.question}-${loginQuizSeed}-${index}`} {...card} isDark={isDark} />
-              ))}
-            </div>
           </div>
         </div>
 
-        <div className="relative w-full">
-          <div className={`backdrop-blur-xl relative overflow-hidden rounded-[2rem] border border-slate-700 shadow-[0_20px_80px_rgba(0,0,0,0.32)] transform transition duration-300 hover:scale-[1.01] p-8 ${isDark ? 'bg-slate-950/95 text-slate-100' : 'bg-white/95 text-slate-950'}`}>
-
-          {/* Logo & Header */}
-          <div className="text-center mb-6">
-            <div className="relative inline-block">
-              <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl rotate-3 absolute -top-1 -left-1 opacity-50"></div>
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-green-600 rounded-2xl flex items-center justify-center relative shadow-lg">
-                <span className="text-4xl">🌾</span>
-              </div>
-            </div>
-            <h1 className={`text-4xl font-extrabold ${isDark ? 'text-slate-100' : 'text-emerald-800'} mt-6 tracking-tight`}>FarmEazy</h1>
-            <p className={`${isDark ? 'text-emerald-300' : 'text-emerald-600'} mt-2 font-medium`}>Sign in to your FarmEazy account</p>
+        <div className="w-full rounded-lg border border-border bg-card shadow-sm p-6 sm:p-8">
+          <div className="mb-6">
+            <div className="h-10 w-10 rounded-md bg-primary flex items-center justify-center text-primary-foreground text-sm font-bold">FE</div>
+            <h1 className="text-2xl font-semibold text-foreground mt-4">Sign in</h1>
+            <p className="text-sm text-muted-foreground mt-1">Use your FarmEazy account credentials</p>
           </div>
-
-
           {/* Login Mode Tabs */}
           <div className={`flex mb-6 rounded-2xl overflow-hidden border ${isDark ? 'border-slate-600' : 'border-emerald-200'}`}>
             <button
@@ -1071,35 +1042,14 @@ function Login() {
           </div>
 
           {/* Register Link */}
-          <div className="text-center">
-            <p className={`${isDark ? 'text-slate-300' : 'text-emerald-600'}`}>
+          <div className="text-center mt-6">
+            <p className="text-sm text-muted-foreground">
               New to FarmEazy?{' '}
-              <Link to="/register" className={`${isDark ? 'text-yellow-400 hover:text-yellow-300' : 'text-orange-500 hover:text-orange-600'} font-bold transition-colors`}>
-                Sign up here 🌱
+              <Link to="/register" className="font-medium text-primary hover:underline">
+                Create an account
               </Link>
             </p>
           </div>
-
-          <div className={`mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
-            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
-              <p className="text-xs uppercase tracking-[0.2em]">Ready in seconds</p>
-              <p className="mt-3 font-bold text-lg">Instant account unlock</p>
-            </div>
-            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-white'}`}>
-              <p className="text-xs uppercase tracking-[0.2em]">Smart routing</p>
-              <p className="mt-3 font-bold text-lg">Dashboard or field tools</p>
-            </div>
-            <div className={`rounded-3xl border p-4 ${isDark ? 'border-slate-700 bg-slate-900/60' : 'border-emerald-200 bg-emerald-50'}`}>
-              <p className="text-xs uppercase tracking-[0.2em]">Modern security</p>
-              <p className="mt-3 font-bold text-lg">OTP + password options</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Decoration */}
-        <div className={`text-center mt-5 ${isDark ? 'text-slate-400' : 'text-emerald-500'} text-sm`}>
-          <p>🌾 Growing success together 🌾</p>
-        </div>
         </div>
       </div>
     </div>

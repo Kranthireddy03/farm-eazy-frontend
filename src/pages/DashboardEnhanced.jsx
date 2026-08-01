@@ -1,34 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { Sprout, ShoppingCart, Droplets, LifeBuoy, Wrench, Pencil, Trash2, Plus } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useCoin } from '../context/CoinContext';
-import { useTheme } from '../context/ThemeContext';
 import apiClient from '../services/apiClient';
-import Toast from '../components/Toast';
+import { PageHeader } from '../components/ui/page-header';
+import { KpiCard } from '../components/ui/kpi-card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import ActivityTimeline from '../components/ui/ActivityTimeline';
 import { PageSkeleton } from '../components/ui/Skeleton';
-
-/**
- * Enhanced Dashboard with Analytics & Activity Feed
- * 
- * Features:
- * - Product count, farm count, crop count displays
- * - User activity log with scrollable feed
- * - Activity filtering and search
- * - Statistics and insights
- * - Quick actions
- */
+import Toast from '../components/Toast';
 
 function DashboardEnhanced() {
-  const navigate = useNavigate()
-  const { toast, showToast, closeToast } = useToast()
-  const { coins } = useCoin()
-  const { isDark } = useTheme()
+  const navigate = useNavigate();
+  const { toast, showToast, closeToast } = useToast();
+  const { coins } = useCoin();
 
-  // Service filter/sort states
-  const [serviceFilter, setServiceFilter] = useState('')
-  const [serviceSort, setServiceSort] = useState('name')
-  const [deleteConfirmId, setDeleteConfirmId] = useState(null)
+  const [serviceFilter, setServiceFilter] = useState('');
+  const [serviceSort, setServiceSort] = useState('name');
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const [stats, setStats] = useState({
     totalFarms: 0,
@@ -37,41 +29,38 @@ function DashboardEnhanced() {
     totalProducts: 0,
     totalOrders: 0,
     totalServices: 0,
-    activeAlerts: 0
-  })
-  
-  const [activities, setActivities] = useState([])
-  const [filteredActivities, setFilteredActivities] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [selectedActivityType, setSelectedActivityType] = useState('ALL')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [serviceListings, setServiceListings] = useState([])
+    activeAlerts: 0,
+  });
+
+  const [activities, setActivities] = useState([]);
+  const [filteredActivities, setFilteredActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedActivityType, setSelectedActivityType] = useState('ALL');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [serviceListings, setServiceListings] = useState([]);
 
   const activityTypes = [
-    { value: 'ALL', label: 'All Activities', icon: '📝' },
-    { value: 'REGISTERED', label: 'Account', icon: '✍️' },
-    { value: 'ORDER_PLACED', label: 'Orders', icon: '📦' },
-    { value: 'ADDED_PRODUCT', label: 'Products', icon: '➕' },
-    { value: 'FARM_ADDED', label: 'Farms', icon: '🌾' },
-    { value: 'CROP_ADDED', label: 'Crops', icon: '🌱' },
-    { value: 'COINS_EARNED', label: 'Coins', icon: '🪙' }
-  ]
+    { value: 'ALL', label: 'All activities' },
+    { value: 'REGISTERED', label: 'Account' },
+    { value: 'ORDER_PLACED', label: 'Orders' },
+    { value: 'ADDED_PRODUCT', label: 'Products' },
+    { value: 'FARM_ADDED', label: 'Farms' },
+    { value: 'CROP_ADDED', label: 'Crops' },
+    { value: 'COINS_EARNED', label: 'Coins' },
+  ];
 
-  // Fetch dashboard statistics
   useEffect(() => {
-    fetchStats()
-  }, [])
+    fetchStats();
+  }, []);
 
-  // Filter activities when type or search changes
   useEffect(() => {
-    filterActivities()
-  }, [activities, selectedActivityType, searchTerm])
+    filterActivities();
+  }, [activities, selectedActivityType, searchTerm]);
 
   const fetchStats = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
 
-      // Fetch all stats in parallel
       const [farmsRes, cropsRes, irrigationRes, productsRes, servicesRes, ordersRes] =
         await Promise.allSettled([
           apiClient.get('/farms'),
@@ -79,45 +68,43 @@ function DashboardEnhanced() {
           apiClient.get('/irrigation'),
           apiClient.get('/products'),
           apiClient.get('/services/listings'),
-          apiClient.get('/orders').catch(() => ({ data: { totalOrders: 0 } }))
+          apiClient.get('/orders').catch(() => ({ data: { totalOrders: 0 } })),
         ]);
 
       const activitiesRes = await apiClient.get('/activities');
       setActivities(Array.isArray(activitiesRes.data) ? activitiesRes.data : []);
 
-      const newStats = { ...stats }
+      const newStats = { ...stats };
 
-      // Process results
       if (farmsRes.status === 'fulfilled') {
-        newStats.totalFarms = Array.isArray(farmsRes.value.data) ? farmsRes.value.data.length : 0
+        newStats.totalFarms = Array.isArray(farmsRes.value.data) ? farmsRes.value.data.length : 0;
       }
       if (cropsRes.status === 'fulfilled') {
-        newStats.totalCrops = Array.isArray(cropsRes.value.data) ? cropsRes.value.data.length : 0
+        newStats.totalCrops = Array.isArray(cropsRes.value.data) ? cropsRes.value.data.length : 0;
       }
       if (irrigationRes.status === 'fulfilled') {
-        newStats.totalIrrigations = Array.isArray(irrigationRes.value.data) ? irrigationRes.value.data.length : 0
+        newStats.totalIrrigations = Array.isArray(irrigationRes.value.data) ? irrigationRes.value.data.length : 0;
       }
       if (productsRes.status === 'fulfilled') {
-        newStats.totalProducts = Array.isArray(productsRes.value.data) ? productsRes.value.data.length : 0
+        newStats.totalProducts = Array.isArray(productsRes.value.data) ? productsRes.value.data.length : 0;
       }
       if (servicesRes.status === 'fulfilled') {
-        const servicesData = servicesRes.value.data
-        // Get user info from localStorage (assumes user object with id or email)
+        const servicesData = servicesRes.value.data;
         let user = null;
         try {
           user = JSON.parse(localStorage.getItem('user'));
-        } catch {}
-        // Handle paginated response (Spring Boot Page object)
+        } catch {
+          /* ignore */
+        }
         let allServices = [];
         if (servicesData.content && Array.isArray(servicesData.content)) {
           allServices = servicesData.content;
         } else if (Array.isArray(servicesData)) {
           allServices = servicesData;
         }
-        // Filter by user if possible
         let filtered = allServices;
         if (user && user.id) {
-          filtered = allServices.filter(s => s.userId === user.id);
+          filtered = allServices.filter((s) => s.userId === user.id);
         }
         setServiceListings(filtered);
         newStats.totalServices = filtered.length;
@@ -127,19 +114,18 @@ function DashboardEnhanced() {
         }
       }
       if (ordersRes.status === 'fulfilled') {
-        newStats.totalOrders = Array.isArray(ordersRes.value.data) ? ordersRes.value.data.length : 0
+        newStats.totalOrders = Array.isArray(ordersRes.value.data) ? ordersRes.value.data.length : 0;
       }
 
-      setStats(newStats)
+      setStats(newStats);
     } catch (error) {
-      console.error('Error fetching stats:', error)
-      showToast('Failed to load dashboard data', 'error')
+      console.error('Error fetching stats:', error);
+      showToast('Failed to load dashboard data', 'error');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  // Service management functions
   const editService = (id) => {
     navigate(`/services/edit/${id}`);
   };
@@ -147,452 +133,262 @@ function DashboardEnhanced() {
   const deleteService = async (id) => {
     try {
       await apiClient.delete(`/services/${id}`);
-      setServiceListings(prev => prev.filter(s => s.id !== id));
+      setServiceListings((prev) => prev.filter((s) => s.id !== id));
       showToast('Service deleted successfully', 'success');
       setDeleteConfirmId(null);
-    } catch (error) {
+    } catch {
       showToast('Failed to delete service', 'error');
       setDeleteConfirmId(null);
     }
   };
 
   const filterActivities = () => {
-    let filtered = activities
+    let filtered = activities;
 
-    // Filter by type
     if (selectedActivityType !== 'ALL') {
-      filtered = filtered.filter(activity => 
-        activity.activityType === selectedActivityType
-      )
+      filtered = filtered.filter((activity) => activity.activityType === selectedActivityType);
     }
 
-    // Filter by search term
     if (searchTerm) {
-      filtered = filtered.filter(activity =>
-        activity.description.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      filtered = filtered.filter((activity) =>
+        activity.description.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
     }
 
-    setFilteredActivities(filtered)
-  }
+    setFilteredActivities(filtered);
+  };
 
-  const getActivityIcon = (activityType) => {
-    const iconMap = {
-      'REGISTERED': '✍️',
-      'LOGGED_IN': '🔓',
-      'LOGGED_OUT': '🔒',
-      'ADDED_PRODUCT': '➕',
-      'REMOVED_PRODUCT': '➖',
-      'UPDATED_PRODUCT': '✏️',
-      'ADDED_TO_CART': '🛒',
-      'REMOVED_FROM_CART': '🗑️',
-      'ORDER_PLACED': '📦',
-      'ORDER_PAID': '💳',
-      'ORDER_SHIPPED': '🚚',
-      'ORDER_DELIVERED': '✅',
-      'ORDER_CANCELLED': '❌',
-      'COINS_EARNED': '🪙',
-      'COINS_USED': '💰',
-      'PASSWORD_CHANGED': '🔐',
-      'PROFILE_UPDATED': '👤',
-      'FARM_ADDED': '🌾',
-      'FARM_UPDATED': '🔄',
-      'FARM_DELETED': '❌',
-      'CROP_ADDED': '🌱',
-      'CROP_UPDATED': '🔄',
-      'CROP_DELETED': '❌',
-      'IRRIGATION_ADDED': '💧',
-      'IRRIGATION_UPDATED': '🔄',
-      'IRRIGATION_DELETED': '❌',
-      'PAYMENT_FAILED': '⚠️'
-    }
-    return iconMap[activityType] || '📝'
-  }
+  const filteredServices = serviceListings
+    .filter(
+      (service) =>
+        !serviceFilter ||
+        (service.name && service.name.toLowerCase().includes(serviceFilter.toLowerCase())) ||
+        (service.description &&
+          service.description.toLowerCase().includes(serviceFilter.toLowerCase())),
+    )
+    .sort((a, b) => {
+      if (serviceSort === 'name') return (a.name || '').localeCompare(b.name || '');
+      if (serviceSort === 'price') return (a.price || 0) - (b.price || 0);
+      if (serviceSort === 'status') return (a.status || '').localeCompare(b.status || '');
+      return 0;
+    });
 
   if (loading) {
     return (
-      <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-        <div className="max-w-7xl mx-auto">
-          <PageSkeleton />
-        </div>
+      <div className="space-y-6">
+        <PageSkeleton />
       </div>
     );
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-      {/* Toast Notification */}
-      {toast && (
-        <Toast message={toast.message} type={toast.type} onClose={closeToast} />
-      )}
-      <div className="max-w-7xl mx-auto space-y-8">
-        {/* Header */}
-        <section className="page-hero interactive-card mb-0">
-          <h1 className={`text-4xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Welcome Back! 👋</h1>
-          <p className={isDark ? 'text-slate-400' : 'text-slate-600'}>Here's your farming dashboard overview</p>
-        </section>
+    <div className="space-y-8">
+      {toast && <Toast message={toast.message} type={toast.type} onClose={closeToast} />}
 
-        {/* Analytics Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {/* Farms Card */}
-          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-green-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Active Farms</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalFarms}</p>
-                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {stats.totalFarms === 0 ? '✚ Add your first farm' : '📊 Manage farms'}
-                </p>
-              </div>
-              <div className="text-5xl">🌾</div>
-            </div>
-            <Link 
-              to="/farms"
-              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-green-900/50 text-green-400 hover:bg-green-900/70' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-            >
-              View Farms →
-            </Link>
-          </div>
+      <PageHeader
+        title="Dashboard"
+        description="Overview of farms, marketplace activity, and recent actions for your selected location."
+        actions={
+          <Button variant="outline" size="sm" onClick={() => navigate('/activities')}>
+            View activity log
+          </Button>
+        }
+      />
 
-          {/* Crops Card */}
-          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-blue-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Growing Crops</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalCrops}</p>
-                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {stats.totalCrops === 0 ? '✚ Plant your first crop' : '🌱 Monitor growth'}
-                </p>
-              </div>
-              <div className="text-5xl">🌱</div>
-            </div>
-            <Link 
-              to="/crops"
-              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-blue-900/50 text-blue-400 hover:bg-blue-900/70' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`}
-            >
-              View Crops →
-            </Link>
-          </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard title="Active farms" value={stats.totalFarms} hint="Registered locations" icon={Sprout} />
+        <KpiCard title="Growing crops" value={stats.totalCrops} hint="Across all farms" icon={Sprout} />
+        <KpiCard title="Listed products" value={stats.totalProducts} hint="Marketplace listings" icon={ShoppingCart} />
+        <KpiCard title="Orders" value={stats.totalOrders} hint="Purchase history" icon={ShoppingCart} />
+      </div>
 
-          {/* Products Card */}
-          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-orange-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Listed Products</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalProducts}</p>
-                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {stats.totalProducts === 0 ? '✚ Sell products' : '🛍️ Manage sales'}
-                </p>
-              </div>
-              <div className="text-5xl">📦</div>
-            </div>
-            <Link 
-              to="/selling"
-              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-orange-900/50 text-orange-400 hover:bg-orange-900/70' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'}`}
-            >
-              Manage →
-            </Link>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <KpiCard title="FarmEazy coins" value={coins?.totalCoins || 0} hint="Rewards balance" icon={ShoppingCart} />
+        <KpiCard title="Irrigation schedules" value={stats.totalIrrigations} hint="Active plans" icon={Droplets} />
+        <KpiCard title="Service listings" value={stats.totalServices} hint="Your offerings" icon={LifeBuoy} />
+      </div>
 
-          {/* Orders Card */}
-          <div className={`glass-card interactive-card p-6 hover:shadow-xl transition-shadow border-l-4 border-l-purple-500 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className={`text-sm font-medium ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Orders Placed</p>
-                <p className={`text-3xl font-bold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>{stats.totalOrders}</p>
-                <p className={`text-xs mt-2 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {stats.totalOrders === 0 ? '✚ Start shopping' : '🛒 View orders'}
-                </p>
-              </div>
-              <div className="text-5xl">🛒</div>
-            </div>
-            <button
-              onClick={() => navigate('/cart')}
-              className={`mt-4 inline-block px-4 py-2 rounded-lg text-sm font-semibold transition ${isDark ? 'bg-purple-900/50 text-purple-400 hover:bg-purple-900/70' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'}`}
-            >
-              Go to Cart →
-            </button>
-          </div>
-        </div>
-
-        {/* Coins, Irrigation & Services Row */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {/* Coins Card */}
-          <div className="glass-card interactive-card bg-gradient-to-r from-yellow-400 to-yellow-500 p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-yellow-100 text-sm font-medium">Available Coins</p>
-                <p className="text-4xl font-bold mt-2">{coins?.totalCoins || 0} 🪙</p>
-                <p className="text-yellow-100 text-xs mt-2">≈ ₹{coins?.totalCoins || 0} in value</p>
-              </div>
-              <div className="text-6xl opacity-50">💰</div>
-            </div>
-          </div>
-
-          {/* Irrigation Card */}
-          <div className="glass-card interactive-card bg-gradient-to-r from-blue-400 to-blue-500 p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Irrigation Schedules</p>
-                <p className="text-4xl font-bold mt-2">{stats.totalIrrigations}</p>
-                <p className="text-blue-100 text-xs mt-2">
-                  {stats.totalIrrigations === 0 ? '✚ Create schedule' : '💧 Active schedules'}
-                </p>
-              </div>
-              <div className="text-6xl opacity-50">💧</div>
-            </div>
-          </div>
-
-          {/* Services Card */}
-          <div className="glass-card interactive-card bg-gradient-to-r from-indigo-400 to-indigo-500 p-6 text-white">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-indigo-100 text-sm font-medium">Service Listings</p>
-                <p className="text-4xl font-bold mt-2">{stats.totalServices}</p>
-                <p className="text-indigo-100 text-xs mt-2">
-                  {stats.totalServices === 0 ? '✚ List services' : '🔧 Active services'}
-                </p>
-              </div>
-              <div className="text-6xl opacity-50">🚜</div>
-            </div>
-            <Link
-              to="/irrigation-services"
-              className="mt-3 inline-block px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-500 transition"
-            >
-              View Services →
-            </Link>
-          </div>
-        </div>
-
-        {/* Service Listings Section */}
-        <div className={`glass-card interactive-card p-6 mt-8 ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
-          <h2 className={`text-2xl font-bold mb-4 flex items-center ${isDark ? 'text-white' : 'text-slate-900'}`}>
-            <span className="mr-2">🚜</span> My Service Listings
-          </h2>
-          {/* Filter and Sort Controls */}
-          <div className="flex flex-col md:flex-row gap-4 mb-4">
-            <input
-              type="text"
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Wrench className="h-5 w-5 text-muted-foreground" />
+            My service listings
+          </CardTitle>
+          <CardDescription>Manage services you offer in your area.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col md:flex-row gap-3">
+            <Input
               value={serviceFilter}
-              onChange={e => setServiceFilter(e.target.value)}
-              placeholder="Filter by name or description..."
-              className={`px-3 py-2 border rounded-lg w-full md:w-1/2 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-slate-800 placeholder-gray-400'}`}
+              onChange={(e) => setServiceFilter(e.target.value)}
+              placeholder="Filter by name or description"
+              className="md:max-w-md"
             />
             <select
               value={serviceSort}
-              onChange={e => setServiceSort(e.target.value)}
-              className={`px-3 py-2 border rounded-lg w-full md:w-1/4 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-slate-800'}`}
+              onChange={(e) => setServiceSort(e.target.value)}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="name">Sort by Name</option>
-              <option value="price">Sort by Price</option>
-              <option value="status">Sort by Status</option>
+              <option value="name">Sort by name</option>
+              <option value="price">Sort by price</option>
+              <option value="status">Sort by status</option>
             </select>
           </div>
 
-          {/* Filtered and Sorted Listings */}
-          {serviceListings.length === 0 ? (
-            <p className={isDark ? 'text-slate-500' : 'text-slate-400'}>No service listings yet.</p>
+          {filteredServices.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No service listings yet.</p>
           ) : (
-            <ul>
-              {serviceListings
-                .filter(service =>
-                  (!serviceFilter ||
-                    (service.name && service.name.toLowerCase().includes(serviceFilter.toLowerCase())) ||
-                    (service.description && service.description.toLowerCase().includes(serviceFilter.toLowerCase()))
-                  )
-                )
-                .sort((a, b) => {
-                  if (serviceSort === 'name') {
-                    return (a.name || '').localeCompare(b.name || '');
-                  } else if (serviceSort === 'price') {
-                    return (a.price || 0) - (b.price || 0);
-                  } else if (serviceSort === 'status') {
-                    return (a.status || '').localeCompare(b.status || '');
-                  }
-                  return 0;
-                })
-                .map(service => (
-                  <li key={service.id} className={`flex items-center justify-between py-3 ${isDark ? 'border-b border-slate-700' : 'border-b border-gray-200'}`}>
-                    <div className="flex items-center gap-4">
-                      <span className="text-2xl">🔧</span>
-                      <div>
-                        <div className={`font-semibold ${isDark ? 'text-white' : 'text-slate-800'}`}>{service.name}</div>
-                        {service.description && (
-                          <div className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{service.description}</div>
-                        )}
-                        {service.price && (
-                          <div className="text-sm text-green-500 mt-1">₹{service.price}</div>
-                        )}
-                        {service.status && (
-                          <div className="text-xs text-indigo-500 mt-1">Status: {service.status}</div>
-                        )}
-                      </div>
+            <ul className="divide-y divide-border">
+              {filteredServices.map((service) => (
+                <li key={service.id} className="flex items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="font-medium text-foreground">{service.name}</p>
+                    {service.description && (
+                      <p className="text-sm text-muted-foreground mt-0.5">{service.description}</p>
+                    )}
+                    <div className="flex flex-wrap gap-2 mt-1 text-sm">
+                      {service.price && <span className="text-primary">₹{service.price}</span>}
+                      {service.status && (
+                        <span className="text-muted-foreground">Status: {service.status}</span>
+                      )}
                     </div>
-                    <div>
-                      <button
-                        className="bg-blue-500 text-white px-3 py-1 rounded mr-2"
-                        onClick={() => editService(service.id)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        className="bg-red-500 text-white px-3 py-1 rounded"
-                        onClick={() => setDeleteConfirmId(service.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                ))}
+                  </div>
+                  <div className="flex shrink-0 gap-2">
+                    <Button variant="outline" size="sm" onClick={() => editService(service.id)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                      Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => setDeleteConfirmId(service.id)}>
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Delete
+                    </Button>
+                  </div>
+                </li>
+              ))}
             </ul>
           )}
+        </CardContent>
+      </Card>
 
-          {/* Delete Confirmation Dialog */}
-          {deleteConfirmId && (
-            <div className="fixed inset-0 flex items-center justify-center z-50">
-              <div className="bg-black bg-opacity-50 absolute inset-0"></div>
-              <div className={`rounded-lg shadow-xl p-6 relative z-10 w-96 ${isDark ? 'bg-slate-800 border border-slate-700' : 'bg-white border border-gray-200'}`}>
-                <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-slate-800'}`}>Confirm Delete</h3>
-                <p className={`mb-6 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Are you sure you want to delete this service?</p>
-                <div className="flex justify-end gap-3">
-                  <button
-                    className={`px-4 py-2 rounded transition ${isDark ? 'bg-slate-600 text-slate-200 hover:bg-slate-500' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-                    onClick={() => setDeleteConfirmId(null)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-500 transition"
-                    onClick={() => deleteService(deleteConfirmId)}
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Activity feed</CardTitle>
+          <CardDescription>Track actions and interactions in your account.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">Activity type</label>
+              <select
+                value={selectedActivityType}
+                onChange={(e) => setSelectedActivityType(e.target.value)}
+                className="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                {activityTypes.map((type) => (
+                  <option key={type.value} value={type.value}>{type.label}</option>
+                ))}
+              </select>
             </div>
-          )}
-        </div>
-
-        {/* Activity Feed Section */}
-          <div className={`glass-card interactive-card overflow-hidden ${isDark ? 'border border-slate-700' : 'border border-gray-200'}`}>
-          <div className="bg-gradient-to-r from-indigo-600 to-indigo-700 px-6 py-4">
-            <h2 className="text-2xl font-bold text-white">📊 Your Activity Feed</h2>
-            <p className="text-indigo-100 text-sm mt-1">Track all your actions and interactions</p>
-          </div>
-
-          {/* Filters */}
-          <div className={`px-6 py-4 border-b ${isDark ? 'border-slate-700 bg-slate-700/50' : 'border-gray-200 bg-gray-50'}`}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Activity Type Filter */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Activity Type</label>
-                <select
-                  value={selectedActivityType}
-                  onChange={(e) => setSelectedActivityType(e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-slate-800'}`}
-                >
-                  {activityTypes.map(type => (
-                    <option key={type.value} value={type.value}>
-                      {type.icon} {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Search */}
-              <div>
-                <label className={`block text-sm font-medium mb-2 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Search Activities</label>
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search description..."
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-slate-800 placeholder-gray-400'}`}
-                />
-              </div>
-
-              {/* Results Count */}
-              <div className="flex items-end">
-                <div className={`px-4 py-2 rounded-lg font-semibold ${isDark ? 'bg-indigo-900/50 text-indigo-300' : 'bg-indigo-100 text-indigo-700'}`}>
-                  {filteredActivities.length} result{filteredActivities.length !== 1 ? 's' : ''}
-                </div>
-              </div>
+            <div>
+              <label className="text-sm font-medium text-foreground mb-1.5 block">Search</label>
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search description"
+              />
+            </div>
+            <div className="flex items-end">
+              <span className="inline-flex h-9 items-center rounded-md bg-muted px-3 text-sm font-medium text-muted-foreground">
+                {filteredActivities.length} result{filteredActivities.length !== 1 ? 's' : ''}
+              </span>
             </div>
           </div>
 
-          {/* Activity List */}
-          <div className="px-6 py-6 max-h-[28rem] overflow-y-auto custom-scrollbar">
+          <div className="max-h-[28rem] overflow-y-auto">
             <ActivityTimeline
               activities={filteredActivities}
-              emptyMessage="📭 No activities match your filters yet."
+              emptyMessage="No activities match your filters yet."
             />
           </div>
 
-          {/* Activity Stats */}
           {activities.length > 0 && (
-            <div className={`px-6 py-4 border-t ${isDark ? 'bg-slate-700/50 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                <div>
-                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    {activities.filter(a => a.activityType.includes('FARM')).length}
-                  </p>
-                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Farm Actions</p>
-                </div>
-                <div>
-                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    {activities.filter(a => a.activityType.includes('CROP')).length}
-                  </p>
-                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Crop Actions</p>
-                </div>
-                <div>
-                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    {activities.filter(a => a.activityType.includes('ORDER')).length}
-                  </p>
-                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Order Actions</p>
-                </div>
-                <div>
-                  <p className={`text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
-                    {activities.filter(a => a.activityType.includes('COIN')).length}
-                  </p>
-                  <p className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Coin Actions</p>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 border-t border-border pt-4 text-center">
+              <div>
+                <p className="text-2xl font-semibold text-foreground">
+                  {activities.filter((a) => a.activityType.includes('FARM')).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Farm actions</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-foreground">
+                  {activities.filter((a) => a.activityType.includes('CROP')).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Crop actions</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-foreground">
+                  {activities.filter((a) => a.activityType.includes('ORDER')).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Order actions</p>
+              </div>
+              <div>
+                <p className="text-2xl font-semibold text-foreground">
+                  {activities.filter((a) => a.activityType.includes('COIN')).length}
+                </p>
+                <p className="text-xs text-muted-foreground">Coin actions</p>
               </div>
             </div>
           )}
-        </div>
+        </CardContent>
+      </Card>
 
-        {/* Quick Actions */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button
-            onClick={() => navigate('/farms')}
-            className={`glass-card interactive-card p-4 hover:shadow-lg transition text-left border-l-4 border-l-green-500 ${isDark ? 'border border-slate-700 hover:bg-slate-700' : 'border border-gray-200 hover:bg-gray-50'}`}
-          >
-            <p className="text-2xl">🌾</p>
-            <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Add Farm</p>
-            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Create a new farm</p>
-          </button>
-          
-          <button
-            onClick={() => navigate('/crops')}
-            className={`glass-card interactive-card p-4 hover:shadow-lg transition text-left border-l-4 border-l-blue-500 ${isDark ? 'border border-slate-700 hover:bg-slate-700' : 'border border-gray-200 hover:bg-gray-50'}`}
-          >
-            <p className="text-2xl">🌱</p>
-            <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Plant Crop</p>
-            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Add new crop</p>
-          </button>
-
-          <button
-            onClick={() => navigate('/buying')}
-            className={`glass-card interactive-card p-4 hover:shadow-lg transition text-left border-l-4 border-l-orange-500 ${isDark ? 'border border-slate-700 hover:bg-slate-700' : 'border border-gray-200 hover:bg-gray-50'}`}
-          >
-            <p className="text-2xl">🛒</p>
-            <p className={`font-semibold mt-2 ${isDark ? 'text-white' : 'text-slate-800'}`}>Shop</p>
-            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Browse marketplace</p>
-          </button>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <button
+          type="button"
+          onClick={() => navigate('/farms')}
+          className="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+        >
+          <Sprout className="h-5 w-5 text-primary mb-2" />
+          <p className="font-medium text-foreground">Add farm</p>
+          <p className="text-sm text-muted-foreground">Create a new farm</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/crops')}
+          className="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+        >
+          <Plus className="h-5 w-5 text-primary mb-2" />
+          <p className="font-medium text-foreground">Plant crop</p>
+          <p className="text-sm text-muted-foreground">Add new crop</p>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate('/buying')}
+          className="rounded-lg border border-border bg-card p-4 text-left transition-colors hover:bg-accent"
+        >
+          <ShoppingCart className="h-5 w-5 text-primary mb-2" />
+          <p className="font-medium text-foreground">Shop</p>
+          <p className="text-sm text-muted-foreground">Browse marketplace</p>
+        </button>
       </div>
+
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteConfirmId(null)} />
+          <Card className="relative z-10 w-full max-w-sm">
+            <CardHeader>
+              <CardTitle>Confirm delete</CardTitle>
+              <CardDescription>Are you sure you want to delete this service?</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setDeleteConfirmId(null)}>Cancel</Button>
+              <Button variant="destructive" onClick={() => deleteService(deleteConfirmId)}>Delete</Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
-  )
+  );
 }
 
-export default DashboardEnhanced
+export default DashboardEnhanced;

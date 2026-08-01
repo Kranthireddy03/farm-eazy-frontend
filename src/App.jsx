@@ -70,8 +70,10 @@ import { STORAGE_KEYS } from './config/api';
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from './utils/supportPortal';
 import SessionWarningModal from './components/SessionWarningModal';
 import './i18n';
-import Layout from './components/Layout';
-import PublicLayout from './components/PublicLayout';
+import Layout from './components/layout/AppShell';
+import PublicLayout from './components/layout/ProductPublicLayout';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Toaster } from 'sonner';
 const UserPreferences = lazy(() => import('./pages/UserPreferences'));
 const CommunicationPreferences = lazy(() => import('./pages/CommunicationPreferences'));
 import { ShellProvider } from './components/shell/ShellContext';
@@ -127,6 +129,12 @@ const AdminNotifications = lazy(() => import('./pages/AdminNotifications'));
 // Import removed to decouple from main FarmEazy flow.
 const AdminBlogManagement = lazy(() => import('./pages/admin/AdminBlogManagement'));
 // user ticket pages removed; users should use /support page
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: 1, refetchOnWindowFocus: false, staleTime: 30_000 },
+  },
+});
 
 /**
  * ProtectedRoute Component
@@ -497,21 +505,24 @@ function AppContent() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <LocationProvider>
-            <LoaderProvider>
-              <CoinProvider>
-                <ToastProvider>
-                  <ShellProvider>
-                    <AppContent />
-                  </ShellProvider>
-                </ToastProvider>
-              </CoinProvider>
-            </LoaderProvider>
-          </LocationProvider>
-        </AuthProvider>
-      </ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <AuthProvider>
+            <LocationProvider>
+              <LoaderProvider>
+                <CoinProvider>
+                  <ToastProvider>
+                    <ShellProvider>
+                      <AppContent />
+                      <Toaster richColors closeButton position="top-right" theme="system" />
+                    </ShellProvider>
+                  </ToastProvider>
+                </CoinProvider>
+              </LoaderProvider>
+            </LocationProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
     </ErrorBoundary>
   );
 }

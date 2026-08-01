@@ -1,43 +1,62 @@
+/** @type {import('tailwindcss').Config} */
 module.exports = {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
-  // Enable class-based dark mode (class on html element)
+  content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
   darkMode: 'class',
   theme: {
     extend: {
       colors: {
-        primary: '#10b981',
-        secondary: '#059669',
-        accent: '#34d399',
-        // Light mode specific colors
-        light: {
-          bg: '#f8fafc',
-          'bg-secondary': '#f1f5f9',
-          'bg-card': '#ffffff',
-          'bg-hover': '#e2e8f0',
-          text: '#1e293b',
-          'text-secondary': '#475569',
-          'text-muted': '#64748b',
-          border: '#cbd5e1',
+        border: 'hsl(var(--border))',
+        input: 'hsl(var(--input))',
+        ring: 'hsl(var(--ring))',
+        background: 'hsl(var(--background))',
+        foreground: 'hsl(var(--foreground))',
+        primary: {
+          DEFAULT: 'hsl(var(--primary))',
+          foreground: 'hsl(var(--primary-foreground))',
         },
-        // Dark mode specific colors (existing slate-based theme)
-        dark: {
-          bg: '#0f172a',
-          'bg-secondary': '#1e293b',
-          'bg-card': '#334155',
-          'bg-hover': '#475569',
-          text: '#f1f5f9',
-          'text-secondary': '#cbd5e1',
-          'text-muted': '#94a3b8',
-          border: '#475569',
-        }
-      }
+        secondary: {
+          DEFAULT: 'hsl(var(--secondary))',
+          foreground: 'hsl(var(--secondary-foreground))',
+        },
+        destructive: {
+          DEFAULT: 'hsl(var(--destructive))',
+          foreground: 'hsl(var(--destructive-foreground))',
+        },
+        muted: {
+          DEFAULT: 'hsl(var(--muted))',
+          foreground: 'hsl(var(--muted-foreground))',
+        },
+        accent: {
+          DEFAULT: 'hsl(var(--accent))',
+          foreground: 'hsl(var(--accent-foreground))',
+        },
+        popover: {
+          DEFAULT: 'hsl(var(--popover))',
+          foreground: 'hsl(var(--popover-foreground))',
+        },
+        card: {
+          DEFAULT: 'hsl(var(--card))',
+          foreground: 'hsl(var(--card-foreground))',
+        },
+      },
+      borderRadius: {
+        lg: 'var(--radius)',
+        md: 'calc(var(--radius) - 2px)',
+        sm: 'calc(var(--radius) - 4px)',
+      },
+      keyframes: {
+        'fade-in': {
+          from: { opacity: '0' },
+          to: { opacity: '1' },
+        },
+      },
+      animation: {
+        'fade-in': 'fade-in 0.2s ease-out',
+      },
     },
   },
   plugins: [],
   corePlugins: {
-    textSizeAdjust: false, // Disable deprecated -webkit-text-size-adjust
+    textSizeAdjust: false,
   },
-}
+};
