@@ -4,7 +4,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Download, ShoppingCart, Store } from 'lucide-react'
+import { Download, ShoppingCart, Store, Package, MapPin, Lightbulb, ClipboardList } from 'lucide-react'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
 import AppPage from '../components/layout/AppPage'
@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext'
 import ProductModal from '../components/ProductModal'
 import { ProductCard } from '../components/marketplace/ProductCard'
 import { CartPromptDialog } from '../components/marketplace/CartPromptDialog'
+import { PageScaffold } from '../components/app/PageScaffold'
 import { KpiCard } from '../components/ui/kpi-card'
 import { Button } from '../components/ui/button'
 import { FilterBar } from '../components/ui/filter-bar'
@@ -20,8 +21,10 @@ import { PageToolbar, PageToolbarGroup } from '../components/ui/page-toolbar'
 import { EmptyState } from '../components/ui/empty-state'
 import { PageSkeleton } from '../components/ui/Skeleton'
 import { Badge } from '../components/ui/badge'
-import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { InfoPanel } from '../components/platform/InfoPanel'
+import { SummaryPanel } from '../components/platform/SummaryPanel'
 import { useWishlist } from '../hooks/useWishlist'
+import { useMarketplaceFilters } from '../hooks/useMarketplaceFilters'
 import { buildCartItem, addToCartStorage } from '../lib/marketplace'
 
 const CATEGORIES = [
@@ -45,14 +48,43 @@ function Buying() {
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState('')
-  const debouncedSearch = useDebouncedValue(searchTerm)
-  const [selectedCategory, setSelectedCategory] = useState('ALL')
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [showModal, setShowModal] = useState(false)
   const [revealedContacts, setRevealedContacts] = useState({})
   const [showCartPrompt, setShowCartPrompt] = useState(false)
   const [lastAddedProduct, setLastAddedProduct] = useState(null)
+
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedCategory,
+    setSelectedCategory,
+    filteredProducts: filteredByFilters,
+    clearFilters,
+    hasActiveFilters,
+  } = useMarketplaceFilters(products, {
+    categories: CATEGORIES,
+    excludeOwnProducts: true,
+    getUserId,
+    getUserEmail,
+  })
+
+  const filteredProducts = useMemo(
+    () => filteredByFilters.filter((p) => p.deliverable !== false),
+    [filteredByFilters],
+  )
+
+  const deliverableCount = filteredProducts.length
+  const categoryBreakdown = useMemo(() => {
+    const counts = {}
+    filteredProducts.forEach((p) => {
+      const key = p.category || 'Other'
+      counts[key] = (counts[key] || 0) + 1
+    })
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+  }, [filteredProducts])
 
   useEffect(() => {
     fetchProducts()
@@ -83,37 +115,6 @@ function Buying() {
       setLoading(false)
     }
   }
-
-  const filteredProducts = useMemo(() => {
-    let filtered = products
-    const currentUserId = getUserId()
-    const currentUserEmail = getUserEmail()
-
-    if (currentUserId || currentUserEmail) {
-      filtered = filtered.filter((product) => {
-        const isOwn =
-          (currentUserId && product.sellerId && product.sellerId.toString() === currentUserId.toString()) ||
-          (currentUserEmail && product.sellerEmail && product.sellerEmail.toLowerCase() === currentUserEmail.toLowerCase())
-        return !isOwn
-      })
-    }
-
-    if (selectedCategory !== 'ALL') {
-      filtered = filtered.filter((p) => p.category === selectedCategory)
-    }
-
-    if (debouncedSearch.trim()) {
-      const q = debouncedSearch.toLowerCase()
-      filtered = filtered.filter(
-        (p) =>
-          p.productName?.toLowerCase().includes(q) ||
-          p.description?.toLowerCase().includes(q) ||
-          p.sellerFullName?.toLowerCase().includes(q),
-      )
-    }
-
-    return filtered.filter((p) => p.deliverable !== false)
-  }, [products, debouncedSearch, selectedCategory, getUserId, getUserEmail])
 
   const handleAddToCart = (cartItem) => {
     addToCartStorage(cartItem)
@@ -217,91 +218,149 @@ function Buying() {
       }
       toolbar={toolbar}
     >
-      <div className="space-y-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <KpiCard title="Live products" value={products.length} hint="All listings" />
-          <KpiCard title="In your zone" value={filteredProducts.length} hint="Deliverable now" trend={selectedCategory !== 'ALL' ? selectedCategory : null} />
-          <KpiCard title="Category" value={CATEGORIES.find((c) => c.value === selectedCategory)?.label || 'All'} hint="Active filter" />
-          <KpiCard title="Favorites" value={wishlistIds.length} hint="Saved locally" />
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard title="Live products" value={products.length} hint="All listings" icon={Package} />
+        <KpiCard title="In your zone" value={deliverableCount} hint="Deliverable now" icon={MapPin} />
+        <KpiCard
+          title="Category"
+          value={CATEGORIES.find((c) => c.value === selectedCategory)?.label || 'All'}
+          hint="Active filter"
+        />
+        <KpiCard title="Favorites" value={wishlistIds.length} hint="Saved locally" />
+      </div>
 
-        <div className="flex flex-wrap gap-2">
-          {QUICK_CHIPS.map((chip) => (
-            <Button
-              key={chip}
-              type="button"
-              size="sm"
-              variant={searchTerm === chip ? 'default' : 'outline'}
-              onClick={() => setSearchTerm(chip)}
+      <PageScaffold
+        aside={
+          <>
+            <InfoPanel
+              icon={MapPin}
+              title="Your delivery zone"
+              description={`${deliverableCount} product(s) can reach your current location.`}
             >
-              {chip}
-            </Button>
-          ))}
-        </div>
-
-        {loading ? (
-          <PageSkeleton variant="cards" />
-        ) : filteredProducts.length === 0 ? (
-          <EmptyState
-            title={products.length === 0 ? 'No products yet' : 'Nothing deliverable here'}
-            description={
-              products.length === 0
-                ? 'Be the first seller in your region or check back soon.'
-                : 'Try another category or update your delivery location.'
-            }
-            action={
-              products.length === 0 ? (
-                <Button onClick={() => navigate('/selling')}>List a product</Button>
-              ) : (
-                <Button variant="outline" onClick={() => { setSearchTerm(''); setSelectedCategory('ALL') }}>
-                  Clear filters
+              {categoryBreakdown.length > 0 && (
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  {categoryBreakdown.map(([cat, count]) => (
+                    <li key={cat} className="flex justify-between gap-2">
+                      <span className="capitalize">{cat}</span>
+                      <span className="font-medium text-foreground">{count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </InfoPanel>
+            <SummaryPanel title="Quick actions" description="Continue your purchase journey.">
+              <div className="flex flex-col gap-2">
+                <Button onClick={() => navigate('/cart')} className="w-full gap-2">
+                  <ShoppingCart className="h-4 w-4" />
+                  View cart
                 </Button>
-              )
-            }
-          />
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onView={(p) => handleViewDetails(p)}
-                onQuickView={(p) => {
-                  setSelectedProduct(p)
-                  setShowModal(true)
-                }}
-                onAddToCart={handleQuickAdd}
-                onRevealPhone={(p) => {
-                  if (!p.sellerPhone) {
-                    showToast('Seller phone not available', 'warning')
-                    return
-                  }
-                  setRevealedContacts((prev) => ({
-                    ...prev,
-                    [p.id]: { ...prev[p.id], phone: true },
-                  }))
-                }}
-                onRevealEmail={(p) => {
-                  if (!p.sellerEmail) {
-                    showToast('Seller email not available', 'warning')
-                    return
-                  }
-                  setRevealedContacts((prev) => ({
-                    ...prev,
-                    [p.id]: { ...prev[p.id], email: true },
-                  }))
-                }}
-                onShare={handleShare}
-                isWishlisted={isWishlisted(product.id)}
-                onToggleWishlist={handleToggleWishlist}
-                revealedPhone={revealedContacts[product.id]?.phone}
-                revealedEmail={revealedContacts[product.id]?.email}
-              />
+                <Button variant="outline" onClick={() => navigate('/orders')} className="w-full gap-2">
+                  <ClipboardList className="h-4 w-4" />
+                  Your orders
+                </Button>
+                <Button variant="outline" onClick={() => navigate('/selling')} className="w-full gap-2">
+                  <Store className="h-4 w-4" />
+                  Sell products
+                </Button>
+              </div>
+            </SummaryPanel>
+            <InfoPanel
+              icon={Lightbulb}
+              title="Buying tips"
+              description="Get more value from the marketplace."
+            >
+              <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
+                <li>Update your location in the header for accurate delivery.</li>
+                <li>Compare seller ratings and delivery windows before ordering.</li>
+                <li>Use favorites to track products you may buy later.</li>
+              </ul>
+            </InfoPanel>
+          </>
+        }
+      >
+        <div className="space-y-6">
+          <div className="flex flex-wrap gap-2">
+            {QUICK_CHIPS.map((chip) => (
+              <Button
+                key={chip}
+                type="button"
+                size="sm"
+                variant={searchTerm === chip ? 'default' : 'outline'}
+                onClick={() => setSearchTerm(chip)}
+              >
+                {chip}
+              </Button>
             ))}
+            {hasActiveFilters && (
+              <Button type="button" size="sm" variant="ghost" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            )}
           </div>
-        )}
 
-        <ProductModal
+          {loading ? (
+            <PageSkeleton variant="cards" />
+          ) : filteredProducts.length === 0 ? (
+            <EmptyState
+              title={products.length === 0 ? 'No products yet' : 'Nothing deliverable here'}
+              description={
+                products.length === 0
+                  ? 'Be the first seller in your region or check back soon.'
+                  : 'Try another category or update your delivery location.'
+              }
+              action={
+                products.length === 0 ? (
+                  <Button onClick={() => navigate('/selling')}>List a product</Button>
+                ) : (
+                  <Button variant="outline" onClick={clearFilters}>Clear filters</Button>
+                )
+              }
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+              {filteredProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onView={(p) => handleViewDetails(p)}
+                  onQuickView={(p) => {
+                    setSelectedProduct(p)
+                    setShowModal(true)
+                  }}
+                  onAddToCart={handleQuickAdd}
+                  onRevealPhone={(p) => {
+                    if (!p.sellerPhone) {
+                      showToast('Seller phone not available', 'warning')
+                      return
+                    }
+                    setRevealedContacts((prev) => ({
+                      ...prev,
+                      [p.id]: { ...prev[p.id], phone: true },
+                    }))
+                  }}
+                  onRevealEmail={(p) => {
+                    if (!p.sellerEmail) {
+                      showToast('Seller email not available', 'warning')
+                      return
+                    }
+                    setRevealedContacts((prev) => ({
+                      ...prev,
+                      [p.id]: { ...prev[p.id], email: true },
+                    }))
+                  }}
+                  onShare={handleShare}
+                  isWishlisted={isWishlisted(product.id)}
+                  onToggleWishlist={handleToggleWishlist}
+                  revealedPhone={revealedContacts[product.id]?.phone}
+                  revealedEmail={revealedContacts[product.id]?.email}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </PageScaffold>
+
+      <ProductModal
           product={selectedProduct}
           isOpen={showModal}
           onClose={() => {
@@ -321,8 +380,7 @@ function Buying() {
             navigate('/cart')
           }}
           onContinue={() => setShowCartPrompt(false)}
-        />
-      </div>
+      />
     </AppPage>
   )
 }

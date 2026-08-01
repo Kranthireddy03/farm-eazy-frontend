@@ -36,7 +36,7 @@ export function useCheckout(cartItems, availableCoins = 0) {
   );
 
   const coinDiscount = useCoins ? coinsToUse * COIN_VALUE : 0;
-  const finalAmount = Math.max(0, totals.total - coinDiscount);
+  const finalAmount = Math.max(MINIMUM_PAYMENT, totals.total - coinDiscount);
 
   const handleUseCoins = useCallback(
     (checked) => {

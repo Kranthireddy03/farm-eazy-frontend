@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
+import { useCheckout } from '../hooks/useCheckout'
 import apiClient from '../services/apiClient'
-import { useTheme } from '../context/ThemeContext';
 import LocationPicker from '../components/LocationPicker'
 import { sendNotification } from '../components/NotificationCenter'
 import AppPage from '../components/layout/AppPage'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
+import { Badge } from '../components/ui/badge'
+import { InfoPanel } from '../components/platform/InfoPanel'
 import {
-  calculateCartTotals,
   getMaxUsableCoins,
-  COIN_VALUE,
   MINIMUM_PAYMENT,
-  TAX_RATE,
 } from '../lib/marketplace'
+import { CheckoutStepIndicator } from '../components/marketplace/CheckoutStepIndicator'
 import { CheckoutProcessingOverlay } from '../components/marketplace/CheckoutProcessingOverlay'
 import { CheckoutRetryPanel } from '../components/marketplace/CheckoutRetryPanel'
 import { OrderSummaryPanel } from '../components/marketplace/OrderSummaryPanel'
@@ -32,28 +32,16 @@ function loadRazorpayScript() {
 }
 
 function Checkout() {
-    const { isDark } = useTheme();
   // Add missing handleRetryPayment function
   const handleRetryPayment = () => {
-    // Re-invoke Razorpay payment flow for pending order
-    // You may want to call the backend to get the pending order details and re-initiate payment
-    // For now, just reload the page or re-run handleCheckout
     handleCheckout();
   };
     // Loads cart, coins, and addresses for checkout page
     const loadCheckoutData = async () => {
       try {
-        // Load cart from localStorage
         const cart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]');
         setCartItems(cart);
-        const savedCoins = JSON.parse(localStorage.getItem('farmeazy_checkout_coins') || 'null');
-        if (savedCoins?.useCoins) {
-          setUseCoins(true);
-          setCoinsToUse(savedCoins.coinsToUse || 0);
-        }
-        // Fetch coins
         await fetchCoins();
-        // Fetch addresses
         await fetchAddresses();
       } catch (error) {
         showToast('Failed to load checkout data', 'error');
@@ -70,30 +58,21 @@ function Checkout() {
 
   const [cartItems, setCartItems] = useState([])
   const [coins, setCoins] = useState(0)
-  const [useCoins, setUseCoins] = useState(false)
-  const [coinsToUse, setCoinsToUse] = useState(0)
 
-  const handleCoinToggle = () => {
-    setUseCoins(!useCoins);
-    if (!useCoins) {
-      const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
-      setCoinsToUse(maxCoins);
-    } else {
-      setCoinsToUse(0);
-    }
-  };
+  const {
+    totals: { subtotal, tax, total },
+    useCoins,
+    coinsToUse,
+    maxUsableCoins,
+    finalAmount,
+    handleUseCoins,
+    setCoinsToUse,
+    clearPersistedCoins,
+  } = useCheckout(cartItems, coins)
 
-  const handleCoinsToUseChange = (e) => {
-    const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
-    const value = Math.max(0, Math.min(Number(e.target.value), maxCoins));
-    setCoinsToUse(value);
-  };
+  const coinsApplied = useCoins ? Math.min(coinsToUse, maxUsableCoins) : 0
+  const remainingCoinsAfterUse = coins - coinsApplied
 
-  const handleCoinSliderChange = (e) => {
-    const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
-    const value = Math.max(0, Math.min(Number(e.target.value), maxCoins));
-    setCoinsToUse(value);
-  };
   const [selectedPayment, setSelectedPayment] = useState('CASH_ON_DELIVERY')
   const [razorpayLoading, setRazorpayLoading] = useState(false)
   const [checkingOut, setCheckingOut] = useState(false)
@@ -126,6 +105,7 @@ function Checkout() {
   const PHONE_PAY_ID = '6301630368'
   const paymentSimulationEnabled = String(import.meta.env.VITE_PAYMENT_SIMULATION_ENABLED || 'false').toLowerCase() === 'true'
   const hasOutOfAreaItems = cartItems.some((item) => item.deliverable === false)
+  const checkoutStep = selectedAddress ? (selectedPayment ? 3 : 2) : 1
 
   useEffect(() => {
     loadCheckoutData()
@@ -205,15 +185,6 @@ function Checkout() {
       console.error('Error fetching addresses:', error)
     }
   }
-
-  const calculateTotals = () => calculateCartTotals(cartItems, TAX_RATE)
-
-  const { subtotal, tax, total } = calculateTotals();
-  // Updated: Calculate max usable coins based on minimum payment requirement
-  const maxCoinsUsable = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
-  const coinsApplied = useCoins ? Math.min(coinsToUse, maxCoinsUsable) : 0;
-  const finalAmount = Math.max(MINIMUM_PAYMENT, total - (coinsApplied * COIN_VALUE));
-  const remainingCoinsAfterUse = coins - coinsApplied;
 
   const handleAddressChange = (e) => {
     const { name, value } = e.target
@@ -344,7 +315,7 @@ function Checkout() {
 
               const placedOrder = await apiClient.post('/orders', orderData);
               localStorage.removeItem('farmeazy_cart');
-              localStorage.removeItem('farmeazy_checkout_coins');
+              clearPersistedCoins();
               window.dispatchEvent(new CustomEvent('cart-updated'));
               sendNotification(`Order #${placedOrder.data.id} placed successfully!`, 'success', '✅');
               setProcessingState(prev => ({
@@ -428,7 +399,7 @@ function Checkout() {
                   
                   // Clear cart immediately and notify Layout
                   localStorage.removeItem('farmeazy_cart');
-                  localStorage.removeItem('farmeazy_checkout_coins');
+                  clearPersistedCoins();
                   window.dispatchEvent(new CustomEvent('cart-updated'));
                   sendNotification(`Order #${placedOrder.data.id} placed successfully!`, 'success', '✅');
                   
@@ -515,7 +486,7 @@ function Checkout() {
         
         // Clear cart immediately and notify Layout
         localStorage.removeItem('farmeazy_cart')
-        localStorage.removeItem('farmeazy_checkout_coins')
+        clearPersistedCoins()
         window.dispatchEvent(new CustomEvent('cart-updated'))
         sendNotification(`Order #${response.data.id} placed! Cash on Delivery`, 'success', '📦');
         
@@ -577,40 +548,57 @@ function Checkout() {
   }
 
   return (
-    <AppPage title="Checkout" description="Complete your order securely.">
+    <AppPage
+      title="Checkout"
+      description="Review items, delivery, and payment before placing your order."
+      meta={
+        <>
+          <Badge variant="muted">{cartItems.length} items</Badge>
+          <Badge variant="outline">₹{finalAmount.toFixed(2)} to pay</Badge>
+        </>
+      }
+    >
+        <CheckoutStepIndicator
+          steps={['Review', 'Delivery', 'Payment']}
+          currentStep={checkoutStep}
+          totalSteps={3}
+        />
 
         {hasOutOfAreaItems && (
-          <div className={`mb-6 rounded-2xl border p-4 ${isDark ? 'border-red-800 bg-red-950/20 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
-            One or more items in this cart cannot be delivered to your selected location. Remove them before placing the order.
-          </div>
+          <InfoPanel
+            variant="destructive"
+            title="Delivery unavailable"
+            description="One or more items cannot be delivered to your selected location. Remove them before placing the order."
+            className="mt-6"
+          />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
           {/* Main Checkout */}
           <div className="lg:col-span-2 space-y-6">
             {/* Order Items Review */}
-            <div className={`interactive-card rounded-2xl shadow-lg p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
-              <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>Order Summary</h2>
+            <div className={`interactive-card rounded-2xl shadow-lg p-6 border border border-border bg-card`}> 
+              <h2 className={`text-2xl font-bold mb-4 text-foreground`}>Order Summary</h2>
               <div className="space-y-4">
                 {cartItems.map(item => {
                   const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
                   const hasDiscount = item.discountPercentage && item.discountPercentage > 0
 
                   return (
-                    <div key={item.id} className={`flex justify-between items-start pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
+                    <div key={item.id} className={`flex justify-between items-start pb-4 border-b border-border`}>
                       <div className="flex-1">
-                        <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.productName}</p>
+                        <p className={`font-semibold text-foreground`}>{item.productName}</p>
                         <div className="flex items-center gap-2 mt-1">
                           {hasDiscount ? (
                             <>
-                              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Qty: {item.quantity} × ₹{itemPrice.toFixed(2)}</p>
-                              <span className={`line-through text-xs ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{item.price.toFixed(2)}</span>
+                              <p className={`text-sm text-muted-foreground`}>Qty: {item.quantity} × ₹{itemPrice.toFixed(2)}</p>
+                              <span className={`line-through text-xs text-muted-foreground`}>₹{item.price.toFixed(2)}</span>
                               <span className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">
                                 {item.discountPercentage}% OFF
                               </span>
                             </>
                           ) : (
-                            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Qty: {item.quantity} × ₹{item.price.toFixed(2)}</p>
+                            <p className={`text-sm text-muted-foreground`}>Qty: {item.quantity} × ₹{item.price.toFixed(2)}</p>
                           )}
                         </div>
                         {hasDiscount && (
@@ -619,11 +607,11 @@ function Checkout() {
                           </p>
                         )}
                           {/* Vendor Transparency UI - Razorpay Compliance */}
-                          <div className={`mt-2 p-4 rounded-xl border ${isDark ? 'bg-orange-900/30 border-orange-700' : 'bg-orange-50 border-orange-300'}`}>
-                            <div className={`font-semibold mb-2 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
+                          <div className={`mt-2 p-4 rounded-xl border bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800`}>
+                            <div className={`font-semibold mb-2 flex items-center gap-2 text-foreground`}>
                               <span>🏷️</span> Vendor Information
                             </div>
-                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 text-sm ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
+                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-foreground`}>
                               <div><span className="font-semibold">Sold by:</span> {item.vendorName || 'Not specified'}{item.vendorType ? ` (${item.vendorType})` : ''}</div>
                               <div><span className="font-semibold">Vendor ID:</span> {item.vendorId || 'Not specified'}</div>
                               <div><span className="font-semibold">Location:</span> {item.vendorLocation || 'Not specified'}</div>
@@ -631,7 +619,7 @@ function Checkout() {
                             </div>
                           </div>
                       </div>
-                      <p className={`font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>₹{(itemPrice * item.quantity).toFixed(2)}</p>
+                      <p className={`font-bold text-foreground`}>₹{(itemPrice * item.quantity).toFixed(2)}</p>
                     </div>
                   )
                 })}
@@ -639,8 +627,8 @@ function Checkout() {
             </div>
 
             {/* Payment Methods */}
-            <div className={`interactive-card rounded-2xl shadow-lg p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
-              <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>💳 Payment Method</h2>
+            <div className={`interactive-card rounded-2xl shadow-lg p-6 border border border-border bg-card`}> 
+              <h2 className={`text-2xl font-bold mb-4 text-foreground`}>💳 Payment Method</h2>
               <div className="space-y-3">
                 {/* Cash on Delivery */}
                 <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition"
@@ -655,8 +643,8 @@ function Checkout() {
                     className="w-4 h-4 cursor-pointer"
                   />
                   <div className="ml-4">
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>💵 Cash on Delivery</p>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Pay when your order arrives</p>
+                    <p className={`font-semibold text-foreground`}>💵 Cash on Delivery</p>
+                    <p className={`text-sm text-muted-foreground`}>Pay when your order arrives</p>
                     <p className="text-xs text-green-400 mt-1">✓ Free | Delivery in 3-5 days</p>
                   </div>
                 </label>
@@ -673,21 +661,21 @@ function Checkout() {
                     className="w-4 h-4 cursor-pointer"
                   />
                   <div className="ml-4 flex-1">
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>🪙 Razorpay (UPI/Card/Netbanking)</p>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Pay securely online with Razorpay</p>
+                    <p className={`font-semibold text-foreground`}>🪙 Razorpay (UPI/Card/Netbanking)</p>
+                    <p className={`text-sm text-muted-foreground`}>Pay securely online with Razorpay</p>
                   </div>
                 </label>
               </div>
             </div>
 
             {/* Address selection & form - Enhanced with Map */}
-            <div className={`interactive-card rounded-2xl shadow-lg p-6 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
-              <h2 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>📍 Delivery Address</h2>
+            <div className={`interactive-card rounded-2xl shadow-lg p-6 border border border-border bg-card`}> 
+              <h2 className={`text-2xl font-bold mb-4 text-foreground`}>📍 Delivery Address</h2>
 
               {/* Existing addresses dropdown */}
               {addresses.length > 0 && !showAddressForm && (
                 <div className="mb-4 space-y-3">
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Select from saved addresses:</p>
+                  <p className={`text-sm text-muted-foreground`}>Select from saved addresses:</p>
                   <div className="space-y-2">
                     {addresses.map(addr => (
                       <label 
@@ -711,13 +699,13 @@ function Checkout() {
                             <span className="text-lg">
                               {addr.addressType === 'Home' ? '🏠' : addr.addressType === 'Work' ? '🏢' : '📍'}
                             </span>
-                            <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{addr.fullName}</span>
-                            <span className={`text-xs px-2 py-0.5 rounded ${isDark ? 'bg-slate-600 text-slate-300' : 'bg-gray-100 text-gray-700'}`}>{addr.addressType}</span>
+                            <span className={`font-semibold text-foreground`}>{addr.fullName}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground`}>{addr.addressType}</span>
                           </div>
-                          <p className={`text-sm mt-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{addr.addressLine1}</p>
-                          {addr.addressLine2 && <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{addr.addressLine2}</p>}
-                          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{addr.city}, {addr.state} - {addr.postalCode}</p>
-                          <p className={`text-sm mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>📱 {addr.phoneNumber}</p>
+                          <p className={`text-sm mt-1 text-foreground`}>{addr.addressLine1}</p>
+                          {addr.addressLine2 && <p className={`text-sm text-muted-foreground`}>{addr.addressLine2}</p>}
+                          <p className={`text-sm text-muted-foreground`}>{addr.city}, {addr.state} - {addr.postalCode}</p>
+                          <p className={`text-sm mt-1 text-muted-foreground`}>📱 {addr.phoneNumber}</p>
                         </div>
                       </label>
                     ))}
@@ -775,20 +763,12 @@ function Checkout() {
             coins={coins}
             useCoins={useCoins}
             coinsToUse={coinsToUse}
-            maxCoinsUsable={maxCoinsUsable}
+            maxCoinsUsable={maxUsableCoins}
             coinsApplied={coinsApplied}
             remainingCoins={remainingCoinsAfterUse}
-            onUseCoinsChange={(checked) => {
-              setUseCoins(checked);
-              if (checked) {
-                setCoinsToUse(getMaxUsableCoins(total, coins, MINIMUM_PAYMENT));
-              } else {
-                setCoinsToUse(0);
-              }
-            }}
+            onUseCoinsChange={handleUseCoins}
             onCoinsToUseChange={(value) => {
-              const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
-              setCoinsToUse(Math.max(0, Math.min(value, maxCoins)));
+              setCoinsToUse(Math.max(0, Math.min(value, maxUsableCoins)))
             }}
             variant="checkout"
             footerNote={

@@ -1,15 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Package, Plus, Pencil, Trash2, Boxes, AlertTriangle } from 'lucide-react';
+import { Package, Plus, Pencil, Trash2, Boxes, AlertTriangle, Lightbulb, Store, LayoutDashboard } from 'lucide-react';
 import ProductService from '../services/ProductService';
 import apiClient from '../services/apiClient';
 import { useGlobalToast } from '../context/ToastContext';
 import AppPage from '../components/layout/AppPage';
 import { SellingProductForm } from '../components/marketplace/SellingProductForm';
 import { KpiSection } from '../components/app/KpiSection';
+import { PageScaffold } from '../components/app/PageScaffold';
 import { StatsCard } from '../components/platform/StatsCard';
 import { SectionHeader } from '../components/platform/SectionHeader';
 import { InfoPanel } from '../components/platform/InfoPanel';
+import { SummaryPanel } from '../components/platform/SummaryPanel';
 import { Button } from '../components/ui/button';
 import { Badge } from '../components/ui/badge';
 import { DataTable } from '../components/ui/data-table';
@@ -255,6 +257,17 @@ function Selling() {
     <AppPage
       title="Selling"
       description="Publish, optimize, and manage your product inventory."
+      meta={
+        <>
+          <Badge variant="muted">{sellingStats.totalListings} listings</Badge>
+          <Badge variant="outline">{sellingStats.activeListings} active</Badge>
+          {sellingStats.outOfStockListings > 0 && (
+            <Badge variant="outline" className="text-amber-700 dark:text-amber-400">
+              {sellingStats.outOfStockListings} out of stock
+            </Badge>
+          )}
+        </>
+      }
       actions={
         <Button onClick={handleOpenNew} className="gap-2" disabled={loading}>
           <Plus className="h-4 w-4" />
@@ -290,27 +303,69 @@ function Selling() {
 
       <SectionHeader title="My products" description="Edit inventory, pricing, and delivery windows." />
 
-      <FilterBar
-        searchValue={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="Search listings…"
-        resultCount={filteredProducts.length}
-      />
-
-      {myProducts.length === 0 ? (
-        <EmptyState
-          title="No products yet"
-          description="Start listing your products to reach buyers across the marketplace."
-          action={
-            <Button onClick={handleOpenNew} className="gap-2">
-              <Plus className="h-4 w-4" />
-              List your first product
-            </Button>
-          }
+      <PageScaffold
+        aside={
+          <>
+            <SummaryPanel title="Listing status" description="Snapshot of your seller inventory.">
+              <dl className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <dt className="text-muted-foreground">Active</dt>
+                  <dd className="text-lg font-semibold">{sellingStats.activeListings}</dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Units listed</dt>
+                  <dd className="text-lg font-semibold">{sellingStats.listedUnits}</dd>
+                </div>
+              </dl>
+            </SummaryPanel>
+            <SummaryPanel title="Quick actions" description="Common seller workflows.">
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={() => navigate('/vendor-dashboard')}>
+                  <LayoutDashboard className="h-4 w-4" />
+                  Vendor dashboard
+                </Button>
+                <Button variant="outline" className="w-full gap-2" onClick={() => navigate('/buying')}>
+                  <Store className="h-4 w-4" />
+                  Browse marketplace
+                </Button>
+              </div>
+            </SummaryPanel>
+            <InfoPanel
+              icon={Lightbulb}
+              title="Listing tips"
+              description="Improve visibility and conversion."
+            >
+              <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
+                <li>Use clear photos and accurate delivery windows.</li>
+                <li>Keep stock updated to avoid cancelled orders.</li>
+                <li>Set competitive pricing with honest discounts.</li>
+              </ul>
+            </InfoPanel>
+          </>
+        }
+      >
+        <FilterBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search listings…"
+          onClear={() => setSearch('')}
         />
-      ) : (
-        <DataTable columns={productColumns} data={filteredProducts} />
-      )}
+
+        {myProducts.length === 0 ? (
+          <EmptyState
+            title="No products yet"
+            description="Start listing your products to reach buyers across the marketplace."
+            action={
+              <Button onClick={handleOpenNew} className="gap-2">
+                <Plus className="h-4 w-4" />
+                List your first product
+              </Button>
+            }
+          />
+        ) : (
+          <DataTable columns={productColumns} data={filteredProducts} />
+        )}
+      </PageScaffold>
     </AppPage>
   );
 }
