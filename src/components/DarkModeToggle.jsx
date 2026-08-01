@@ -1,60 +1,61 @@
-/**
- * Theme Toggle Component
- * 
- * A floating button that toggles between dark and light modes.
- * Uses ThemeContext for state management and persists preference.
- * 
- * Props:
- * - floating: boolean - If true, renders as fixed floating button
- * - className: string - Additional CSS classes
- */
-
 import { useTheme } from '../context/ThemeContext';
+import { Sun, Moon, Monitor } from 'lucide-react';
+import { cn } from '../lib/utils';
+
+const MODES = [
+  { id: 'light', icon: Sun, label: 'Light' },
+  { id: 'dark', icon: Moon, label: 'Dark' },
+  { id: 'system', icon: Monitor, label: 'System' },
+];
 
 function DarkModeToggle({ floating = false, className = '' }) {
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { themeMode, setThemeMode, isDarkMode } = useTheme();
 
-  // Floating button styles (fixed position, always visible)
   if (floating) {
     return (
       <button
-        onClick={toggleTheme}
-        className={`fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg 
-          transition-all duration-300 transform hover:scale-110 
-          ${isDarkMode 
-            ? 'bg-slate-700 hover:bg-slate-600 text-yellow-400 border border-slate-500 shadow-slate-900/50' 
-            : 'bg-white hover:bg-gray-100 text-slate-700 border border-gray-300 shadow-gray-300/50'
-          }
-          focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2
-          ${className}`}
-        aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-        title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+        type="button"
+        onClick={() => setThemeMode(isDarkMode ? 'light' : 'dark')}
+        className={cn(
+          'fixed bottom-6 right-6 z-50 p-3 rounded-full shadow-lg border border-border bg-card',
+          'transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          className,
+        )}
+        aria-label="Toggle theme"
       >
-        <span className="text-2xl transition-transform duration-300">
-          {isDarkMode ? '☀️' : '🌙'}
-        </span>
+        {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
       </button>
     );
   }
 
-  // Inline button styles (for header/navbar)
   return (
-    <button
-      onClick={toggleTheme}
-      className={`p-2 rounded-full shadow transition-all duration-300 
-        ${isDarkMode 
-          ? 'bg-slate-700 hover:bg-slate-600 text-yellow-400 border border-slate-600' 
-          : 'bg-gray-100 hover:bg-gray-200 text-slate-700 border border-gray-300'
-        }
-        focus:outline-none focus:ring-2 focus:ring-primary
-        ${className}`}
-      aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-      title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+    <div
+      className={cn(
+        'flex items-center rounded-md border border-border bg-muted/50 p-0.5',
+        className,
+      )}
+      role="group"
+      aria-label="Theme"
     >
-      <span className="text-xl">
-        {isDarkMode ? '☀️' : '🌙'}
-      </span>
-    </button>
+      {MODES.map(({ id, icon: Icon, label }) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => setThemeMode(id)}
+          className={cn(
+            'flex h-8 w-8 items-center justify-center rounded-sm transition-colors',
+            themeMode === id
+              ? 'bg-background text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground',
+          )}
+          aria-label={label}
+          aria-pressed={themeMode === id}
+          title={label}
+        >
+          <Icon className="h-4 w-4" />
+        </button>
+      ))}
+    </div>
   );
 }
 

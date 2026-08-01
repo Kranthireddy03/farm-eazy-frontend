@@ -12,6 +12,8 @@ export default function AppPage({
   title,
   description,
   actions,
+  toolbar,
+  meta,
   breadcrumbs,
   children,
   className,
@@ -24,7 +26,13 @@ export default function AppPage({
     <div className={cn('space-y-6', className)}>
       <Breadcrumbs items={crumbs} />
       {(title || description) && (
-        <PageHeader title={title} description={description} actions={actions} />
+        <PageHeader
+          title={title}
+          description={description}
+          actions={actions}
+          toolbar={toolbar}
+          meta={meta}
+        />
       )}
       {children}
     </div>

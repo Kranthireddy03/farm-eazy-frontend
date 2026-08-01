@@ -5,6 +5,8 @@
  * Supports both dark and light themes
  */
 
+@import './design-system/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

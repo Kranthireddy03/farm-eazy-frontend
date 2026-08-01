@@ -5,27 +5,37 @@ import ProductService from '../services/ProductService'
 import { useToast } from '../hooks/useToast'
 import AppPage from '../components/layout/AppPage'
 import { sendNotification } from '../components/NotificationCenter'
-import { useTheme } from '../context/ThemeContext'
+import { Button } from '../components/ui/button'
+import { Badge } from '../components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
+import { ErrorState } from '../components/ui/error-state'
+import { PageSkeleton } from '../components/ui/Skeleton'
+import { CartPromptDialog } from '../components/marketplace/CartPromptDialog'
+import { useWishlist } from '../hooks/useWishlist'
+import { buildCartItem, addToCartStorage } from '../lib/marketplace'
+import {
+  ArrowLeft, Heart, MapPin, Mail, Phone, Package, Truck, Share2, ShoppingCart,
+} from 'lucide-react'
 
 function ProductDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { isDark } = useTheme()
-  
+  const { isWishlisted, toggleWishlist } = useWishlist()
+
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [showCartPrompt, setShowCartPrompt] = useState(false)
   const [revealedContact, setRevealedContact] = useState({ phone: false, email: false })
   const [addingToCart, setAddingToCart] = useState(false)
-  const isNotDeliverable = product?.deliverable === false
 
+  const isNotDeliverable = product?.deliverable === false
   const sellerPhone = product?.sellerPhone || product?.contactPhone || ''
   const sellerEmail = product?.sellerEmail || product?.contactEmail || ''
+
   const productMediaUrls = Array.from(new Set([
     ...(Array.isArray(product?.mediaUrls) ? product.mediaUrls : []),
     ...(product?.imageUrls || '').split(',').map((url) => url.trim()).filter(Boolean),
-    ...(product?.videoUrls || '').split(',').map((url) => url.trim()).filter(Boolean),
   ]))
   const productVideoUrls = (product?.videoUrls || '')
     .split(',')
@@ -46,388 +56,268 @@ function ProductDetail() {
       }
     }
     fetchProduct()
-  }, [id])
+  }, [id, showToast])
 
-  const getCategoryIcon = (category) => {
-    const icons = {
-      'Vegetables': '🥬',
-      'Fruits': '🍎',
-      'Grains': '🌾',
-      'Dairy': '🥛',
-      'Seeds': '🌱',
-      'Fertilizers': '🧪',
-      'Equipment': '🔧',
-      'Tools': '⚒️',
-      'Organic': '🌿'
-    }
-    return icons[category] || '📦'
-  }
+  const displayPrice = product?.discountPercentage > 0
+    ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2)
+    : Number(product?.price || 0).toFixed(2)
 
   const handleAddToCart = () => {
     if (!product) return
     if (isNotDeliverable) {
-      showToast(product.deliveryMessage || 'This product is not deliverable to your current location', 'warning')
+      showToast(product.deliveryMessage || 'Not deliverable to your location', 'warning')
       return
     }
     setAddingToCart(true)
-    
     try {
-      // Get existing cart from localStorage
-      const existingCart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]')
-      
-      // Check if product already in cart
-      const existingItemIndex = existingCart.findIndex(item => item.id === product.id)
-      
-      if (existingItemIndex !== -1) {
-        // Update quantity
-        existingCart[existingItemIndex].quantity += 1
-        showToast(`${product.productName} quantity updated in cart`, 'success')
-      } else {
-        // Add new item
-        const cartItem = {
-          id: product.id,
-          productName: product.productName,
-          price: product.price,
-          discountedPrice: product.discountPercentage > 0 
-            ? product.price * (1 - product.discountPercentage / 100) 
-            : null,
-          unit: product.unit,
-          quantity: 1,
-          imageUrl: product.imageUrls ? product.imageUrls.split(',')[0] : null,
-          category: product.category,
-          sellerName: product.sellerFullName,
-          maxQuantity: product.quantity,
-          deliverable: product.deliverable !== false,
-          deliveryMessage: product.deliveryMessage || ''
-        }
-        existingCart.push(cartItem)
-        showToast(`${product.productName} added to cart`, 'success')
-      }
-      
-      localStorage.setItem('farmeazy_cart', JSON.stringify(existingCart))
-      
-      // Dispatch event to update cart count in header
-      window.dispatchEvent(new CustomEvent('cart-updated'))
-      
-      // Send notification
-      sendNotification(`${product.productName} added to cart`, 'success', '🛒')
-      
-      // Show cart prompt modal
+      const cartItem = buildCartItem(product, 1)
+      addToCartStorage(cartItem)
+      sendNotification(`${product.productName} added to cart`, 'success')
+      showToast(`${product.productName} added to cart`, 'success')
       setShowCartPrompt(true)
     } catch (error) {
-      console.error('Failed to add to cart:', error)
       showToast('Failed to add product to cart', 'error')
     } finally {
       setAddingToCart(false)
     }
   }
 
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: product?.productName, url: window.location.href })
+      } else {
+        await navigator.clipboard.writeText(window.location.href)
+        showToast('Link copied', 'success')
+      }
+    } catch {
+      /* cancelled */
+    }
+  }
+
   if (loading) {
     return (
-      <div className={`premium-shell flex items-center justify-center min-h-screen ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-16 w-16 border-b-2 border-orange-400"></div>
-          <p className={`mt-4 text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Loading product details...</p>
-        </div>
-      </div>
-    );
+      <AppPage title="Product" description="Loading product details…">
+        <PageSkeleton variant="cards" />
+      </AppPage>
+    )
   }
+
   if (!product) {
     return (
-      <div className={`premium-shell flex items-center justify-center min-h-screen ${isDark ? 'bg-slate-950' : 'bg-emerald-50'}`}>
-        <div className={`glass-card interactive-card p-12 text-center max-w-md border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-          <div className="text-6xl mb-4">❌</div>
-          <h2 className={`text-2xl font-black mb-2 ${isDark ? 'text-white' : 'text-slate-900'}`}>Product Not Found</h2>
-          <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>The product you're looking for doesn't exist.</p>
-          <button
-            onClick={() => navigate('/buying')}
-            className="premium-button"
-          >
-            ← Back to Marketplace
-          </button>
+      <AppPage title="Product not found" description="This listing may have been removed.">
+        <ErrorState
+          title="Product not found"
+          description="The product you're looking for doesn't exist or is no longer available."
+          showHome={false}
+        />
+        <div className="flex justify-center mt-4">
+          <Button variant="outline" onClick={() => navigate('/buying')} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to marketplace
+          </Button>
         </div>
-      </div>
-    );
+      </AppPage>
+    )
   }
-  // ...existing main product JSX...
+
+  const outOfStock = product.quantity <= 0 || product.status === 'OUT_OF_STOCK'
+
   return (
-    <AppPage title={product.productName} description="Product details and seller information.">
-      <div className="max-w-6xl mx-auto">
-        <button
-          onClick={() => navigate('/buying')}
-          className={`mb-6 flex items-center gap-2 font-semibold transition-colors ${isDark ? 'text-orange-400 hover:text-orange-300' : 'text-orange-600 hover:text-orange-500'}`}
-        >
-          ← Back to Marketplace
-        </button>
-        
-        <div className={`glass-card interactive-card overflow-hidden border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-      <div className="grid md:grid-cols-2 gap-0">
-        {/* Product Media Carousel */}
-          <div className={`relative h-96 md:h-full ${isDark ? 'bg-gradient-to-br from-slate-700 to-slate-600' : 'bg-gradient-to-br from-gray-100 to-gray-200'}`}>
-          <ProductMediaCarousel mediaUrls={productMediaUrls} videoUrls={productVideoUrls} />
-          {/* Category Badge */}
-          <div className={`absolute top-4 right-4 px-4 py-2 rounded-full font-semibold shadow-lg backdrop-blur ${isDark ? 'bg-slate-700 text-white' : 'bg-white/90 text-gray-800'}`}>
-            {getCategoryIcon(product.category)} {product.category}
+    <AppPage
+      title={product.productName}
+      description={product.category}
+      meta={
+        <>
+          <Badge variant={isNotDeliverable ? 'destructive' : 'success'}>
+            {isNotDeliverable ? 'Not deliverable' : 'Deliverable to you'}
+          </Badge>
+          {product.discountPercentage > 0 && (
+            <Badge variant="success">{product.discountPercentage}% off</Badge>
+          )}
+        </>
+      }
+      actions={
+        <>
+          <Button variant="outline" size="sm" onClick={handleShare} className="gap-2">
+            <Share2 className="h-4 w-4" />
+            Share
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const added = toggleWishlist(product.id)
+              showToast(added ? 'Saved to favorites' : 'Removed from favorites', 'success')
+            }}
+            className="gap-2"
+            aria-pressed={isWishlisted(product.id)}
+          >
+            <Heart className={`h-4 w-4 ${isWishlisted(product.id) ? 'fill-primary text-primary' : ''}`} />
+            Favorite
+          </Button>
+          <Button
+            size="sm"
+            onClick={handleAddToCart}
+            disabled={outOfStock || isNotDeliverable || addingToCart}
+            className="gap-2"
+          >
+            <ShoppingCart className="h-4 w-4" />
+            {addingToCart ? 'Adding…' : 'Add to cart'}
+          </Button>
+        </>
+      }
+    >
+      <Button variant="ghost" size="sm" className="gap-2 -mt-2 mb-2" onClick={() => navigate('/buying')}>
+        <ArrowLeft className="h-4 w-4" />
+        Marketplace
+      </Button>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="overflow-hidden">
+          <div className="aspect-square bg-muted max-h-[min(70vh,520px)]">
+            <ProductMediaCarousel mediaUrls={productMediaUrls} videoUrls={productVideoUrls} />
           </div>
-        </div>
-                    {/* Product Details */}
-                    <div className="p-8">
-                      <h1 className={`text-4xl font-black mb-4 ${isDark ? 'text-white' : 'text-slate-900'}`}>{product.productName}</h1>
-                      {/* Price */}
-                      <div className="mb-6">
-                        <div className="flex items-baseline gap-3">
-                          <span className="text-4xl font-bold text-orange-500">₹{product.price}</span>
-                          <span className={`text-xl ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>/ {product.unit}</span>
-                        </div>
-                        {product.discountPercentage > 0 && (
-                          <div className="mt-2">
-                            <span className="text-green-500 font-semibold text-lg">
-                              {product.discountPercentage}% OFF
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                        {/* Vendor Transparency UI */}
-                        <div className={`glass-card mt-4 p-4 rounded-2xl border ${isDark ? 'bg-slate-700 border-slate-600 text-slate-100' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
-                          <h4 className="font-semibold text-lg mb-2">Vendor Information</h4>
-                          <div>Vendor Name: {product.vendorName}</div>
-                          <div>Vendor ID: {product.vendorId}</div>
-                          <div>Vendor Location: {product.vendorLocation}</div>
-                          <div>Vendor Type: {product.vendorType}</div>
-                          <div className="mt-2 font-semibold text-emerald-500">
-                            Estimated Delivery: {product.deliveryDaysMin || 3}-{product.deliveryDaysMax || 5} days
-                          </div>
-                          <div className={`mt-2 text-sm font-semibold ${isNotDeliverable ? 'text-red-500' : 'text-emerald-500'}`}>
-                            {isNotDeliverable ? (product.deliveryMessage || 'Not deliverable to your location') : 'Deliverable to your location'}
-                          </div>
-                        </div>
-                      {/* Description */}
-                      <div className="mb-6">
-                        <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Description</h3>
-                        <p className={`leading-relaxed ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>{product.description}</p>
-                      </div>
-                      {/* Availability */}
-                      <div className="mb-6 flex items-center gap-4">
-                        <div className={`rounded-lg px-4 py-3 border-2 ${isDark ? 'bg-green-900/40 border-green-700' : 'bg-green-50 border-green-300'}`}>
-                          <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Available Quantity</p>
-                          <p className="text-2xl font-bold text-green-500">{product.quantity} {product.unit}</p>
-                        </div>
-                        {product.weight && (
-                          <div className={`rounded-lg px-4 py-3 border-2 ${isDark ? 'bg-blue-900/40 border-blue-700' : 'bg-blue-50 border-blue-300'}`}>
-                            <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Weight</p>
-                            <p className="text-xl font-bold text-blue-500">{product.weight}</p>
-                          </div>
-                        )}
-                      </div>
-                      {/* Specifications */}
-                      {product.specifications && (
-                        <div className="mb-6">
-                          <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Specifications</h3>
-                          <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>{product.specifications}</p>
-                        </div>
-                      )}
-                      {/* Warranty */}
-                      {product.warrantyInfo && (
-                        <div className="mb-6">
-                          <h3 className={`text-lg font-semibold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Warranty Information</h3>
-                          <p className={isDark ? 'text-slate-300' : 'text-gray-600'}>{product.warrantyInfo}</p>
-                        </div>
-                      )}
-                      {/* Seller Information */}
-                      <div className={`rounded-lg p-6 mb-6 border ${isDark ? 'bg-orange-900/30 border-orange-700' : 'bg-orange-50 border-orange-300'}`}>
-                        <h3 className={`text-lg font-semibold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                          <span>👤</span> Seller Information
-                        </h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">👤</span>
-                            <div>
-                              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Full Name</p>
-                              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.sellerFullName}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">📧</span>
-                            <div>
-                              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Email</p>
-                              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.sellerEmail}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-2xl">📞</span>
-                            <div>
-                              <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Phone</p>
-                              <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{sellerPhone || 'Not available'}</p>
-                            </div>
-                          </div>
-                          {product.sellerLocation && (
-                            <div className="flex items-center gap-3">
-                              <span className="text-2xl">📍</span>
-                              <div>
-                                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Location</p>
-                                <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.sellerLocation}</p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {/* Contact Actions */}
-                      <div className="grid grid-cols-2 gap-4">
-                        <button
-                          onClick={() => {
-                            if (!Boolean(sellerPhone)) {
-                              showToast('Seller phone not available', 'warning');
-                              return;
-                            }
-                            setRevealedContact(prev => ({ ...prev, phone: true }));
-                          }}
-                          disabled={!Boolean(sellerPhone)}
-                          className={`px-6 py-4 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${Boolean(sellerPhone) ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-                        >
-                          <span className="text-2xl">📞</span>
-                          Call Seller
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (!Boolean(sellerEmail)) {
-                              showToast('Seller email not available', 'warning');
-                              return;
-                            }
-                            setRevealedContact(prev => ({ ...prev, email: true }));
-                          }}
-                          disabled={!Boolean(sellerEmail)}
-                          className={`px-6 py-4 rounded-lg font-bold transition-colors shadow-lg hover:shadow-xl flex items-center justify-center gap-2 ${Boolean(sellerEmail) ? 'bg-orange-600 text-white hover:bg-orange-700' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
-                        >
-                          <span className="text-2xl">✉️</span>
-                          Email Seller
-                        </button>
-                      </div>
-                      {(revealedContact.phone || revealedContact.email) && (
-                        <div className={`mt-4 rounded-lg p-4 space-y-2 border ${isDark ? 'bg-slate-700 border-slate-600' : 'bg-gray-100 border-gray-300'}`}>
-                          {revealedContact.phone && Boolean(sellerPhone) && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-green-500">📞</span>
-                              <a
-                                href={`tel:${sellerPhone}`}
-                                className="text-green-500 font-semibold hover:underline"
-                              >
-                                {sellerPhone}
-                              </a>
-                            </div>
-                          )}
-                          {revealedContact.email && Boolean(sellerEmail) && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-orange-500">✉️</span>
-                              <a
-                                href={`mailto:${sellerEmail}?subject=Inquiry about ${product.productName}`}
-                                className="text-orange-500 font-semibold hover:underline"
-                              >
-                                {sellerEmail}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className={`mt-6 p-3 rounded-lg border text-sm ${isDark ? 'bg-slate-700 border-slate-600 text-slate-300' : 'bg-blue-50 border-blue-100 text-slate-700'}`}>
-                        Media gallery supports swipe/drag and inline video playback for a smoother product preview.
-                      </div>
-                      {/* Add to Cart Button */}
-                      <button
-                        className={`mt-6 w-full px-6 py-4 rounded-xl font-bold text-lg transition-all flex items-center justify-center gap-2 ${
-                          product.status === 'OUT_OF_STOCK' || product.status === 'DISCONTINUED' || product.quantity <= 0 || isNotDeliverable
-                            ? 'bg-slate-600 text-slate-400 cursor-not-allowed'
-                            : addingToCart
-                            ? 'bg-green-600 text-white cursor-wait'
-                            : 'bg-green-500 text-white hover:bg-green-600 hover:scale-[1.02] shadow-lg hover:shadow-xl'
-                        }`}
-                        onClick={handleAddToCart}
-                        disabled={product.status === 'OUT_OF_STOCK' || product.status === 'DISCONTINUED' || product.quantity <= 0 || isNotDeliverable || addingToCart}
-                      >
-                        {addingToCart ? (
-                          <>
-                            <span className="animate-spin">⏳</span>
-                            Adding...
-                          </>
-                        ) : isNotDeliverable ? (
-                          <>🚫 Not Deliverable</>
-                        ) : product.status === 'OUT_OF_STOCK' || product.quantity <= 0 ? (
-                          <>❌ Out of Stock</>
-                        ) : product.status === 'DISCONTINUED' ? (
-                          <>🚫 Discontinued</>
-                        ) : (
-                          <>🛒 Add to Cart</>
-                        )}
-                      </button>
-                    </div>
-                  </div>
+        </Card>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-3xl font-semibold tracking-tight">{product.productName}</CardTitle>
+              <CardDescription className="text-base leading-relaxed">{product.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-baseline gap-2">
+                {product.discountPercentage > 0 && (
+                  <span className="text-muted-foreground line-through text-lg">₹{product.price}</span>
+                )}
+                <span className="text-3xl font-semibold text-primary">₹{displayPrice}</span>
+                <span className="text-muted-foreground">/ {product.unit}</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Package className="h-3.5 w-3.5" /> Stock
+                  </p>
+                  <p className="font-semibold mt-1">{product.quantity} {product.unit}</p>
                 </div>
-                  {/* Additional Images */}
-                  {product.imageUrls && product.imageUrls.split(',').length > 1 && (
-                    <div className={`mt-8 rounded-lg shadow-xl p-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                      <h3 className={`text-2xl font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-800'}`}>More Images</h3>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {product.imageUrls.split(',').slice(1).map((url, idx) => (
-                          <img
-                            key={idx}
-                            src={url.trim()}
-                            alt={`${product.productName} ${idx + 2}`}
-                            className="w-full h-48 object-cover rounded-lg shadow-md hover:shadow-xl transition-shadow"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Truck className="h-3.5 w-3.5" /> Delivery
+                  </p>
+                  <p className="font-semibold mt-1 text-sm">
+                    {product.deliveryDaysMin || 3}–{product.deliveryDaysMax || 5} days
+                  </p>
+                </div>
+              </div>
+
+              {product.specifications && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-1">Specifications</h3>
+                  <p className="text-sm text-muted-foreground">{product.specifications}</p>
+                </div>
+              )}
+
+              {product.warrantyInfo && (
+                <div>
+                  <h3 className="text-sm font-semibold mb-1">Warranty</h3>
+                  <p className="text-sm text-muted-foreground">{product.warrantyInfo}</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Seller</CardTitle>
+              <CardDescription>{product.sellerFullName}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+              {product.sellerLocation && (
+                <p className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4 shrink-0" />
+                  {product.sellerLocation}
+                </p>
+              )}
+              {product.vendorName && (
+                <p className="text-muted-foreground">Vendor: {product.vendorName}</p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!sellerPhone}
+                  onClick={() => setRevealedContact((p) => ({ ...p, phone: true }))}
+                  className="gap-2"
+                >
+                  <Phone className="h-4 w-4" />
+                  Call
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!sellerEmail}
+                  onClick={() => setRevealedContact((p) => ({ ...p, email: true }))}
+                  className="gap-2"
+                >
+                  <Mail className="h-4 w-4" />
+                  Email
+                </Button>
+              </div>
+              {(revealedContact.phone || revealedContact.email) && (
+                <div className="rounded-md border border-border bg-muted/40 p-3 space-y-1">
+                  {revealedContact.phone && sellerPhone && (
+                    <a href={`tel:${sellerPhone}`} className="text-primary font-medium hover:underline block">
+                      {sellerPhone}
+                    </a>
                   )}
-      {showCartPrompt && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm">
-                      <div className={`border-2 border-green-500/50 rounded-2xl shadow-2xl p-8 max-w-md w-full text-center transform animate-pulse-once ${isDark ? 'bg-slate-800' : 'bg-white'}`}>
-                        <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                          <span className="text-5xl">✅</span>
-                        </div>
-                        <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>Added to Cart!</h2>
-                        <div className={`rounded-lg p-4 mb-6 ${isDark ? 'bg-slate-700/50' : 'bg-gray-100'}`}>
-                          <p className="text-orange-500 font-semibold text-lg">{product?.productName}</p>
-                          <p className={`text-sm mt-1 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                            ₹{product?.discountPercentage > 0 
-                              ? (product.price * (1 - product.discountPercentage / 100)).toFixed(2) 
-                              : product?.price} / {product?.unit}
-                          </p>
-                        </div>
-                        <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>What would you like to do next?</p>
-                        <div className="flex flex-col gap-3">
-                          <button
-                            className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 px-6 rounded-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
-                            onClick={() => {
-                              setShowCartPrompt(false);
-                              navigate('/cart');
-                            }}
-                          >
-                            <span>🛒</span> View Cart & Checkout
-                          </button>
-                          <button
-                            className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2"
-                            onClick={() => {
-                              setShowCartPrompt(false);
-                              handleAddToCart();
-                            }}
-                          >
-                            <span>➕</span> Add One More
-                          </button>
-                          <button
-                            className={`font-bold py-3 px-6 rounded-lg transition-all flex items-center justify-center gap-2 ${isDark ? 'bg-slate-700 hover:bg-slate-600 text-white' : 'bg-gray-200 hover:bg-gray-300 text-gray-800'}`}
-                            onClick={() => setShowCartPrompt(false)}
-                          >
-                            <span>🛍️</span> Continue Shopping
-                          </button>
-                        </div>
-                      </div>
-                    </div>
+                  {revealedContact.email && sellerEmail && (
+                    <a href={`mailto:${sellerEmail}`} className="text-primary font-medium hover:underline block">
+                      {sellerEmail}
+                    </a>
                   )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
+
+      {product.imageUrls && product.imageUrls.split(',').length > 1 && (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="text-base">Gallery</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {product.imageUrls.split(',').slice(1).map((url, idx) => (
+                <img
+                  key={idx}
+                  src={url.trim()}
+                  alt=""
+                  className="rounded-lg border border-border object-cover aspect-square w-full"
+                  loading="lazy"
+                />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <CartPromptDialog
+        open={showCartPrompt}
+        productName={product.productName}
+        quantity={1}
+        unitPrice={displayPrice}
+        onViewCart={() => {
+          setShowCartPrompt(false)
+          navigate('/cart')
+        }}
+        onContinue={() => setShowCartPrompt(false)}
+      />
     </AppPage>
-  );
+  )
 }
 
-export default ProductDetail;
+export default ProductDetail
