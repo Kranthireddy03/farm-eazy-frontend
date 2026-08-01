@@ -1,12 +1,34 @@
 // FarmEazy In-App Chat Support Component
 import { useEffect, useMemo, useState } from 'react';
-import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets } from '../services/SupportTicketService';
+import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets, getUserChatStats } from '../services/SupportTicketService';
 import apiClient from '../services/apiClient';
 import { unwrapApiList } from '../utils/apiResponse';
+import { getUserFacingErrorMessage } from '../utils/userFacingError';
 import { useGlobalToast } from '../context/ToastContext';
 import { STORAGE_KEYS } from '../config/api';
 
-const DEFAULT_GREETING = 'Welcome to FarmEazy live chat. Tell me what you need help with, or choose one of the quick topics below.';
+const DEFAULT_GREETING = 'Welcome to FarmEazy live chat. Messages sync with support agents on the support portal. Choose a quick topic or describe your issue.';
+const CHAT_POLL_MS = 5000;
+
+function extractUploadPath(url) {
+  if (!url) return null;
+  const raw = String(url);
+  const match = raw.match(/\/uploads\/[^\s?#)]+/i);
+  return match ? match[0] : null;
+}
+
+function normalizeAttachmentKey(url) {
+  const raw = String(url || '').trim();
+  if (!raw) return null;
+  return extractUploadPath(raw) || raw;
+}
+
+function toAbsoluteAttachmentUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url)) return url;
+  if (url.startsWith('/')) return `${window.location.origin}${url}`;
+  return `${window.location.origin}/${url}`;
+}
 
 function normalizeText(value) {
   return String(value || '').trim().toLowerCase();
@@ -89,20 +111,6 @@ function mergeMessages(existingMessages, incomingMessages) {
   return merged;
 }
 
-const extractUploadPath = (url) => {
-  if (!url) return null;
-  const raw = String(url || '');
-  const match = raw.match(/\/uploads\/[^\s?#)]+/i);
-  return match ? match[0] : null;
-};
-
-const toAbsoluteAttachmentUrl = (url) => {
-  if (!url) return '';
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith('/')) return `${window.location.origin}${url}`;
-  return `${window.location.origin}/${url}`;
-};
-
 const stripAttachmentLines = (text) =>
   String(text || '')
     .replace(/^.*Attachment[s]?:\s*([^\n\r]+?)\s*\((https?:\/\/(?:[^\s)]+)|\/uploads\/[^\s)]+)\).*$/gim, '')
@@ -137,21 +145,18 @@ const parseAttachmentsFromMessage = (message) => {
   return collected;
 };
 
+function buildTicketDescriptionFromChat(userText, messages) {
+  const transcript = (messages || [])
+    .filter((msg) => msg?.text)
+    .slice(-8)
+    .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
+    .join('\n');
 
-const fetchAttachmentBlob = async (url) => {
-  const uploadPath = extractUploadPath(url);
-  if (uploadPath) {
-    const ticketDisplayId = ticketId || undefined;
-    const contactEmail = localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || undefined;
-    const response = await apiClient.get('/attachments/file', {
-      params: { path: uploadPath, ticketDisplayId, contactEmail },
-      responseType: 'blob',
-    });
-    return response.data;
-  }
-  const response = await apiClient.get(toAbsoluteAttachmentUrl(url), { responseType: 'blob' });
-  return response.data;
-};
+  return [
+    userText,
+    transcript ? `\n--- Chat context ---\n${transcript}` : '',
+  ].join('').trim();
+}
 
 
 export default function ChatSupport({ className = '' }) {
@@ -171,6 +176,21 @@ export default function ChatSupport({ className = '' }) {
   const [allowAutoTicketSelection, setAllowAutoTicketSelection] = useState(true);
   const { showToast } = useGlobalToast();
 
+  const fetchAttachmentBlob = async (url, activeTicketId) => {
+    const uploadPath = extractUploadPath(url);
+    if (uploadPath) {
+      const ticketDisplayId = activeTicketId || undefined;
+      const contactEmail = localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || undefined;
+      const response = await apiClient.get('/attachments/file', {
+        params: { path: uploadPath, ticketDisplayId, contactEmail },
+        responseType: 'blob',
+      });
+      return response.data;
+    }
+    const response = await apiClient.get(toAbsoluteAttachmentUrl(url), { responseType: 'blob' });
+    return response.data;
+  };
+
   const openAttachment = async (url) => {
     if (!url) {
       showToast('Attachment URL is unavailable.', 'error');
@@ -178,7 +198,7 @@ export default function ChatSupport({ className = '' }) {
     }
 
     try {
-      const blob = await fetchAttachmentBlob(url);
+      const blob = await fetchAttachmentBlob(url, ticketId);
       const blobUrl = window.URL.createObjectURL(blob);
       window.open(blobUrl, '_blank', 'noopener,noreferrer');
       window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60 * 1000);
@@ -356,10 +376,31 @@ export default function ChatSupport({ className = '' }) {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    const now = new Date();
-    const hour = now.getHours();
-    setLiveStatus(hour >= 9 && hour < 18 ? 'available' : 'offline');
+
+    const loadLiveStatus = async () => {
+      try {
+        const stats = await getUserChatStats();
+        if (stats?.agentsOnline != null) {
+          setLiveStatus(stats.agentsOnline ? 'available' : 'offline');
+          return;
+        }
+      } catch {
+        // fall back to business hours heuristic
+      }
+      const hour = new Date().getHours();
+      setLiveStatus(hour >= 9 && hour < 18 ? 'available' : 'offline');
+    };
+
+    loadLiveStatus();
+    const interval = setInterval(loadLiveStatus, 60000);
+    return () => clearInterval(interval);
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    const openChat = () => setOpen(true);
+    window.addEventListener('farmeazy:open-live-chat', openChat);
+    return () => window.removeEventListener('farmeazy:open-live-chat', openChat);
+  }, []);
 
   useEffect(() => {
     const handleVisibilityChange = () => {
@@ -393,7 +434,7 @@ export default function ChatSupport({ className = '' }) {
       } catch {
         // Keep polling silently; the user already has the ticket link.
       }
-    }, 15000);
+    }, CHAT_POLL_MS);
 
     return () => clearInterval(interval);
   }, [ticketId, open, isTabVisible]);
@@ -457,8 +498,8 @@ export default function ChatSupport({ className = '' }) {
         if (normalized.length > 0) {
           setMessages((prev) => mergeMessages(prev, normalized));
         }
-      } catch {
-        appendSupportMessage('I could not sync your latest message to the support thread right now. Please retry in a moment.');
+      } catch (err) {
+        appendSupportMessage(getUserFacingErrorMessage(err, 'I could not sync your message to the support thread. Please retry.'));
       } finally {
         setLoading(false);
       }
@@ -485,7 +526,7 @@ export default function ChatSupport({ className = '' }) {
       setLoading(true);
       try {
         const ticket = await createSupportTicket({
-          description: text,
+          description: buildTicketDescriptionFromChat(text, messages),
           file: attachment,
           category: inferCategory(text),
           priority: inferPriority(text),
@@ -498,8 +539,8 @@ export default function ChatSupport({ className = '' }) {
             : 'No support executive is online right now. The ticket is queued and will be picked up during support hours.');
         appendSupportMessage(`Ticket ${ticket.displayId} created. ${liveText}`);
         appendSupportMessage('You can keep chatting here. I will poll for updates and show executive replies when they arrive.');
-      } catch {
-        appendSupportMessage('I could not create the ticket right now. Please try again or use the Support page.');
+      } catch (err) {
+        appendSupportMessage(getUserFacingErrorMessage(err, 'I could not create the ticket. Please try again or email support@farm-eazy.com.'));
       } finally {
         setLoading(false);
       }
@@ -621,6 +662,20 @@ export default function ChatSupport({ className = '' }) {
                 })}
               </div>
             </div>
+          </div>
+
+          <div className="px-3 pt-2 flex flex-wrap gap-2">
+            {quickSuggestions.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                disabled={loading}
+                onClick={() => handleFAQ(item.text)}
+                className="rounded-full border border-border bg-muted/60 px-3 py-1 text-[11px] font-medium hover:bg-muted text-muted-foreground"
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
 
           <div className="flex-1 p-3 overflow-y-auto space-y-2" style={{ maxHeight: 360 }}>

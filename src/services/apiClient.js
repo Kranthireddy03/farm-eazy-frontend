@@ -19,6 +19,7 @@ import {
   resolveGatewayClient,
 } from '../config/securityEnv';
 import { getApiErrorCode, isLocationRequiredError, isRateLimitError } from '../utils/apiError';
+import { getUserFacingErrorMessage } from '../utils/userFacingError';
 import { enqueueLocationRetry } from './locationApiBridge';
 
 const API_ENCRYPTION_ENABLED = isApiEncryptionEnabled();
@@ -107,9 +108,41 @@ function queueAction(config) {
   setQueue(queue);
 }
 
+const FALLBACK_IGNORE_URL_FRAGMENTS = [
+  '/products/media/',
+  '/health',
+  '/actuator/',
+  '/notifications/count',
+  '/coins/',
+  '/system/full-status',
+  '/payment/create-order',
+  '/faq-questions',
+  '/support-tickets/stats/',
+  '/blog-posts',
+  '/public/',
+];
+
 function shouldIgnoreFallbackForUrl(url) {
   const value = String(url || '');
-  return value.includes('/products/media/') || value.endsWith('/health') || value.includes('/health?');
+  return FALLBACK_IGNORE_URL_FRAGMENTS.some((fragment) => value.includes(fragment));
+}
+
+function shouldForceResilienceMode(error, requestUrl) {
+  if (!window.navigator.onLine) {
+    return true;
+  }
+  const status = error?.response?.status;
+  if (status === 502 || status === 504) {
+    return true;
+  }
+  const isNetworkError = !error.response
+    && (String(error.code || '').toUpperCase() === 'ERR_NETWORK'
+      || String(error.message || '').toLowerCase().includes('network'));
+  if (!isNetworkError) {
+    return false;
+  }
+  const criticalFragments = ['/users/me', '/auth/login', '/addresses'];
+  return criticalFragments.some((fragment) => String(requestUrl || '').includes(fragment));
 }
 
 async function resolveUserLocationHeaders() {
@@ -190,7 +223,19 @@ function emitGlobalFallback(detail) {
     // No-op if storage is unavailable.
   }
 
-  window.dispatchEvent(new CustomEvent(FALLBACK_EVENT_NAME, { detail: payload }));
+  window.dispatchEvent(new CustomEvent('farmeazy:service-degraded', {
+    detail: {
+      ...payload,
+      userMessage: getUserFacingErrorMessage(
+        { response: { status: payload.status, data: { message: payload.message } }, message: payload.message },
+        'A background service is temporarily unavailable.',
+      ),
+    },
+  }));
+
+  if (payload.forceResilienceMode) {
+    window.dispatchEvent(new CustomEvent(FALLBACK_EVENT_NAME, { detail: payload }));
+  }
 }
 
 const textEncoder = new TextEncoder();
@@ -613,21 +658,24 @@ apiClient.interceptors.response.use(
     const isNetworkError = !error.response
       && (String(error.code || '').toUpperCase() === 'ERR_NETWORK'
         || String(error.message || '').toLowerCase().includes('network'));
-    const isServerError = status >= 500;
-    const shouldTriggerFallback = (isNetworkError || isServerError)
+    const isServerError = status >= 500 && status !== 503;
+    const shouldNotifyDegraded = (isNetworkError || isServerError)
       && !isAuthEndpoint
       && !shouldIgnoreFallbackForUrl(requestUrl)
       && !originalRequest?._skipFallback;
 
-    if (shouldTriggerFallback) {
+    if (shouldNotifyDegraded) {
+      const forceResilienceMode = shouldForceResilienceMode(error, requestUrl);
       emitGlobalFallback({
         status,
         url: requestUrl,
         method: originalRequest?.method,
         message: error.response?.data?.message || error.message,
+        forceResilienceMode,
       });
     }
 
+    error.userMessage = getUserFacingErrorMessage(error);
     return Promise.reject(error);
   }
 );

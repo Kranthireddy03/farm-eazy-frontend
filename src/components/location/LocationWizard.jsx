@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { MapPin, Navigation, Search, Clock, Home } from 'lucide-react'
 import apiClient from '../../services/apiClient'
 import { unwrapApiList } from '../../utils/apiResponse'
+import { getUserFacingErrorMessage } from '../../utils/userFacingError'
 import { useAuth } from '../../context/AuthContext'
 import { useSession } from '../../context/SessionContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -210,8 +211,8 @@ export default function LocationWizard() {
     try {
       await setSelectedLocation(payload)
       setConfirming(null)
-    } catch {
-      setAddressError('Could not save your location. Please try again.')
+    } catch (err) {
+      setAddressError(getUserFacingErrorMessage(err, 'Could not save your location. Please try again.'))
     }
   }
 
@@ -288,7 +289,7 @@ export default function LocationWizard() {
       aria-modal="true"
       aria-labelledby="location-wizard-title"
     >
-      <div className={`w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border shadow-2xl p-5 sm:p-6 ${isDark ? 'bg-card border-border text-slate-100' : 'bg-white border-border text-foreground'}`}>
+      <div className={`w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 ${isDark ? 'bg-slate-950/95 border-sky-500/20 text-slate-100' : 'bg-white border-sky-200/60 text-foreground'}`}>
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-primary mb-2">

@@ -1,6 +1,13 @@
-import { useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import apiClient from '../services/apiClient'
+import { useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { MapPin, MessageCircle, Send } from 'lucide-react';
+import apiClient from '../services/apiClient';
+import { getUserFacingErrorMessage } from '../utils/userFacingError';
+import {
+  ExperienceAlert,
+  ExperiencePageShell,
+  ExperiencePanel,
+} from '../components/experience/ExperiencePageShell';
 
 const SERVICE_OPTIONS = [
   'Fresh produce delivery',
@@ -8,15 +15,14 @@ const SERVICE_OPTIONS = [
   'Vendor marketplace',
   'Irrigation services',
   'All FarmEazy services',
-]
+];
 
 export default function ServiceUnavailableLocation() {
-  const navigate = useNavigate()
-  const location = useLocation()
-  const [score, setScore] = useState(0)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState('')
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
   const [form, setForm] = useState({
     city: '',
@@ -25,148 +31,206 @@ export default function ServiceUnavailableLocation() {
     preferredService: SERVICE_OPTIONS[0],
     households: '',
     notes: '',
-  })
+  });
 
   const accessMessage = useMemo(() => {
-    return location.state?.message || 'Service is not available for your current location yet.'
-  }, [location.state])
+    return location.state?.message || 'FarmEazy is not live in your area yet, but we are expanding.';
+  }, [location.state]);
 
   const handleChange = (event) => {
-    const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
   const submitLaunchRequest = async (event) => {
-    event.preventDefault()
-    setError('')
-    setSuccess('')
+    event.preventDefault();
+    setError('');
+    setSuccess('');
 
-    const subject = `Location Launch Request: ${form.city}, ${form.state}`
+    if (!form.city.trim() || !form.state.trim()) {
+      setError('City and state are required so our operations team can prioritize your area.');
+      return;
+    }
+
+    const subject = `Location Launch Request: ${form.city.trim()}, ${form.state.trim()}`;
     const description = [
       'User requested FarmEazy launch in a non-serviceable location.',
-      `City: ${form.city}`,
-      `State: ${form.state}`,
-      `Postal Code: ${form.postalCode || 'Not provided'}`,
+      `City: ${form.city.trim()}`,
+      `State: ${form.state.trim()}`,
+      `Postal Code: ${form.postalCode?.trim() || 'Not provided'}`,
       `Preferred Service: ${form.preferredService}`,
       `Estimated Households Interested: ${form.households || 'Not provided'}`,
-      `Additional Notes: ${form.notes || 'None'}`,
-      `Game Score: ${score}`,
-    ].join('\n')
+      `Additional Notes: ${form.notes?.trim() || 'None'}`,
+    ].join('\n');
 
     try {
-      setSaving(true)
+      setSaving(true);
       await apiClient.post('/service-requests', {
         category: 'OTHER',
         priority: 'MEDIUM',
         subject,
         description,
-      })
-      setSuccess('Launch request submitted. Our team will evaluate this location and contact you with updates.')
+      });
+      setSuccess('Launch request submitted. Our team will evaluate this location and contact you with updates.');
       setForm((prev) => ({
         ...prev,
         postalCode: '',
         households: '',
         notes: '',
-      }))
+      }));
     } catch (err) {
-      setError(err?.response?.data?.message || 'Unable to submit launch request right now.')
+      setError(getUserFacingErrorMessage(err, 'Unable to submit your launch request right now.'));
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-card to-background text-foreground px-4 py-8">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <section className="rounded-2xl border border-orange-300/30 bg-orange-900/20 p-6">
-          <p className="text-xs uppercase tracking-[0.18em] text-orange-300">Location Access</p>
-          <h1 className="mt-2 text-3xl font-black">FarmEazy Is Expanding</h1>
-          <p className="mt-3 text-muted-foreground">{accessMessage}</p>
-          <p className="mt-2 text-muted-foreground text-sm">
-            Admin and operations panels remain available, but user marketplace actions are paused for this location.
-          </p>
-
-          <div className="mt-6 rounded-xl border border-border bg-card/50 p-4">
-            <p className="text-sm font-semibold">Mini Game: Harvest Taps</p>
-            <p className="text-xs text-muted-foreground mt-1">Tap to collect crops while we process your launch request.</p>
-            <div className="mt-4 flex items-center justify-between">
-              <div className="text-4xl">🌾</div>
-              <div className="text-right">
-                <div className="text-xs text-muted-foreground">Harvest Score</div>
-                <div className="text-2xl font-black text-primary">{score}</div>
-              </div>
-            </div>
-            <button
-              type="button"
-              onClick={() => setScore((prev) => prev + 1)}
-              className="mt-4 w-full rounded-xl bg-primary/50 hover:bg-primary/80 text-foreground font-bold py-2"
-            >
-              Tap To Harvest
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/dashboard')}
-              className="mt-3 w-full rounded-xl border border-border hover:bg-muted font-semibold py-2"
-            >
-              Back To Dashboard
-            </button>
+    <ExperiencePageShell
+      variant="expansion"
+      badge="Location expansion"
+      title="FarmEazy is growing toward you"
+      description={accessMessage}
+      meta={
+        <p>
+          Marketplace buying may be paused here, but you can still manage farms, chat with support, and track launch requests.
+        </p>
+      }
+      actions={
+        <button
+          type="button"
+          onClick={() => navigate('/dashboard')}
+          className="rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15"
+        >
+          Back to dashboard
+        </button>
+      }
+      aside={
+        <ExperiencePanel
+          title="Talk to support"
+          description="Live chat on the main app connects to agents on the support portal (port 5173). Open chat from the dashboard."
+        >
+          <button
+            type="button"
+            onClick={() => {
+              navigate('/dashboard');
+              window.setTimeout(() => {
+                window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
+              }, 400);
+            }}
+            className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 text-slate-900 font-bold py-2.5 hover:bg-amber-400"
+          >
+            <MessageCircle className="h-4 w-4" />
+            Open live chat
+          </button>
+        </ExperiencePanel>
+      }
+    >
+      <ExperiencePanel
+        title="Request service launch"
+        description="Share location details so operations can prioritize rollout planning."
+      >
+        <form className="space-y-4" onSubmit={submitLaunchRequest}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="block text-sm">
+              <span className="font-semibold text-slate-200">City</span>
+              <input
+                name="city"
+                value={form.city}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                placeholder="Your city"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="font-semibold text-slate-200">State</span>
+              <input
+                name="state"
+                value={form.state}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+                placeholder="Your state"
+              />
+            </label>
           </div>
-        </section>
 
-        <section className="rounded-2xl border border-border bg-muted/40 p-6">
-          <h2 className="text-2xl font-black">Request Service Launch</h2>
-          <p className="mt-2 text-sm text-muted-foreground">Share your location details so we can prioritize rollout planning.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <label className="block text-sm">
+              <span className="font-semibold text-slate-200">Postal code</span>
+              <input
+                name="postalCode"
+                value={form.postalCode}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white"
+              />
+            </label>
+            <label className="block text-sm">
+              <span className="font-semibold text-slate-200">Interested households</span>
+              <input
+                name="households"
+                type="number"
+                min="1"
+                value={form.households}
+                onChange={handleChange}
+                className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white"
+              />
+            </label>
+          </div>
 
-          <form className="mt-5 space-y-4" onSubmit={submitLaunchRequest}>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-semibold mb-1">City</label>
-                <input name="city" value={form.city} onChange={handleChange} required className="w-full rounded-lg border border-border bg-muted px-3 py-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1">State</label>
-                <input name="state" value={form.state} onChange={handleChange} required className="w-full rounded-lg border border-border bg-muted px-3 py-2" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-semibold mb-1">Postal Code</label>
-                <input name="postalCode" value={form.postalCode} onChange={handleChange} className="w-full rounded-lg border border-border bg-muted px-3 py-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold mb-1">Interested Households</label>
-                <input name="households" type="number" min="1" value={form.households} onChange={handleChange} className="w-full rounded-lg border border-border bg-muted px-3 py-2" />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-1">Preferred Service</label>
-              <select name="preferredService" value={form.preferredService} onChange={handleChange} className="w-full rounded-lg border border-border bg-muted px-3 py-2">
-                {SERVICE_OPTIONS.map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-1">Additional Notes</label>
-              <textarea name="notes" rows="4" value={form.notes} onChange={handleChange} className="w-full rounded-lg border border-border bg-muted px-3 py-2" />
-            </div>
-
-            {error && <div className="rounded-lg border border-red-400/40 bg-red-900/30 px-3 py-2 text-sm text-red-200">{error}</div>}
-            {success && <div className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-sm text-primary/80">{success}</div>}
-
-            <button
-              type="submit"
-              disabled={saving}
-              className="w-full rounded-xl bg-orange-500 hover:bg-orange-400 disabled:opacity-60 text-foreground font-bold py-2.5"
+          <label className="block text-sm">
+            <span className="font-semibold text-slate-200">Preferred service</span>
+            <select
+              name="preferredService"
+              value={form.preferredService}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white"
             >
-              {saving ? 'Submitting...' : 'Submit Launch Request'}
-            </button>
-          </form>
-        </section>
-      </div>
-    </div>
-  )
+              {SERVICE_OPTIONS.map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block text-sm">
+            <span className="font-semibold text-slate-200">Additional notes</span>
+            <textarea
+              name="notes"
+              rows={4}
+              value={form.notes}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2.5 text-sm text-white placeholder:text-slate-500"
+              placeholder="Tell us what you need most in this area"
+            />
+          </label>
+
+          {error && <ExperienceAlert tone="error">{error}</ExperienceAlert>}
+          {success && <ExperienceAlert tone="success">{success}</ExperienceAlert>}
+
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 disabled:opacity-60 text-slate-900 font-bold py-3"
+          >
+            <Send className="h-4 w-4" />
+            {saving ? 'Submitting…' : 'Submit launch request'}
+          </button>
+        </form>
+      </ExperiencePanel>
+
+      <ExperiencePanel
+        title="Why we ask for location"
+        description="Accurate service boundaries protect delivery quality, vendor eligibility, and irrigation pilot coverage."
+      >
+        <div className="flex items-start gap-3 text-sm text-slate-300">
+          <MapPin className="h-5 w-5 text-amber-300 shrink-0 mt-0.5" />
+          <p>
+            If your pin is outside our service map, you will see this page instead of a broken checkout or empty marketplace.
+            Set a different saved address from the location wizard when your area goes live.
+          </p>
+        </div>
+      </ExperiencePanel>
+    </ExperiencePageShell>
+  );
 }

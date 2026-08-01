@@ -25,21 +25,32 @@ class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.hasError) {
+      const errorText = this.state.error?.message || String(this.state.error);
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-background text-foreground px-6">
-          <h1 className="text-2xl font-semibold mb-3">Something went wrong</h1>
-          <p className="text-muted-foreground mb-4 text-center max-w-xl">
-            Your session is preserved. You can retry or open resilience mode.
-          </p>
-          <button
-            onClick={() => window.location.assign('/fallback')}
-            className="mb-4 rounded-md px-4 py-2 bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90"
-          >
-            Open resilience mode
-          </button>
-          <details className="text-xs text-muted-foreground whitespace-pre-wrap max-w-xl mx-auto">
-            {this.state.error && this.state.error.toString()}
-          </details>
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[radial-gradient(circle_at_20%_0%,#1e3a5f_0%,#0f172a_50%,#020617_85%)] text-foreground px-6">
+          <div className="max-w-lg w-full rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 shadow-2xl text-center">
+            <h1 className="text-2xl font-black text-white">Something went wrong</h1>
+            <p className="text-slate-300 mt-3 text-sm leading-relaxed">
+              Your session is safe. Retry the page or open resilience mode while we recover.
+            </p>
+            <p className="mt-4 text-xs text-red-200/90 bg-red-950/40 border border-red-400/30 rounded-xl px-3 py-2">
+              {errorText}
+            </p>
+            <div className="mt-6 flex flex-wrap justify-center gap-3">
+              <button
+                onClick={() => window.location.reload()}
+                className="rounded-xl px-4 py-2 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100"
+              >
+                Reload page
+              </button>
+              <button
+                onClick={() => window.location.assign('/fallback')}
+                className="rounded-xl px-4 py-2 bg-emerald-500 text-slate-900 text-sm font-semibold hover:bg-emerald-400"
+              >
+                Resilience mode
+              </button>
+            </div>
+          </div>
         </div>
       );
     }
@@ -71,6 +82,7 @@ import { SessionProvider } from './context/SessionContext';
 import SessionBootstrapGate from './components/session/SessionBootstrapGate';
 import LocationWizard from './components/location/LocationWizard';
 import RateLimitOverlay from './components/RateLimitOverlay';
+import ServiceDegradedNotifier from './components/ServiceDegradedNotifier';
 import { STORAGE_KEYS } from './config/api';
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from './utils/supportPortal';
 import './i18n';
@@ -495,6 +507,7 @@ function App() {
                         <AppContent />
                         <LocationWizard />
                         <RateLimitOverlay />
+                        <ServiceDegradedNotifier />
                         <GlobalFloatingThemeToggle />
                         <Toaster richColors closeButton position="top-right" theme="system" />
                       </ShellProvider>
