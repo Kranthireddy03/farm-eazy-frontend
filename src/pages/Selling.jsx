@@ -75,7 +75,7 @@ function Selling() {
   const fetchMyProducts = async () => {
     try {
       const products = await ProductService.getMyProducts();
-      setMyProducts(products);
+      setMyProducts(Array.isArray(products) ? products : []);
     } catch (error) {
       console.error('Error fetching products:', error);
     }

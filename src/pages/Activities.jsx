@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { api } from '../config/api';
+import apiClient from '../services/apiClient';
+import { unwrapApiList } from '../utils/apiResponse';
 import { useToast } from '../hooks/useToast';
 import { useTheme } from '../context/ThemeContext';
 import AppPage from '../components/layout/AppPage';
@@ -25,14 +26,14 @@ const Activities = () => {
         const fetchActivities = async () => {
             setLoading(true);
             try {
-                const response = await api.get(`/activities?page=${page}&size=20`);
-                // Filter out login activities
-                const filtered = response.data.filter(activity => {
-                    const desc = activity.description.toLowerCase();
+                const response = await apiClient.get(`/activities?page=${page}&size=20`);
+                const list = unwrapApiList(response?.data);
+                const filtered = list.filter((activity) => {
+                    const desc = String(activity?.description || '').toLowerCase();
                     return !desc.includes('logged in') && !desc.includes('login');
                 });
                 setActivities(filtered);
-                setHasMore(response.data.length === 20);
+                setHasMore(list.length === 20);
                 setLoading(false);
             } catch (error) {
                 showToast('Failed to fetch activities', 'error');

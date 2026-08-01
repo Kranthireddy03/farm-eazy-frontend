@@ -166,6 +166,18 @@ export function LocationProvider({ children }) {
   }, [])
 
   useEffect(() => {
+    if (hasEffectiveLocation && isSelectorOpen) {
+      const blockingBootstrap =
+        wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP'
+        || wizardDetail?.reason === 'LOCATION_REQUIRED';
+      if (blockingBootstrap || wizardDetail?.blocking) {
+        setIsSelectorOpen(false)
+        setWizardDetail(null)
+      }
+    }
+  }, [hasEffectiveLocation, isSelectorOpen, wizardDetail])
+
+  useEffect(() => {
     const onLogout = () => {
       setSelectedLocationState(null)
       setLocationVersion((previous) => previous + 1)

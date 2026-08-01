@@ -1,4 +1,5 @@
 import apiClient from './apiClient';
+import { unwrapApiList } from '../utils/apiResponse';
 
 const ProductService = {
   createProduct: async (productData) => {
@@ -40,7 +41,7 @@ const ProductService = {
 
   getMyProducts: async () => {
     const response = await apiClient.get('/products/my-products');
-    return response.data;
+    return unwrapApiList(response?.data);
   },
 
   getProductById: async (id) => {

@@ -12,7 +12,7 @@ const defaultPrefs = {
 };
 
 const UserPreferences = () => {
-  const { setTheme } = useTheme();
+  const { setTheme, isDark } = useTheme();
 
   const startGuidedTour = () => {
     window.dispatchEvent(new Event('start-onboarding-tour'));
