@@ -15,7 +15,6 @@ import { Badge } from '../ui/badge';
 import NotificationBell from '../NotificationBell';
 import ChatSupport from '../ChatSupport';
 import LocationBar from '../LocationBar';
-import AppOpenLocationModal from '../AppOpenLocationModal';
 import InactivityWarning from '../InactivityWarning';
 import { useShell } from '../shell/ShellContext';
 import { useAuth } from '../../context/AuthContext';
@@ -209,7 +208,6 @@ export default function AppShell({ children, onShowTour }) {
         </header>
 
         <LocationBar />
-        <AppOpenLocationModal />
 
         <main className="flex-1 p-4 md:p-6 w-full max-w-screen-2xl mx-auto min-h-[calc(100vh-12rem)]">
           {children || <Outlet />}

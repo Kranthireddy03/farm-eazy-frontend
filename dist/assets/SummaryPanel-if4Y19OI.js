@@ -1,0 +1,2 @@
+import{D as s}from"./vendor-CIBu4acD.js";import{C as n,g as x,h as t,i as c,j as o,d as l}from"./index-DAu9ZfoD.js";function h({title:a,description:r,children:d,className:m,footer:e}){return s.jsxs(n,{className:l("shadow-sm",m),children:[(a||r)&&s.jsxs(x,{children:[a&&s.jsx(t,{className:"text-base",children:a}),r&&s.jsx(c,{children:r})]}),s.jsx(o,{className:"space-y-4",children:d}),e&&s.jsx("div",{className:"border-t border-border px-6 py-4 text-sm text-muted-foreground",children:e})]})}export{h as S};
+//# sourceMappingURL=SummaryPanel-if4Y19OI.js.map

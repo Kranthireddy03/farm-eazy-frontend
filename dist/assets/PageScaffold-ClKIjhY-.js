@@ -1,0 +1,2 @@
+import{D as s}from"./vendor-CIBu4acD.js";import{d as a}from"./index-DAu9ZfoD.js";function p({children:c,aside:r,className:e,asideClassName:i}){return r?s.jsxs("div",{className:a("grid grid-cols-1 lg:grid-cols-3 gap-6",e),children:[s.jsx("div",{className:"lg:col-span-2 space-y-6",children:c}),s.jsx("aside",{className:a("space-y-6 lg:col-span-1",i),children:r})]}):s.jsx("div",{className:a("space-y-6",e),children:c})}export{p as P};
+//# sourceMappingURL=PageScaffold-ClKIjhY-.js.map

@@ -1,0 +1,2 @@
+import{D as s}from"./vendor-CIBu4acD.js";import{d as t}from"./index-DAu9ZfoD.js";function d({className:o,type:r="text",...e}){return s.jsx("input",{type:r,className:t("flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors","placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring","disabled:cursor-not-allowed disabled:opacity-50",o),...e})}export{d as I};
+//# sourceMappingURL=input-RoD1dZTA.js.map

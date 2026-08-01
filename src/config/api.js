@@ -96,6 +96,9 @@ api.interceptors.response.use(
 
 // API Endpoints
 export const API_ENDPOINTS = {
+  // User profile (canonical session source)
+  USERS_ME: `${API_BASE_URL}/users/me`,
+
   // Authentication
   REGISTER: `${API_BASE_URL}/auth/register`,
   LOGIN: `${API_BASE_URL}/auth/login`,

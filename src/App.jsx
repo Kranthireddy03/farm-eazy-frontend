@@ -60,7 +60,6 @@ class ErrorBoundary extends React.Component {
 import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useState, useEffect, Suspense, lazy } from 'react'
 import AuthService from './services/AuthService'
-import apiClient from './services/apiClient'
 import { CoinProvider } from './context/CoinContext';
 import { LoaderProvider } from './context/LoaderContext';
 import { ThemeProvider } from './context/ThemeContext';
@@ -68,9 +67,12 @@ import { ToastProvider } from './context/ToastContext';
 import { LocationProvider } from './context/LocationContext';
 import { useLocationContext } from './context/LocationContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SessionProvider } from './context/SessionContext';
+import SessionBootstrapGate from './components/session/SessionBootstrapGate';
+import LocationWizard from './components/location/LocationWizard';
+import RateLimitOverlay from './components/RateLimitOverlay';
 import { STORAGE_KEYS } from './config/api';
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from './utils/supportPortal';
-import SessionWarningModal from './components/SessionWarningModal';
 import './i18n';
 import Layout from './components/layout/AppShell';
 import PublicLayout from './components/layout/ProductPublicLayout';
@@ -157,7 +159,11 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/complete-google-profile" replace />;
   }
   
-  return isAuthenticated ? children : <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
+  return isAuthenticated ? (
+    <SessionBootstrapGate>
+      {children}
+    </SessionBootstrapGate>
+  ) : <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
 }
 
 function SupportPortalRedirect({
@@ -202,67 +208,6 @@ function SupportPortalRedirect({
   );
 }
 
-function LocationAccessRoute({ children }) {
-  const { hasSelectedLocation, locationVersion, openSelector } = useLocationContext()
-  const [checking, setChecking] = useState(true)
-  const [allowed, setAllowed] = useState(true)
-  const [message, setMessage] = useState('')
-
-  useEffect(() => {
-    if (!hasSelectedLocation) {
-      setAllowed(false)
-      setMessage('Please select your location to continue.')
-      setChecking(false)
-      openSelector()
-      return
-    }
-
-    let active = true
-
-    const runCheck = async () => {
-      try {
-        const response = await apiClient.get('/location-access/status', { _skipFallback: true })
-        if (!active) return
-        const isAllowed = Boolean(response?.data?.allowed)
-        setAllowed(isAllowed)
-        setMessage(response?.data?.message || '')
-      } catch (_err) {
-        if (!active) return
-        setAllowed(false)
-        setMessage('Unable to verify location access at the moment.')
-      } finally {
-        if (active) {
-          setChecking(false)
-        }
-      }
-    }
-
-    runCheck()
-    return () => {
-      active = false
-    }
-  }, [hasSelectedLocation, locationVersion, openSelector])
-
-  if (checking) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-white dark:bg-card">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
-      </div>
-    )
-  }
-
-  if (!allowed) {
-    openSelector()
-    return <Navigate to="/service-unavailable" replace state={{ message }} />
-  }
-
-  return children
-}
-
-/**
- * AppContent Component
- * Main app content that uses auth context
- */
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -454,9 +399,7 @@ function AppContent() {
         <Route
           element={
             <ProtectedRoute>
-              <LocationAccessRoute>
-                <Layout onShowTour={() => setShowOnboarding(true)} />
-              </LocationAccessRoute>
+              <Layout onShowTour={() => setShowOnboarding(true)} />
             </ProtectedRoute>
           }
         >
@@ -523,19 +466,23 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <AuthProvider>
-            <LocationProvider>
-              <LoaderProvider>
-                <CoinProvider>
-                  <ToastProvider>
-                    <ShellProvider>
-                      <AppContent />
-                      <GlobalFloatingThemeToggle />
-                      <Toaster richColors closeButton position="top-right" theme="system" />
-                    </ShellProvider>
-                  </ToastProvider>
-                </CoinProvider>
-              </LoaderProvider>
-            </LocationProvider>
+            <SessionProvider>
+              <LocationProvider>
+                <LoaderProvider>
+                  <CoinProvider>
+                    <ToastProvider>
+                      <ShellProvider>
+                        <AppContent />
+                        <LocationWizard />
+                        <RateLimitOverlay />
+                        <GlobalFloatingThemeToggle />
+                        <Toaster richColors closeButton position="top-right" theme="system" />
+                      </ShellProvider>
+                    </ToastProvider>
+                  </CoinProvider>
+                </LoaderProvider>
+              </LocationProvider>
+            </SessionProvider>
           </AuthProvider>
         </ThemeProvider>
       </QueryClientProvider>

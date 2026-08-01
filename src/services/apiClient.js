@@ -12,6 +12,8 @@
 
 import axios from 'axios';
 import { API_BASE_URL, STORAGE_KEYS } from '../config/api';
+import { getApiErrorCode, isLocationRequiredError, isRateLimitError } from '../utils/apiError';
+import { enqueueLocationRetry } from './locationApiBridge';
 
 const API_ENCRYPTION_ENABLED = import.meta.env.VITE_API_ENCRYPTION_ENABLED === 'true';
 const GATEWAY_ENABLED = import.meta.env.VITE_API_GATEWAY_ENABLED === 'true';
@@ -539,30 +541,37 @@ apiClient.interceptors.response.use(
       }
     }
 
-    if ((status === 401 || status === 403) && hadAuthHeader) {
-      const errorMessage = error.response?.data?.message || 'Session expired';
-      
-      console.warn(`Auth error (${status}):`, errorMessage);
-      clearSessionData();
-      broadcastAuthEvent(false, 'unauthorized');
-      
-      // Store logout reason so other parts of the app can display it.
-      if (status === 401) {
-        sessionStorage.setItem('logoutReason', 'Your session has expired. Please log in again.');
-      } else {
-        sessionStorage.setItem('logoutReason', 'You are not authorized to access this resource. Please log in again.');
+    if (status === 403 && hadAuthHeader && isLocationRequiredError(error) && originalRequest && !originalRequest._skipLocationRetry) {
+      const retryRequest = { ...originalRequest };
+      retryRequest._skipLocationRetry = true;
+      return enqueueLocationRetry(() => apiClient(retryRequest));
+    }
+
+    if (status === 403 && hadAuthHeader) {
+      const errorCode = getApiErrorCode(error);
+      if (errorCode === 'LOCATION_REQUIRED') {
+        return Promise.reject(error);
       }
 
-      // Do not force navigation here; leave routing decisions to the application.
+      const errorMessage = error.response?.data?.error?.message || error.response?.data?.message || 'Not authorized';
+      console.warn(`Forbidden (${status}):`, errorMessage);
+      sessionStorage.setItem('logoutReason', 'You are not authorized to access this resource.');
       return Promise.reject(error);
     }
 
     // Handle rate limiting
-    if (status === 429) {
-      const retryAfter = error.response.headers['retry-after'];
+    if (status === 429 || isRateLimitError(error)) {
+      const retryAfter = error.response?.headers?.['retry-after'];
       console.warn(`Rate limited. Retry after: ${retryAfter || 'unknown'} seconds`);
       error.isRateLimited = true;
       error.retryAfter = retryAfter;
+      window.dispatchEvent(new CustomEvent('farmeazy:rate-limited', {
+        detail: {
+          retryAfter,
+          message: error.response?.data?.error?.message || error.response?.data?.message || 'Too many requests. Please wait and try again.',
+          code: getApiErrorCode(error),
+        },
+      }));
     }
 
     // Handle server errors

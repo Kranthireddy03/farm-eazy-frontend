@@ -28,7 +28,6 @@ import { useCoin } from '../context/CoinContext'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal'
-import AppOpenLocationModal from './AppOpenLocationModal'
 import LocationBar from './LocationBar'
 import { useShell } from './shell/ShellContext'
 
@@ -755,9 +754,6 @@ function Layout({ onShowTour, children }) {
       </header>
 
       <LocationBar />
-
-      {/* App-open location prompt */}
-      <AppOpenLocationModal />
 
       {/* Inactivity Warning Modal - Remove from here */}
 
