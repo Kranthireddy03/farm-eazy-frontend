@@ -48,6 +48,7 @@ export default function AppShell({ children, onShowTour }) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef(null);
   const hasRedirectedRef = useRef(false);
+  const loginBonusClaimedRef = useRef(false);
 
   const userEmail = getUserEmail();
   const userUsername = localStorage.getItem('farmEazy_username') || getUserName();
@@ -90,7 +91,9 @@ export default function AppShell({ children, onShowTour }) {
   }, [showUserMenu]);
 
   useEffect(() => {
-    apiClient.post('/coins/login-bonus').catch(() => {}).finally(() => refreshCoins?.());
+    if (loginBonusClaimedRef.current) return;
+    loginBonusClaimedRef.current = true;
+    apiClient.post('/coins/login-bonus').catch(() => {}).finally(() => refreshCoins());
   }, [refreshCoins]);
 
   const isActive = (path) => {

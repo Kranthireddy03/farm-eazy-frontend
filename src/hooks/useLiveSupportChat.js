@@ -72,10 +72,24 @@ export function useLiveSupportChat({ enabled, sessionKey = 0, onFallback }) {
   const [liveMode, setLiveMode] = useState(false);
   const subscriptionRef = useRef(null);
   const typingHideRef = useRef(null);
+  const onFallbackRef = useRef(onFallback);
+  const bootstrapInFlightRef = useRef(false);
   const conversationId = conversation?.displayId;
+
+  useEffect(() => {
+    onFallbackRef.current = onFallback;
+  }, [onFallback]);
 
   const applyStompEvent = useCallback((event) => {
     if (!event?.type) return;
+
+    if (event.type === 'STATUS' && event.conversation) {
+      setConversation(event.conversation);
+      if (CLOSED_STATUSES.has(String(event.conversation.status || '').toUpperCase())) {
+        setShowRating(true);
+      }
+      return;
+    }
 
     if (event.type === 'MESSAGE' && event.message) {
       const normalized = normalizeLiveMessage(event.message);
@@ -115,6 +129,8 @@ export function useLiveSupportChat({ enabled, sessionKey = 0, onFallback }) {
   }, []);
 
   const bootstrapLive = useCallback(async () => {
+    if (bootstrapInFlightRef.current) return;
+    bootstrapInFlightRef.current = true;
     setConnecting(true);
     try {
       const online = await getAgentsOnline();
@@ -144,11 +160,12 @@ export function useLiveSupportChat({ enabled, sessionKey = 0, onFallback }) {
       }
     } catch (err) {
       setLiveMode(false);
-      if (onFallback) onFallback(err);
+      if (onFallbackRef.current) onFallbackRef.current(err);
     } finally {
+      bootstrapInFlightRef.current = false;
       setConnecting(false);
     }
-  }, [applyStompEvent, onFallback]);
+  }, [applyStompEvent]);
 
   useEffect(() => {
     if (!enabled) return undefined;
@@ -218,11 +235,6 @@ export function useLiveSupportChat({ enabled, sessionKey = 0, onFallback }) {
 
       stompSendTyping(conversationId, false).catch(() => {});
 
-      const updated = await startLiveConversation();
-      setConversation(updated);
-      if (CLOSED_STATUSES.has(String(updated.status || '').toUpperCase())) {
-        setShowRating(true);
-      }
       return true;
     } finally {
       setLoading(false);

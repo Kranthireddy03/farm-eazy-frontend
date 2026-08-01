@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import apiClient from '../services/apiClient';
 
 const CoinContext = createContext();
@@ -11,7 +11,7 @@ export function CoinProvider({ children }) {
   const [coins, setCoins] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchCoins = async () => {
+  const fetchCoins = useCallback(async () => {
     setLoading(true);
     try {
       const response = await apiClient.get('/coins');
@@ -21,13 +21,13 @@ export function CoinProvider({ children }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
      const token = localStorage.getItem("farmEazy_token");
      if (!token) return; // STOP here if not logged in
      fetchCoins();
-  }, []);
+  }, [fetchCoins]);
 
   return (
     <CoinContext.Provider value={{ coins, loading, refreshCoins: fetchCoins }}>

@@ -1,5 +1,5 @@
 // FarmEazy In-App Chat Support Component
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets, getUserChatStats } from '../services/SupportTicketService';
 import apiClient from '../services/apiClient';
 import { unwrapApiList } from '../utils/apiResponse';
@@ -181,12 +181,14 @@ export default function ChatSupport({ className = '' }) {
   const [ratingComment, setRatingComment] = useState('');
   const { showToast } = useGlobalToast();
 
+  const onLiveFallback = useCallback(() => {
+    // Legacy ticket/FAQ flow remains available when live bootstrap fails.
+  }, []);
+
   const liveChat = useLiveSupportChat({
     enabled: open && isAuthenticated,
     sessionKey: liveSessionKey,
-    onFallback: () => {
-      // Legacy ticket/FAQ flow remains available when live bootstrap fails.
-    },
+    onFallback: onLiveFallback,
   });
 
   const viewingLegacyTicket = Boolean(ticketId);
@@ -395,7 +397,7 @@ export default function ChatSupport({ className = '' }) {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || useLiveStream) return;
 
     const loadLiveStatus = async () => {
       try {
@@ -414,7 +416,7 @@ export default function ChatSupport({ className = '' }) {
     loadLiveStatus();
     const interval = setInterval(loadLiveStatus, 60000);
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, useLiveStream]);
 
   useEffect(() => {
     const openChat = () => setOpen(true);
