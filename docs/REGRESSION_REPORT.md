@@ -191,3 +191,10 @@ Without secrets, the API job skips cleanly so PRs still pass.
 - Mobile viewport automation (manual spot-check recommended at 390px)
 - Refresh token via HttpOnly cookie in dev (login currently clears cookie in Set-Cookie; browser `withCredentials` flow may differ)
 
+### Premium UX + live chat follow-up (2026-08-01)
+
+- Restructured `/fallback` and `/service-unavailable` with `ExperiencePageShell` premium layout
+- Live chat (`ChatSupport`) fixes: attachment crash, 5s polling, quick topics, transcript in ticket body for portal agents
+- Support portal (`:5173`) polls ticket threads every 5s; dev CORS includes `:5173`
+- API client shows clear error toasts instead of redirecting to `/fallback` for auxiliary failures (503 payment, notifications, etc.)
+
