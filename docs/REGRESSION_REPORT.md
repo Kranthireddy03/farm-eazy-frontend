@@ -143,3 +143,51 @@ npm run build
 ## Sign-off
 
 All automated checks pass. Critical UI regressions identified during browser testing were fixed and verified. No open **blocking** failures remain in the tested scope.
+
+---
+
+## Final sanity pass (2026-08-01 follow-up)
+
+### Extended API regression (`35/35 pass`)
+
+Added coverage for: irrigation schedules/stats, irrigation-sensor types, crops, vendor onboarding, service listing eligibility, services nearby, bank verification, service requests (GET/POST), blog submission/admin, payment create-order (503 without Razorpay keys — expected), products/my-products, order validation, refresh-token check (skipped when dev login clears HttpOnly cookie).
+
+Run: `npm run regression:api`
+
+### Browser routes (final)
+
+| Route | Result |
+|-------|--------|
+| `/irrigation`, `/irrigation-services`, `/irrigation-sensors` | Pass |
+| `/vendor-dashboard`, `/vendor-onboarding`, `/bank-verification` | Pass |
+| `/blog/submit`, `/admin/blog-posts`, `/checkout` | Pass |
+| `/service-requests` | **Fixed** — missing `AppPage` import |
+| Logout → refresh → login | Pass |
+
+### Additional fixes (final pass)
+
+| File | Fix |
+|------|-----|
+| `IrrigationSensorDashboard.jsx` | Wrong path `/api/farms` → `/farms` + list unwrap |
+| `ServiceRequests.jsx` | Missing `AppPage` import; paginated list unwrap |
+| `scripts/regression-api.mjs` | Extended endpoint suite |
+| `.github/workflows/ci.yml` | Build + optional API regression on secrets |
+| `package.json` | `regression:api` script |
+
+### CI recommendation
+
+The workflow `.github/workflows/ci.yml` runs `npm run build` on every PR and runs `node scripts/regression-api.mjs` when repository secrets are set:
+
+- `REGRESSION_API_URL` (e.g. `http://localhost:8080` or staging URL)
+- `REGRESSION_API_ENCRYPTION_SECRET` (must match backend)
+- `REGRESSION_API_GATEWAY_CLIENT` (optional, defaults in script)
+
+Without secrets, the API job skips cleanly so PRs still pass.
+
+### Still not fully E2E-tested
+
+- Checkout with real cart item + Razorpay payment capture (needs listing + `payment.simulation` or Razorpay keys)
+- Vendor onboarding → approved → selling product with image upload
+- Mobile viewport automation (manual spot-check recommended at 390px)
+- Refresh token via HttpOnly cookie in dev (login currently clears cookie in Set-Cookie; browser `withCredentials` flow may differ)
+
