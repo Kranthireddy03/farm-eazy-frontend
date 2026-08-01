@@ -1,23 +1,45 @@
 /**
- * Crops Page Component
- *
- * Features:
- * - List all crops across farms
- * - Add new crop
- * - Edit crop details
- * - Delete crop
- * - Card-based grid view (matching Farms style)
+ * Crops Page — enterprise list + forms (Farms pattern)
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
-import { useTheme } from '../context/ThemeContext'
 import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
+import { KpiCard } from '../components/ui/kpi-card'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
+import { FormField } from '../components/ui/form-field'
+import { DataTable } from '../components/ui/data-table'
+import { ErrorState } from '../components/ui/error-state'
+import { PageSkeleton } from '../components/ui/Skeleton'
+import { Badge } from '../components/ui/badge'
+import { Sprout, Leaf, Calendar, Plus } from 'lucide-react'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
+
+const selectClass =
+  'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+
+const STATUS_STYLES = {
+  PLANTED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  GROWING: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  READY: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  HARVESTED: 'bg-muted text-muted-foreground',
+}
+
+const EMPTY_FORM = {
+  cropName: '',
+  season: '',
+  sowingDate: '',
+  expectedHarvestDate: '',
+  farmId: '',
+  status: 'PLANTED',
+}
 
 function Crops() {
-  const { isDark } = useTheme()
   const { showToast } = useToast()
   const [crops, setCrops] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,14 +48,9 @@ function Crops() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [editingCrop, setEditingCrop] = useState(null)
   const [farms, setFarms] = useState([])
-  const [formData, setFormData] = useState({
-    cropName: '',
-    season: '',
-    sowingDate: '',
-    expectedHarvestDate: '',
-    farmId: '',
-    status: 'PLANTED',
-  })
+  const [formData, setFormData] = useState(EMPTY_FORM)
+  const [cropSearch, setCropSearch] = useState('')
+  const debouncedCropSearch = useDebouncedValue(cropSearch)
 
   useEffect(() => {
     fetchCrops()
@@ -64,17 +81,21 @@ function Crops() {
     }
   }
 
+  const getFarmName = useCallback(
+    (farmId) => {
+      const farm = farms.find((f) => f.id === farmId)
+      return farm ? farm.farmName : 'Unknown farm'
+    },
+    [farms],
+  )
+
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
+    setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
   const handleAddCrop = async (e) => {
     e.preventDefault()
-
     if (!formData.cropName || !formData.season || !formData.sowingDate || !formData.expectedHarvestDate || !formData.farmId) {
       setError('Please fill in all required fields')
       showToast('Please fill in all required fields', 'warning')
@@ -88,11 +109,10 @@ function Crops() {
         season: formData.season,
         sowingDate: formData.sowingDate,
         expectedHarvestDate: formData.expectedHarvestDate,
-        farmId: parseInt(formData.farmId),
+        farmId: parseInt(formData.farmId, 10),
         status: formData.status,
       })
-
-      setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
+      setFormData(EMPTY_FORM)
       setShowAddForm(false)
       setError('')
       showToast('Crop created successfully!', 'success')
@@ -106,10 +126,7 @@ function Crops() {
   }
 
   const handleDeleteCrop = async (cropId) => {
-    if (!window.confirm('Are you sure you want to delete this crop?')) {
-      return
-    }
-
+    if (!window.confirm('Are you sure you want to delete this crop?')) return
     try {
       await apiClient.delete(API_ENDPOINTS.DELETE_CROP(cropId))
       setError('')
@@ -136,7 +153,6 @@ function Crops() {
 
   const handleUpdateCrop = async (e) => {
     e.preventDefault()
-
     if (!formData.cropName || !formData.season || !formData.sowingDate || !formData.expectedHarvestDate || !formData.farmId) {
       setError('Please fill in all required fields')
       showToast('Please fill in all required fields', 'warning')
@@ -150,11 +166,10 @@ function Crops() {
         season: formData.season,
         sowingDate: formData.sowingDate,
         expectedHarvestDate: formData.expectedHarvestDate,
-        farmId: parseInt(formData.farmId),
+        farmId: parseInt(formData.farmId, 10),
         status: formData.status,
       })
-
-      setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
+      setFormData(EMPTY_FORM)
       setEditingCrop(null)
       setError('')
       showToast('Crop updated successfully!', 'success')
@@ -169,42 +184,117 @@ function Crops() {
 
   const handleCancelEdit = () => {
     setEditingCrop(null)
-    setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
+    setFormData(EMPTY_FORM)
   }
 
-  const getFarmName = (farmId) => {
-    const farm = farms.find(f => f.id === farmId)
-    return farm ? farm.farmName : 'Unknown Farm'
-  }
+  const filteredCrops = useMemo(() => {
+    if (!debouncedCropSearch.trim()) return crops
+    const q = debouncedCropSearch.toLowerCase()
+    return crops.filter(
+      (c) =>
+        (c.cropName && c.cropName.toLowerCase().includes(q)) ||
+        (c.season && c.season.toLowerCase().includes(q)) ||
+        getFarmName(c.farmId).toLowerCase().includes(q),
+    )
+  }, [crops, debouncedCropSearch, getFarmName])
 
-  const getStatusColor = (status) => {
-    const colors = isDark ? {
-      PLANTED: 'bg-blue-900/50 text-blue-300',
-      GROWING: 'bg-green-900/50 text-green-300',
-      READY: 'bg-yellow-900/50 text-yellow-300',
-      HARVESTED: 'bg-gray-700 text-gray-300',
-    } : {
-      PLANTED: 'bg-blue-100 text-blue-800',
-      GROWING: 'bg-green-100 text-green-800',
-      READY: 'bg-yellow-100 text-yellow-800',
-      HARVESTED: 'bg-gray-100 text-gray-800',
-    }
-    return colors[status] || (isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-800')
-  }
+  const cropMetrics = useMemo(() => {
+    const total = crops.length
+    const planted = crops.filter((c) => c.status === 'PLANTED').length
+    const growing = crops.filter((c) => c.status === 'GROWING').length
+    const ready = crops.filter((c) => c.status === 'READY').length
+    return { total, planted, growing, ready }
+  }, [crops])
+
+  const cropColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'cropName',
+        header: 'Crop',
+        cell: ({ row }) => <span className="font-medium">{row.original.cropName}</span>,
+      },
+      {
+        id: 'farm',
+        header: 'Farm',
+        cell: ({ row }) => (
+          <span className="text-muted-foreground">{getFarmName(row.original.farmId)}</span>
+        ),
+      },
+      {
+        accessorKey: 'season',
+        header: 'Season',
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge className={STATUS_STYLES[row.original.status] || STATUS_STYLES.HARVESTED}>
+            {row.original.status}
+          </Badge>
+        ),
+      },
+      {
+        accessorKey: 'sowingDate',
+        header: 'Sowing',
+        cell: ({ row }) => new Date(row.original.sowingDate).toLocaleDateString(),
+      },
+      {
+        accessorKey: 'expectedHarvestDate',
+        header: 'Harvest',
+        cell: ({ row }) => new Date(row.original.expectedHarvestDate).toLocaleDateString(),
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleEditClick(row.original)}>Edit</Button>
+            <Button variant="destructive" size="sm" onClick={() => handleDeleteCrop(row.original.id)}>Delete</Button>
+          </div>
+        ),
+      },
+    ],
+    [getFarmName],
+  )
+
+  const cropFormFields = (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <FormField label="Crop name" id="cropName" required>
+        <Input id="cropName" name="cropName" value={formData.cropName} onChange={handleChange} placeholder="Wheat" required />
+      </FormField>
+      <FormField label="Farm" id="farmId" required>
+        <select id="farmId" name="farmId" value={formData.farmId} onChange={handleChange} className={selectClass} required>
+          <option value="">Select a farm</option>
+          {farms.map((farm) => (
+            <option key={farm.id} value={farm.id}>{farm.farmName}</option>
+          ))}
+        </select>
+      </FormField>
+      <FormField label="Season" id="season" required>
+        <Input id="season" name="season" value={formData.season} onChange={handleChange} placeholder="Rabi" required />
+      </FormField>
+      <FormField label="Status" id="status">
+        <select id="status" name="status" value={formData.status} onChange={handleChange} className={selectClass}>
+          <option value="PLANTED">Planted</option>
+          <option value="GROWING">Growing</option>
+          <option value="READY">Ready</option>
+          <option value="HARVESTED">Harvested</option>
+        </select>
+      </FormField>
+      <FormField label="Sowing date" id="sowingDate" required>
+        <Input id="sowingDate" type="date" name="sowingDate" value={formData.sowingDate} onChange={handleChange} required />
+      </FormField>
+      <FormField label="Expected harvest" id="expectedHarvestDate" required>
+        <Input id="expectedHarvestDate" type="date" name="expectedHarvestDate" value={formData.expectedHarvestDate} onChange={handleChange} required />
+      </FormField>
+    </div>
+  )
 
   if (loading) {
     return (
       <AppPage title="Crops" description="Track planting, growth, and harvest across your farms.">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="spinner text-green-600 mb-4">
-              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-              </svg>
-            </div>
-            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading crops...</p>
-          </div>
-        </div>
+        <PageSkeleton variant="table" />
       </AppPage>
     )
   }
@@ -214,302 +304,103 @@ function Crops() {
       title="Crops"
       description="Track planting, growth, and harvest across your farms."
       actions={
-        <button
+        <Button
           onClick={() => {
             setShowAddForm(!showAddForm)
             setEditingCrop(null)
-            setFormData({ cropName: '', season: '', sowingDate: '', expectedHarvestDate: '', farmId: '', status: 'PLANTED' })
+            setFormData(EMPTY_FORM)
           }}
-          className="premium-button"
         >
-          {showAddForm ? 'Close Form' : '+ Add Crop'}
-        </button>
+          <Plus className="h-4 w-4" />
+          {showAddForm ? 'Close form' : 'Add crop'}
+        </Button>
       }
     >
-      <div className="space-y-8">
-        {/* Error Message */}
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <KpiCard title="Total crops" value={cropMetrics.total} hint="Across all farms" icon={Sprout} />
+          <KpiCard title="Planted" value={cropMetrics.planted} hint="Recently sown" icon={Leaf} />
+          <KpiCard title="Growing" value={cropMetrics.growing} hint="In progress" icon={Leaf} />
+          <KpiCard title="Ready" value={cropMetrics.ready} hint="Near harvest" icon={Calendar} />
+        </div>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Quick actions</CardTitle>
+            <CardDescription>Connect crops to farms and irrigation.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Link to="/farms" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Manage farms</Link>
+            <Link to="/irrigation" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Irrigation</Link>
+            <Link to="/dashboard" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Dashboard</Link>
+          </CardContent>
+        </Card>
+
         {error && (
-          <div className={`glass-card px-4 py-3 border ${isDark ? 'border-red-700/40 bg-red-950/40 text-red-300' : 'border-red-200 bg-red-50 text-red-700'}`}>
-            {error}
-          </div>
+          <ErrorState title="Something went wrong" description={error} onRetry={fetchCrops} showHome={false} />
         )}
 
-        {/* Add Crop Form */}
         {showAddForm && (
-          <div className="glass-card interactive-card p-6">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Add New Crop</h2>
-                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Capture farm, season, and harvest targets in one pass.</p>
-              </div>
-              <span className="text-3xl">🌱</span>
-            </div>
-            <form onSubmit={handleAddCrop} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">Crop Name <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="cropName"
-                    value={formData.cropName}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="e.g., Wheat"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Farm <span className="text-red-500">*</span></label>
-                  <select
-                    name="farmId"
-                    value={formData.farmId}
-                    onChange={handleChange}
-                    className="form-input"
-                    required
-                  >
-                    <option value="">-- Select a farm --</option>
-                    {farms.map((farm) => (
-                      <option key={farm.id} value={farm.id}>
-                        {farm.farmName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label">Season <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="season"
-                    value={formData.season}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="e.g., Rabi"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="form-input"
-                  >
-                    <option value="PLANTED">Planted</option>
-                    <option value="GROWING">Growing</option>
-                    <option value="READY">Ready</option>
-                    <option value="HARVESTED">Harvested</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label">Sowing Date <span className="text-red-500">*</span></label>
-                  <input
-                    type="date"
-                    name="sowingDate"
-                    value={formData.sowingDate}
-                    onChange={handleChange}
-                    className="form-input"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Expected Harvest Date <span className="text-red-500">*</span></label>
-                  <input
-                    type="date"
-                    name="expectedHarvestDate"
-                    value={formData.expectedHarvestDate}
-                    onChange={handleChange}
-                    className="form-input"
-                    required
-                  />
-                </div>
-              </div>
-              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                {submitting ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Creating...
-                  </span>
-                ) : (
-                  'Create Crop'
-                )}
-              </button>
-            </form>
-          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Add new crop</CardTitle>
+              <CardDescription>Capture farm, season, and harvest targets.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleAddCrop} className="space-y-4">
+                {cropFormFields}
+                <Button type="submit" disabled={submitting}>{submitting ? 'Creating…' : 'Create crop'}</Button>
+              </form>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Edit Crop Form */}
         {editingCrop && (
-          <div className="glass-card interactive-card p-6">
-            <div className="mb-4 flex items-start justify-between gap-4">
-              <div>
-                <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>Edit Crop</h2>
-                <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Refine the crop timeline without leaving the page.</p>
-              </div>
-              <span className="text-3xl">✏️</span>
-            </div>
-            <form onSubmit={handleUpdateCrop} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="form-label">Crop Name <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="cropName"
-                    value={formData.cropName}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="e.g., Wheat"
-                    required
-                  />
+          <Card>
+            <CardHeader>
+              <CardTitle>Edit crop</CardTitle>
+              <CardDescription>Update timeline for {editingCrop.cropName}.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleUpdateCrop} className="space-y-4">
+                {cropFormFields}
+                <div className="flex gap-2">
+                  <Button type="submit" disabled={submitting}>{submitting ? 'Updating…' : 'Update crop'}</Button>
+                  <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
                 </div>
-                <div>
-                  <label className="form-label">Farm <span className="text-red-500">*</span></label>
-                  <select
-                    name="farmId"
-                    value={formData.farmId}
-                    onChange={handleChange}
-                    className="form-input"
-                    required
-                  >
-                    <option value="">-- Select a farm --</option>
-                    {farms.map((farm) => (
-                      <option key={farm.id} value={farm.id}>
-                        {farm.farmName}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label">Season <span className="text-red-500">*</span></label>
-                  <input
-                    type="text"
-                    name="season"
-                    value={formData.season}
-                    onChange={handleChange}
-                    className="form-input"
-                    placeholder="e.g., Rabi"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Status</label>
-                  <select
-                    name="status"
-                    value={formData.status}
-                    onChange={handleChange}
-                    className="form-input"
-                  >
-                    <option value="PLANTED">Planted</option>
-                    <option value="GROWING">Growing</option>
-                    <option value="READY">Ready</option>
-                    <option value="HARVESTED">Harvested</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="form-label">Sowing Date <span className="text-red-500">*</span></label>
-                  <input
-                    type="date"
-                    name="sowingDate"
-                    value={formData.sowingDate}
-                    onChange={handleChange}
-                    className="form-input"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="form-label">Expected Harvest Date <span className="text-red-500">*</span></label>
-                  <input
-                    type="date"
-                    name="expectedHarvestDate"
-                    value={formData.expectedHarvestDate}
-                    onChange={handleChange}
-                    className="form-input"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="flex space-x-2">
-                <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                  {submitting ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Updating...
-                    </span>
-                  ) : (
-                    'Update Crop'
-                  )}
-                </button>
-                <button type="button" onClick={handleCancelEdit} className="btn-secondary">
-                  Cancel
-                </button>
-              </div>
-            </form>
-          </div>
+              </form>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Crops Grid */}
-        {crops.length === 0 ? (
-          <div className="glass-card interactive-card text-center py-12">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-cyan-500/10 text-3xl">🌿</div>
-            <p className={`text-lg font-semibold ${isDark ? 'text-slate-300' : 'text-slate-700'}`}>No crops yet. Add your first crop!</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {crops.map((crop) => (
-              <div key={crop.id} className="glass-card interactive-card">
-                <div className="flex items-start justify-between mb-4">
+        <DataTable
+          columns={cropColumns}
+          data={filteredCrops}
+          searchPlaceholder="Search crops…"
+          globalFilter={cropSearch}
+          onGlobalFilterChange={setCropSearch}
+          emptyTitle="No crops yet"
+          emptyDescription="Add your first crop to track seasons and harvest windows."
+          emptyAction={<Button size="sm" onClick={() => setShowAddForm(true)}>Add crop</Button>}
+          mobileCardRender={(crop) => (
+            <Card key={crop.id}>
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-2">
                   <div>
-                    <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{crop.cropName}</h3>
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>📍 {getFarmName(crop.farmId)}</p>
+                    <p className="font-medium">{crop.cropName}</p>
+                    <p className="text-sm text-muted-foreground">{getFarmName(crop.farmId)}</p>
                   </div>
-                  <span className="text-2xl">🌱</span>
+                  <Badge className={STATUS_STYLES[crop.status] || STATUS_STYLES.HARVESTED}>{crop.status}</Badge>
                 </div>
-
-                <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
-                  <div className="flex justify-between items-center">
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Season</p>
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{crop.season}</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Status</p>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(crop.status)}`}>
-                      {crop.status}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Sowing Date</p>
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{new Date(crop.sowingDate).toLocaleDateString()}</p>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Expected Harvest</p>
-                    <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{new Date(crop.expectedHarvestDate).toLocaleDateString()}</p>
-                  </div>
+                <p className="text-sm text-muted-foreground">{crop.season} · Harvest {new Date(crop.expectedHarvestDate).toLocaleDateString()}</p>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleEditClick(crop)}>Edit</Button>
+                  <Button size="sm" variant="destructive" onClick={() => handleDeleteCrop(crop.id)}>Delete</Button>
                 </div>
-
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleEditClick(crop)}
-                    className="flex-1 btn-primary text-center text-sm"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDeleteCrop(crop.id)}
-                    className="flex-1 btn-secondary text-sm"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+              </CardContent>
+            </Card>
+          )}
+        />
       </div>
     </AppPage>
   )

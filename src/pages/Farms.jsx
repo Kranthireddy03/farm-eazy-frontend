@@ -11,7 +11,6 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useLoader } from '../context/LoaderContext'
-import { useTheme } from '../context/ThemeContext'
 import { useLocationContext } from '../context/LocationContext'
 import { useToast } from '../hooks/useToast';
 import AppPage from '../components/layout/AppPage';
@@ -20,9 +19,19 @@ import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 import { sendNotification } from '../components/NotificationCenter'
+import { KpiCard } from '../components/ui/kpi-card'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
+import { FormField } from '../components/ui/form-field'
+import { DataTable } from '../components/ui/data-table'
+import { EmptyState } from '../components/ui/empty-state'
+import { ErrorState } from '../components/ui/error-state'
+import { PageSkeleton } from '../components/ui/Skeleton'
+import { Sprout, MapPin, Plus } from 'lucide-react'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 
 function Farms() {
-    const { isDark } = useTheme()
     // Import dashboard stats refresh
     const dashboardWindow = window;
     const refreshDashboardStats = () => {
@@ -46,7 +55,63 @@ function Farms() {
   })
   const [showLocationPicker, setShowLocationPicker] = useState(false)
   const { selectedLocation } = useLocationContext()
+  const [farmSearch, setFarmSearch] = useState('')
+  const debouncedFarmSearch = useDebouncedValue(farmSearch)
+
   const { show: showLoader, hide: hideLoader } = useLoader();
+
+  const filteredFarms = useMemo(() => {
+    if (!debouncedFarmSearch.trim()) return farms
+    const q = debouncedFarmSearch.toLowerCase()
+    return farms.filter(
+      (f) =>
+        (f.farmName && f.farmName.toLowerCase().includes(q)) ||
+        (f.location && f.location.toLowerCase().includes(q)),
+    )
+  }, [farms, debouncedFarmSearch])
+
+  const farmColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'farmName',
+        header: 'Farm name',
+        cell: ({ row }) => <span className="font-medium">{row.original.farmName}</span>,
+      },
+      {
+        accessorKey: 'location',
+        header: 'Location',
+        cell: ({ row }) => (
+          <span className="text-muted-foreground flex items-center gap-1">
+            <MapPin className="h-3.5 w-3.5" />
+            {row.original.location}
+          </span>
+        ),
+      },
+      {
+        accessorKey: 'areaSize',
+        header: 'Area (ha)',
+        cell: ({ row }) => Number(row.original.areaSize).toFixed(1),
+      },
+      {
+        id: 'actions',
+        header: 'Actions',
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleEditClick(row.original)}>Edit</Button>
+            <Link
+              to={`/farms/${row.original.id}`}
+              className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent"
+            >
+              View
+            </Link>
+            <Button variant="destructive" size="sm" onClick={() => handleDeleteFarm(row.original.id)}>Delete</Button>
+          </div>
+        ),
+      },
+    ],
+    [],
+  )
 
   const farmMetrics = useMemo(() => {
     const totalFarms = farms.length
@@ -244,17 +309,8 @@ function Farms() {
 
   if (loading) {
     return (
-      <AppPage title="Farms" description="Manage your farm locations and land parcels.">
-        <div className="flex items-center justify-center h-96">
-          <div className="text-center">
-            <div className="spinner text-green-600 mb-4">
-              <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
-              </svg>
-            </div>
-            <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading farms...</p>
-          </div>
-        </div>
+      <AppPage title="Farms" description="Manage farm locations and land parcels.">
+        <PageSkeleton variant="table" />
       </AppPage>
     )
   }
@@ -262,120 +318,74 @@ function Farms() {
   return (
     <AppPage
       title="Farms"
-      description="Manage your farm locations and land parcels."
+      description="Register land parcels, track area, and connect crops and irrigation to each location."
       actions={
-        <button
+        <Button
           onClick={() => {
             setShowAddForm(!showAddForm)
             setEditingFarm(null)
             setFormData({ farmName: '', location: '', areaSize: '', latitude: null, longitude: null })
             setShowLocationPicker(false)
           }}
-          className="premium-button"
         >
-          {showAddForm ? 'Close Form' : '+ Add Farm'}
-        </button>
+          <Plus className="h-4 w-4" />
+          {showAddForm ? 'Close form' : 'Add farm'}
+        </Button>
       }
     >
-      <div className="space-y-8">
+      <div className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
-          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Farms</p>
-          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.totalFarms}</p>
-        </div>
-        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
-          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Area</p>
-          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.totalArea.toFixed(1)} ha</p>
-        </div>
-        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
-          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Average Size</p>
-          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.averageArea.toFixed(1)} ha</p>
-        </div>
-        <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-emerald-100'}`}>
-          <p className={`text-xs uppercase tracking-wide ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Large Farms</p>
-          <p className={`mt-2 text-2xl font-bold ${isDark ? 'text-white' : 'text-slate-900'}`}>{farmMetrics.largeFarms}</p>
-          <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>10+ hectares</p>
-        </div>
+        <KpiCard title="Total farms" value={farmMetrics.totalFarms} hint="Registered parcels" icon={Sprout} />
+        <KpiCard title="Total area" value={`${farmMetrics.totalArea.toFixed(1)} ha`} hint="Combined hectares" icon={MapPin} />
+        <KpiCard title="Average size" value={`${farmMetrics.averageArea.toFixed(1)} ha`} hint="Per farm" icon={Sprout} />
+        <KpiCard title="Large farms" value={farmMetrics.largeFarms} hint="10+ hectares" icon={Sprout} />
       </div>
 
-      <div className={`glass-card interactive-card p-4 ${isDark ? 'border-slate-700' : 'border-slate-100'}`}>
-        <div className="flex flex-wrap gap-3 items-center justify-between">
-          <div>
-            <p className={`text-sm font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>Farm Operations Quick Actions</p>
-            <p className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Jump to high-frequency tasks for faster daily operations.</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link to="/crops" className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold">Manage Crops</Link>
-            <Link to="/irrigation" className={`px-3 py-2 rounded-lg border text-sm font-semibold ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>Irrigation Planner</Link>
-            <Link to="/service-requests" className={`px-3 py-2 rounded-lg border text-sm font-semibold ${isDark ? 'border-slate-600 text-slate-200 hover:bg-slate-800' : 'border-slate-200 text-slate-700 hover:bg-slate-50'}`}>Service Requests</Link>
-          </div>
-        </div>
-      </div>
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Quick actions</CardTitle>
+          <CardDescription>High-frequency farm operations.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <Link to="/crops" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Manage crops</Link>
+          <Link to="/irrigation" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Irrigation</Link>
+          <Link to="/service-requests" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Service requests</Link>
+        </CardContent>
+      </Card>
 
-      {/* Error Message */}
       {error && (
-        <div className={`px-4 py-3 rounded-lg border ${isDark ? 'bg-red-900/30 border-red-700 text-red-400' : 'bg-red-50 border-red-200 text-red-700'}`}>
-          {error}
-        </div>
+        <ErrorState title="Could not load farms" description={error} onRetry={fetchFarms} showHome={false} />
       )}
 
-      {/* Add Farm Form */}
       {showAddForm && (
-        <div className={`glass-card interactive-card rounded-3xl border p-6 ${isDark ? 'border-slate-700 bg-slate-900/65' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Add New Farm</h2>
-            <span className={`text-xs px-3 py-1 rounded-full border ${isDark ? 'border-emerald-600/60 text-emerald-300 bg-emerald-900/20' : 'border-emerald-200 text-emerald-700 bg-emerald-50'}`}>Interactive Form</span>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Add new farm</CardTitle>
+            <CardDescription>Register a parcel with name, location, and area.</CardDescription>
+          </CardHeader>
+          <CardContent>
           <form onSubmit={handleAddFarm} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="form-label">Farm Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="farmName"
-                  value={formData.farmName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="e.g., North Field"
-                  required
-                />
-              </div>
-              <div>
-                <label className="form-label">Location <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="e.g., District, State"
-                  required
-                />
-              </div>
-              <div>
-                <label className="form-label">Area Size (hectares) <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  name="areaSize"
-                  value={formData.areaSize}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="e.g., 5.5"
-                  step="0.1"
-                  required
-                />
-              </div>
+              <FormField label="Farm name" id="farmName" required>
+                <Input id="farmName" name="farmName" value={formData.farmName} onChange={handleChange} placeholder="North field" required />
+              </FormField>
+              <FormField label="Location" id="location" required>
+                <Input id="location" name="location" value={formData.location} onChange={handleChange} placeholder="District, state" required />
+              </FormField>
+              <FormField label="Area (hectares)" id="areaSize" required hint="Decimal values supported">
+                <Input id="areaSize" type="number" name="areaSize" value={formData.areaSize} onChange={handleChange} step="0.1" required />
+              </FormField>
             </div>
-            <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-slate-700 bg-slate-800/80 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+            <div className="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm space-y-2">
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={useCurrentAppLocation} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
-                  Use Current Location
-                </button>
-                <button type="button" onClick={() => setShowLocationPicker((prev) => !prev)} className={`px-3 py-2 rounded-lg text-xs font-semibold ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
-                  {showLocationPicker ? 'Hide Map Picker' : 'Search / Map Pin'}
-                </button>
+                <Button type="button" variant="secondary" size="sm" onClick={useCurrentAppLocation}>Use current location</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowLocationPicker((prev) => !prev)}>
+                  {showLocationPicker ? 'Hide map' : 'Map picker'}
+                </Button>
               </div>
-              <p className="mt-2 text-xs">Current farm coordinates: {formData.latitude != null ? Number(formData.latitude).toFixed(5) : 'not set'}, {formData.longitude != null ? Number(formData.longitude).toFixed(5) : 'not set'}</p>
+              <p className="text-xs text-muted-foreground">
+                Coordinates: {formData.latitude != null ? Number(formData.latitude).toFixed(5) : '—'}, {formData.longitude != null ? Number(formData.longitude).toFixed(5) : '—'}
+              </p>
             </div>
             {showLocationPicker && (
               <LocationPicker
@@ -389,83 +399,41 @@ function Farms() {
                 initialAddress={null}
               />
             )}
-            <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-slate-700 bg-slate-800/80 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
-              Tip: Use specific names and location tags so your crops and irrigation schedules are easier to filter later.
-            </div>
-            <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-              {submitting ? (
-                <span className="flex items-center justify-center">
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Creating...
-                </span>
-              ) : (
-                'Create Farm'
-              )}
-            </button>
+            <Button type="submit" disabled={submitting}>{submitting ? 'Creating…' : 'Create farm'}</Button>
           </form>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Edit Farm Form */}
       {editingFarm && (
-        <div className={`glass-card interactive-card rounded-3xl border p-6 ${isDark ? 'border-slate-700 bg-slate-900/65' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Edit Farm</h2>
-            <span className={`text-xs px-3 py-1 rounded-full border ${isDark ? 'border-cyan-600/60 text-cyan-300 bg-cyan-900/20' : 'border-cyan-200 text-cyan-700 bg-cyan-50'}`}>Live Update</span>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>Edit farm</CardTitle>
+            <CardDescription>Update parcel details for {editingFarm.farmName}.</CardDescription>
+          </CardHeader>
+          <CardContent>
           <form onSubmit={handleUpdateFarm} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label className="form-label">Farm Name <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="farmName"
-                  value={formData.farmName}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="e.g., North Field"
-                  required
-                />
-              </div>
-              <div>
-                <label className="form-label">Location <span className="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="e.g., District, State"
-                  required
-                />
-              </div>
-              <div>
-                <label className="form-label">Area Size (hectares) <span className="text-red-500">*</span></label>
-                <input
-                  type="number"
-                  name="areaSize"
-                  value={formData.areaSize}
-                  onChange={handleChange}
-                  className="form-input"
-                  placeholder="e.g., 5.5"
-                  step="0.1"
-                  required
-                />
-              </div>
+              <FormField label="Farm name" id="edit-farmName" required>
+                <Input id="edit-farmName" name="farmName" value={formData.farmName} onChange={handleChange} required />
+              </FormField>
+              <FormField label="Location" id="edit-location" required>
+                <Input id="edit-location" name="location" value={formData.location} onChange={handleChange} required />
+              </FormField>
+              <FormField label="Area (hectares)" id="edit-areaSize" required>
+                <Input id="edit-areaSize" type="number" name="areaSize" value={formData.areaSize} onChange={handleChange} step="0.1" required />
+              </FormField>
             </div>
-            <div className={`rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-slate-700 bg-slate-800/80 text-slate-300' : 'border-slate-200 bg-slate-50 text-slate-600'}`}>
+            <div className="rounded-md border border-border bg-muted/40 px-4 py-3 text-sm space-y-2">
               <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={useCurrentAppLocation} className="px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700">
-                  Use Current Location
-                </button>
-                <button type="button" onClick={() => setShowLocationPicker((prev) => !prev)} className={`px-3 py-2 rounded-lg text-xs font-semibold ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'}`}>
-                  {showLocationPicker ? 'Hide Map Picker' : 'Search / Map Pin'}
-                </button>
+                <Button type="button" variant="secondary" size="sm" onClick={useCurrentAppLocation}>Use current location</Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowLocationPicker((prev) => !prev)}>
+                  {showLocationPicker ? 'Hide map' : 'Map picker'}
+                </Button>
               </div>
-              <p className="mt-2 text-xs">Current farm coordinates: {formData.latitude != null ? Number(formData.latitude).toFixed(5) : 'not set'}, {formData.longitude != null ? Number(formData.longitude).toFixed(5) : 'not set'}</p>
+              <p className="text-xs text-muted-foreground">
+                Coordinates: {formData.latitude != null ? Number(formData.latitude).toFixed(5) : '—'}, {formData.longitude != null ? Number(formData.longitude).toFixed(5) : '—'}
+              </p>
             </div>
             {showLocationPicker && (
               <LocationPicker
@@ -479,76 +447,40 @@ function Farms() {
                 initialAddress={null}
               />
             )}
-            <div className="flex space-x-2">
-              <button type="submit" disabled={submitting} className="btn-primary disabled:opacity-50 disabled:cursor-not-allowed">
-                {submitting ? (
-                  <span className="flex items-center justify-center">
-                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Updating...
-                  </span>
-                ) : (
-                  'Update Farm'
-                )}
-              </button>
-              <button type="button" onClick={handleCancelEdit} className="btn-secondary">
-                Cancel
-              </button>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={submitting}>{submitting ? 'Updating…' : 'Update farm'}</Button>
+              <Button type="button" variant="outline" onClick={handleCancelEdit}>Cancel</Button>
             </div>
           </form>
-        </div>
+          </CardContent>
+        </Card>
       )}
 
-      {/* Farms List */}
-      {farms.length === 0 ? (
-        <div className={`glass-card interactive-card text-center py-12 rounded-3xl border ${isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-100 bg-white/90 shadow-lg'}`}>
-          <p className={`text-lg ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>No farms yet. Create your first farm to get started!</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {farms.map((farm) => (
-            <div key={farm.id} className={`glass-card interactive-card rounded-2xl border p-5 hover:shadow-lg transition-shadow ${isDark ? 'border-slate-700 bg-slate-900/70' : 'border-slate-100 bg-white/95 shadow-sm'}`}>
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{farm.farmName}</h3>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{farm.location}</p>
-                </div>
-                <span className="text-2xl">🌾</span>
+      <DataTable
+        columns={farmColumns}
+        data={filteredFarms}
+        searchPlaceholder="Search farms…"
+        globalFilter={farmSearch}
+        onGlobalFilterChange={setFarmSearch}
+        emptyTitle="No farms yet"
+        emptyDescription="Create your first farm to start tracking crops and irrigation."
+        emptyAction={<Button size="sm" onClick={() => setShowAddForm(true)}>Add farm</Button>}
+        mobileCardRender={(farm) => (
+          <Card key={farm.id}>
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <p className="font-medium">{farm.farmName}</p>
+                <p className="text-sm text-muted-foreground">{farm.location}</p>
               </div>
-
-              <div className={`space-y-2 mb-4 pb-4 border-b ${isDark ? 'border-slate-700' : 'border-gray-200'}`}>
-                <div>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Area Size</p>
-                  <p className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{farm.areaSize} hectares</p>
-                </div>
+              <p className="text-sm">{farm.areaSize} ha</p>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleEditClick(farm)}>Edit</Button>
+                <Link to={`/farms/${farm.id}`} className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium hover:bg-accent">View</Link>
               </div>
-
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => handleEditClick(farm)}
-                  className="flex-1 btn-primary text-center text-sm"
-                >
-                  Edit
-                </button>
-                <Link
-                  to={`/farms/${farm.id}`}
-                  className="flex-1 btn-secondary text-center text-sm"
-                >
-                  View
-                </Link>
-                <button
-                  onClick={() => handleDeleteFarm(farm.id)}
-                  className="flex-1 btn-secondary text-sm"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+            </CardContent>
+          </Card>
+        )}
+      />
       </div>
     </AppPage>
   )

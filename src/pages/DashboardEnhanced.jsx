@@ -1,21 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sprout, ShoppingCart, Droplets, LifeBuoy, Wrench, Pencil, Trash2, Plus } from 'lucide-react';
+import { Sprout, ShoppingCart, Droplets, LifeBuoy, Wrench, Pencil, Trash2, Plus, CloudSun, Bell, TrendingUp } from 'lucide-react';
 import { useToast } from '../hooks/useToast';
 import { useCoin } from '../context/CoinContext';
+import { useLocationContext } from '../context/LocationContext';
 import apiClient from '../services/apiClient';
-import { PageHeader } from '../components/ui/page-header';
+import AppPage from '../components/layout/AppPage';
 import { KpiCard } from '../components/ui/kpi-card';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { FilterBar } from '../components/ui/filter-bar';
 import ActivityTimeline from '../components/ui/ActivityTimeline';
 import { PageSkeleton } from '../components/ui/Skeleton';
+import { ActivityAreaChart, OrdersBarChart, groupActivitiesByDay } from '../components/charts/dashboard-charts';
 
 function DashboardEnhanced() {
   const navigate = useNavigate();
   const { showToast } = useToast();
   const { coins } = useCoin();
+  const { selectedLocationLabel, hasSelectedLocation } = useLocationContext();
 
   const [serviceFilter, setServiceFilter] = useState('');
   const [serviceSort, setServiceSort] = useState('name');
@@ -174,37 +178,73 @@ function DashboardEnhanced() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <AppPage title="Dashboard" description="Loading your operational overview…">
         <PageSkeleton />
-      </div>
+      </AppPage>
     );
   }
 
+  const activityChartData = groupActivitiesByDay(activities);
+  const ordersChartData = [
+    { label: 'Farms', value: stats.totalFarms },
+    { label: 'Products', value: stats.totalProducts },
+    { label: 'Orders', value: stats.totalOrders },
+    { label: 'Services', value: stats.totalServices },
+  ];
+
   return (
-    <div className="space-y-8">
-
-      <PageHeader
-        title="Dashboard"
-        description="Overview of farms, marketplace activity, and recent actions for your selected location."
-        actions={
-          <Button variant="outline" size="sm" onClick={() => navigate('/activities')}>
-            View activity log
+    <AppPage
+      title="Operations dashboard"
+      description="Analytics, activity, and marketplace signals for your selected service location."
+      actions={
+        <>
+          <Button variant="outline" size="sm" onClick={() => navigate('/notifications')}>
+            <Bell className="h-4 w-4" />
+            Notifications
           </Button>
-        }
-      />
+          <Button variant="outline" size="sm" onClick={() => navigate('/activities')}>
+            Activity log
+          </Button>
+        </>
+      }
+    >
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         <KpiCard title="Active farms" value={stats.totalFarms} hint="Registered locations" icon={Sprout} />
         <KpiCard title="Growing crops" value={stats.totalCrops} hint="Across all farms" icon={Sprout} />
-        <KpiCard title="Listed products" value={stats.totalProducts} hint="Marketplace listings" icon={ShoppingCart} />
-        <KpiCard title="Orders" value={stats.totalOrders} hint="Purchase history" icon={ShoppingCart} />
+        <KpiCard title="Listed products" value={stats.totalProducts} hint="Marketplace" icon={ShoppingCart} />
+        <KpiCard title="Orders" value={stats.totalOrders} hint="Purchase history" icon={TrendingUp} />
+        <KpiCard title="Coins" value={coins?.totalCoins || 0} hint="Rewards balance" icon={ShoppingCart} />
+        <KpiCard title="Irrigation" value={stats.totalIrrigations} hint="Active schedules" icon={Droplets} />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <KpiCard title="FarmEazy coins" value={coins?.totalCoins || 0} hint="Rewards balance" icon={ShoppingCart} />
-        <KpiCard title="Irrigation schedules" value={stats.totalIrrigations} hint="Active plans" icon={Droplets} />
-        <KpiCard title="Service listings" value={stats.totalServices} hint="Your offerings" icon={LifeBuoy} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 grid gap-4">
+          <ActivityAreaChart data={activityChartData} description="Events recorded in the last 7 days" />
+        </div>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <CloudSun className="h-4 w-4 text-muted-foreground" />
+              Location context
+            </CardTitle>
+            <CardDescription>Weather and service area for marketplace data.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="rounded-md border border-border bg-muted/40 p-4">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Service location</p>
+              <p className="font-medium text-foreground mt-1">
+                {hasSelectedLocation ? selectedLocationLabel : 'No location selected'}
+              </p>
+            </div>
+            <p className="text-muted-foreground">
+              Marketplace listings and delivery eligibility are scoped to your active location. Update it from the location bar above.
+            </p>
+          </CardContent>
+        </Card>
       </div>
+
+      <OrdersBarChart data={ordersChartData} title="Portfolio snapshot" description="Counts across core modules" />
 
       <Card>
         <CardHeader>
@@ -215,23 +255,11 @@ function DashboardEnhanced() {
           <CardDescription>Manage services you offer in your area.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-3">
-            <Input
-              value={serviceFilter}
-              onChange={(e) => setServiceFilter(e.target.value)}
-              placeholder="Filter by name or description"
-              className="md:max-w-md"
-            />
-            <select
-              value={serviceSort}
-              onChange={(e) => setServiceSort(e.target.value)}
-              className="h-9 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="name">Sort by name</option>
-              <option value="price">Sort by price</option>
-              <option value="status">Sort by status</option>
-            </select>
-          </div>
+          <FilterBar
+            value={serviceFilter}
+            onChange={setServiceFilter}
+            placeholder="Search services…"
+          />
 
           {filteredServices.length === 0 ? (
             <p className="text-sm text-muted-foreground">No service listings yet.</p>
@@ -385,7 +413,7 @@ function DashboardEnhanced() {
           </Card>
         </div>
       )}
-    </div>
+    </AppPage>
   );
 }
 

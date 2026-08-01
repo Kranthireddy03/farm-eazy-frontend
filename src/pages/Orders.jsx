@@ -1,43 +1,81 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import ProductMediaCarousel from '../components/ProductMediaCarousel'
 import { useNavigate } from 'react-router-dom'
 import apiClient from '../services/apiClient'
-import { useTheme } from '../context/ThemeContext'
+import { useToast } from '../hooks/useToast'
 import AppPage from '../components/layout/AppPage'
 import CancelOrderModal from '../components/CancelOrderModal'
 import RefundDetailsModal from '../components/RefundDetailsModal'
+import { KpiCard } from '../components/ui/kpi-card'
+import { Button } from '../components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
+import { Badge } from '../components/ui/badge'
+import { ErrorState } from '../components/ui/error-state'
+import { EmptyState } from '../components/ui/empty-state'
+import { PageSkeleton } from '../components/ui/Skeleton'
+import { FilterBar } from '../components/ui/filter-bar'
+import { Package, ShoppingBag, Truck, IndianRupee } from 'lucide-react'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
+
+const ORDER_STATUS_STYLES = {
+  CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  DELIVERED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  SHIPPED: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  CONFIRMED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  PENDING: 'bg-muted text-muted-foreground',
+}
+
+const REFUND_STATUS_STYLES = {
+  REFUND_DETAILS_REQUIRED: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+  REQUESTED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  APPROVED: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  PROCESSING: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  COMPLETED: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  FAILED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  REJECTED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  PARTIALLY_REFUNDED: 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400',
+}
+
+const STATUS_FILTERS = [
+  { value: 'ALL', label: 'All' },
+  { value: 'PENDING', label: 'Pending' },
+  { value: 'CONFIRMED', label: 'Confirmed' },
+  { value: 'SHIPPED', label: 'Shipped' },
+  { value: 'DELIVERED', label: 'Delivered' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+]
 
 function Orders() {
-    const { isDark } = useTheme()
-    // Import dashboard stats refresh
-    const dashboardWindow = window;
-    const refreshDashboardStats = () => {
-      if (dashboardWindow.fetchStats) {
-        dashboardWindow.fetchStats();
-      }
-    };
+  const dashboardWindow = window
+  const refreshDashboardStats = () => {
+    if (dashboardWindow.fetchStats) dashboardWindow.fetchStats()
+  }
+
   const navigate = useNavigate()
+  const { showToast } = useToast()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  
-  // Modal states
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('ALL')
+  const debouncedSearch = useDebouncedValue(search)
+
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [showRefundDetailsModal, setShowRefundDetailsModal] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null)
-  const [successMessage, setSuccessMessage] = useState(null)
 
   const fetchOrders = async () => {
     try {
       const response = await apiClient.get('/orders')
       const list = Array.isArray(response.data) ? response.data : []
       setOrders(list)
+      setError(null)
     } catch (err) {
       setError('Could not load orders')
     } finally {
       setLoading(false)
-      refreshDashboardStats();
+      refreshDashboardStats()
     }
   }
 
@@ -46,6 +84,33 @@ function Orders() {
   }, [])
 
   const formatCurrency = (amount) => `₹${Number(amount || 0).toFixed(2)}`
+
+  const orderMetrics = useMemo(() => {
+    const total = orders.length
+    const active = orders.filter((o) => !['CANCELLED', 'DELIVERED'].includes(o.orderStatus)).length
+    const delivered = orders.filter((o) => o.orderStatus === 'DELIVERED').length
+    const revenue = orders
+      .filter((o) => o.orderStatus !== 'CANCELLED')
+      .reduce((sum, o) => sum + Number(o.finalAmount || 0), 0)
+    return { total, active, delivered, revenue }
+  }, [orders])
+
+  const filteredOrders = useMemo(() => {
+    let list = orders
+    if (statusFilter !== 'ALL') {
+      list = list.filter((o) => o.orderStatus === statusFilter)
+    }
+    if (debouncedSearch.trim()) {
+      const q = debouncedSearch.toLowerCase()
+      list = list.filter(
+        (o) =>
+          String(o.id).includes(q) ||
+          (o.orderStatus && o.orderStatus.toLowerCase().includes(q)) ||
+          (o.items?.some((i) => i.productName?.toLowerCase().includes(q))),
+      )
+    }
+    return list
+  }, [orders, statusFilter, debouncedSearch])
 
   const handleCancelClick = (order) => {
     setSelectedOrder(order)
@@ -63,53 +128,43 @@ function Orders() {
   }
 
   const handleCancelSuccess = (result) => {
-    setSuccessMessage(result.message || 'Order cancelled successfully')
-    fetchOrders() // Refresh orders
-    setTimeout(() => setSuccessMessage(null), 5000)
+    showToast(result.message || 'Order cancelled successfully', 'success')
+    fetchOrders()
   }
 
   const handleReturnSuccess = (result) => {
-    setSuccessMessage(result.message || 'Return request submitted successfully')
-    fetchOrders() // Refresh orders
-    setTimeout(() => setSuccessMessage(null), 5000)
+    showToast(result.message || 'Return request submitted successfully', 'success')
+    fetchOrders()
   }
 
   const handleRefundDetailsSuccess = () => {
-    setSuccessMessage('Refund details saved. Your refund will be processed shortly.')
-    fetchOrders() // Refresh orders
-    setTimeout(() => setSuccessMessage(null), 5000)
+    showToast('Refund details saved. Your refund will be processed shortly.', 'success')
+    fetchOrders()
   }
 
-  // Get refund status badge
-  const getRefundStatusBadge = (order) => {
+  const getRefundBadge = (order) => {
     if (!order.refundStatus || order.refundStatus === 'NOT_REQUESTED') return null
-
-    const statusConfig = {
-      'REFUND_DETAILS_REQUIRED': { bg: 'bg-yellow-500', text: 'Add Refund Details', icon: '⚠️' },
-      'REQUESTED': { bg: 'bg-blue-500', text: 'Refund Requested', icon: '⏳' },
-      'APPROVED': { bg: 'bg-blue-600', text: 'Refund Approved', icon: '✓' },
-      'PROCESSING': { bg: 'bg-purple-500', text: 'Processing Refund', icon: '⚡' },
-      'COMPLETED': { bg: 'bg-green-500', text: 'Refunded', icon: '✓' },
-      'FAILED': { bg: 'bg-red-500', text: 'Refund Failed', icon: '✗' },
-      'REJECTED': { bg: 'bg-red-600', text: 'Refund Rejected', icon: '✗' },
-      'PARTIALLY_REFUNDED': { bg: 'bg-teal-500', text: 'Partial Refund', icon: '↩' },
+    const labels = {
+      REFUND_DETAILS_REQUIRED: 'Add refund details',
+      REQUESTED: 'Refund requested',
+      APPROVED: 'Refund approved',
+      PROCESSING: 'Processing refund',
+      COMPLETED: 'Refunded',
+      FAILED: 'Refund failed',
+      REJECTED: 'Refund rejected',
+      PARTIALLY_REFUNDED: 'Partial refund',
     }
-
-    const config = statusConfig[order.refundStatus] || { bg: 'bg-gray-500', text: order.refundStatus, icon: '?' }
-
     return (
-      <span className={`${config.bg} text-white px-2 py-1 rounded-full text-xs font-medium`}>
-        {config.icon} {config.text}
-      </span>
+      <Badge className={REFUND_STATUS_STYLES[order.refundStatus] || REFUND_STATUS_STYLES.REQUESTED}>
+        {labels[order.refundStatus] || order.refundStatus}
+      </Badge>
     )
   }
 
   if (loading) {
     return (
       <AppPage title="My Orders" description="View and manage your order history.">
-        <div className="flex items-center justify-center h-64">
-          <p className={`text-lg ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>Loading your orders...</p>
-        </div>
+        <PageSkeleton variant="cards" />
       </AppPage>
     )
   }
@@ -117,31 +172,14 @@ function Orders() {
   if (error) {
     return (
       <AppPage title="My Orders" description="View and manage your order history.">
-        <div className="glass-card interactive-card p-8 text-center">
-          <p className="text-red-400 mb-4">{error}</p>
-          <button
-            onClick={() => navigate('/buying')}
-            className="premium-button"
-          >
-            Back to shop
-          </button>
-        </div>
-      </AppPage>
-    )
-  }
-
-  if (orders.length === 0) {
-    return (
-      <AppPage title="My Orders" description="View and manage your order history.">
-        <div className="glass-card interactive-card p-8 text-center">
-          <div className="text-6xl mb-4">📦</div>
-          <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-slate-600'}`}>Your order history will appear here.</p>
-          <button
-            onClick={() => navigate('/buying')}
-            className="premium-button"
-          >
-            Start Shopping
-          </button>
+        <ErrorState
+          title="Could not load orders"
+          description={error}
+          onRetry={fetchOrders}
+          showHome={false}
+        />
+        <div className="flex justify-center mt-4">
+          <Button variant="outline" onClick={() => navigate('/buying')}>Back to shop</Button>
         </div>
       </AppPage>
     )
@@ -152,175 +190,148 @@ function Orders() {
       title="My Orders"
       description="View and manage your order history."
       actions={
-        <button
-          onClick={() => navigate('/buying')}
-          className="premium-button"
-        >
+        <Button onClick={() => navigate('/buying')}>
+          <ShoppingBag className="h-4 w-4" />
           Continue shopping
-        </button>
+        </Button>
       }
     >
       <div className="space-y-6">
-        {successMessage && (
-          <div className={`glass-card p-4 rounded-2xl ${isDark ? 'bg-green-900/30 text-green-400 border border-green-800' : 'bg-green-50 text-green-700 border border-green-200'}`}>
-            ✓ {successMessage}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <KpiCard title="Total orders" value={orderMetrics.total} hint="All time" icon={Package} />
+          <KpiCard title="Active" value={orderMetrics.active} hint="In progress" icon={Truck} />
+          <KpiCard title="Delivered" value={orderMetrics.delivered} hint="Completed" icon={Package} />
+          <KpiCard title="Spend" value={formatCurrency(orderMetrics.revenue)} hint="Excluding cancelled" icon={IndianRupee} />
+        </div>
+
+        <FilterBar
+          value={search}
+          onChange={setSearch}
+          placeholder="Search orders or products…"
+          filters={STATUS_FILTERS}
+          activeFilter={statusFilter}
+          onFilterChange={setStatusFilter}
+        />
+
+        {orders.length === 0 ? (
+          <EmptyState
+            title="No orders yet"
+            description="Your order history will appear here once you make a purchase."
+            action={<Button onClick={() => navigate('/buying')}>Start shopping</Button>}
+          />
+        ) : filteredOrders.length === 0 ? (
+          <EmptyState
+            title="No matching orders"
+            description="Try adjusting your search or status filter."
+            action={<Button variant="outline" onClick={() => { setSearch(''); setStatusFilter('ALL') }}>Clear filters</Button>}
+          />
+        ) : (
+          <div className="space-y-4">
+            {filteredOrders.map((order) => (
+              <Card key={order.id} className="overflow-hidden transition-shadow hover:shadow-md">
+                <CardHeader className="pb-3 border-b border-border bg-muted/30">
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 flex-1">
+                      <div>
+                        <CardDescription>Order ID</CardDescription>
+                        <CardTitle className="text-base font-semibold">#FZ{order.id}</CardTitle>
+                      </div>
+                      <div>
+                        <CardDescription>Placed</CardDescription>
+                        <p className="text-sm font-medium">{order.createdAt?.split('T')[0] || '—'}</p>
+                      </div>
+                      <div>
+                        <CardDescription>Total</CardDescription>
+                        <p className="text-sm font-semibold text-primary">{formatCurrency(order.finalAmount)}</p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <Badge className={ORDER_STATUS_STYLES[order.orderStatus] || ORDER_STATUS_STYLES.PENDING}>
+                          {order.orderStatus || 'PENDING'}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground">Payment: {order.paymentStatus}</span>
+                        {getRefundBadge(order)}
+                      </div>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                {order.items?.length > 0 && (
+                  <CardContent className="pt-4 space-y-4">
+                    {order.items.map((item) => (
+                      <div key={`${order.id}-${item.productId}`} className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="w-20 h-20 shrink-0 rounded-md border border-border overflow-hidden">
+                            <ProductMediaCarousel mediaUrls={item.mediaUrls || (item.imageUrls ? item.imageUrls.split(',') : [])} />
+                          </div>
+                          <div>
+                            <p className="font-medium">{item.productName}</p>
+                            <p className="text-sm text-muted-foreground">Qty {item.quantity}</p>
+                            {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
+                              <p className="text-sm mt-1">
+                                <span className="font-semibold text-primary">{formatCurrency(item.discountedPrice)}</span>
+                                <span className="ml-2 line-through text-muted-foreground">{formatCurrency(item.price)}</span>
+                              </p>
+                            ) : (
+                              <p className="text-sm font-semibold text-primary mt-1">{formatCurrency(item.price)}</p>
+                            )}
+                          </div>
+                        </div>
+                        <p className="font-medium">{formatCurrency(item.totalPrice)}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                )}
+
+                {order.refundStatus && order.refundStatus !== 'NOT_REQUESTED' && (
+                  <CardContent className="pt-0">
+                    <div className="rounded-md border border-border bg-muted/40 p-3 text-sm space-y-1">
+                      {order.refundAmount > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Refund amount</span>
+                          <span className="font-medium text-green-600">{formatCurrency(order.refundAmount)}</span>
+                        </div>
+                      )}
+                      {order.coinsRefunded > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Coins refunded</span>
+                          <span className="font-medium">+{order.coinsRefunded}</span>
+                        </div>
+                      )}
+                      {order.refundReason && (
+                        <p className="text-xs text-muted-foreground">Reason: {order.refundReason}</p>
+                      )}
+                    </div>
+                  </CardContent>
+                )}
+
+                <CardContent className="pt-0 flex flex-wrap gap-2 border-t border-border">
+                  {order.refundStatus === 'REFUND_DETAILS_REQUIRED' && (
+                    <Button size="sm" variant="secondary" onClick={() => handleRefundDetailsClick(order)}>
+                      Add refund details
+                    </Button>
+                  )}
+                  {order.canCancel && order.orderStatus !== 'CANCELLED' && (!order.refundStatus || order.refundStatus === 'NOT_REQUESTED') && (
+                    <Button size="sm" variant="destructive" onClick={() => handleCancelClick(order)}>
+                      Cancel order
+                    </Button>
+                  )}
+                  {order.canReturn && order.orderStatus === 'DELIVERED' && (!order.refundStatus || order.refundStatus === 'NOT_REQUESTED') && (
+                    <Button size="sm" variant="outline" onClick={() => handleReturnClick(order)}>
+                      Request return
+                    </Button>
+                  )}
+                  {['DELIVERED', 'CANCELLED'].includes(order.orderStatus) && (
+                    <Button size="sm" variant="outline" onClick={() => navigate('/buying')}>
+                      Buy again
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ))}
           </div>
         )}
-
-        <div className="space-y-4">
-          {orders.map(order => (
-            <div key={order.id} className="glass-card interactive-card p-6 border">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Order ID</p>
-                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>#FZ{order.id}</p>
-                </div>
-                <div>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Placed on</p>
-                  <p className={`text-lg font-semibold ${isDark ? 'text-white' : 'text-slate-900'}`}>{order.createdAt?.split('T')[0] || '—'}</p>
-                </div>
-                <div>
-                  <p className={`text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total</p>
-                  <p className="text-lg font-semibold text-orange-400">{formatCurrency(order.finalAmount)}</p>
-                </div>
-                <div className="text-right">
-                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                    order.orderStatus === 'CANCELLED' ? 'bg-red-900/50 text-red-400' :
-                    order.orderStatus === 'DELIVERED' ? 'bg-green-900/50 text-green-400' :
-                    order.orderStatus === 'SHIPPED' ? 'bg-purple-900/50 text-purple-400' :
-                    isDark ? 'bg-blue-900/50 text-blue-400' : 'bg-blue-100 text-blue-700'
-                  }`}>
-                    {order.orderStatus || 'PENDING'}
-                  </span>
-                  <div className={`text-xs mt-1 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Payment: {order.paymentStatus}</div>
-                  {/* Refund status badge */}
-                  {getRefundStatusBadge(order) && (
-                    <div className="mt-2">{getRefundStatusBadge(order)}</div>
-                  )}
-                </div>
-              </div>
-
-              {order.items && order.items.length > 0 && (
-                <div className={`mt-4 border-t ${isDark ? 'border-slate-600' : 'border-gray-200'} pt-4 text-sm ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                  {order.items.map(item => (
-                    <div key={`${order.id}-${item.productId}`} className="flex flex-col md:flex-row justify-between py-1 items-center gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-32 h-32">
-                          <ProductMediaCarousel mediaUrls={item.mediaUrls || (item.imageUrls ? item.imageUrls.split(',') : [])} />
-                        </div>
-                        <div>
-                          <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>{item.productName}</span> × {item.quantity}
-                          {item.discountedPrice !== undefined && item.discountedPrice < item.price ? (
-                            <>
-                              <span className="ml-2 text-orange-400 font-bold">₹{item.discountedPrice.toFixed(2)}</span>
-                              <span className={`ml-2 line-through ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{item.price.toFixed(2)}</span>
-                              <span className="ml-2 text-green-400 font-semibold">Saved ₹{((item.price - item.discountedPrice) * item.quantity).toFixed(2)}</span>
-                            </>
-                          ) : (
-                            <span className="ml-2 text-orange-400 font-bold">₹{item.price.toFixed(2)}</span>
-                          )}
-                        </div>
-                      </div>
-                      <span className={isDark ? 'text-white' : 'text-gray-800'}>{formatCurrency(item.totalPrice)}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Refund amount display */}
-              {order.refundStatus && order.refundStatus !== 'NOT_REQUESTED' && (
-                <div className={`mt-3 p-3 rounded-lg ${isDark ? 'bg-slate-700/50' : 'bg-gray-50'}`}>
-                  {order.refundAmount > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Refund Amount:</span>
-                      <span className="text-green-500 font-semibold">{formatCurrency(order.refundAmount)}</span>
-                    </div>
-                  )}
-                  {order.coinsRefunded > 0 && (
-                    <div className="flex justify-between items-center mt-1">
-                      <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Coins Refunded:</span>
-                      <span className="text-yellow-500 font-semibold">+{order.coinsRefunded} 🪙</span>
-                    </div>
-                  )}
-                  {order.coinsUsed > 0 && !order.coinsRefunded && ['REQUESTED', 'APPROVED', 'PROCESSING'].includes(order.refundStatus) && (
-                    <div className="flex justify-between items-center mt-1">
-                      <span className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>Coins to Refund:</span>
-                      <span className="text-yellow-400 font-semibold">{order.coinsUsed} 🪙</span>
-                    </div>
-                  )}
-                  {order.refundReason && (
-                    <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      Reason: {order.refundReason}
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Action buttons */}
-              <div className={`mt-4 pt-4 border-t ${isDark ? 'border-slate-700' : 'border-gray-100'} flex flex-wrap gap-2`}>
-                {/* Add Refund Details button - when required */}
-                {order.refundStatus === 'REFUND_DETAILS_REQUIRED' && (
-                  <button
-                    onClick={() => handleRefundDetailsClick(order)}
-                    className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white font-medium rounded-lg text-sm transition"
-                  >
-                    ⚠️ Add Refund Details
-                  </button>
-                )}
-
-                {/* Cancel button - for pending/confirmed orders */}
-                {order.canCancel && order.orderStatus !== 'CANCELLED' && (!order.refundStatus || order.refundStatus === 'NOT_REQUESTED') && (
-                  <button
-                    onClick={() => handleCancelClick(order)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      isDark ? 'bg-red-900/30 text-red-400 hover:bg-red-900/50' : 'bg-red-50 text-red-600 hover:bg-red-100'
-                    }`}
-                  >
-                    ❌ Cancel Order
-                  </button>
-                )}
-
-                {/* Return button - for delivered orders */}
-                {order.canReturn && order.orderStatus === 'DELIVERED' && (!order.refundStatus || order.refundStatus === 'NOT_REQUESTED') && (
-                  <button
-                    onClick={() => handleReturnClick(order)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      isDark ? 'bg-orange-900/30 text-orange-400 hover:bg-orange-900/50' : 'bg-orange-50 text-orange-600 hover:bg-orange-100'
-                    }`}
-                  >
-                    ↩️ Request Return
-                  </button>
-                )}
-
-                {/* Track order button */}
-                {['CONFIRMED', 'SHIPPED'].includes(order.orderStatus) && (
-                  <button
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      isDark ? 'bg-slate-700 text-gray-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                  >
-                    📦 Track Order
-                  </button>
-                )}
-
-                {/* Reorder button - for delivered/cancelled */}
-                {['DELIVERED', 'CANCELLED'].includes(order.orderStatus) && (
-                  <button
-                    onClick={() => navigate('/buying')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
-                      isDark ? 'bg-green-900/30 text-green-400 hover:bg-green-900/50' : 'bg-green-50 text-green-600 hover:bg-green-100'
-                    }`}
-                  >
-                    🔄 Buy Again
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
       </div>
 
-      {/* Cancel Order Modal */}
       <CancelOrderModal
         isOpen={showCancelModal}
         onClose={() => {
@@ -332,7 +343,6 @@ function Orders() {
         type="cancel"
       />
 
-      {/* Return Order Modal */}
       <CancelOrderModal
         isOpen={showReturnModal}
         onClose={() => {
@@ -344,7 +354,6 @@ function Orders() {
         type="return"
       />
 
-      {/* Refund Details Modal */}
       <RefundDetailsModal
         isOpen={showRefundDetailsModal}
         onClose={() => {
