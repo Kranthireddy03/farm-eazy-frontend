@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets } from '../services/SupportTicketService';
 import apiClient from '../services/apiClient';
+import { unwrapApiList } from '../utils/apiResponse';
 import { useGlobalToast } from '../context/ToastContext';
 import { STORAGE_KEYS } from '../config/api';
 
@@ -342,7 +343,7 @@ export default function ChatSupport({ className = '' }) {
       try {
         setFaqLoading(true);
         const res = await apiClient.get('/faq-questions', { params: { source: 'user' } });
-        setFaqs(Array.isArray(res.data) ? res.data : []);
+        setFaqs(unwrapApiList(res.data));
       } catch {
         setFaqs([]);
       } finally {

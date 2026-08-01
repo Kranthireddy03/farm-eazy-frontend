@@ -1,6 +1,7 @@
 import apiClient from './apiClient';
+import { unwrapApiData } from '../utils/apiResponse';
 
 export const getPublicStats = async () => {
   const res = await apiClient.get('/public/stats');
-  return res.data;
+  return unwrapApiData(res.data) || {};
 };

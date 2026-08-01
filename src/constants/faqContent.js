@@ -145,11 +145,11 @@ export function inferFaqCategory(question = '', answer = '') {
 export function mapApprovedFaqs(items) {
   if (!Array.isArray(items)) return []
   return items
-    .filter((item) => item?.question && item?.answer)
+    .filter((item) => item?.question)
     .map((item) => ({
       id: item.id,
       q: item.question,
-      a: item.answer,
-      cat: inferFaqCategory(item.question, item.answer),
+      a: item.answer || item.details || 'This answer is being finalized by our team.',
+      cat: inferFaqCategory(item.question, item.answer || item.details || ''),
     }))
 }

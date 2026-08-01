@@ -3,6 +3,8 @@ import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import { useNavigate } from 'react-router-dom';
 import apiClient from '../services/apiClient';
+import { getApiErrorMessage } from '../utils/apiError';
+import { unwrapApiData } from '../utils/apiResponse';
 import { useTheme } from '../context/ThemeContext';
 import { GlassPanel, HeroFrame, PillButton, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 import { PublicPageContainer, PublicNotePanel } from '../components/public/PublicPagePrimitives';
@@ -24,26 +26,20 @@ export default function AskQuestion() {
     setResponse('');
     try {
       const res = await apiClient.post('/faq/question', { question, email, source: 'FAQ_USER_PUBLIC_PAGE' });
+      const body = unwrapApiData(res.data);
+      const message = typeof body === 'string'
+        ? body
+        : body?.message || 'Your question has been submitted successfully.';
       setSubmitted(true);
-      setResponse(res.data);
+      setResponse(message);
       setQuestion('');
       setEmail('');
-      // If backend returns a special flag or message for FAQ addition, show congrats
-      if (res.data && typeof res.data === 'object' && res.data.faqAdded) {
-        setFaqCongrats(true);
-        showToast('🎉 Your question was added to the FAQ! Thank you for contributing.', 'success');
-      } else {
-        setFaqCongrats(false);
-        showToast('Your question was submitted and is being reviewed by admins. You will receive an answer soon.', 'info');
-      }
+      setFaqCongrats(false);
+      showToast('Your question was submitted and is being reviewed by admins. You will receive an answer soon.', 'info');
     } catch (err) {
-      if (err.response && err.response.data) {
-        setError(err.response.data.message || 'Failed to submit question.');
-        showToast(err.response.data.message || 'Failed to submit question.', 'error');
-      } else {
-        setError('Network error. Please try again.');
-        showToast('Network error. Please try again.', 'error');
-      }
+      const message = getApiErrorMessage(err, 'Failed to submit question.');
+      setError(message);
+      showToast(message, 'error');
     }
   };
 

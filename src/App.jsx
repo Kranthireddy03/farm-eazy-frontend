@@ -146,7 +146,7 @@ const queryClient = new QueryClient({
  * ProtectedRoute Component
  * Uses AuthContext for consistent session management
  */
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ children, skipSessionBootstrap = false }) {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   const profileCompletionRequired = localStorage.getItem(STORAGE_KEYS.USER_PROFILE_COMPLETION_REQUIRED) === 'true';
@@ -159,11 +159,19 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/complete-google-profile" replace />;
   }
   
-  return isAuthenticated ? (
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
+  }
+
+  if (skipSessionBootstrap) {
+    return children;
+  }
+
+  return (
     <SessionBootstrapGate>
       {children}
     </SessionBootstrapGate>
-  ) : <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
+  );
 }
 
 function SupportPortalRedirect({
@@ -233,7 +241,7 @@ function AppContent() {
   const renderContextAwarePage = (PageComponent) => {
     if (isAuthenticated) {
       return (
-        <ProtectedRoute>
+        <ProtectedRoute skipSessionBootstrap>
           <Layout onShowTour={() => setShowOnboarding(true)}>
             <PageComponent />
           </Layout>

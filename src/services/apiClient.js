@@ -243,6 +243,24 @@ async function decryptPayload(encryptedPayload) {
   return JSON.parse(textDecoder.decode(decrypted));
 }
 
+/**
+ * Backend may encrypt responses even when the frontend request-encryption flag is off.
+ * Always decrypt { payload } envelopes when a secret is configured.
+ */
+async function normalizeApiResponseBody(data) {
+  if (data && typeof data === 'object' && typeof data.payload === 'string') {
+    if (!ENCRYPTION_SECRET) {
+      const error = new Error(
+        'API returned an encrypted payload but VITE_API_ENCRYPTION_SECRET is not configured.'
+      );
+      error.code = 'API_ENCRYPTION_MISCONFIG';
+      throw error;
+    }
+    return decryptPayload(data.payload);
+  }
+  return data;
+}
+
 async function importHmacKey() {
   // Browser HMAC is disabled for Option B (no secrets in browser). Calls should not reach here.
   throw new Error('Browser HMAC import is disabled under the Option B security model');
@@ -480,8 +498,8 @@ apiClient.interceptors.response.use(
       localStorage.setItem(LAST_SYNC_KEY, new Date().toISOString());
     }
 
-    if (API_ENCRYPTION_ENABLED && ENCRYPTION_SECRET && response?.data && typeof response.data === 'object' && response.data.payload) {
-      response.data = await decryptPayload(response.data.payload);
+    if (response?.data) {
+      response.data = await normalizeApiResponseBody(response.data);
     }
     // Development logging
     if (import.meta.env.DEV) {

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, Navigation, Search, Clock, Home } from 'lucide-react'
 import apiClient from '../../services/apiClient'
+import { unwrapApiList } from '../../utils/apiResponse'
 import { useAuth } from '../../context/AuthContext'
 import { useSession } from '../../context/SessionContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -69,7 +70,7 @@ export default function LocationWizard() {
     setAddressError('')
     try {
       const response = await apiClient.get('/addresses')
-      const list = Array.isArray(response?.data) ? response.data : []
+      const list = unwrapApiList(response?.data)
       setSavedAddresses(list)
     } catch {
       setAddressError('Unable to load saved addresses right now.')

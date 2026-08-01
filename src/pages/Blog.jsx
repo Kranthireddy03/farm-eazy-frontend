@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
 import { getPublicBlogPosts } from '../services/BlogService'
+import { deriveBlogExcerpt } from '../utils/apiResponse'
 import { GlassPanel, HeroFrame, PillButton, ScrollRail, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface'
 
 export default function Blog() {
@@ -20,20 +21,23 @@ export default function Blog() {
       try {
         const blogPosts = await getPublicBlogPosts()
         const mappedBlogs = blogPosts
-          .filter(item => item?.title && item?.excerpt)
-          .map((item) => ({
-            id: item.id,
-            slug: item.slug,
-            title: item.title,
-            excerpt: item.excerpt,
-            category: item.category || 'General',
-            readTime: `${Math.max(2, Math.ceil((item.excerpt || '').split(' ').length / 120))} min read`,
-            date: item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : 'Recently updated',
-            authorName: item.authorName || 'FarmEazy Team',
-            source: item.source || 'ADMIN_PORTAL',
-            averageRating: item.averageRating || 0,
-            ratingCount: item.ratingCount || 0,
-          }))
+          .filter((item) => item?.title)
+          .map((item) => {
+            const excerpt = deriveBlogExcerpt(item)
+            return {
+              id: item.id,
+              slug: item.slug,
+              title: item.title,
+              excerpt,
+              category: item.category || 'General',
+              readTime: `${Math.max(2, Math.ceil((excerpt || '').split(' ').length / 120))} min read`,
+              date: item.publishedAt ? new Date(item.publishedAt).toLocaleDateString() : 'Recently updated',
+              authorName: item.authorName || 'FarmEazy Team',
+              source: item.source || 'ADMIN_PORTAL',
+              averageRating: item.averageRating || 0,
+              ratingCount: item.ratingCount || 0,
+            }
+          })
         setPosts(mappedBlogs)
       } catch (_err) {
         setError('Unable to load blog feed right now. Please try again soon.')

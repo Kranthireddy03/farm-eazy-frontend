@@ -1,4 +1,5 @@
 import apiClient from './apiClient'
+import { unwrapApiList } from '../utils/apiResponse'
 
 /**
  * Approved FAQs from backend (addedToFAQ=true, filtered by source + visibility).
@@ -6,5 +7,5 @@ import apiClient from './apiClient'
  */
 export async function getApprovedFaqQuestions(source = 'user') {
   const res = await apiClient.get('/faq-questions', { params: { source } })
-  return Array.isArray(res.data) ? res.data : []
+  return unwrapApiList(res.data)
 }
