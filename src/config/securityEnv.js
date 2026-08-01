@@ -1,8 +1,7 @@
 /**
- * Resolves browser API security env vars to match backend defaults in local dev.
+ * Resolves browser API security env vars for local and production builds.
  */
 
-const DEV_ENCRYPTION_DEFAULT = 'FarmEazyProdApiEncryptionKeyV2026SecureDefault';
 const PLACEHOLDER_SECRETS = new Set([
   'your-strong-32-plus-character-secret',
   'your-gateway-hmac-secret',
@@ -19,8 +18,8 @@ function isPlaceholderSecret(value) {
 
 export function resolveEncryptionSecret() {
   const configured = String(import.meta.env.VITE_API_ENCRYPTION_SECRET || '').trim();
-  if (import.meta.env.DEV && isPlaceholderSecret(configured)) {
-    return DEV_ENCRYPTION_DEFAULT;
+  if (isPlaceholderSecret(configured)) {
+    return '';
   }
   return configured;
 }
