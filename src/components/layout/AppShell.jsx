@@ -91,8 +91,9 @@ export default function AppShell({ children, onShowTour }) {
   }, [showUserMenu]);
 
   useEffect(() => {
-    if (loginBonusClaimedRef.current) return;
+    if (loginBonusClaimedRef.current || sessionStorage.getItem('farmEazy_login_bonus_claimed')) return;
     loginBonusClaimedRef.current = true;
+    sessionStorage.setItem('farmEazy_login_bonus_claimed', '1');
     apiClient.post('/coins/login-bonus').catch(() => {}).finally(() => refreshCoins());
   }, [refreshCoins]);
 
