@@ -7,14 +7,18 @@ import AppPage from '../components/layout/AppPage'
 import { sendNotification } from '../components/NotificationCenter'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
+import { Card, CardContent } from '../components/ui/card'
 import { ErrorState } from '../components/ui/error-state'
 import { PageSkeleton } from '../components/ui/Skeleton'
 import { CartPromptDialog } from '../components/marketplace/CartPromptDialog'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { InfoPanel } from '../components/platform/InfoPanel'
+import { SummaryPanel } from '../components/platform/SummaryPanel'
+import { DetailPanel } from '../components/platform/DetailPanel'
 import { useWishlist } from '../hooks/useWishlist'
 import { buildCartItem, addToCartStorage } from '../lib/marketplace'
 import {
-  ArrowLeft, Heart, MapPin, Mail, Phone, Package, Truck, Share2, ShoppingCart,
+  ArrowLeft, Heart, MapPin, Mail, Phone, Truck, Share2, ShoppingCart,
 } from 'lucide-react'
 
 function ProductDetail() {
@@ -173,123 +177,119 @@ function ProductDetail() {
         Marketplace
       </Button>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <PageScaffold
+        aside={
+          <>
+            <SummaryPanel title="Order summary" description="Price and availability at your location">
+              <div className="flex items-baseline gap-2">
+                {product.discountPercentage > 0 && (
+                  <span className="text-muted-foreground line-through">₹{product.price}</span>
+                )}
+                <span className="text-3xl font-semibold text-primary tabular-nums">₹{displayPrice}</span>
+                <span className="text-muted-foreground text-sm">/ {product.unit}</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">Stock</p>
+                  <p className="font-semibold mt-1">{product.quantity} {product.unit}</p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-xs text-muted-foreground">Delivery</p>
+                  <p className="font-semibold mt-1 text-sm">
+                    {product.deliveryDaysMin || 3}–{product.deliveryDaysMax || 5} days
+                  </p>
+                </div>
+              </div>
+              <Button
+                className="w-full mt-4 gap-2"
+                onClick={handleAddToCart}
+                disabled={outOfStock || isNotDeliverable || addingToCart}
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {addingToCart ? 'Adding…' : 'Add to cart'}
+              </Button>
+            </SummaryPanel>
+            {isNotDeliverable && (
+              <InfoPanel
+                variant="warning"
+                title="Not deliverable"
+                description={product.deliveryMessage || 'This product cannot be delivered to your selected location.'}
+              />
+            )}
+          </>
+        }
+      >
         <Card className="overflow-hidden">
           <div className="aspect-square bg-muted max-h-[min(70vh,520px)]">
             <ProductMediaCarousel mediaUrls={productMediaUrls} videoUrls={productVideoUrls} />
           </div>
         </Card>
 
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-3xl font-semibold tracking-tight">{product.productName}</CardTitle>
-              <CardDescription className="text-base leading-relaxed">{product.description}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-baseline gap-2">
-                {product.discountPercentage > 0 && (
-                  <span className="text-muted-foreground line-through text-lg">₹{product.price}</span>
-                )}
-                <span className="text-3xl font-semibold text-primary">₹{displayPrice}</span>
-                <span className="text-muted-foreground">/ {product.unit}</span>
-              </div>
+        <DetailPanel title={product.productName} description={product.description}>
+          {product.specifications && (
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Specifications</h3>
+              <p className="text-sm text-muted-foreground">{product.specifications}</p>
+            </div>
+          )}
+          {product.warrantyInfo && (
+            <div>
+              <h3 className="text-sm font-semibold mb-1">Warranty</h3>
+              <p className="text-sm text-muted-foreground">{product.warrantyInfo}</p>
+            </div>
+          )}
+        </DetailPanel>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Package className="h-3.5 w-3.5" /> Stock
-                  </p>
-                  <p className="font-semibold mt-1">{product.quantity} {product.unit}</p>
-                </div>
-                <div className="rounded-lg border border-border p-3">
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Truck className="h-3.5 w-3.5" /> Delivery
-                  </p>
-                  <p className="font-semibold mt-1 text-sm">
-                    {product.deliveryDaysMin || 3}–{product.deliveryDaysMax || 5} days
-                  </p>
-                </div>
-              </div>
+        <DetailPanel title="Seller" description={product.sellerFullName}>
+          {product.sellerLocation && (
+            <p className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4 shrink-0" />
+              {product.sellerLocation}
+            </p>
+          )}
+          {product.vendorName && (
+            <p className="text-sm text-muted-foreground">Vendor: {product.vendorName}</p>
+          )}
+          <div className="flex flex-wrap gap-2 mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!sellerPhone}
+              onClick={() => setRevealedContact((p) => ({ ...p, phone: true }))}
+              className="gap-2"
+            >
+              <Phone className="h-4 w-4" />
+              Call
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={!sellerEmail}
+              onClick={() => setRevealedContact((p) => ({ ...p, email: true }))}
+              className="gap-2"
+            >
+              <Mail className="h-4 w-4" />
+              Email
+            </Button>
+          </div>
+          {(revealedContact.phone || revealedContact.email) && (
+            <div className="rounded-md border border-border bg-muted/40 p-3 space-y-1 mt-3">
+              {revealedContact.phone && sellerPhone && (
+                <a href={`tel:${sellerPhone}`} className="text-primary font-medium hover:underline block">
+                  {sellerPhone}
+                </a>
+              )}
+              {revealedContact.email && sellerEmail && (
+                <a href={`mailto:${sellerEmail}`} className="text-primary font-medium hover:underline block">
+                  {sellerEmail}
+                </a>
+              )}
+            </div>
+          )}
+        </DetailPanel>
 
-              {product.specifications && (
-                <div>
-                  <h3 className="text-sm font-semibold mb-1">Specifications</h3>
-                  <p className="text-sm text-muted-foreground">{product.specifications}</p>
-                </div>
-              )}
-
-              {product.warrantyInfo && (
-                <div>
-                  <h3 className="text-sm font-semibold mb-1">Warranty</h3>
-                  <p className="text-sm text-muted-foreground">{product.warrantyInfo}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Seller</CardTitle>
-              <CardDescription>{product.sellerFullName}</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              {product.sellerLocation && (
-                <p className="flex items-center gap-2 text-muted-foreground">
-                  <MapPin className="h-4 w-4 shrink-0" />
-                  {product.sellerLocation}
-                </p>
-              )}
-              {product.vendorName && (
-                <p className="text-muted-foreground">Vendor: {product.vendorName}</p>
-              )}
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!sellerPhone}
-                  onClick={() => setRevealedContact((p) => ({ ...p, phone: true }))}
-                  className="gap-2"
-                >
-                  <Phone className="h-4 w-4" />
-                  Call
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={!sellerEmail}
-                  onClick={() => setRevealedContact((p) => ({ ...p, email: true }))}
-                  className="gap-2"
-                >
-                  <Mail className="h-4 w-4" />
-                  Email
-                </Button>
-              </div>
-              {(revealedContact.phone || revealedContact.email) && (
-                <div className="rounded-md border border-border bg-muted/40 p-3 space-y-1">
-                  {revealedContact.phone && sellerPhone && (
-                    <a href={`tel:${sellerPhone}`} className="text-primary font-medium hover:underline block">
-                      {sellerPhone}
-                    </a>
-                  )}
-                  {revealedContact.email && sellerEmail && (
-                    <a href={`mailto:${sellerEmail}`} className="text-primary font-medium hover:underline block">
-                      {sellerEmail}
-                    </a>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-
-      {product.imageUrls && product.imageUrls.split(',').length > 1 && (
-        <Card className="mt-6">
-          <CardHeader>
-            <CardTitle className="text-base">Gallery</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {product.imageUrls && product.imageUrls.split(',').length > 1 && (
+          <DetailPanel title="Gallery">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {product.imageUrls.split(',').slice(1).map((url, idx) => (
                 <img
@@ -301,9 +301,9 @@ function ProductDetail() {
                 />
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </DetailPanel>
+        )}
+      </PageScaffold>
 
       <CartPromptDialog
         open={showCartPrompt}

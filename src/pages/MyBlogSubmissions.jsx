@@ -1,141 +1,173 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
-import { getMyBlogSubmissions } from '../services/BlogService'
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { FileText, PenLine } from 'lucide-react';
+import AppPage from '../components/layout/AppPage';
+import { PageScaffold } from '../components/app/PageScaffold';
+import { KpiSection } from '../components/app/KpiSection';
+import { KpiCard } from '../components/ui/kpi-card';
+import { Button, buttonVariants } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { EmptyState } from '../components/ui/empty-state';
+import { PageSkeleton } from '../components/ui/Skeleton';
+import { InfoPanel } from '../components/platform/InfoPanel';
+import { FePanel } from '../components/platform/FeOpsPrimitives';
+import { cn } from '../lib/utils';
+import { getMyBlogSubmissions } from '../services/BlogService';
 
 const STATUS_STYLE = {
-  DRAFT: 'bg-muted text-foreground',
-  PENDING_APPROVAL: 'bg-amber-100 text-amber-700',
-  PUBLISHED: 'bg-primary/10 text-primary',
-  ARCHIVED: 'bg-rose-100 text-rose-700',
-}
+  DRAFT: 'muted',
+  PENDING_APPROVAL: 'warning',
+  PUBLISHED: 'success',
+  ARCHIVED: 'outline',
+};
+
+const FILTER_CHIPS = [
+  { value: 'ALL', label: 'All' },
+  { value: 'DRAFT', label: 'Draft' },
+  { value: 'PENDING_APPROVAL', label: 'Pending' },
+  { value: 'PUBLISHED', label: 'Published' },
+  { value: 'ARCHIVED', label: 'Archived' },
+];
 
 export default function MyBlogSubmissions() {
-  const { isDark } = useTheme()
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
-  const [posts, setPosts] = useState([])
-  const [statusFilter, setStatusFilter] = useState('ALL')
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [posts, setPosts] = useState([]);
+  const [statusFilter, setStatusFilter] = useState('ALL');
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true)
-      setError('')
+      setLoading(true);
+      setError('');
       try {
-        const data = await getMyBlogSubmissions()
-        setPosts(data)
-      } catch (_err) {
-        setError('Unable to load your submissions right now.')
+        const data = await getMyBlogSubmissions();
+        setPosts(data);
+      } catch {
+        setError('Unable to load your submissions right now.');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
-    load()
-  }, [])
+    };
+    load();
+  }, []);
 
   const statusCounts = posts.reduce(
     (acc, post) => {
-      const status = post.status || 'DRAFT'
-      acc.ALL += 1
-      if (status === 'DRAFT') acc.DRAFT += 1
-      if (status === 'PENDING_APPROVAL') acc.PENDING_APPROVAL += 1
-      if (status === 'PUBLISHED') acc.PUBLISHED += 1
-      if (status === 'ARCHIVED') acc.ARCHIVED += 1
-      return acc
+      const status = post.status || 'DRAFT';
+      acc.ALL += 1;
+      if (status === 'DRAFT') acc.DRAFT += 1;
+      if (status === 'PENDING_APPROVAL') acc.PENDING_APPROVAL += 1;
+      if (status === 'PUBLISHED') acc.PUBLISHED += 1;
+      if (status === 'ARCHIVED') acc.ARCHIVED += 1;
+      return acc;
     },
-    { ALL: 0, DRAFT: 0, PENDING_APPROVAL: 0, PUBLISHED: 0, ARCHIVED: 0 }
-  )
+    { ALL: 0, DRAFT: 0, PENDING_APPROVAL: 0, PUBLISHED: 0, ARCHIVED: 0 },
+  );
 
-  const filteredPosts = statusFilter === 'ALL'
-    ? posts
-    : posts.filter((post) => (post.status || 'DRAFT') === statusFilter)
+  const filteredPosts =
+    statusFilter === 'ALL'
+      ? posts
+      : posts.filter((post) => (post.status || 'DRAFT') === statusFilter);
 
   return (
-    <div className={`min-h-screen px-4 py-10 ${isDark ? 'bg-card text-white' : 'bg-gradient-to-br from-primary/5 to-cyan-50 text-foreground'}`}>
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center justify-between gap-3">
-          <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>My Blog Submissions</h1>
-          <div className="flex items-center gap-2">
-            <Link to="/blog/submit" className="px-3 py-2 rounded-lg bg-primary hover:bg-primary/90 text-white text-sm font-semibold">Write New Blog</Link>
-            <Link to="/blog" className={`text-sm font-semibold ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>Back to Blog</Link>
-          </div>
-        </div>
+    <AppPage
+      title="My blog submissions"
+      description="Track review progress. Approved posts may be edited by admins before publishing."
+      actions={
+        <>
+          <Link to="/blog" className={buttonVariants({ variant: 'outline', size: 'sm' })}>
+            Back to blog
+          </Link>
+          <Link to="/blog/submit" className={buttonVariants({ size: 'sm' })}>
+            Write new post
+          </Link>
+        </>
+      }
+    >
+      {loading ? (
+        <PageSkeleton variant="cards" />
+      ) : error ? (
+        <InfoPanel variant="destructive" title="Could not load submissions" description={error} />
+      ) : posts.length === 0 ? (
+        <EmptyState
+          icon={PenLine}
+          title="No submissions yet"
+          description="Share a farming story or practical guide with the community."
+          action={
+            <Link to="/blog/submit" className={buttonVariants()}>
+              Start writing
+            </Link>
+          }
+        />
+      ) : (
+        <>
+          <KpiSection columns={4}>
+            <KpiCard title="Total" value={statusCounts.ALL} icon={FileText} />
+            <KpiCard title="Pending" value={statusCounts.PENDING_APPROVAL} hint="Awaiting review" />
+            <KpiCard title="Published" value={statusCounts.PUBLISHED} hint="Live on blog" />
+            <KpiCard title="Drafts" value={statusCounts.DRAFT} hint="Not submitted" />
+          </KpiSection>
 
-        <p className={`mt-3 text-sm md:text-base ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
-          Track review progress of your submitted blog posts. Admin may edit and publish approved entries.
-        </p>
-
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : error ? (
-          <div className={`${isDark ? 'bg-red-900/30 border-red-700 text-red-200' : 'bg-red-50 border-red-200 text-red-700'} border rounded-xl p-4 mt-6`}>
-            {error}
-          </div>
-        ) : posts.length === 0 ? (
-          <div className={`${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-background border-border/60 text-primary'} border rounded-xl p-6 mt-6`}>
-            <p className="font-semibold">No blog submissions yet.</p>
-            <p className="mt-1 text-sm opacity-90">Start by creating your first farming story or practical guide.</p>
-          </div>
-        ) : (
-          <>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {[['ALL', 'All'], ['DRAFT', 'Draft'], ['PENDING_APPROVAL', 'Pending'], ['PUBLISHED', 'Published'], ['ARCHIVED', 'Archived']].map(([key, label]) => (
+          <PageScaffold
+            aside={
+              <InfoPanel
+                title="Review process"
+                description="Submissions are reviewed by the FarmEazy editorial team."
+              >
+                <p className="text-sm text-muted-foreground mt-2">
+                  You will see status updates here when an admin approves, requests changes, or publishes your post.
+                </p>
+              </InfoPanel>
+            }
+          >
+            <div className="flex flex-wrap gap-2 mb-4">
+              {FILTER_CHIPS.map((chip) => (
                 <button
-                  key={key}
+                  key={chip.value}
                   type="button"
-                  onClick={() => setStatusFilter(key)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
-                    statusFilter === key
-                      ? 'bg-primary border-primary text-white'
-                      : isDark
-                        ? 'border-border text-muted-foreground hover:border-border'
-                        : 'border-border text-foreground hover:border-primary/30'
-                  }`}
+                  className={cn('ops-chip', statusFilter === chip.value && 'ops-chip-active')}
+                  onClick={() => setStatusFilter(chip.value)}
                 >
-                  {label} ({statusCounts[key] || 0})
+                  {chip.label} ({statusCounts[chip.value] || 0})
                 </button>
               ))}
             </div>
 
             {filteredPosts.length === 0 ? (
-              <div className={`${isDark ? 'bg-muted border-border text-muted-foreground' : 'bg-background border-border/60 text-primary'} border rounded-xl p-6 mt-4`}>
-                <p className="font-semibold">No submissions in this status.</p>
-                <p className="mt-1 text-sm opacity-90">Try another filter to review your full submission history.</p>
-              </div>
+              <EmptyState title="No posts in this status" description="Try another filter." />
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {filteredPosts.map((post) => {
-                  const status = post.status || 'DRAFT'
+                  const status = post.status || 'DRAFT';
                   return (
-                    <article key={post.id} className={`${isDark ? 'bg-muted border-border' : 'bg-background border-border/60'} border rounded-xl p-4 shadow-sm`}>
+                    <FePanel key={post.id} interactive className="p-4">
                       <div className="flex items-start justify-between gap-2">
-                        <h2 className={`font-bold text-base ${isDark ? 'text-white' : 'text-foreground'}`}>{post.title}</h2>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${STATUS_STYLE[status] || 'bg-muted text-foreground'}`}>
+                        <h2 className="font-semibold text-foreground">{post.title}</h2>
+                        <Badge variant={STATUS_STYLE[status] || 'muted'}>
                           {status.replace('_', ' ')}
-                        </span>
+                        </Badge>
                       </div>
-
-                      <p className={`mt-2 text-sm line-clamp-3 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>{post.excerpt}</p>
-
-                      <div className={`mt-3 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-                        {post.category || 'General'} • Updated {post.updatedAt ? new Date(post.updatedAt).toLocaleString() : 'recently'}
-                      </div>
-
+                      <p className="mt-2 text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>
+                      <p className="mt-3 text-xs text-muted-foreground">
+                        {post.category || 'General'} • Updated{' '}
+                        {post.updatedAt ? new Date(post.updatedAt).toLocaleString() : 'recently'}
+                      </p>
                       {status === 'PUBLISHED' && post.slug && (
-                        <Link to={`/blog/${post.slug}`} className={`mt-3 inline-block text-sm font-semibold ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>
-                          Open published blog
+                        <Link
+                          to={`/blog/${post.slug}`}
+                          className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
+                        >
+                          Open published post
                         </Link>
                       )}
-                    </article>
-                  )
+                    </FePanel>
+                  );
                 })}
               </div>
             )}
-          </>
-        )}
-      </div>
-    </div>
-  )
+          </PageScaffold>
+        </>
+      )}
+    </AppPage>
+  );
 }

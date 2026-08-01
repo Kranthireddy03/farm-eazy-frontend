@@ -13,7 +13,9 @@ import { useState, useEffect, useMemo } from 'react'
 import { useLoader } from '../context/LoaderContext'
 import { useLocationContext } from '../context/LocationContext'
 import { useToast } from '../hooks/useToast';
-import AppPage from '../components/layout/AppPage';
+import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { InfoPanel } from '../components/platform/InfoPanel'
 import LocationPicker from '../components/LocationPicker'
 import { Link } from 'react-router-dom'
 import apiClient from '../services/apiClient'
@@ -333,25 +335,32 @@ function Farms() {
         </Button>
       }
     >
-      <div className="space-y-6">
+      <PageScaffold
+        aside={
+          <InfoPanel
+            title="Farm operations"
+            description="Link parcels to crops, irrigation, and service requests."
+          >
+            <div className="flex flex-wrap gap-2 mt-3">
+              <Link to="/crops" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">
+                Manage crops
+              </Link>
+              <Link to="/irrigation" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">
+                Irrigation
+              </Link>
+              <Link to="/service-requests" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">
+                Service requests
+              </Link>
+            </div>
+          </InfoPanel>
+        }
+      >
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <KpiCard title="Total farms" value={farmMetrics.totalFarms} hint="Registered parcels" icon={Sprout} />
         <KpiCard title="Total area" value={`${farmMetrics.totalArea.toFixed(1)} ha`} hint="Combined hectares" icon={MapPin} />
         <KpiCard title="Average size" value={`${farmMetrics.averageArea.toFixed(1)} ha`} hint="Per farm" icon={Sprout} />
         <KpiCard title="Large farms" value={farmMetrics.largeFarms} hint="10+ hectares" icon={Sprout} />
       </div>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Quick actions</CardTitle>
-          <CardDescription>High-frequency farm operations.</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-2">
-          <Link to="/crops" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Manage crops</Link>
-          <Link to="/irrigation" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Irrigation</Link>
-          <Link to="/service-requests" className="inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent">Service requests</Link>
-        </CardContent>
-      </Card>
 
       {error && (
         <ErrorState title="Could not load farms" description={error} onRetry={fetchFarms} showHome={false} />
@@ -481,7 +490,7 @@ function Farms() {
           </Card>
         )}
       />
-      </div>
+      </PageScaffold>
     </AppPage>
   )
 }

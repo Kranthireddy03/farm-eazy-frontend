@@ -5,6 +5,7 @@ import { useCheckout } from '../hooks/useCheckout'
 import apiClient from '../services/apiClient'
 import { sendNotification } from '../components/NotificationCenter'
 import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
@@ -571,69 +572,67 @@ function Checkout() {
           />
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
-          {/* Main Checkout */}
-          <div className="lg:col-span-2 space-y-6">
-            <CheckoutOrderReviewSection cartItems={cartItems} />
-            <CheckoutPaymentSection
-              selectedPayment={selectedPayment}
-              onSelect={setSelectedPayment}
-            />
-            <CheckoutAddressSection
-              addresses={addresses}
-              selectedAddress={selectedAddress}
-              onSelectAddress={setSelectedAddress}
-              showAddressForm={showAddressForm}
-              onToggleAddressForm={() => setShowAddressForm((prev) => !prev)}
-              onAddressAdded={(newId) => {
-                setShowAddressForm(false);
-                fetchAddresses();
-                if (newId) setSelectedAddress(newId);
+        <PageScaffold
+          aside={
+            <OrderSummaryPanel
+              subtotal={subtotal}
+              tax={tax}
+              total={total}
+              finalAmount={finalAmount}
+              coins={coins}
+              useCoins={useCoins}
+              coinsToUse={coinsToUse}
+              maxCoinsUsable={maxUsableCoins}
+              coinsApplied={coinsApplied}
+              remainingCoins={remainingCoinsAfterUse}
+              onUseCoinsChange={handleUseCoins}
+              onCoinsToUseChange={(value) => {
+                setCoinsToUse(Math.max(0, Math.min(value, maxUsableCoins)))
               }}
-              showToast={showToast}
+              variant="checkout"
+              footerNote={
+                selectedPayment === 'CASH_ON_DELIVERY' ? (
+                  <p className="text-xs text-muted-foreground rounded-md border border-border p-3">
+                    Cash on delivery — expected delivery 3–5 business days.
+                  </p>
+                ) : null
+              }
+              primaryAction={
+                <Button
+                  className="w-full"
+                  onClick={handleCheckout}
+                  disabled={checkingOut || hasOutOfAreaItems || (selectedPayment === 'CASH_ON_DELIVERY' && !selectedAddress)}
+                >
+                  {checkingOut ? 'Processing…' : 'Place order'}
+                </Button>
+              }
+              secondaryAction={
+                <Button variant="outline" className="w-full" onClick={() => navigate('/cart')}>
+                  Back to cart
+                </Button>
+              }
             />
-          </div>
-
-          {/* Order Summary Sidebar */}
-          <OrderSummaryPanel
-            subtotal={subtotal}
-            tax={tax}
-            total={total}
-            finalAmount={finalAmount}
-            coins={coins}
-            useCoins={useCoins}
-            coinsToUse={coinsToUse}
-            maxCoinsUsable={maxUsableCoins}
-            coinsApplied={coinsApplied}
-            remainingCoins={remainingCoinsAfterUse}
-            onUseCoinsChange={handleUseCoins}
-            onCoinsToUseChange={(value) => {
-              setCoinsToUse(Math.max(0, Math.min(value, maxUsableCoins)))
-            }}
-            variant="checkout"
-            footerNote={
-              selectedPayment === 'CASH_ON_DELIVERY' ? (
-                <p className="text-xs text-muted-foreground rounded-md border border-border p-3">
-                  Cash on delivery — expected delivery 3–5 business days.
-                </p>
-              ) : null
-            }
-            primaryAction={
-              <Button
-                className="w-full"
-                onClick={handleCheckout}
-                disabled={checkingOut || hasOutOfAreaItems || (selectedPayment === 'CASH_ON_DELIVERY' && !selectedAddress)}
-              >
-                {checkingOut ? 'Processing…' : 'Place order'}
-              </Button>
-            }
-            secondaryAction={
-              <Button variant="outline" className="w-full" onClick={() => navigate('/cart')}>
-                Back to cart
-              </Button>
-            }
+          }
+        >
+          <CheckoutOrderReviewSection cartItems={cartItems} />
+          <CheckoutPaymentSection
+            selectedPayment={selectedPayment}
+            onSelect={setSelectedPayment}
           />
-        </div>
+          <CheckoutAddressSection
+            addresses={addresses}
+            selectedAddress={selectedAddress}
+            onSelectAddress={setSelectedAddress}
+            showAddressForm={showAddressForm}
+            onToggleAddressForm={() => setShowAddressForm((prev) => !prev)}
+            onAddressAdded={(newId) => {
+              setShowAddressForm(false);
+              fetchAddresses();
+              if (newId) setSelectedAddress(newId);
+            }}
+            showToast={showToast}
+          />
+        </PageScaffold>
     </AppPage>
   )
 }

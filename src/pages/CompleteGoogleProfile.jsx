@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import AuthService from '../services/AuthService'
 import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
 import { useGlobalToast } from '../context/ToastContext'
 import { STORAGE_KEYS } from '../config/api'
+import { AuthPageLayout, AuthSidePanel } from '../components/layout/AuthPageLayout'
+import { Button } from '../components/ui/button'
+import { Input } from '../components/ui/input'
+import { InfoPanel } from '../components/platform/InfoPanel'
 
 function CompleteGoogleProfile() {
   const navigate = useNavigate()
   const location = useLocation()
   const { isAuthenticated, login, logout } = useAuth()
-  const { isDark } = useTheme()
   const { success: toastSuccess } = useGlobalToast()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -116,88 +118,94 @@ function CompleteGoogleProfile() {
   const canSubmit = isPhoneValid && isPasswordValid && !loading
 
   return (
-    <div className={`min-h-screen flex items-center justify-center px-4 py-10 ${isDark ? 'bg-gradient-to-br from-background via-card to-primary/10' : 'bg-gradient-to-br from-primary/5 via-white to-amber-50'}`}>
-      <div className={`w-full max-w-2xl rounded-3xl border shadow-2xl backdrop-blur-xl p-8 ${isDark ? 'border-border bg-card/90' : 'border-border/60 bg-background/95'}`}>
-        <div className="mb-6">
-          <p className={`text-sm font-semibold uppercase tracking-[0.2em] ${isDark ? 'text-primary' : 'text-primary'}`}>Finish Google Signup</p>
-          <h1 className={`mt-2 text-3xl font-black ${isDark ? 'text-foreground' : 'text-foreground'}`}>Complete your account</h1>
-          <p className={`mt-2 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Mobile number is mandatory. All other fields are optional and based on your preference. Add password only if you want password login.</p>
+    <AuthPageLayout
+      title="Complete your account"
+      description="Mobile number is required. Other fields are optional. Add a password only if you want password login."
+      side={
+        <AuthSidePanel
+          title="Finish Google signup"
+          description="Link your phone to unlock orders, marketplace, and farm tools. Your Google email stays connected for faster sign-in."
+        />
+      }
+    >
+      {error && (
+        <InfoPanel variant="destructive" title="Could not save profile" description={error} className="mb-4" />
+      )}
+
+      <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
+        <label className="grid gap-2 md:col-span-1">
+          <span className="text-sm font-medium text-foreground">Username (optional)</span>
+          <Input name="username" value={formData.username} onChange={handleChange} />
+        </label>
+        <label className="grid gap-2 md:col-span-1">
+          <span className="text-sm font-medium text-foreground">
+            Mobile number <span className="text-destructive">*</span>
+          </span>
+          <Input
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            maxLength={10}
+            inputMode="numeric"
+            required
+          />
+          {!isPhoneValid && (
+            <span className="text-xs text-muted-foreground">Enter a valid 10-digit mobile number.</span>
+          )}
+        </label>
+
+        <div className="md:col-span-2 rounded-xl border border-border bg-muted/30 p-4">
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={setPasswordNow}
+              onChange={(e) => {
+                setSetPasswordNow(e.target.checked)
+                setError('')
+              }}
+              className="mt-1"
+            />
+            <span className="text-sm text-muted-foreground">I want to sign in with password also.</span>
+          </label>
+
+          {setPasswordNow && (
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="grid gap-2">
+                <span className="text-sm font-medium">Password</span>
+                <Input type="password" name="password" value={formData.password} onChange={handleChange} />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-sm font-medium">Confirm password</span>
+                <Input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} />
+              </label>
+            </div>
+          )}
         </div>
 
-        {error && (
-          <div className={`mb-4 rounded-2xl border px-4 py-3 text-sm ${isDark ? 'border-red-700 bg-red-950/50 text-red-200' : 'border-red-200 bg-red-50 text-red-700'}`}>
-            {error}
-          </div>
-        )}
+        <label className="grid gap-2 md:col-span-2">
+          <span className="text-sm font-medium">Address (optional)</span>
+          <Input name="address" value={formData.address} onChange={handleChange} />
+        </label>
+        <label className="grid gap-2 md:col-span-1">
+          <span className="text-sm font-medium">City (optional)</span>
+          <Input name="city" value={formData.city} onChange={handleChange} />
+        </label>
+        <label className="grid gap-2 md:col-span-1">
+          <span className="text-sm font-medium">State (optional)</span>
+          <Input name="state" value={formData.state} onChange={handleChange} />
+        </label>
+        <label className="grid gap-2 md:col-span-2">
+          <span className="text-sm font-medium">PIN code (optional)</span>
+          <Input name="pinCode" value={formData.pinCode} onChange={handleChange} />
+        </label>
 
-        <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-          <label className="grid gap-2 md:col-span-1">
-            <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Username (optional)</span>
-            <input name="username" value={formData.username} onChange={handleChange} className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-          </label>
-          <label className="grid gap-2 md:col-span-1">
-            <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Mobile Number <span className="text-red-500">*</span></span>
-            <input name="phone" value={formData.phone} onChange={handleChange} maxLength={10} inputMode="numeric" required className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-            {!isPhoneValid && (
-              <span className={`text-xs ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Enter a valid 10-digit mobile number to enable Complete Setup.</span>
-            )}
-          </label>
-
-          <div className={`md:col-span-2 rounded-2xl border p-4 ${isDark ? 'border-border bg-muted/60' : 'border-border/60 bg-primary/5'}`}>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={setPasswordNow}
-                onChange={(e) => {
-                  setSetPasswordNow(e.target.checked)
-                  setError('')
-                }}
-                className="mt-1"
-              />
-              <span className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
-                I want to sign in with password also.
-              </span>
-            </label>
-
-            {setPasswordNow && (
-              <div className="mt-4 grid gap-4 md:grid-cols-2">
-                <label className="grid gap-2 md:col-span-1">
-                  <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Password <span className="text-red-500">*</span></span>
-                  <input type="password" name="password" value={formData.password} onChange={handleChange} className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-                </label>
-                <label className="grid gap-2 md:col-span-1">
-                  <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Confirm Password <span className="text-red-500">*</span></span>
-                  <input type="password" name="confirmPassword" value={formData.confirmPassword} onChange={handleChange} className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-                </label>
-              </div>
-            )}
-          </div>
-
-          <label className="grid gap-2 md:col-span-2">
-            <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>Address (optional)</span>
-            <input name="address" value={formData.address} onChange={handleChange} className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-          </label>
-          <label className="grid gap-2 md:col-span-1">
-            <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>City (optional)</span>
-            <input name="city" value={formData.city} onChange={handleChange} className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-          </label>
-          <label className="grid gap-2 md:col-span-1">
-            <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>State (optional)</span>
-            <input name="state" value={formData.state} onChange={handleChange} className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-          </label>
-          <label className="grid gap-2 md:col-span-2">
-            <span className={`text-sm font-semibold ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>PIN Code (optional)</span>
-            <input name="pinCode" value={formData.pinCode} onChange={handleChange} className={`rounded-xl border px-4 py-3 outline-none ${isDark ? 'border-border bg-muted text-foreground focus:border-primary' : 'border-border bg-background text-foreground focus:border-primary'}`} />
-          </label>
-
-          <div className="md:col-span-2 flex items-center justify-end pt-2">
-            <button type="submit" disabled={!canSubmit} className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed">
-              {loading ? 'Saving...' : 'Complete Setup'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div className="md:col-span-2 flex justify-end pt-2">
+          <Button type="submit" disabled={!canSubmit}>
+            {loading ? 'Saving…' : 'Complete setup'}
+          </Button>
+        </div>
+      </form>
+    </AuthPageLayout>
   )
 }
 

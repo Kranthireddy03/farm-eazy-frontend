@@ -1,19 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { Bell, Mail, MailOpen, RefreshCw } from 'lucide-react';
+import AppPage from '../components/layout/AppPage';
+import { PageScaffold } from '../components/app/PageScaffold';
+import { KpiSection } from '../components/app/KpiSection';
+import { KpiCard } from '../components/ui/kpi-card';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { Link } from 'react-router-dom';
+import { cn } from '../lib/utils';
+import { EmptyState } from '../components/ui/empty-state';
+import { PageSkeleton } from '../components/ui/Skeleton';
+import { InfoPanel } from '../components/platform/InfoPanel';
+import { FePanel } from '../components/platform/FeOpsPrimitives';
 import NotificationService from '../services/NotificationService';
-import { useTheme } from '../context/ThemeContext';
 
-/**
- * NOTIFICATIONS PAGE
- * 
- * Full page view of all notifications.
- * Allows users to view, filter, and manage all notifications.
- * Note: Layout is provided by parent route, do not wrap in Layout here.
- */
+const FILTER_CHIPS = [
+  { value: 'all', label: 'All' },
+  { value: 'unread', label: 'Unread' },
+  { value: 'read', label: 'Read' },
+];
+
+const TYPE_ACCENT = {
+  ORDER: 'border-l-blue-500',
+  PAYMENT: 'border-l-primary',
+  FARM: 'border-l-amber-500',
+  IRRIGATION: 'border-l-cyan-500',
+  PRODUCT: 'border-l-violet-500',
+  ACCOUNT: 'border-l-border',
+  SYSTEM: 'border-l-orange-500',
+  PROMO: 'border-l-pink-500',
+};
+
+const PRIORITY_VARIANT = {
+  URGENT: 'destructive',
+  HIGH: 'warning',
+  NORMAL: 'muted',
+  LOW: 'outline',
+};
+
 export default function Notifications() {
-  const { isDark } = useTheme();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // all, unread, read
+  const [filter, setFilter] = useState('all');
   const [selectedNotification, setSelectedNotification] = useState(null);
 
   useEffect(() => {
@@ -35,9 +63,7 @@ export default function Notifications() {
   const handleMarkRead = async (id) => {
     try {
       await NotificationService.markAsRead(id);
-      setNotifications(prev => 
-        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-      );
+      setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)));
       window.dispatchEvent(new Event('notifications-changed'));
     } catch (error) {
       console.error('Failed to mark as read:', error);
@@ -47,7 +73,7 @@ export default function Notifications() {
   const handleDismiss = async (id) => {
     try {
       await NotificationService.dismiss(id);
-      setNotifications(prev => prev.filter(n => n.id !== id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
       window.dispatchEvent(new Event('notifications-changed'));
     } catch (error) {
       console.error('Failed to dismiss notification:', error);
@@ -57,7 +83,7 @@ export default function Notifications() {
   const handleMarkAllRead = async () => {
     try {
       await NotificationService.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
       window.dispatchEvent(new Event('notifications-changed'));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -68,234 +94,183 @@ export default function Notifications() {
     try {
       if (!notification.isRead) {
         await NotificationService.markAsRead(notification.id);
-        setNotifications(prev =>
-          prev.map(n => (n.id === notification.id ? { ...n, isRead: true } : n))
+        setNotifications((prev) =>
+          prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)),
         );
       }
       window.dispatchEvent(new Event('notifications-changed'));
-
       setSelectedNotification(notification);
     } catch (error) {
-      console.error('Failed to open notification action:', error);
+      console.error('Failed to open notification:', error);
     }
   };
 
-  const closeNotificationModal = () => {
-    setSelectedNotification(null);
-  };
-
-  const filteredNotifications = notifications.filter(n => {
+  const filteredNotifications = notifications.filter((n) => {
     if (filter === 'unread') return !n.isRead;
     if (filter === 'read') return n.isRead;
     return true;
   });
 
-  const getIcon = (type) => NotificationService.getTypeIcon(type);
-
-  const getTypeColorClass = (type) => {
-    const colors = {
-      ORDER: isDark ? 'border-l-blue-500 bg-blue-900/20' : 'border-l-blue-500 bg-blue-50',
-      PAYMENT: isDark ? 'border-l-green-500 bg-green-900/20' : 'border-l-green-500 bg-green-50',
-      FARM: isDark ? 'border-l-yellow-500 bg-yellow-900/20' : 'border-l-yellow-500 bg-yellow-50',
-      IRRIGATION: isDark ? 'border-l-cyan-500 bg-cyan-900/20' : 'border-l-cyan-500 bg-cyan-50',
-      PRODUCT: isDark ? 'border-l-purple-500 bg-purple-900/20' : 'border-l-purple-500 bg-purple-50',
-      ACCOUNT: isDark ? 'border-l-border bg-muted/20' : 'border-l-border bg-muted/50',
-      SYSTEM: isDark ? 'border-l-orange-500 bg-orange-900/20' : 'border-l-orange-500 bg-orange-50',
-      PROMO: isDark ? 'border-l-pink-500 bg-pink-900/20' : 'border-l-pink-500 bg-pink-50'
-    };
-    return colors[type] || (isDark ? 'border-l-border bg-muted/20' : 'border-l-border bg-muted/50');
-  };
-
-  const getPriorityBadge = (priority) => {
-    const styles = {
-      URGENT: 'bg-red-500 text-white',
-      HIGH: 'bg-orange-500 text-white',
-      NORMAL: 'bg-blue-500 text-white',
-      LOW: 'bg-muted/500 text-white'
-    };
-    return styles[priority] || styles.NORMAL;
-  };
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const readCount = notifications.filter((n) => n.isRead).length;
 
   return (
-    <>
-    <div className="max-w-5xl mx-auto p-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-          <h1 className={`text-2xl font-bold flex items-center gap-2 ${isDark ? 'text-white' : 'text-foreground'}`}>
-            🔔 Notifications
-          </h1>
-          <div className="flex items-center gap-3">
-            {/* Filter */}
-            <select
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              className={`border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 ${isDark ? 'bg-muted border-border text-white' : 'bg-background border-border text-foreground'}`}
-            >
-              <option value="all">All</option>
-              <option value="unread">Unread</option>
-              <option value="read">Read</option>
-            </select>
-            
-            {/* Mark All Read */}
-            <button
-              onClick={handleMarkAllRead}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition-colors text-sm"
-            >
-              Mark All Read
-            </button>
+    <AppPage
+      title="Notifications"
+      description="Orders, bookings, farm alerts, and account updates in one place."
+      actions={
+        <>
+          <Button variant="outline" size="sm" onClick={fetchNotifications} className="gap-2">
+            <RefreshCw className="h-4 w-4" />
+            Refresh
+          </Button>
+          <Button size="sm" onClick={handleMarkAllRead} disabled={unreadCount === 0}>
+            Mark all read
+          </Button>
+        </>
+      }
+    >
+      <KpiSection>
+        <KpiCard title="Total" value={notifications.length} hint="All notifications" icon={Bell} />
+        <KpiCard title="Unread" value={unreadCount} hint="Needs attention" icon={Mail} />
+        <KpiCard title="Read" value={readCount} hint="Archived in feed" icon={MailOpen} />
+      </KpiSection>
 
-            <button
-              onClick={fetchNotifications}
-              className={`px-4 py-2 rounded-lg text-sm border transition-colors ${isDark ? 'border-border text-muted-foreground hover:bg-muted' : 'border-border text-foreground hover:bg-muted'}`}
+      <PageScaffold
+        aside={
+          <InfoPanel
+            title="Alert preferences"
+            description="Tune how you receive order and farm updates."
+          >
+            <p className="text-sm text-muted-foreground mt-2">
+              Visit communication preferences to control SMS, email, and in-app channels for each category.
+            </p>
+            <Link
+              to="/communication-preferences"
+              className="mt-4 inline-flex h-8 items-center rounded-md border border-input bg-background px-3 text-xs font-medium hover:bg-accent"
             >
-              Refresh
+              Open preferences
+            </Link>
+          </InfoPanel>
+        }
+      >
+        <div className="flex flex-wrap gap-2 mb-4">
+          {FILTER_CHIPS.map((chip) => (
+            <button
+              key={chip.value}
+              type="button"
+              className={cn('ops-chip', filter === chip.value && 'ops-chip-active')}
+              onClick={() => setFilter(chip.value)}
+            >
+              {chip.label}
             </button>
-          </div>
+          ))}
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className={`rounded-xl p-4 border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-            <div className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>{notifications.length}</div>
-            <div className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Total</div>
-          </div>
-          <div className={`rounded-xl p-4 border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-            <div className={`text-3xl font-bold ${isDark ? 'text-blue-300' : 'text-blue-700'}`}>{notifications.filter(n => !n.isRead).length}</div>
-            <div className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Unread</div>
-          </div>
-          <div className={`rounded-xl p-4 border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-            <div className={`text-3xl font-bold ${isDark ? 'text-green-300' : 'text-green-700'}`}>{notifications.filter(n => n.isRead).length}</div>
-            <div className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Read</div>
-          </div>
-        </div>
-
-        {/* Notification List */}
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin w-8 h-8 border-4 border-border border-t-blue-500 rounded-full"></div>
-          </div>
+          <PageSkeleton variant="cards" />
         ) : filteredNotifications.length === 0 ? (
-          <div className={`rounded-xl p-12 text-center border ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-            <span className="text-6xl block mb-4">📭</span>
-            <p className={isDark ? 'text-muted-foreground' : 'text-muted-foreground'}>No notifications found</p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="No notifications"
+            description={
+              filter === 'all'
+                ? 'You are all caught up. New alerts will appear here.'
+                : 'No notifications match this filter.'
+            }
+          />
         ) : (
           <div className="space-y-3">
             {filteredNotifications.map((notification) => (
-              <div
+              <FePanel
                 key={notification.id}
-                className={`rounded-xl p-4 border ${isDark ? 'border-border' : 'border-border'} border-l-4 ${getTypeColorClass(notification.type)} ${
-                  !notification.isRead ? 'ring-1 ring-blue-500/30' : ''
+                interactive
+                className={`p-4 border-l-4 ${TYPE_ACCENT[notification.type] || 'border-l-border'} ${
+                  !notification.isRead ? 'ring-1 ring-primary/20' : ''
                 }`}
               >
                 <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <span className="text-3xl flex-shrink-0">{getIcon(notification.type)}</span>
-                  
-                  {/* Content */}
+                  <span className="text-2xl shrink-0" aria-hidden="true">
+                    {NotificationService.getTypeIcon(notification.type)}
+                  </span>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`font-semibold ${!notification.isRead ? (isDark ? 'text-white' : 'text-foreground') : (isDark ? 'text-muted-foreground' : 'text-foreground')}`}>
-                        {notification.title}
-                      </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-foreground">{notification.title}</span>
                       {!notification.isRead && (
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        <span className="h-2 w-2 rounded-full bg-primary" aria-label="Unread" />
                       )}
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityBadge(notification.priority)}`}>
+                      <Badge variant={PRIORITY_VARIANT[notification.priority] || 'muted'}>
                         {notification.priority}
-                      </span>
+                      </Badge>
                       {notification.isBroadcast && (
-                        <span className={`text-xs px-2 py-0.5 rounded-full border ${isDark ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 text-purple-700 border-purple-200'}`}>
-                          📢 Broadcast
-                        </span>
+                        <Badge variant="outline">Broadcast</Badge>
                       )}
                     </div>
-                    <p className={`mt-2 ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>{notification.message}</p>
-                    <div className="flex items-center gap-4 mt-3">
-                      <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{notification.timeAgo}</span>
-                      <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>•</span>
-                      <span className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{notification.type}</span>
+                    <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
+                      {notification.message}
+                    </p>
+                    <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
+                      <span>{notification.timeAgo}</span>
+                      <span>•</span>
+                      <span>{notification.type}</span>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2 flex-shrink-0">
+                  <div className="flex flex-col gap-2 shrink-0">
                     {!notification.isRead && (
-                      <button
-                        onClick={() => handleMarkRead(notification.id)}
-                        className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-500 transition-colors"
-                      >
-                        Mark Read
-                      </button>
+                      <Button size="sm" variant="secondary" onClick={() => handleMarkRead(notification.id)}>
+                        Mark read
+                      </Button>
                     )}
-                    <button
-                      onClick={() => handleDismiss(notification.id)}
-                      className={`px-3 py-1 text-xs rounded-lg transition-colors ${isDark ? 'bg-muted text-muted-foreground hover:bg-red-600 hover:text-white' : 'bg-muted text-foreground hover:bg-red-600 hover:text-white'}`}
-                    >
-                      Dismiss
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleView(notification)}
-                      className="px-3 py-1 bg-primary text-white text-xs rounded-lg hover:bg-primary transition-colors text-center"
-                    >
+                    <Button size="sm" variant="outline" onClick={() => handleView(notification)}>
                       View
-                    </button>
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => handleDismiss(notification.id)}>
+                      Dismiss
+                    </Button>
                   </div>
                 </div>
-              </div>
+              </FePanel>
             ))}
           </div>
         )}
-      </div>
+      </PageScaffold>
+
       {selectedNotification && (
-        <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/55 px-4">
-          <div className={`w-full max-w-xl rounded-2xl border shadow-2xl ${isDark ? 'bg-muted border-border' : 'bg-background border-border'}`}>
-            <div className={`flex items-center justify-between px-5 py-4 border-b ${isDark ? 'border-border' : 'border-border'}`}>
-              <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Notification Details</h2>
-              <button
-                type="button"
-                onClick={closeNotificationModal}
-                className={`text-sm rounded-lg px-2 py-1 ${isDark ? 'text-muted-foreground hover:bg-muted' : 'text-muted-foreground hover:bg-muted'}`}
-              >
-                ✕
-              </button>
+        <div
+          className="fixed inset-0 z-[1200] flex items-center justify-center bg-background/80 backdrop-blur-sm px-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <FePanel className="w-full max-w-xl p-0 overflow-hidden shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">Notification details</h2>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedNotification(null)}>
+                Close
+              </Button>
             </div>
-
             <div className="px-5 py-4 space-y-3">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className={`text-base font-semibold ${isDark ? 'text-foreground' : 'text-foreground'}`}>{selectedNotification.title}</span>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${getPriorityBadge(selectedNotification.priority)}`}>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-base font-semibold">{selectedNotification.title}</span>
+                <Badge variant={PRIORITY_VARIANT[selectedNotification.priority] || 'muted'}>
                   {selectedNotification.priority}
-                </span>
-                <span className={`text-xs px-2 py-0.5 rounded-full border ${isDark ? 'border-border text-muted-foreground' : 'border-border text-foreground'}`}>
-                  {selectedNotification.type}
-                </span>
+                </Badge>
+                <Badge variant="outline">{selectedNotification.type}</Badge>
               </div>
-
-              <div className={`rounded-xl p-4 border ${isDark ? 'border-border bg-muted/40' : 'border-border bg-muted/30'}`}>
-                <p className={`whitespace-pre-wrap text-sm leading-relaxed ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
+              <div className="rounded-lg border border-border bg-muted/30 p-4">
+                <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
                   {selectedNotification.message}
                 </p>
               </div>
-
-              <div className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+              <p className="text-xs text-muted-foreground">
                 Received: {selectedNotification.timeAgo || 'just now'}
-              </div>
+              </p>
             </div>
-
-            <div className={`px-5 py-4 border-t flex items-center justify-end gap-2 ${isDark ? 'border-border' : 'border-border'}`}>
-              <button
-                type="button"
-                onClick={closeNotificationModal}
-                className={`px-4 py-2 rounded-lg text-sm ${isDark ? 'bg-muted text-muted-foreground hover:bg-muted' : 'bg-muted text-foreground hover:bg-muted'}`}
-              >
-                OK
-              </button>
+            <div className="px-5 py-4 border-t border-border flex justify-end">
+              <Button onClick={() => setSelectedNotification(null)}>OK</Button>
             </div>
-          </div>
+          </FePanel>
         </div>
       )}
-    </>
+    </AppPage>
   );
 }

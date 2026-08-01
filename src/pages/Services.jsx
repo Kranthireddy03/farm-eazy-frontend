@@ -1,4 +1,5 @@
 import { Tractor, Droplets, Sprout, BarChart3, ShoppingCart, Warehouse } from 'lucide-react';
+import AppPage from '../components/layout/AppPage';
 import { FeatureCard, GlassPanel, HeroFrame, PillButton, SectionTitle, StrongPanel } from '../components/ui/PremiumSurface';
 
 export default function Services() {
@@ -18,7 +19,8 @@ export default function Services() {
   ];
 
   return (
-    <div className="min-h-screen py-8 px-4">
+    <AppPage noMotion title="Services" description="Smart farming services to grow efficiently and profitably.">
+    <div className="py-2 px-0">
       <div className="max-w-7xl mx-auto space-y-8">
         <HeroFrame
           eyebrow="Services"
@@ -80,5 +82,6 @@ export default function Services() {
         </GlassPanel>
       </div>
     </div>
+    </AppPage>
   );
 }

@@ -1,9 +1,15 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { useTheme } from '../context/ThemeContext'
-import { useToast } from '../hooks/useToast'
-import Toast from '../components/Toast'
-import { submitUserBlogPost } from '../services/BlogService'
+import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useToast } from '../hooks/useToast';
+import Toast from '../components/Toast';
+import { submitUserBlogPost } from '../services/BlogService';
+import AppPage from '../components/layout/AppPage';
+import { PageScaffold } from '../components/app/PageScaffold';
+import { DetailPanel } from '../components/platform/DetailPanel';
+import { InfoPanel } from '../components/platform/InfoPanel';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { FePanel } from '../components/platform/FeOpsPrimitives';
 
 const EMPTY_FORM = {
   title: '',
@@ -13,177 +19,178 @@ const EMPTY_FORM = {
   tagsInput: '',
   coverImageUrl: '',
   authorName: '',
-}
+};
+
+const AUTHOR_TIPS = [
+  'Use actionable titles that mention crop, region, or season.',
+  'Start with a practical problem, then list clear steps.',
+  'Prefer short paragraphs with measurable outcomes.',
+];
 
 export default function BlogSubmit() {
-  const { isDark } = useTheme()
-  const { toast, showToast, closeToast } = useToast()
-  const navigate = useNavigate()
-  const [saving, setSaving] = useState(false)
-  const [form, setForm] = useState(EMPTY_FORM)
-  const completion = Math.round((
-    Number(Boolean(form.title.trim())) +
-    Number(Boolean(form.excerpt.trim())) +
-    Number(Boolean(form.content.trim())) +
-    Number(Boolean(form.category.trim())) +
-    Number(Boolean(form.tagsInput.trim()))
-  ) / 5 * 100)
+  const { toast, showToast, closeToast } = useToast();
+  const navigate = useNavigate();
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState(EMPTY_FORM);
+
+  const completion = Math.round(
+    (Number(Boolean(form.title.trim())) +
+      Number(Boolean(form.excerpt.trim())) +
+      Number(Boolean(form.content.trim())) +
+      Number(Boolean(form.category.trim())) +
+      Number(Boolean(form.tagsInput.trim()))) /
+      5 *
+      100,
+  );
 
   const onSubmit = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     const payload = {
       title: form.title.trim(),
       excerpt: form.excerpt.trim(),
       content: form.content.trim(),
       category: form.category.trim(),
-      tags: form.tagsInput.split(',').map(t => t.trim()).filter(Boolean),
+      tags: form.tagsInput.split(',').map((t) => t.trim()).filter(Boolean),
       coverImageUrl: form.coverImageUrl.trim(),
       authorName: form.authorName.trim(),
-    }
+    };
 
     if (!payload.title || !payload.excerpt || !payload.content) {
-      showToast('Title, excerpt, and content are required.', 'error')
-      return
+      showToast('Title, excerpt, and content are required.', 'error');
+      return;
     }
 
     try {
-      setSaving(true)
-      await submitUserBlogPost(payload)
-      showToast('Your blog was submitted for admin review and approval.', 'success')
-      setForm(EMPTY_FORM)
-      setTimeout(() => navigate('/blog'), 1000)
+      setSaving(true);
+      await submitUserBlogPost(payload);
+      showToast('Your blog was submitted for admin review and approval.', 'success');
+      setForm(EMPTY_FORM);
+      setTimeout(() => navigate('/blog'), 1000);
     } catch (err) {
-      showToast(err?.response?.data?.message || 'Unable to submit blog right now.', 'error')
+      showToast(err?.response?.data?.message || 'Unable to submit blog right now.', 'error');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
 
   return (
-    <div className={`premium-shell min-h-screen px-4 py-10 ${isDark ? 'bg-card text-white' : 'bg-gradient-to-br from-primary/5 to-cyan-50 text-foreground'}`}>
-      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
+    <AppPage
+      title="Write for FarmEazy"
+      description="Share practical farming knowledge. Articles are reviewed before publishing."
+      actions={
+        <>
+          <Link
+            to="/blog/my-submissions"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            My submissions
+          </Link>
+          <Link to="/blog" className="text-sm font-medium text-muted-foreground hover:text-foreground">
+            Back to blog
+          </Link>
+        </>
+      }
+    >
       {toast && (
         <div className="fixed bottom-6 right-6 z-[100]">
           <Toast message={toast.message} type={toast.type} onClose={closeToast} />
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr] gap-6 items-start">
-      <div className={`interactive-card rounded-2xl border p-6 md:p-8 ${isDark ? 'bg-muted border-border' : 'bg-background border-border/60 shadow-sm'}`}>
-        <div className="flex items-center justify-between gap-3">
-          <h1 className={`text-2xl md:text-3xl font-extrabold ${isDark ? 'text-white' : 'text-foreground'}`}>
-            Write a Blog for FarmEazy
-          </h1>
-          <div className="flex items-center gap-3">
-            <Link to="/blog/my-submissions" className={`text-sm font-semibold ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>
-              My Submissions
-            </Link>
-            <Link to="/blog" className={`text-sm font-semibold ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>
-              Back to Blog
-            </Link>
-          </div>
+      <FePanel className="p-4 mb-6">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Submission readiness</span>
+          <span className="font-semibold text-primary tabular-nums">{completion}%</span>
         </div>
-
-        <p className={`mt-3 text-sm md:text-base ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
-          Share practical farming knowledge. Your article will be reviewed by admin and then published.
-        </p>
-
-        <div className={`mt-4 rounded-2xl border p-4 ${isDark ? 'border-border bg-muted/40' : 'border-border bg-muted/30'}`}>
-          <div className="flex items-center justify-between text-sm">
-            <span className={isDark ? 'text-muted-foreground' : 'text-foreground'}>Submission readiness</span>
-            <span className={isDark ? 'text-primary font-semibold' : 'text-primary font-semibold'}>{completion}%</span>
-          </div>
-          <div className={`mt-2 h-2 rounded-full overflow-hidden ${isDark ? 'bg-muted' : 'bg-muted'}`}>
-            <div className="h-full bg-gradient-to-r from-primary/50 to-cyan-500 transition-all duration-500" style={{ width: `${completion}%` }} />
-          </div>
+        <div className="mt-2 h-2 rounded-full overflow-hidden bg-muted">
+          <div
+            className="h-full bg-primary transition-all duration-500"
+            style={{ width: `${completion}%` }}
+          />
         </div>
+      </FePanel>
 
-        <form className="mt-6 space-y-4" onSubmit={onSubmit}>
-          <input
-            value={form.title}
-            onChange={(e) => setForm(prev => ({ ...prev, title: e.target.value }))}
-            placeholder="Title"
-            className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-card border-border text-white' : 'bg-background border-border text-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
-          />
-          <input
-            value={form.authorName}
-            onChange={(e) => setForm(prev => ({ ...prev, authorName: e.target.value }))}
-            placeholder="Author name (optional)"
-            className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-card border-border text-white' : 'bg-background border-border text-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input
-              value={form.category}
-              onChange={(e) => setForm(prev => ({ ...prev, category: e.target.value }))}
-              placeholder="Category"
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-card border-border text-white' : 'bg-background border-border text-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
-            />
-            <input
-              value={form.tagsInput}
-              onChange={(e) => setForm(prev => ({ ...prev, tagsInput: e.target.value }))}
-              placeholder="Tags separated by comma"
-              className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-card border-border text-white' : 'bg-background border-border text-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
-            />
-          </div>
-          <input
-            value={form.coverImageUrl}
-            onChange={(e) => setForm(prev => ({ ...prev, coverImageUrl: e.target.value }))}
-            placeholder="Cover image URL (optional)"
-            className={`w-full px-4 py-3 rounded-xl border transition-all duration-300 ${isDark ? 'bg-card border-border text-white' : 'bg-background border-border text-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
-          />
-          <textarea
-            rows={3}
-            value={form.excerpt}
-            onChange={(e) => setForm(prev => ({ ...prev, excerpt: e.target.value }))}
-            placeholder="Short summary"
-            className={`w-full px-4 py-3 rounded-xl border resize-none transition-all duration-300 ${isDark ? 'bg-card border-border text-white' : 'bg-background border-border text-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
-          />
-          <textarea
-            rows={10}
-            value={form.content}
-            onChange={(e) => setForm(prev => ({ ...prev, content: e.target.value }))}
-            placeholder="Write your full blog here"
-            className={`w-full px-4 py-3 rounded-xl border resize-y transition-all duration-300 ${isDark ? 'bg-card border-border text-white' : 'bg-background border-border text-foreground'} focus:outline-none focus:ring-2 focus:ring-primary`}
-          />
-
-          <button
-            type="submit"
-            disabled={saving}
-            className="w-full px-4 py-3 rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/80 text-white font-semibold disabled:opacity-60 transition-all duration-300 hover:scale-[1.01]"
-          >
-            {saving ? 'Submitting...' : 'Submit for Review'}
-          </button>
-        </form>
-      </div>
-
-      <aside className="space-y-5">
-        <div className={`interactive-card rounded-2xl border p-5 ${isDark ? 'bg-muted/90 border-border' : 'bg-background/90 border-border shadow-sm'}`}>
-          <h2 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Author Assistant</h2>
-          <div className="mt-4 space-y-3">
-            {[
-              'Use actionable titles that mention crop, region, or season.',
-              'Start with a practical problem and then list clear steps.',
-              'Prefer short paragraphs with measurable outcomes.'
-            ].map((tip) => (
-              <div key={tip} className={`rounded-xl p-3 text-sm ${isDark ? 'bg-card/70 text-muted-foreground' : 'bg-muted/30 text-foreground'}`}>
-                {tip}
+      <PageScaffold
+        aside={
+          <>
+            <InfoPanel title="Author assistant" description="Tips for stronger submissions.">
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                {AUTHOR_TIPS.map((tip) => (
+                  <li key={tip} className="rounded-lg border border-border bg-muted/30 p-3">
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </InfoPanel>
+            <InfoPanel title="Checklist" description="Before you submit">
+              <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                <li>Title is clear and specific</li>
+                <li>Summary explains value in 2–3 lines</li>
+                <li>Content includes steps or best practices</li>
+                <li>Tags are relevant and searchable</li>
+              </ul>
+            </InfoPanel>
+          </>
+        }
+      >
+        <form onSubmit={onSubmit} className="space-y-6">
+          <DetailPanel title="Post details" description="Title, author, and taxonomy.">
+            <div className="space-y-4">
+              <Input
+                value={form.title}
+                onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+                placeholder="Title"
+              />
+              <Input
+                value={form.authorName}
+                onChange={(e) => setForm((prev) => ({ ...prev, authorName: e.target.value }))}
+                placeholder="Author name (optional)"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  value={form.category}
+                  onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value }))}
+                  placeholder="Category"
+                />
+                <Input
+                  value={form.tagsInput}
+                  onChange={(e) => setForm((prev) => ({ ...prev, tagsInput: e.target.value }))}
+                  placeholder="Tags, comma separated"
+                />
               </div>
-            ))}
-          </div>
-        </div>
+              <Input
+                value={form.coverImageUrl}
+                onChange={(e) => setForm((prev) => ({ ...prev, coverImageUrl: e.target.value }))}
+                placeholder="Cover image URL (optional)"
+              />
+            </div>
+          </DetailPanel>
 
-        <div className={`interactive-card rounded-2xl border p-5 ${isDark ? 'bg-muted/90 border-border' : 'bg-background/90 border-border shadow-sm'}`}>
-          <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Submission Checklist</h3>
-          <ul className={`mt-3 space-y-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-foreground'}`}>
-            <li>Title is clear and specific</li>
-            <li>Summary explains value in 2-3 lines</li>
-            <li>Content includes steps or best practices</li>
-            <li>Tags are relevant and searchable</li>
-          </ul>
-        </div>
-      </aside>
-      </div>
-    </div>
-  )
+          <DetailPanel title="Content" description="Summary and full article body.">
+            <div className="space-y-4">
+              <textarea
+                rows={3}
+                value={form.excerpt}
+                onChange={(e) => setForm((prev) => ({ ...prev, excerpt: e.target.value }))}
+                placeholder="Short summary"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              />
+              <textarea
+                rows={12}
+                value={form.content}
+                onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
+                placeholder="Write your full blog here"
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y min-h-[280px]"
+              />
+            </div>
+          </DetailPanel>
+
+          <Button type="submit" disabled={saving} className="w-full sm:w-auto">
+            {saving ? 'Submitting…' : 'Submit for review'}
+          </Button>
+        </form>
+      </PageScaffold>
+    </AppPage>
+  );
 }

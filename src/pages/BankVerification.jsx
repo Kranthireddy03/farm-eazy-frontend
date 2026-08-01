@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
+import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
 import OtpService from '../services/OtpService'
 
@@ -355,20 +356,15 @@ function BankVerification() {
   }
 
   return (
-    <div className={`premium-shell min-h-screen py-8 px-4 ${isDark ? 'bg-gradient-to-br from-background to-card' : 'bg-gradient-to-br from-primary/5 via-white to-primary/5'}`}>
-      <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>
-            {isVendorFlow ? 'Vendor Verification' : 'Bank Verification'}
-          </h1>
-          <p className={`mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
-            {isVendorFlow
-              ? 'Complete verification to unlock vendor dashboard and paid product/service listings'
-              : 'Verify your bank account or UPI ID for secure transactions'}
-          </p>
-        </div>
+    <AppPage
+      title={isVendorFlow ? 'Vendor verification' : 'Bank verification'}
+      description={
+        isVendorFlow
+          ? 'Complete verification to unlock vendor dashboard and paid listings.'
+          : 'Verify your bank account or UPI ID for secure transactions.'
+      }
+    >
+      <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Limits Card */}
         <div className={`mb-6 p-4 rounded-xl border ${
@@ -785,7 +781,7 @@ function BankVerification() {
           </ul>
         </div>
       </div>
-    </div>
+    </AppPage>
   )
 }
 
