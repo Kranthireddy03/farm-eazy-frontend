@@ -148,7 +148,7 @@ function ProductDetail() {
             size="sm"
             onClick={() => {
               const added = toggleWishlist(product.id)
-              showToast(added ? 'Saved to favorites' : 'Removed from favorites', 'success')
+              showToast(added ? 'Product saved to your wishlist.' : 'Product removed from saved products.', 'success')
             }}
             className="gap-2"
             aria-pressed={isWishlisted(product.id)}

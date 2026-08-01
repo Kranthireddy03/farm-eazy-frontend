@@ -102,6 +102,7 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const Orders = lazy(() => import('./pages/Orders'));
+const Wishlist = lazy(() => import('./pages/Wishlist'));
 const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
 const RefundDetails = lazy(() => import('./pages/RefundDetails'));
 const AddressBook = lazy(() => import('./pages/AddressBook'));
@@ -463,6 +464,7 @@ function AppContent() {
           <Route path="/selling" element={<Selling />} />
           <Route path="/buying" element={<Buying />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/wishlist" element={<Wishlist />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
           <Route path="/product/:id" element={<ProductDetail />} />

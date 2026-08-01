@@ -158,7 +158,7 @@ function Buying() {
 
   const handleToggleWishlist = (product) => {
     const added = toggleWishlist(product.id)
-    showToast(added ? 'Added to favorites' : 'Removed from favorites', 'success')
+    showToast(added ? 'Product saved to your wishlist.' : 'Product removed from saved products.', 'success')
   }
 
   const handleExportList = () => {
@@ -226,7 +226,7 @@ function Buying() {
           value={CATEGORIES.find((c) => c.value === selectedCategory)?.label || 'All'}
           hint="Active filter"
         />
-        <KpiCard title="Favorites" value={wishlistIds.length} hint="Saved locally" />
+        <KpiCard title="Saved products" value={wishlistIds.length} hint="On this device" />
       </div>
 
       <PageScaffold
@@ -254,6 +254,9 @@ function Buying() {
                   <ShoppingCart className="h-4 w-4" />
                   View cart
                 </Button>
+                <Button variant="outline" onClick={() => navigate('/wishlist')} className="w-full gap-2">
+                  Saved products
+                </Button>
                 <Button variant="outline" onClick={() => navigate('/orders')} className="w-full gap-2">
                   <ClipboardList className="h-4 w-4" />
                   Your orders
@@ -272,7 +275,7 @@ function Buying() {
               <ul className="text-sm text-muted-foreground space-y-2 list-disc pl-4">
                 <li>Update your location in the header for accurate delivery.</li>
                 <li>Compare seller ratings and delivery windows before ordering.</li>
-                <li>Use favorites to track products you may buy later.</li>
+                <li>Save products to your wishlist to compare and buy later.</li>
               </ul>
             </InfoPanel>
           </>

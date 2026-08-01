@@ -52,7 +52,8 @@ export function buildCommandItems({ navigate, isAuthenticated, isAdmin, openSupp
   if (isAuthenticated) {
     actions.push(
       { id: 'cart', label: 'Open cart', group: 'Actions', icon: '🛒', action: () => navigate('/cart') },
-      { id: 'orders', label: 'My orders', group: 'Actions', icon: '📦', action: () => navigate('/orders') },
+      { id: 'wishlist', label: 'Saved products', group: 'Actions', icon: '❤️', action: () => navigate('/wishlist') },
+      { id: 'orders', label: 'Orders', group: 'Actions', icon: '📦', action: () => navigate('/orders') },
       { id: 'settings', label: 'Settings', group: 'Actions', icon: '⚙️', action: () => navigate('/settings') },
       { id: 'notifications', label: 'Notifications', group: 'Actions', icon: '🔔', action: () => navigate('/notifications') },
       { id: 'activities', label: 'Activity timeline', group: 'Actions', icon: '📋', action: () => navigate('/activities') },

@@ -14,8 +14,12 @@ import { ErrorState } from '../components/ui/error-state'
 import { EmptyState } from '../components/ui/empty-state'
 import { PageSkeleton } from '../components/ui/Skeleton'
 import { FilterBar } from '../components/ui/filter-bar'
-import { Package, ShoppingBag, Truck, IndianRupee } from 'lucide-react'
+import { Package, ShoppingBag, Truck, IndianRupee, Heart, LifeBuoy } from 'lucide-react'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { KpiSection } from '../components/app/KpiSection'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { InfoPanel } from '../components/platform/InfoPanel'
+import { SummaryPanel } from '../components/platform/SummaryPanel'
 
 const ORDER_STATUS_STYLES = {
   CANCELLED: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
@@ -127,13 +131,19 @@ function Orders() {
     setShowRefundDetailsModal(true)
   }
 
+  const recentOrders = useMemo(() => {
+    return [...orders]
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      .slice(0, 5)
+  }, [orders])
+
   const handleCancelSuccess = (result) => {
-    showToast(result.message || 'Order cancelled successfully', 'success')
+    showToast(result.message || 'Order cancelled successfully.', 'success')
     fetchOrders()
   }
 
   const handleReturnSuccess = (result) => {
-    showToast(result.message || 'Return request submitted successfully', 'success')
+    showToast(result.message || 'Return request submitted successfully.', 'success')
     fetchOrders()
   }
 
@@ -163,7 +173,7 @@ function Orders() {
 
   if (loading) {
     return (
-      <AppPage title="My Orders" description="View and manage your order history.">
+      <AppPage title="Orders" description="View order history, track delivery, and manage returns.">
         <PageSkeleton variant="cards" />
       </AppPage>
     )
@@ -171,7 +181,7 @@ function Orders() {
 
   if (error) {
     return (
-      <AppPage title="My Orders" description="View and manage your order history.">
+      <AppPage title="Orders" description="View order history, track delivery, and manage returns.">
         <ErrorState
           title="Could not load orders"
           description={error}
@@ -179,7 +189,7 @@ function Orders() {
           showHome={false}
         />
         <div className="flex justify-center mt-4">
-          <Button variant="outline" onClick={() => navigate('/buying')}>Back to shop</Button>
+          <Button variant="outline" onClick={() => navigate('/buying')}>Browse marketplace</Button>
         </div>
       </AppPage>
     )
@@ -187,23 +197,63 @@ function Orders() {
 
   return (
     <AppPage
-      title="My Orders"
-      description="View and manage your order history."
+      title="Orders"
+      description="View order history, track delivery, and manage returns."
       actions={
-        <Button onClick={() => navigate('/buying')}>
+        <Button onClick={() => navigate('/buying')} className="gap-2">
           <ShoppingBag className="h-4 w-4" />
-          Continue shopping
+          Browse marketplace
         </Button>
       }
     >
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <KpiCard title="Total orders" value={orderMetrics.total} hint="All time" icon={Package} />
-          <KpiCard title="Active" value={orderMetrics.active} hint="In progress" icon={Truck} />
-          <KpiCard title="Delivered" value={orderMetrics.delivered} hint="Completed" icon={Package} />
-          <KpiCard title="Spend" value={formatCurrency(orderMetrics.revenue)} hint="Excluding cancelled" icon={IndianRupee} />
-        </div>
+      <KpiSection>
+        <KpiCard title="Total orders" value={orderMetrics.total} hint="All time" icon={Package} />
+        <KpiCard title="Active" value={orderMetrics.active} hint="In progress" icon={Truck} />
+        <KpiCard title="Delivered" value={orderMetrics.delivered} hint="Completed" icon={Package} />
+        <KpiCard title="Spend" value={formatCurrency(orderMetrics.revenue)} hint="Excluding cancelled" icon={IndianRupee} />
+      </KpiSection>
 
+      <PageScaffold
+        aside={
+          <>
+            <SummaryPanel title="Recent orders" description="Latest activity on your account.">
+              {recentOrders.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No orders yet.</p>
+              ) : (
+                <ul className="space-y-2 text-sm">
+                  {recentOrders.map((o) => (
+                    <li key={o.id} className="flex justify-between gap-2 border-b border-border pb-2 last:border-0">
+                      <span className="font-medium">#FZ{o.id}</span>
+                      <span className="text-muted-foreground truncate">{o.orderStatus}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </SummaryPanel>
+            <SummaryPanel title="Quick actions" description="Marketplace and saved items.">
+              <div className="flex flex-col gap-2">
+                <Button variant="outline" className="w-full gap-2" onClick={() => navigate('/wishlist')}>
+                  <Heart className="h-4 w-4" />
+                  Saved products
+                </Button>
+                <Button variant="outline" className="w-full gap-2" onClick={() => navigate('/support')}>
+                  <LifeBuoy className="h-4 w-4" />
+                  Order support
+                </Button>
+              </div>
+            </SummaryPanel>
+            <InfoPanel
+              title="Returns and refunds"
+              description="When you need help with an order."
+            >
+              <p className="text-sm text-muted-foreground">
+                Cancel eligible orders before shipment. After delivery, use Request return on delivered orders.
+                Add refund details when prompted so we can process your refund.
+              </p>
+            </InfoPanel>
+          </>
+        }
+      >
         <FilterBar
           value={search}
           onChange={setSearch}
@@ -216,13 +266,13 @@ function Orders() {
         {orders.length === 0 ? (
           <EmptyState
             title="No orders yet"
-            description="Your order history will appear here once you make a purchase."
-            action={<Button onClick={() => navigate('/buying')}>Start shopping</Button>}
+            description="Your order history will appear here after you place your first order."
+            action={<Button onClick={() => navigate('/buying')}>Browse marketplace</Button>}
           />
         ) : filteredOrders.length === 0 ? (
           <EmptyState
             title="No matching orders"
-            description="Try adjusting your search or status filter."
+            description="Try a different search term or status filter."
             action={<Button variant="outline" onClick={() => { setSearch(''); setStatusFilter('ALL') }}>Clear filters</Button>}
           />
         ) : (
@@ -330,7 +380,7 @@ function Orders() {
             ))}
           </div>
         )}
-      </div>
+      </PageScaffold>
 
       <CancelOrderModal
         isOpen={showCancelModal}

@@ -271,7 +271,7 @@ function Selling() {
       actions={
         <Button onClick={handleOpenNew} className="gap-2" disabled={loading}>
           <Plus className="h-4 w-4" />
-          List new product
+          Create product
         </Button>
       }
     >
@@ -358,7 +358,7 @@ function Selling() {
             action={
               <Button onClick={handleOpenNew} className="gap-2">
                 <Plus className="h-4 w-4" />
-                List your first product
+                Create your first product
               </Button>
             }
           />

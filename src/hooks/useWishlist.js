@@ -17,8 +17,13 @@ export function useWishlist() {
 
   useEffect(() => {
     const onStorage = () => setIds(readWishlist());
+    const onWishlistUpdated = () => setIds(readWishlist());
     window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
+    window.addEventListener('farmeazy:wishlist-updated', onWishlistUpdated);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('farmeazy:wishlist-updated', onWishlistUpdated);
+    };
   }, []);
 
   const persist = useCallback((next) => {

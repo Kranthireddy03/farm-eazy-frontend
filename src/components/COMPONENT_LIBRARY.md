@@ -1,9 +1,13 @@
 # Component library
 
+**Platform frozen** — see `docs/RELEASE_QUALITY.md`. No new generic components unless **3+ pages** need them.
+
 Internal UI platform for FarmEazy. **Import from `src/components/catalog` when building new pages.**
 
 **Quality standards:** `docs/PAGE_QUALITY_STANDARDS.md`  
 **UX audit & priorities:** `docs/UX_AUDIT.md`  
+**Page reviews:** `docs/PAGE_REVIEWS.md`  
+**UX copy:** `docs/UX_COPY_GUIDE.md`  
 **Technical debt:** `docs/TECHNICAL_DEBT.md`
 
 ---
@@ -86,4 +90,4 @@ AppShell
 
 ## Marketplace journey order
 
-1. Cart → 2. Checkout → 3. Order confirmation → 4. Orders → 5. Selling → 6. Wishlist → 7. Recommendations
+1. Cart → 2. Checkout → 3. Order confirmation → 4. Orders → 5. Selling → 6. Saved products (`/wishlist`) → 7. Recommendations (deferred)

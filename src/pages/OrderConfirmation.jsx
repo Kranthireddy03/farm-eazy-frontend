@@ -10,7 +10,8 @@ import { Badge } from '../components/ui/badge'
 import { ErrorState } from '../components/ui/error-state'
 import { PageSkeleton } from '../components/ui/Skeleton'
 import { BrandLoader } from '../components/ui/brand-loader'
-import { cn } from '../lib/utils'
+import { CheckoutStepIndicator } from '../components/marketplace/CheckoutStepIndicator'
+import { SummaryPanel } from '../components/platform/SummaryPanel'
 
 function OrderConfirmation() {
   const { orderId } = useParams()
@@ -57,6 +58,12 @@ function OrderConfirmation() {
 
   const coinDiscount = order.coinsUsed || 0
 
+  const orderProgressStep = (() => {
+    if (order.orderStatus === 'CANCELLED') return 1
+    const map = { PENDING: 1, CONFIRMED: 2, SHIPPED: 3, DELIVERED: 4 }
+    return map[order.orderStatus] || 1
+  })()
+
   return (
     <AppPage
       title="Order confirmed"
@@ -78,7 +85,18 @@ function OrderConfirmation() {
     >
       <PageScaffold
         aside={
-          <Card className="border-primary/20 bg-primary/5">
+          <>
+            <SummaryPanel title="Order progress" description="Typical delivery timeline.">
+              <CheckoutStepIndicator
+                steps={['Placed', 'Confirmed', 'Shipped', 'Delivered']}
+                currentStep={orderProgressStep}
+                totalSteps={4}
+              />
+              {order.orderStatus === 'CANCELLED' && (
+                <p className="text-sm text-destructive mt-4">This order was cancelled.</p>
+              )}
+            </SummaryPanel>
+            <Card className="border-primary/20 bg-primary/5">
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Truck className="h-4 w-4" />
@@ -91,6 +109,7 @@ function OrderConfirmation() {
               <p>Payment: <span className="font-medium text-foreground">{order.paymentStatus || 'Pending'}</span></p>
             </CardContent>
           </Card>
+          </>
         }
       >
         <Card>
@@ -150,7 +169,7 @@ function OrderConfirmation() {
         </Card>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => navigate('/buying')}>Continue shopping</Button>
+          <Button onClick={() => navigate('/buying')}>Browse marketplace</Button>
           <Link to="/support" className={cn(buttonVariants({ variant: 'outline' }))}>
             Need help?
           </Link>
