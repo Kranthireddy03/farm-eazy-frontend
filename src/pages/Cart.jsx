@@ -2,13 +2,13 @@
  * Shopping cart — review items, apply coins, proceed to checkout.
  */
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ShoppingBag } from 'lucide-react'
 import { useToast } from '../hooks/useToast'
+import { useCart } from '../hooks/useCart'
 import AppPage from '../components/layout/AppPage'
 import apiClient from '../services/apiClient'
-import ProductService from '../services/ProductService'
 import { KpiSection } from '../components/app/KpiSection'
 import { PageScaffold } from '../components/app/PageScaffold'
 import { CartLineItem } from '../components/marketplace/CartLineItem'
@@ -17,108 +17,55 @@ import { KpiCard } from '../components/ui/kpi-card'
 import { Button } from '../components/ui/button'
 import { EmptyState } from '../components/ui/empty-state'
 
-import {
-  calculateCartTotals,
-  COIN_VALUE,
-} from '../lib/marketplace'
-
 function Cart() {
   const navigate = useNavigate()
   const { showToast } = useToast()
 
-  const [cartItems, setCartItems] = useState([])
-  const [coins, setCoins] = useState(0)
-  const [useCoins, setUseCoins] = useState(false)
-  const [coinsToUse, setCoinsToUse] = useState(0)
+  const {
+    cartItems,
+    coins,
+    useCoins,
+    coinsToUse,
+    totals: { subtotal, tax, total, savings },
+    finalAmount,
+    updateQuantity,
+    removeFromCart,
+    handleUseCoins,
+    persistCheckoutCoins,
+    setAvailableCoins,
+    setCoinsToUse,
+    isEmpty,
+  } = useCart({ onToast: showToast })
+
   const [checkingOut, setCheckingOut] = useState(false)
 
   useEffect(() => {
-    loadCart()
-    fetchCoins()
-  }, [])
-
-  const loadCart = () => {
-    const savedCart = localStorage.getItem('farmeazy_cart')
-    if (savedCart) setCartItems(JSON.parse(savedCart))
-  }
-
-  const fetchCoins = async () => {
-    try {
-      const response = await apiClient.get('/coins')
-      setCoins(response.data.totalCoins || 0)
-    } catch {
-      setCoins(0)
-    }
-  }
-
-  const saveCart = (items) => {
-    localStorage.setItem('farmeazy_cart', JSON.stringify(items))
-    setCartItems(items)
-    window.dispatchEvent(new Event('cart-updated'))
-  }
-
-  const updateQuantity = (productId, newQuantity) => {
-    if (newQuantity <= 0) {
-      removeFromCart(productId)
-      return
-    }
-    const item = cartItems.find((i) => i.id === productId)
-    if (item && newQuantity > item.availableQuantity) {
-      showToast(`Only ${item.availableQuantity} items available`, 'warning')
-      return
-    }
-    saveCart(
-      cartItems.map((i) => (i.id === productId ? { ...i, quantity: newQuantity } : i)),
-    )
-  }
-
-  const removeFromCart = async (productId) => {
-    const item = cartItems.find((i) => i.id === productId)
-    if (item) {
+    const fetchCoins = async () => {
       try {
-        await ProductService.releaseProductQuantity(productId, item.quantity)
-      } catch (error) {
-        showToast(
-          `Failed to release stock: ${error?.response?.data?.message || error.message}`,
-          'error',
-        )
+        const response = await apiClient.get('/coins')
+        setAvailableCoins(response.data.totalCoins || 0)
+      } catch {
+        setAvailableCoins(0)
       }
     }
-    saveCart(cartItems.filter((i) => i.id !== productId))
-    showToast('Item removed from cart', 'success')
-  }
-
-  const { subtotal, tax, total, savings } = calculateCartTotals(cartItems)
-
-  const handleUseCoins = (checked) => {
-    setUseCoins(checked)
-    if (checked) {
-      setCoinsToUse(Math.min(coins, Math.floor(total)))
-    } else {
-      setCoinsToUse(0)
-    }
-  }
-
-  const finalAmount = Math.max(0, total - coinsToUse * COIN_VALUE)
+    fetchCoins()
+  }, [setAvailableCoins])
 
   const handleCheckout = async () => {
-    if (cartItems.length === 0) {
+    if (isEmpty) {
       showToast('Your cart is empty', 'warning')
       return
     }
     try {
       setCheckingOut(true)
-      localStorage.setItem(
-        'farmeazy_checkout_coins',
-        JSON.stringify({ useCoins, coinsToUse }),
-      )
+      persistCheckoutCoins()
       navigate('/checkout')
     } finally {
       setCheckingOut(false)
     }
   }
 
-  if (cartItems.length === 0) {
+  if (isEmpty) {
     return (
       <AppPage title="Shopping cart" description="Review items before checkout.">
         <EmptyState

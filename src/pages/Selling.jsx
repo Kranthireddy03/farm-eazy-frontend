@@ -1,91 +1,41 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { formatDate } from '../utils/formatDate';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
-import OtpService from '../services/OtpService';
+import { Package, Plus, Pencil, Trash2, Boxes, AlertTriangle } from 'lucide-react';
 import ProductService from '../services/ProductService';
 import apiClient from '../services/apiClient';
-import LocationPicker from '../components/LocationPicker';
 import { useGlobalToast } from '../context/ToastContext';
-import { useTheme } from '../context/ThemeContext';
-import { useAuth } from '../context/AuthContext';
 import AppPage from '../components/layout/AppPage';
+import { SellingProductForm } from '../components/marketplace/SellingProductForm';
+import { KpiSection } from '../components/app/KpiSection';
+import { StatsCard } from '../components/platform/StatsCard';
+import { SectionHeader } from '../components/platform/SectionHeader';
+import { InfoPanel } from '../components/platform/InfoPanel';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { DataTable } from '../components/ui/data-table';
+import { EmptyState } from '../components/ui/empty-state';
+import { PageSkeleton } from '../components/ui/Skeleton';
+import { FilterBar } from '../components/ui/filter-bar';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
+
+const STATUS_STYLES = {
+  ACTIVE: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
+  OUT_OF_STOCK: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+  DRAFT: 'bg-muted text-muted-foreground',
+};
 
 function Selling() {
   const navigate = useNavigate();
-  const { showToast, showOtpNotification } = useGlobalToast();
-  const { isDark } = useTheme();
-  const { getUserEmail, getUserId, getUserName, getUserPhone, isAuthenticated, updateActivity } = useAuth();
-  const [currentStep, setCurrentStep] = useState(2); // Skip OTP step
-  const [otpVerified, setOtpVerified] = useState(true); // Already verified (OTP disabled)
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
-  const [timer, setTimer] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const { showToast } = useGlobalToast();
+
   const [myProducts, setMyProducts] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [editingProduct, setEditingProduct] = useState(null); // For edit mode
+  const [editingProduct, setEditingProduct] = useState(null);
   const [eligibilityLoading, setEligibilityLoading] = useState(true);
   const [eligibility, setEligibility] = useState(null);
-  const { executeRecaptcha } = useGoogleReCaptcha();
-
-  const getCaptchaToken = async (action) => {
-    if (typeof executeRecaptcha !== 'function') return null;
-    try {
-      return await executeRecaptcha(action);
-    } catch (error) {
-      console.warn('reCAPTCHA execution failed:', error);
-      return null;
-    }
-  }
-  
-  // Use AuthContext for user email instead of direct localStorage access
-  const userEmail = getUserEmail();
-  
-  const [formData, setFormData] = useState({
-    productName: '',
-    category: '',
-    description: '',
-    price: '',
-    discountPercentage: 0,
-    quantity: '',
-    unit: '',
-    deliveryDaysMin: 3,
-    deliveryDaysMax: 5,
-    weight: '',
-    specifications: '',
-    warrantyInfo: '',
-    imageUrls: '',
-    videoUrls: '',
-    contactEmail: '',
-    contactPhone: '',
-    sellerEmail: getUserEmail() || '',
-    sellerPhone: getUserPhone() || '',
-    vendorId: getUserId() || '',
-    vendorName: getUserName() || '',
-    vendorLocation: '',
-    vendorType: ''
-  });
-  // Ensure geofence fields are present in formData
-  useEffect(() => {
-    setFormData(prev => ({
-      geofenceLatitude: prev.geofenceLatitude || null,
-      geofenceLongitude: prev.geofenceLongitude || null,
-      geofenceRadiusKm: prev.geofenceRadiusKm || 5,
-      ...prev
-    }))
-  }, [])
-
-  const categories = [
-    { value: 'seeds', label: '🌱 Seeds', color: 'from-green-400 to-green-600' },
-    { value: 'fertilizers', label: '🌿 Fertilizers', color: 'from-emerald-400 to-emerald-600' },
-    { value: 'pesticides', label: '🛡️ Pesticides', color: 'from-teal-400 to-teal-600' },
-    { value: 'tools', label: '🔧 Tools', color: 'from-blue-400 to-blue-600' },
-    { value: 'machinery', label: '🚜 Machinery', color: 'from-indigo-400 to-indigo-600' },
-    { value: 'irrigation', label: '💧 Irrigation', color: 'from-cyan-400 to-cyan-600' },
-    { value: 'produce', label: '🥕 Fresh Produce', color: 'from-orange-400 to-orange-600' },
-    { value: 'others', label: '📦 Others', color: 'from-gray-400 to-gray-600' }
-  ];
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
     loadEligibilityAndProducts();
@@ -102,7 +52,7 @@ function Selling() {
       setEligibility(eligibilityData);
 
       if (isEligible) {
-        fetchMyProducts();
+        await fetchMyProducts();
       } else {
         setMyProducts([]);
       }
@@ -112,20 +62,13 @@ function Selling() {
         eligible: false,
         verificationInProgress: false,
         verificationMessage: 'Unable to validate vendor verification right now. Please complete or retry verification.',
-        verificationRedirectPath: '/vendor-verification'
+        verificationRedirectPath: '/vendor-dashboard',
       });
       setMyProducts([]);
     } finally {
       setEligibilityLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (timer > 0) {
-      const interval = setInterval(() => setTimer(timer - 1), 1000);
-      return () => clearInterval(interval);
-    }
-  }, [timer]);
 
   const fetchMyProducts = async () => {
     try {
@@ -136,98 +79,45 @@ function Selling() {
     }
   };
 
-  const handleSendOtp = async () => {
-    setLoading(true);
-    try {
-      const captchaToken = await getCaptchaToken('selling_otp');
-      // Use detailed OTP endpoint for SMS notification support
-      const response = await OtpService.sendOtpDetailed(userEmail, 'SELLING', null, captchaToken);
-      setOtpSent(true);
-      setTimer(600); // 10 minutes
-      // Show notification with SMS status
-      showOtpNotification(response);
-    } catch (error) {
-      showToast(error.response?.data?.message || 'Failed to send OTP', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const vendorDashboardEligible = Boolean(eligibility?.vendorDashboardEligible);
+  const canSellProducts = Boolean(eligibility?.eligible);
 
-  const handleOtpChange = (index, value) => {
-    if (value.length <= 1 && /^\d*$/.test(value)) {
-      const newOtp = [...otpCode];
-      newOtp[index] = value;
-      setOtpCode(newOtp);
-      
-      // Auto-focus next input
-      if (value && index < 5) {
-        document.getElementById(`otp-${index + 1}`).focus();
-      }
-    }
-  };
+  const sellingStats = useMemo(() => {
+    const totalListings = myProducts.length;
+    const activeListings = myProducts.filter((p) => p.status === 'ACTIVE').length;
+    const outOfStockListings = myProducts.filter((p) => p.status === 'OUT_OF_STOCK').length;
+    const listedUnits = myProducts.reduce((sum, p) => sum + (Number(p.quantity) || 0), 0);
+    return { totalListings, activeListings, outOfStockListings, listedUnits };
+  }, [myProducts]);
 
-  const handleVerifyOtp = async () => {
-    const code = otpCode.join('');
-    if (code.length !== 6) {
-      showToast('Please enter complete OTP', 'error');
+  const filteredProducts = useMemo(() => {
+    if (!debouncedSearch.trim()) return myProducts;
+    const q = debouncedSearch.toLowerCase();
+    return myProducts.filter(
+      (p) =>
+        p.productName?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.status?.toLowerCase().includes(q),
+    );
+  }, [myProducts, debouncedSearch]);
+
+  const handleOpenNew = () => {
+    if (!canSellProducts) {
+      showToast(eligibility?.verificationMessage || 'Complete vendor verification first.', 'warning');
+      navigate(eligibility?.verificationRedirectPath || '/vendor-dashboard');
       return;
     }
-    
-    setLoading(true);
-    try {
-      await OtpService.verifyOtp(userEmail, code, 'SELLING');
-      setOtpVerified(true);
-      setCurrentStep(2);
-      showToast('OTP verified successfully!', 'success');
-    } catch (error) {
-      showToast(error.response?.data?.message || 'Invalid OTP', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    // Allow all input - validation happens on submit
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setEditingProduct(null);
+    setShowForm(true);
   };
 
   const handleEditProduct = (product) => {
-    if (!eligibility?.eligible) {
+    if (!canSellProducts) {
       showToast(eligibility?.verificationMessage || 'Complete vendor verification first.', 'warning');
       navigate(eligibility?.verificationRedirectPath || '/vendor-dashboard');
       return;
     }
     setEditingProduct(product);
-    setFormData({
-      productName: product.productName || '',
-      category: product.category || '',
-      description: product.description || '',
-      price: product.price || '',
-      discountPercentage: product.discountPercentage || 0,
-      quantity: product.quantity || '',
-      unit: product.unit || '',
-      deliveryDaysMin: product.deliveryDaysMin || 3,
-      deliveryDaysMax: product.deliveryDaysMax || 5,
-      weight: product.weight || '',
-      specifications: product.specifications || '',
-      warrantyInfo: product.warrantyInfo || '',
-      imageUrls: product.imageUrls || '',
-      videoUrls: product.videoUrls || '',
-      contactEmail: product.contactEmail || '',
-      contactPhone: product.contactPhone || '',
-      sellerEmail: getUserEmail() || '',
-      sellerPhone: getUserPhone() || '',
-      vendorId: getUserId() || '',
-      vendorName: getUserName() || '',
-      vendorLocation: product.vendorLocation || '',
-      vendorType: product.vendorType || ''
-      ,
-      geofenceLatitude: product.geofenceLatitude || null,
-      geofenceLongitude: product.geofenceLongitude || null,
-      geofenceRadiusKm: product.geofenceRadiusKm || 5
-    });
-    setCurrentStep(2); // Start at Basic step
     setShowForm(true);
   };
 
@@ -235,1056 +125,193 @@ function Selling() {
     if (!window.confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
       return;
     }
-    
     setLoading(true);
     try {
       await ProductService.deleteProduct(productId);
       showToast('Product deleted successfully!', 'success');
-      fetchMyProducts(); // Refresh the list
+      await fetchMyProducts();
     } catch (error) {
-      console.error('Error deleting product:', error);
       showToast(error.response?.data?.message || 'Failed to delete product', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!otpVerified) {
-      showToast('Please verify OTP first', 'error');
-      return;
-    }
-    // Prevent listing products with zero or negative quantity
-    if (!formData.quantity || parseInt(formData.quantity, 10) <= 0) {
-      showToast('Quantity must be greater than zero', 'error');
-      return;
-    }
-    const minDays = parseInt(formData.deliveryDaysMin, 10);
-    const maxDays = parseInt(formData.deliveryDaysMax, 10);
-    if (!Number.isFinite(minDays) || !Number.isFinite(maxDays) || minDays < 1 || maxDays < 1 || minDays > maxDays) {
-      showToast('Please enter a valid delivery window (min and max days).', 'error');
-      return;
-    }
-
-    if (!formData.vendorName || !formData.vendorLocation || !formData.vendorType) {
-      showToast('Please complete vendor details before publishing.', 'error');
-      setCurrentStep(2);
-      return;
-    }
-
-    if (!formData.contactEmail || !formData.contactPhone) {
-      showToast('Please complete contact details before publishing.', 'error');
-      setCurrentStep(5);
-      return;
-    }
-
-    const publishConsent = window.confirm(
-      `Confirm product listing details:\n\nVendor: ${formData.vendorName}\nVendor Location: ${formData.vendorLocation}\nDelivery Window: ${minDays}-${maxDays} days\n\nProceed to publish?`
-    );
-    if (!publishConsent) {
-      return;
-    }
-
-    try {
-      const eligibilityResponse = await apiClient.get('/vendors/listing-eligibility?listingType=PRODUCT', {
-        validateStatus: (status) => status < 500,
-      });
-      const eligibility = eligibilityResponse?.data || {};
-      if (!eligibility.eligible) {
-        const firstReason = Array.isArray(eligibility.missingRequirements) && eligibility.missingRequirements.length
-          ? eligibility.missingRequirements[0]
-          : 'Listing eligibility requirements are not complete.';
-        showToast(firstReason, 'warning');
-        navigate(eligibility?.verificationRedirectPath || '/vendor-dashboard');
-        return;
-      }
-    } catch (eligibilityError) {
-      showToast('Unable to validate listing eligibility right now. Please try again.', 'error');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      // Remove imageFiles and videoFiles from payload before sending
-      const productPayload = {
-        ...formData,
-        sellerEmail: getUserEmail() || '',
-        sellerPhone: getUserPhone() || '',
-        vendorId: getUserId() || '',
-        vendorName: getUserName() || '',
-      };
-      delete productPayload.imageFiles;
-      delete productPayload.videoFiles;
-      if (editingProduct) {
-        await ProductService.updateProduct(editingProduct.id, { ...productPayload, imageFiles: formData.imageFiles, videoFiles: formData.videoFiles });
-        showToast('Product updated successfully!', 'success');
-      } else {
-        await ProductService.createProduct({ ...productPayload, imageFiles: formData.imageFiles, videoFiles: formData.videoFiles });
-        showToast('Product listed successfully!', 'success');
-      }
-      setShowForm(false);
-      setCurrentStep(2);
-      setEditingProduct(null);
-      setFormData({
-        productName: '',
-        category: '',
-        description: '',
-        price: '',
-        discountPercentage: 0,
-        quantity: '',
-        unit: '',
-        deliveryDaysMin: 3,
-        deliveryDaysMax: 5,
-        weight: '',
-        specifications: '',
-        warrantyInfo: '',
-        imageUrls: '',
-        videoUrls: '',
-        contactEmail: '',
-        contactPhone: '',
-        sellerEmail: getUserEmail() || '',
-        sellerPhone: getUserPhone() || '',
-        vendorId: getUserId() || '',
-        vendorName: getUserName() || '',
-        vendorLocation: '',
-        vendorType: ''
-        ,
-        geofenceLatitude: null,
-        geofenceLongitude: null,
-        geofenceRadiusKm: 5
-      });
-      fetchMyProducts();
-    } catch (error) {
-      showToast(error.response?.data?.message || (editingProduct ? 'Failed to update product' : 'Failed to create product'), 'error');
-    } finally {
-      setLoading(false);
-    }
+  const handleFormClose = () => {
+    setShowForm(false);
+    setEditingProduct(null);
   };
 
-  const discountedPrice = formData.price && formData.discountPercentage > 0
-    ? (formData.price - (formData.price * formData.discountPercentage / 100)).toFixed(2)
-    : formData.price;
+  const handleFormSuccess = async () => {
+    await fetchMyProducts();
+    handleFormClose();
+  };
 
-  const imagePreviewUrls = useMemo(
-    () => (formData.imageFiles || []).map((file) => URL.createObjectURL(file)),
-    [formData.imageFiles]
+  const productColumns = useMemo(
+    () => [
+      {
+        accessorKey: 'productName',
+        header: 'Product',
+        cell: ({ row }) => (
+          <div className="min-w-0">
+            <p className="font-medium truncate">{row.original.productName}</p>
+            <p className="text-xs text-muted-foreground capitalize">{row.original.category}</p>
+          </div>
+        ),
+      },
+      {
+        accessorKey: 'status',
+        header: 'Status',
+        cell: ({ row }) => (
+          <Badge className={STATUS_STYLES[row.original.status] || STATUS_STYLES.DRAFT}>
+            {row.original.status}
+          </Badge>
+        ),
+      },
+      {
+        id: 'price',
+        header: 'Price',
+        cell: ({ row }) => (
+          <span className="font-medium">₹{Number(row.original.discountedPrice || row.original.price || 0).toFixed(2)}</span>
+        ),
+      },
+      {
+        id: 'stock',
+        header: 'Stock',
+        cell: ({ row }) => `${row.original.quantity || 0} ${row.original.unit || ''}`,
+      },
+      {
+        id: 'delivery',
+        header: 'Delivery',
+        cell: ({ row }) => `${row.original.deliveryDaysMin || 3}-${row.original.deliveryDaysMax || 5} days`,
+      },
+      {
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => handleEditProduct(row.original)} className="gap-1">
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleDeleteProduct(row.original.id)}
+              className="gap-1 text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Delete
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [canSellProducts, eligibility],
   );
-
-  const videoPreviewUrls = useMemo(
-    () => (formData.videoFiles || []).map((file) => URL.createObjectURL(file)),
-    [formData.videoFiles]
-  );
-
-  useEffect(() => {
-    return () => {
-      imagePreviewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [imagePreviewUrls]);
-
-  useEffect(() => {
-    return () => {
-      videoPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
-    };
-  }, [videoPreviewUrls]);
-
-  const vendorDashboardEligible = Boolean(eligibility?.vendorDashboardEligible)
-  const canSellProducts = Boolean(eligibility?.eligible)
-  const sellingStats = useMemo(() => {
-    const totalListings = myProducts.length
-    const activeListings = myProducts.filter((product) => product.status === 'ACTIVE').length
-    const outOfStockListings = myProducts.filter((product) => product.status === 'OUT_OF_STOCK').length
-    const listedUnits = myProducts.reduce((sum, product) => sum + (Number(product.quantity) || 0), 0)
-
-    return { totalListings, activeListings, outOfStockListings, listedUnits }
-  }, [myProducts])
 
   if (showForm) {
     return (
-      <div className={`min-h-screen py-8 ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className="max-w-4xl mx-auto px-4">
-          {/* Header */}
-          <div className={`rounded-2xl shadow-lg p-6 mb-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-            <button
-              onClick={() => {
-                setShowForm(false);
-                setEditingProduct(null);
-                setFormData({
-                  productName: '',
-                  category: '',
-                  description: '',
-                  price: '',
-                  discountPercentage: 0,
-                  quantity: '',
-                  unit: '',
-                  deliveryDaysMin: 3,
-                  deliveryDaysMax: 5,
-                  weight: '',
-                  specifications: '',
-                  warrantyInfo: '',
-                  imageUrls: '',
-                  videoUrls: '',
-                  contactEmail: '',
-                  contactPhone: '',
-                  sellerEmail: getUserEmail() || '',
-                  sellerPhone: '',
-                  vendorId: getUserId() || '',
-                  vendorName: getUserName() || '',
-                  vendorLocation: '',
-                  vendorType: ''
-                });
-              }}
-              className={`flex items-center gap-2 font-medium transition-colors mb-4 ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
-            >
-              ← Back to Products
-            </button>
-            <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-              {editingProduct ? '✏️ Edit Product' : '➕ List New Product'}
-            </h1>
-          </div>
-
-          {/* Progress Steps - OTP removed, steps 2-6 shown as 1-5 */}
-          <div className={`rounded-2xl shadow-lg p-6 mb-6 border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-            <div className="flex items-center justify-between">
-              {[2, 3, 4, 5, 6].map((step, idx) => (
-                <React.Fragment key={step}>
-                  <div className="flex flex-col items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                      currentStep >= step 
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg' 
-                        : isDark ? 'bg-slate-700 text-slate-400' : 'bg-gray-200 text-gray-500'
-                    }`}>
-                      {currentStep > step ? '✓' : idx + 1}
-                    </div>
-                    <span className={`text-xs mt-1 hidden sm:block ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                      {step === 2 && 'Basic'}
-                      {step === 3 && 'Pricing'}
-                      {step === 4 && 'Stock'}
-                      {step === 5 && 'Details'}
-                      {step === 6 && 'Media'}
-                    </span>
-                  </div>
-                  {step < 6 && (
-                    <div className={`flex-1 h-1 mx-2 rounded transition-all ${
-                      currentStep > step ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : isDark ? 'bg-slate-700' : 'bg-gray-200'
-                    }`} />
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit}>
-            {/* Step 1: OTP Verification */}
-            {currentStep === 1 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-2xl font-bold mb-4 flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>
-                  🔐 Verify Your Email
-                </h2>
-                <p className={`mb-6 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>Enter the 6-digit OTP sent to {userEmail}</p>
-                
-                {!otpSent ? (
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-                  >
-                    {loading ? 'Sending...' : 'Send OTP'}
-                  </button>
-                ) : (
-                  <>
-                    <div className="flex gap-3 justify-center mb-6">
-                      {otpCode.map((digit, index) => (
-                        <input
-                          key={index}
-                          id={`otp-${index}`}
-                          type="text"
-                          maxLength="1"
-                          value={digit}
-                          onChange={(e) => handleOtpChange(index, e.target.value)}
-                          className={`w-14 h-14 text-center text-2xl font-bold border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                        />
-                      ))}
-                    </div>
-                    
-                    {timer > 0 && (
-                      <p className={`text-center mb-4 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-                        Time remaining: <span className="font-bold text-blue-500">{Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}</span>
-                      </p>
-                    )}
-                    
-                    <button
-                      type="button"
-                      onClick={handleVerifyOtp}
-                      disabled={loading || otpCode.join('').length !== 6}
-                      className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 mb-3"
-                    >
-                      {loading ? 'Verifying...' : 'Verify OTP'}
-                    </button>
-                    
-                    <button
-                      type="button"
-                      onClick={handleSendOtp}
-                      disabled={loading || timer > 0}
-                      className="w-full text-blue-500 py-2 font-medium hover:underline disabled:opacity-50"
-                    >
-                      Resend OTP
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-
-            {/* Step 2: Basic Info */}
-            {currentStep === 2 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>📝 Basic Information</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Product Name *</label>
-                    <input
-                      type="text"
-                      name="productName"
-                      value={formData.productName}
-                      onChange={handleInputChange}
-                      required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="e.g., Organic Tomato Seeds"
-                    />
-                  </div>
-
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor Name *</label>
-                    <input
-                      type="text"
-                      name="vendorName"
-                      value={formData.vendorName}
-                      onChange={handleInputChange}
-                      required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="e.g., Seller Name"
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor ID</label>
-                    <input
-                      type="text"
-                      name="vendorId"
-                      value={formData.vendorId}
-                      readOnly
-                      className={`w-full px-4 py-3 border-2 rounded-xl cursor-not-allowed focus:outline-none ${isDark ? 'bg-slate-700 text-slate-400' : 'bg-gray-200 text-gray-500'}`}
-                      placeholder="Vendor ID (auto-filled)"
-                    />
-                  </div>
-                  {/* Seller email and phone are not shown in the form, auto-filled from registration */}
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor Location *</label>
-                    <input
-                      type="text"
-                      name="vendorLocation"
-                      value={formData.vendorLocation}
-                      onChange={handleInputChange}
-                      required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="e.g., District, State"
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Vendor Type *</label>
-                    <select
-                      name="vendorType"
-                      value={formData.vendorType}
-                      onChange={handleInputChange}
-                      required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                    >
-                      <option value="">Select type...</option>
-                      <option value="FARMER">Farmer</option>
-                      <option value="DISTRIBUTOR">Distributor</option>
-                      <option value="RETAILER">Retailer</option>
-                      <option value="COOPERATIVE">Cooperative</option>
-                      <option value="OTHER">Other</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-3 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Category *</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {categories.map(cat => (
-                        <button
-                          key={cat.value}
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
-                          className={`p-4 rounded-xl font-semibold text-sm transition-all ${
-                            formData.category === cat.value
-                              ? `bg-gradient-to-r ${cat.color} text-white shadow-lg scale-105`
-                              : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                          }`}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Description</label>
-                    <textarea
-                      name="description"
-                      value={formData.description}
-                      onChange={handleInputChange}
-                      rows="4"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="Describe your product..."
-                    />
-                    <p className={`text-sm mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>{formData.description.length} characters</p>
-                  </div>
-                </div>
-                
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(3)}
-                  disabled={!formData.productName || !formData.category}
-                  className="w-full mt-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-                >
-                  Next: Pricing →
-                </button>
-              </div>
-            )}
-
-            {/* Step 3: Pricing */}
-            {currentStep === 3 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>💰 Pricing</h2>
-                
-                <div className="space-y-6">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Price (₹) *</label>
-                    <input
-                      type="number"
-                      name="price"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      required
-                      step="0.01"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="0.00"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                      Discount: {formData.discountPercentage}%
-                    </label>
-                    <input
-                      type="range"
-                      name="discountPercentage"
-                      value={formData.discountPercentage}
-                      onChange={handleInputChange}
-                      min="0"
-                      max="50"
-                      className="w-full h-3 bg-gradient-to-r from-blue-200 to-indigo-400 rounded-lg appearance-none cursor-pointer"
-                    />
-                    <div className={`flex justify-between text-xs mt-1 ${isDark ? 'text-slate-500' : 'text-gray-500'}`}>
-                      <span>0%</span>
-                      <span>25%</span>
-                      <span>50%</span>
-                    </div>
-                  </div>
-                  
-                  {formData.price && (
-                    <div className={`p-6 rounded-xl border-2 ${isDark ? 'bg-green-900/30 border-green-700' : 'bg-green-50 border-green-300'}`}>
-                      <h3 className={`font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Price Preview</h3>
-                      <div className="flex items-center gap-4">
-                        {formData.discountPercentage > 0 && (
-                          <span className={`text-2xl line-through ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{formData.price}</span>
-                        )}
-                        <span className="text-3xl font-bold text-green-500">₹{discountedPrice}</span>
-                        {formData.discountPercentage > 0 && (
-                          <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                            {formData.discountPercentage}% OFF
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all ${isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(4)}
-                    disabled={!formData.price}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-                  >
-                    Next: Stock →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 4: Stock/Inventory */}
-            {currentStep === 4 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>📦 Inventory</h2>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Quantity *</label>
-                      <input
-                        type="number"
-                        name="quantity"
-                        value={formData.quantity}
-                        onChange={handleInputChange}
-                        required
-                        min="1"
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                        placeholder="0"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Unit *</label>
-                      <select
-                        name="unit"
-                        value={formData.unit}
-                        onChange={handleInputChange}
-                        required
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white' : 'bg-white border-gray-300 text-gray-800'}`}
-                      >
-                        <option value="">Select...</option>
-                        <option value="kg">Kilogram (kg)</option>
-                        <option value="g">Gram (g)</option>
-                        <option value="l">Liter (l)</option>
-                        <option value="ml">Milliliter (ml)</option>
-                        <option value="piece">Piece</option>
-                        <option value="pack">Pack</option>
-                        <option value="bag">Bag</option>
-                        <option value="box">Box</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Delivery Min Days *</label>
-                      <input
-                        type="number"
-                        name="deliveryDaysMin"
-                        value={formData.deliveryDaysMin}
-                        onChange={handleInputChange}
-                        min="1"
-                        required
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      />
-                    </div>
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Delivery Max Days *</label>
-                      <input
-                        type="number"
-                        name="deliveryDaysMax"
-                        value={formData.deliveryDaysMax}
-                        onChange={handleInputChange}
-                        min="1"
-                        required
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      />
-                    </div>
-                  </div>
-
-                  <div className={`rounded-xl p-4 border ${isDark ? 'bg-slate-700 border-slate-600 text-slate-200' : 'bg-emerald-50 border-emerald-200 text-slate-700'}`}>
-                    Estimated delivery shown to buyers: <span className="font-semibold">{formData.deliveryDaysMin || 3}-{formData.deliveryDaysMax || 5} days</span>
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Weight/Size (optional)</label>
-                    <input
-                      type="text"
-                      name="weight"
-                      value={formData.weight}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="e.g., 1kg, 500g, 2L"
-                    />
-                  </div>
-                </div>
-                
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(3)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all ${isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(5)}
-                    disabled={!formData.quantity || !formData.unit}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-                  >
-                    Next: Details →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 5: Additional Details */}
-            {currentStep === 5 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>📋 Additional Details</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Specifications</label>
-                    <textarea
-                      name="specifications"
-                      value={formData.specifications}
-                      onChange={handleInputChange}
-                      rows="3"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="Technical specifications, ingredients, etc."
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Warranty Information</label>
-                    <input
-                      type="text"
-                      name="warrantyInfo"
-                      value={formData.warrantyInfo}
-                      onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="e.g., 1 year manufacturer warranty"
-                    />
-                  </div>
-                  {/* Geofence selection for this product */}
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Delivery Geofence (optional)</label>
-                    <div className="rounded-xl overflow-hidden border mb-3">
-                      <LocationPicker
-                        onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, geofenceLatitude: lat, geofenceLongitude: lng }))}
-                        onAddressSubmit={(addr) => setFormData(prev => ({ ...prev, geofenceLatitude: addr.latitude, geofenceLongitude: addr.longitude }))}
-                        initialAddress={null}
-                      />
-                    </div>
-
-                    <div className="mt-2">
-                      <label className={`block text-sm font-semibold mb-1 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Deliver Within</label>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {[5, 10, 20, 50].map((radius) => (
-                          <button
-                            key={radius}
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, geofenceRadiusKm: radius }))}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${Number(formData.geofenceRadiusKm || 5) === radius
-                              ? 'bg-emerald-600 text-white border-emerald-600'
-                              : (isDark ? 'bg-slate-800 text-slate-200 border-slate-600 hover:border-emerald-500' : 'bg-white text-slate-700 border-slate-300 hover:border-emerald-500')}`}
-                          >
-                            {radius} km
-                          </button>
-                        ))}
-                        <button
-                          type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, geofenceRadiusKm: prev.geofenceRadiusKm || 5 }))}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${[5, 10, 20, 50].includes(Number(formData.geofenceRadiusKm || 5))
-                            ? (isDark ? 'bg-slate-800 text-slate-200 border-slate-600' : 'bg-white text-slate-700 border-slate-300')
-                            : 'bg-blue-600 text-white border-blue-600'}`}
-                        >
-                          Custom
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="range"
-                          min="0"
-                          max="50"
-                          step="0.5"
-                          value={formData.geofenceRadiusKm || 5}
-                          onChange={(e) => setFormData(prev => ({ ...prev, geofenceRadiusKm: Number(e.target.value) }))}
-                          className="flex-1"
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.5"
-                          value={formData.geofenceRadiusKm || 5}
-                          onChange={(e) => setFormData(prev => ({ ...prev, geofenceRadiusKm: e.target.value === '' ? '' : Number(e.target.value) }))}
-                          className="w-24 px-3 py-2 border rounded-lg"
-                        />
-                      </div>
-                      <p className={`text-xs mt-2 ${isDark ? 'text-slate-400' : 'text-gray-500'}`}>Current geofence: {formData.geofenceLatitude ? formData.geofenceLatitude.toFixed(5) : '—'}, {formData.geofenceLongitude ? formData.geofenceLongitude.toFixed(5) : '—'} • {formData.geofenceRadiusKm || 5} km</p>
-                    </div>
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Contact Email *</label>
-                    <input
-                      type="email"
-                      name="contactEmail"
-                      value={formData.contactEmail}
-                      onChange={handleInputChange}
-                      required
-                      pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="your@email.com"
-                    />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Contact Phone *</label>
-                    <input
-                      type="text"
-                      name="contactPhone"
-                      value={formData.contactPhone}
-                      onChange={handleInputChange}
-                      required
-                      pattern="^[0-9]{10}$"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all ${isDark ? 'bg-slate-700 border-slate-600 text-white placeholder-slate-400' : 'bg-white border-gray-300 text-gray-800 placeholder-gray-400'}`}
-                      placeholder="10-digit phone number"
-                    />
-                  </div>
-                </div>
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(4)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all ${isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(6)}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all"
-                  >
-                    Next: Media →
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 6: Media */}
-            {currentStep === 6 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-                <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>📸 Upload Product Media</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Upload Images (Max 5, jpg/jpeg/png/webp, ≤5MB each)</label>
-                    <input
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp,image/jpg"
-                      multiple
-                      onChange={e => {
-                        const newFiles = Array.from(e.target.files);
-                        setFormData(prev => {
-                          const combined = [...(prev.imageFiles || []), ...newFiles];
-                          if (combined.length > 5) {
-                            showToast('Only 5 images are allowed per product.', 'error');
-                            return { ...prev, imageFiles: combined.slice(0, 5) };
-                          }
-                          return { ...prev, imageFiles: combined };
-                        });
-                        e.target.value = "";
-                      }}
-                      className="w-full"
-                    />
-                    {formData.imageFiles && formData.imageFiles.length > 0 && (
-                      <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {formData.imageFiles.map((file, idx) => (
-                          <div key={idx} className="relative">
-                            <img src={imagePreviewUrls[idx]} alt="preview" className="rounded-xl w-full h-32 object-cover" />
-                            <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, imageFiles: prev.imageFiles.filter((_, i) => i !== idx) }))}>✕</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>Upload Videos (mp4/webm, ≤50MB each, optional, multiple)</label>
-                    <input
-                      type="file"
-                      accept="video/mp4,video/webm"
-                      multiple
-                      onChange={e => {
-                        const newFiles = Array.from(e.target.files);
-                        setFormData(prev => {
-                          const combined = [...(prev.videoFiles || []), ...newFiles];
-                          if (combined.length > 3) {
-                            showToast('Only 3 videos are allowed per product.', 'error');
-                            return { ...prev, videoFiles: combined.slice(0, 3) };
-                          }
-                          return { ...prev, videoFiles: combined };
-                        });
-                        e.target.value = "";
-                      }}
-                      className="w-full"
-                    />
-                    {formData.videoFiles && formData.videoFiles.length > 0 && (
-                      <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
-                        {formData.videoFiles.map((file, idx) => (
-                          <div key={idx} className="relative">
-                            <video controls playsInline preload="metadata" className="rounded-xl w-full h-40 object-cover bg-black">
-                              <source src={videoPreviewUrls[idx]} type={file.type || 'video/mp4'} />
-                              Your browser cannot preview this video file.
-                            </video>
-                            <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, videoFiles: prev.videoFiles.filter((_, i) => i !== idx) }))}>✕</button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(5)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all ${isDark ? 'border-slate-600 text-slate-300 hover:bg-slate-700' : 'border-gray-300 text-gray-700 hover:bg-gray-100'}`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {loading ? (editingProduct ? 'Updating...' : 'Publishing...') : (editingProduct ? '💾 Update Product' : '✨ Publish Product')}
-                  </button>
-                </div>
-              </div>
-            )}
-          </form>
-        </div>
-      </div>
+      <SellingProductForm
+        editingProduct={editingProduct}
+        onClose={handleFormClose}
+        onSuccess={handleFormSuccess}
+      />
     );
   }
-
-  const vendorLocked = !vendorDashboardEligible
 
   if (eligibilityLoading) {
     return (
-      <div className="flex items-center justify-center h-72">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-500"></div>
-      </div>
+      <AppPage title="Selling" description="Manage your product listings.">
+        <PageSkeleton rows={4} />
+      </AppPage>
     );
   }
 
-  if (vendorLocked) {
+  if (!vendorDashboardEligible) {
     return (
-      <div className={`premium-shell min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-        <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-        <div className={`border-b shadow-md ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-          <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
-            <button
-              onClick={() => navigate('/')}
-              className={`flex items-center gap-2 font-medium transition-colors ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
-            >
-              ← Back to Home
-            </button>
-          </div>
-        </div>
-
-        <div className="max-w-4xl mx-auto px-4 py-10">
-          <div className={`rounded-2xl p-8 border shadow-lg ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-            <h1 className={`text-3xl font-bold mb-3 ${isDark ? 'text-white' : 'text-gray-800'}`}>Vendor verification required</h1>
-            <p className={`${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-              {eligibility?.verificationMessage || 'To access product listing, complete vendor verification first.'}
+      <AppPage title="Vendor verification required" description="Complete verification to list products.">
+        <InfoPanel
+          variant="warning"
+          icon={AlertTriangle}
+          title="Verification required"
+          description={eligibility?.verificationMessage || 'To access product listing, complete vendor verification first.'}
+        >
+          {eligibility?.verificationInProgress && (
+            <p className="text-sm text-amber-700 dark:text-amber-300">
+              Your verification is in progress. Vendor dashboard and listings unlock after approval.
             </p>
-            {eligibility?.verificationInProgress && (
-              <p className={`mt-3 ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>
-                Your verification is in progress. After successful verification, vendor dashboard and product/service listings will unlock automatically.
-              </p>
-            )}
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => navigate('/vendor-dashboard')}
-                className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all"
-              >
-                Open Vendor Dashboard
-              </button>
-              <button
-                onClick={loadEligibilityAndProducts}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${isDark ? 'bg-slate-700 text-slate-200 hover:bg-slate-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
-              >
-                Refresh Status
-              </button>
-            </div>
+          )}
+          <div className="flex flex-wrap gap-3 mt-4">
+            <Button onClick={() => navigate('/vendor-dashboard')}>Open vendor dashboard</Button>
+            <Button variant="outline" onClick={loadEligibilityAndProducts}>Refresh status</Button>
           </div>
-        </div>
-      </div>
+        </InfoPanel>
+      </AppPage>
     );
   }
 
   return (
-    <div className={`premium-shell min-h-screen ${isDark ? 'bg-gradient-to-br from-slate-900 to-slate-800' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50'}`}>
-    <div className="absolute inset-0 premium-grid opacity-20 pointer-events-none" />
-      {/* Header */}
-      <div className={`border-b shadow-md ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-        <div className="max-w-7xl mx-auto px-4 py-6 flex items-center justify-between">
-          <button
-            onClick={() => navigate('/')}
-            className={`flex items-center gap-2 font-medium transition-colors ${isDark ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-500'}`}
-          >
-            ← Back to Home
-          </button>
-          <button
-            onClick={() => setShowForm(true)}
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
-          >
-            ➕ List New Product
-          </button>
-        </div>
-      </div>
-
+    <AppPage
+      title="Selling"
+      description="Publish, optimize, and manage your product inventory."
+      actions={
+        <Button onClick={handleOpenNew} className="gap-2" disabled={loading}>
+          <Plus className="h-4 w-4" />
+          List new product
+        </Button>
+      }
+    >
       {vendorDashboardEligible && !canSellProducts && (
-        <div className="max-w-7xl mx-auto px-4 pt-6">
-          <div className={`rounded-2xl p-5 border shadow-sm ${isDark ? 'bg-slate-800 border-slate-700' : 'bg-white border-gray-200'}`}>
-            <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>Vendor dashboard is active</h2>
-            <p className={`mt-2 ${isDark ? 'text-slate-300' : 'text-gray-600'}`}>
-              {eligibility?.verificationMessage || 'Your vendor profile is active. Complete the remaining listing requirements to publish products.'}
-            </p>
-            {Array.isArray(eligibility?.missingRequirements) && eligibility.missingRequirements.length > 0 && (
-              <div className={`mt-4 rounded-xl border p-4 ${isDark ? 'bg-slate-900 border-slate-700' : 'bg-gray-50 border-gray-200'}`}>
-                <p className={`font-semibold ${isDark ? 'text-slate-100' : 'text-gray-800'}`}>Remaining listing steps:</p>
-                <ul className="mt-2 space-y-2 text-sm">
-                  {eligibility.missingRequirements.map((item, index) => (
-                    <li key={`${item}-${index}`} className={`${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{item}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <AppPage
-          title="Selling"
-          description="Publish, optimize, and manage your product inventory."
-          actions={
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all flex items-center gap-2"
-            >
-              ➕ List New Product
-            </button>
+        <InfoPanel
+          variant="warning"
+          title="Complete listing requirements"
+          description={
+            eligibility?.verificationMessage ||
+            'Your vendor profile is active. Complete the remaining steps to publish products.'
           }
         >
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-6">
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-slate-600 bg-slate-900/55' : 'border-slate-200 bg-white/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>Total Listings</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-white' : 'text-slate-900'}`}>{sellingStats.totalListings}</p>
-              </div>
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-emerald-500/30 bg-emerald-900/25' : 'border-emerald-200 bg-emerald-50/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-emerald-300' : 'text-emerald-700'}`}>Active</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-emerald-200' : 'text-emerald-700'}`}>{sellingStats.activeListings}</p>
-              </div>
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-amber-500/30 bg-amber-900/20' : 'border-amber-200 bg-amber-50/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-amber-300' : 'text-amber-700'}`}>Out Of Stock</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-amber-200' : 'text-amber-700'}`}>{sellingStats.outOfStockListings}</p>
-              </div>
-              <div className={`rounded-2xl border p-4 ${isDark ? 'border-cyan-500/30 bg-cyan-900/20' : 'border-cyan-200 bg-cyan-50/80'}`}>
-                <p className={`text-xs uppercase tracking-[0.2em] ${isDark ? 'text-cyan-300' : 'text-cyan-700'}`}>Listed Units</p>
-                <p className={`mt-2 text-3xl font-black ${isDark ? 'text-cyan-200' : 'text-cyan-700'}`}>{sellingStats.listedUnits}</p>
-              </div>
-            </div>
+          {Array.isArray(eligibility?.missingRequirements) && eligibility.missingRequirements.length > 0 && (
+            <ul className="mt-2 space-y-1 text-sm text-muted-foreground list-disc pl-5">
+              {eligibility.missingRequirements.map((item, index) => (
+                <li key={`${item}-${index}`}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </InfoPanel>
+      )}
 
-        <h2 className={`text-xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>My Products</h2>
-        
-        {myProducts.length === 0 ? (
-          <div className={`interactive-card rounded-2xl p-12 text-center shadow-lg border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
-            <div className="text-6xl mb-4">📦</div>
-            <h2 className={`text-2xl font-bold mb-2 ${isDark ? 'text-white' : 'text-gray-800'}`}>No products yet</h2>
-            <p className={`mb-6 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Start listing your products to reach buyers</p>
-            <button
-              onClick={() => setShowForm(true)}
-              className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white px-8 py-4 rounded-xl font-semibold hover:shadow-lg transition-all"
-            >
-              List Your First Product
-            </button>
-          </div>
-        ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myProducts.map(product => (
-              <div key={product.id} className={`interactive-card rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}>
-                <div className={`h-48 flex items-center justify-center ${isDark ? 'bg-gradient-to-r from-slate-700 to-slate-600' : 'bg-gradient-to-r from-emerald-100 to-teal-100'}`}>
-                  {product.imageUrls && product.imageUrls.split(',')[0] ? (
-                    <img
-                      src={product.imageUrls.split(',')[0]}
-                      alt={product.productName}
-                      className="rounded-xl w-full h-48 object-cover"
-                    />
-                  ) : (
-                    <span className="text-6xl">📦</span>
-                  )}
-                </div>
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>{product.productName}</h3>
-                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      product.status === 'ACTIVE' ? (isDark ? 'bg-green-900/50 text-green-400' : 'bg-green-100 text-green-600') :
-                      product.status === 'OUT_OF_STOCK' ? (isDark ? 'bg-red-900/50 text-red-400' : 'bg-red-100 text-red-600') :
-                      (isDark ? 'bg-slate-700 text-slate-400' : 'bg-gray-200 text-gray-600')
-                    }`}>
-                      {product.status}
-                    </span>
-                  </div>
-                  <p className={`text-sm mb-4 capitalize ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>{product.category}</p>
-                  <div className="flex items-center gap-3 mb-4">
-                    {product.discountPercentage > 0 && (
-                      <span className={`text-lg line-through ${isDark ? 'text-slate-500' : 'text-gray-400'}`}>₹{product.price}</span>
-                    )}
-                    <span className={`text-2xl font-bold ${isDark ? 'text-green-400' : 'text-green-700'}`}>₹{product.discountedPrice}</span>
-                    {product.discountPercentage > 0 && (
-                      <span className="bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                        {product.discountPercentage}% OFF
-                      </span>
-                    )}
-                  </div>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                    Stock: <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{product.quantity} {product.unit}</span>
-                  </p>
-                  <p className={`text-sm mb-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-                    Delivery: <span className={`font-semibold ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>{product.deliveryDaysMin || 3}-{product.deliveryDaysMax || 5} days</span>
-                  </p>
-                  <div className="flex gap-2 mt-4">
-                    <button
-                      onClick={() => handleEditProduct(product)}
-                      className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-1 ${
-                        isDark 
-                          ? 'bg-blue-600/20 text-blue-400 hover:bg-blue-600/40' 
-                          : 'bg-blue-100 text-blue-600 hover:bg-blue-200'
-                      }`}
-                    >
-                      ✏️ Edit
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className={`flex-1 py-2 px-3 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-1 ${
-                        isDark 
-                          ? 'bg-red-600/20 text-red-400 hover:bg-red-600/40' 
-                          : 'bg-red-100 text-red-600 hover:bg-red-200'
-                      }`}
-                    >
-                      🗑️ Delete
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-        </AppPage>
-      </div>
-    </div>
+      <KpiSection>
+        <StatsCard title="Total listings" value={sellingStats.totalListings} icon={Package} />
+        <StatsCard title="Active" value={sellingStats.activeListings} tone="success" icon={Boxes} />
+        <StatsCard title="Out of stock" value={sellingStats.outOfStockListings} tone="warning" icon={AlertTriangle} />
+        <StatsCard title="Listed units" value={sellingStats.listedUnits} tone="info" />
+      </KpiSection>
+
+      <SectionHeader title="My products" description="Edit inventory, pricing, and delivery windows." />
+
+      <FilterBar
+        searchValue={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search listings…"
+        resultCount={filteredProducts.length}
+      />
+
+      {myProducts.length === 0 ? (
+        <EmptyState
+          title="No products yet"
+          description="Start listing your products to reach buyers across the marketplace."
+          action={
+            <Button onClick={handleOpenNew} className="gap-2">
+              <Plus className="h-4 w-4" />
+              List your first product
+            </Button>
+          }
+        />
+      ) : (
+        <DataTable columns={productColumns} data={filteredProducts} />
+      )}
+    </AppPage>
   );
 }
 

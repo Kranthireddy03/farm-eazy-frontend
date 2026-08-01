@@ -32,3 +32,20 @@ export { CartPromptDialog } from '../marketplace/CartPromptDialog';
 export { CheckoutStepIndicator } from '../marketplace/CheckoutStepIndicator';
 export { CheckoutProcessingOverlay } from '../marketplace/CheckoutProcessingOverlay';
 export { CheckoutRetryPanel } from '../marketplace/CheckoutRetryPanel';
+export { SellingProductForm } from '../marketplace/SellingProductForm';
+
+// Platform building blocks
+export {
+  AppCard,
+  MetricCard,
+  StatsCard,
+  SectionHeader,
+  SectionContainer,
+  InfoPanel,
+  SummaryPanel,
+  DetailPanel,
+  PageBanner,
+  HeroSection,
+  FeatureGrid,
+  FeatureGridItem,
+} from '../platform';
