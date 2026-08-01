@@ -8,6 +8,16 @@ import { sendNotification } from '../components/NotificationCenter'
 import AppPage from '../components/layout/AppPage'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
+import {
+  calculateCartTotals,
+  getMaxUsableCoins,
+  COIN_VALUE,
+  MINIMUM_PAYMENT,
+  TAX_RATE,
+} from '../lib/marketplace'
+import { CheckoutProcessingOverlay } from '../components/marketplace/CheckoutProcessingOverlay'
+import { CheckoutRetryPanel } from '../components/marketplace/CheckoutRetryPanel'
+import { OrderSummaryPanel } from '../components/marketplace/OrderSummaryPanel'
 
 // Razorpay script loader
 function loadRazorpayScript() {
@@ -36,6 +46,11 @@ function Checkout() {
         // Load cart from localStorage
         const cart = JSON.parse(localStorage.getItem('farmeazy_cart') || '[]');
         setCartItems(cart);
+        const savedCoins = JSON.parse(localStorage.getItem('farmeazy_checkout_coins') || 'null');
+        if (savedCoins?.useCoins) {
+          setUseCoins(true);
+          setCoinsToUse(savedCoins.coinsToUse || 0);
+        }
         // Fetch coins
         await fetchCoins();
         // Fetch addresses
@@ -57,21 +72,11 @@ function Checkout() {
   const [coins, setCoins] = useState(0)
   const [useCoins, setUseCoins] = useState(false)
   const [coinsToUse, setCoinsToUse] = useState(0)
-  
-  // Constants
-  const MINIMUM_PAYMENT = 1 // Minimum payment required in rupees
-  
-  // Calculate max coins that can be used while maintaining minimum payment
-  const getMaxUsableCoins = (totalAmount, availableCoins) => {
-    const maxAllowedDiscount = Math.max(0, totalAmount - MINIMUM_PAYMENT)
-    return Math.min(availableCoins, Math.floor(maxAllowedDiscount))
-  }
-  
-  // Restore coin discount UI logic with 1 rupee minimum
+
   const handleCoinToggle = () => {
     setUseCoins(!useCoins);
     if (!useCoins) {
-      const maxCoins = getMaxUsableCoins(total, coins)
+      const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
       setCoinsToUse(maxCoins);
     } else {
       setCoinsToUse(0);
@@ -79,13 +84,13 @@ function Checkout() {
   };
 
   const handleCoinsToUseChange = (e) => {
-    const maxCoins = getMaxUsableCoins(total, coins)
+    const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
     const value = Math.max(0, Math.min(Number(e.target.value), maxCoins));
     setCoinsToUse(value);
   };
-  
+
   const handleCoinSliderChange = (e) => {
-    const maxCoins = getMaxUsableCoins(total, coins)
+    const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
     const value = Math.max(0, Math.min(Number(e.target.value), maxCoins));
     setCoinsToUse(value);
   };
@@ -119,8 +124,6 @@ function Checkout() {
 
   const UPI_ID = '6301630368@ybl'
   const PHONE_PAY_ID = '6301630368'
-  const TAX_RATE = 0.18
-  const COIN_VALUE = 1
   const paymentSimulationEnabled = String(import.meta.env.VITE_PAYMENT_SIMULATION_ENABLED || 'false').toLowerCase() === 'true'
   const hasOutOfAreaItems = cartItems.some((item) => item.deliverable === false)
 
@@ -156,95 +159,28 @@ function Checkout() {
   // Retry Screen at top of render
   if (retryActive) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-amber-900/30">
-        <div className="bg-slate-800 rounded-lg shadow-lg p-8 max-w-md w-full text-center border border-slate-700">
-          <h2 className="text-2xl font-bold text-amber-400 mb-4">Payment Retry Required</h2>
-          <p className="mb-2 text-slate-300">Payment did not complete. No order has been placed yet.</p>
-          <p className="mb-4 text-slate-300">
-            You have 
-            <span className="font-bold text-white">
-              {Math.floor(retryTimer/60)}:
-              {(retryTimer % 60).toString().padStart(2, '0')}
-            </span> 
-            minutes to retry payment.
-          </p>
-          <button
-            onClick={handleRetryPayment}
-            className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition mb-2"
-            disabled={razorpayLoading}
-          >
-            Retry Payment
-          </button>
-          <button
-            onClick={() => {
-              setRetryActive(false);
-              showToast('You can now edit details and retry payment.', 'info');
-            }}
-            className="bg-slate-600 hover:bg-slate-500 text-white font-bold py-2 px-4 rounded-lg transition"
-          >
-            Edit Order Details
-          </button>
-          <button
-            onClick={() => navigate('/buying')}
-            className="bg-slate-700 hover:bg-slate-600 text-white font-bold py-2 px-4 rounded-lg transition mt-2"
-          >
-            Back to Shopping
-          </button>
-        </div>
-      </div>
+      <>
+        <CheckoutRetryPanel
+          retryTimer={retryTimer}
+          onRetry={handleRetryPayment}
+          onEditDetails={() => {
+            setRetryActive(false);
+            showToast('You can edit details and retry payment.', 'info');
+          }}
+          onBackToShop={() => navigate('/buying')}
+          retryLoading={razorpayLoading}
+        />
+      </>
     );
   }
 
-  // Processing Overlay - shows during payment/order processing
   if (processingState.active) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="bg-slate-800 rounded-2xl shadow-2xl p-10 max-w-md w-full text-center border border-slate-700">
-          {/* Animated spinner */}
-          <div className="relative mx-auto w-24 h-24 mb-6">
-            <div className="absolute inset-0 border-4 border-slate-600 rounded-full"></div>
-            <div className="absolute inset-0 border-4 border-transparent border-t-green-500 rounded-full animate-spin"></div>
-            <div className="absolute inset-2 border-4 border-transparent border-t-orange-500 rounded-full animate-spin" style={{animationDuration: '1.5s', animationDirection: 'reverse'}}></div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-3xl">{processingState.step === 1 ? '💳' : processingState.step === 2 ? '📦' : '🚀'}</span>
-            </div>
-          </div>
-
-          <h2 className="text-2xl font-bold text-white mb-2">
-            {processingState.message || 'Processing...'}
-          </h2>
-          
-          {/* Progress indicator */}
-          <div className="mt-6 mb-4">
-            <div className="flex justify-between mb-2">
-              {['Payment', 'Order', 'Complete'].map((label, idx) => (
-                <div key={label} className="flex flex-col items-center">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
-                    idx + 1 <= processingState.step 
-                      ? 'bg-green-500 text-white scale-110' 
-                      : 'bg-slate-600 text-slate-400'
-                  }`}>
-                    {idx + 1 <= processingState.step ? '✓' : idx + 1}
-                  </div>
-                  <span className={`text-xs mt-1 ${idx + 1 <= processingState.step ? 'text-green-400' : 'text-slate-500'}`}>
-                    {label}
-                  </span>
-                </div>
-              ))}
-            </div>
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-gradient-to-r from-green-500 to-orange-500 transition-all duration-500 ease-out"
-                style={{width: `${(processingState.step / processingState.totalSteps) * 100}%`}}
-              ></div>
-            </div>
-          </div>
-
-          <p className="text-slate-400 text-sm animate-pulse">
-            Please wait, do not close or refresh this page...
-          </p>
-        </div>
-      </div>
+      <CheckoutProcessingOverlay
+        message={processingState.message}
+        step={processingState.step}
+        totalSteps={processingState.totalSteps}
+      />
     );
   }
 
@@ -270,20 +206,11 @@ function Checkout() {
     }
   }
 
-  const calculateTotals = () => {
-    const subtotal = cartItems.reduce((sum, item) => {
-      // Use discounted price if available, otherwise use regular price
-      const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
-      return sum + (itemPrice * item.quantity)
-    }, 0)
-    const tax = subtotal * TAX_RATE
-    const total = subtotal + tax
-    return { subtotal, tax, total }
-  }
+  const calculateTotals = () => calculateCartTotals(cartItems, TAX_RATE)
 
   const { subtotal, tax, total } = calculateTotals();
   // Updated: Calculate max usable coins based on minimum payment requirement
-  const maxCoinsUsable = getMaxUsableCoins(total, coins);
+  const maxCoinsUsable = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
   const coinsApplied = useCoins ? Math.min(coinsToUse, maxCoinsUsable) : 0;
   const finalAmount = Math.max(MINIMUM_PAYMENT, total - (coinsApplied * COIN_VALUE));
   const remainingCoinsAfterUse = coins - coinsApplied;
@@ -840,150 +767,52 @@ function Checkout() {
           </div>
 
           {/* Order Summary Sidebar */}
-          <div className={`interactive-card rounded-2xl shadow-lg p-6 h-fit sticky top-20 border ${isDark ? 'bg-slate-800/95 border-slate-700' : 'bg-white/95 border-gray-200'}`}> 
-            <h2 className={`text-2xl font-bold mb-6 ${isDark ? 'text-white' : 'text-gray-800'}`}>Price Breakdown</h2>
-
-
-            <div className="space-y-3 border-b border-slate-600 pb-4 mb-4">
-              <div className={`flex justify-between ${isDark ? 'text-slate-300' : 'text-gray-700'}`}>
-                <span>Subtotal:</span>
-                <span className={`font-semibold ${isDark ? 'text-white' : 'text-gray-800'}`}>₹{subtotal.toFixed(2)}</span>
-              </div>
-
-              {/* Coin discount UI - Improved with slider and minimum payment info */}
-              <div className="bg-slate-700/50 rounded-lg p-4 my-3">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={useCoins}
-                      onChange={handleCoinToggle}
-                      id="use-coins-toggle"
-                      className="w-5 h-5 accent-orange-500 cursor-pointer"
-                      disabled={maxCoinsUsable === 0}
-                    />
-                    <label htmlFor="use-coins-toggle" className="text-sm text-slate-200 font-semibold cursor-pointer flex items-center gap-2">
-                      <span className="text-lg">🪙</span> Use Coins
-                    </label>
-                  </div>
-                  <span className="text-sm text-orange-400 font-bold">{coins} coins available</span>
-                </div>
-
-                {coins > 0 && maxCoinsUsable === 0 && (
-                  <div className="bg-amber-900/30 border border-amber-600/30 rounded-lg p-2 mb-2">
-                    <p className="text-xs text-amber-300">⚠️ Order total is too low to use coins (min ₹{MINIMUM_PAYMENT} payment required)</p>
-                  </div>
-                )}
-
-                {useCoins && maxCoinsUsable > 0 && (
-                  <div className="space-y-3 mt-3 border-t border-slate-600 pt-3">
-                    {/* Slider */}
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs text-slate-400">
-                        <span>0 coins</span>
-                        <span>{maxCoinsUsable} coins (max)</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max={maxCoinsUsable}
-                        value={coinsToUse}
-                        onChange={handleCoinSliderChange}
-                        className="w-full h-2 bg-slate-600 rounded-lg appearance-none cursor-pointer accent-orange-500"
-                        style={{
-                          background: `linear-gradient(to right, #f97316 0%, #f97316 ${(coinsToUse / maxCoinsUsable) * 100}%, #475569 ${(coinsToUse / maxCoinsUsable) * 100}%, #475569 100%)`
-                        }}
-                      />
-                    </div>
-                    
-                    {/* Number input and summary */}
-                    <div className="flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-slate-300">Use:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max={maxCoinsUsable}
-                          value={coinsToUse}
-                          onChange={handleCoinsToUseChange}
-                          className="px-3 py-2 bg-slate-600 border border-slate-500 text-white rounded-lg w-24 text-center font-bold focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        />
-                        <span className="text-sm text-slate-300">coins</span>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-green-400 font-bold">-₹{(coinsToUse * COIN_VALUE).toFixed(2)}</p>
-                      </div>
-                    </div>
-
-                    {/* Remaining coins info */}
-                    <div className="flex justify-between text-xs text-slate-400 bg-slate-800 rounded p-2">
-                      <span>Remaining after use:</span>
-                      <span className="text-orange-400 font-semibold">{remainingCoinsAfterUse} coins</span>
-                    </div>
-
-                    {/* Minimum payment notice */}
-                    <div className="bg-blue-900/30 border border-blue-600/30 rounded-lg p-2">
-                      <p className="text-xs text-blue-300 flex items-center gap-1">
-                        <span>ℹ️</span> Minimum payment required: <span className="font-bold">₹{MINIMUM_PAYMENT}</span>
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {coinsApplied > 0 && (
-                <div className="flex justify-between text-green-400 font-semibold">
-                  <span>🪙 Coin Discount ({coinsApplied} coins):</span>
-                  <span>- ₹{(coinsApplied * COIN_VALUE).toFixed(2)}</span>
-                </div>
-              )}
-
-              <div className="flex justify-between text-slate-300">
-                <span>Tax & Charges (18% GST):</span>
-                <span className="font-semibold text-white">₹{tax.toFixed(2)}</span>
-              </div>
-            </div>
-
-            <div className="flex justify-between text-xl font-bold mb-6 text-green-400">
-              <span>Final Amount:</span>
-              <span>₹{finalAmount.toFixed(2)}</span>
-            </div>
-
-            {coinsApplied > 0 && (
-              <div className="bg-green-900/30 border-l-4 border-green-500 p-3 mb-4 rounded">
-                <p className="text-sm text-green-300 font-semibold">💰 You're saving ₹{(coinsApplied * COIN_VALUE).toFixed(2)}</p>
-                <p className="text-xs text-green-400 mt-1">Using {coinsApplied} coins for discount</p>
-              </div>
-            )}
-
-            {selectedPayment === 'CASH_ON_DELIVERY' && (
-              <div className="bg-blue-900/30 border-l-4 border-blue-500 p-3 mb-4 rounded">
-                <p className="text-sm text-blue-300 font-semibold">✓ Cash on Delivery</p>
-                <p className="text-xs text-blue-400 mt-1">Expected delivery: 3-5 business days</p>
-              </div>
-            )}
-
-            <button
-              onClick={handleCheckout}
-              disabled={checkingOut || hasOutOfAreaItems || (selectedPayment === 'CASH_ON_DELIVERY' && !selectedAddress)}
-              className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-lg transition text-lg"
-            >
-              {checkingOut ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="animate-spin">⏳</span> Processing...
-                </span>
-              ) : (
-                '✓ Place Order'
-              )}
-            </button>
-
-            <button
-              onClick={() => navigate('/cart')}
-              className="w-full mt-3 bg-slate-600 hover:bg-slate-500 text-white font-bold py-3 px-6 rounded-lg transition"
-            >
-              Back to Cart
-            </button>
-          </div>
+          <OrderSummaryPanel
+            subtotal={subtotal}
+            tax={tax}
+            total={total}
+            finalAmount={finalAmount}
+            coins={coins}
+            useCoins={useCoins}
+            coinsToUse={coinsToUse}
+            maxCoinsUsable={maxCoinsUsable}
+            coinsApplied={coinsApplied}
+            remainingCoins={remainingCoinsAfterUse}
+            onUseCoinsChange={(checked) => {
+              setUseCoins(checked);
+              if (checked) {
+                setCoinsToUse(getMaxUsableCoins(total, coins, MINIMUM_PAYMENT));
+              } else {
+                setCoinsToUse(0);
+              }
+            }}
+            onCoinsToUseChange={(value) => {
+              const maxCoins = getMaxUsableCoins(total, coins, MINIMUM_PAYMENT);
+              setCoinsToUse(Math.max(0, Math.min(value, maxCoins)));
+            }}
+            variant="checkout"
+            footerNote={
+              selectedPayment === 'CASH_ON_DELIVERY' ? (
+                <p className="text-xs text-muted-foreground rounded-md border border-border p-3">
+                  Cash on delivery — expected delivery 3–5 business days.
+                </p>
+              ) : null
+            }
+            primaryAction={
+              <Button
+                className="w-full"
+                onClick={handleCheckout}
+                disabled={checkingOut || hasOutOfAreaItems || (selectedPayment === 'CASH_ON_DELIVERY' && !selectedAddress)}
+              >
+                {checkingOut ? 'Processing…' : 'Place order'}
+              </Button>
+            }
+            secondaryAction={
+              <Button variant="outline" className="w-full" onClick={() => navigate('/cart')}>
+                Back to cart
+              </Button>
+            }
+          />
         </div>
     </AppPage>
   )

@@ -1,4 +1,36 @@
 /** Shared marketplace helpers — cart shape preserved for checkout compatibility */
+export const TAX_RATE = 0.18;
+export const COIN_VALUE = 1;
+export const MINIMUM_PAYMENT = 1;
+
+export function getItemUnitPrice(item) {
+  if (item.discountedPrice !== undefined && item.discountedPrice > 0) {
+    return item.discountedPrice;
+  }
+  return item.price;
+}
+
+export function calculateCartTotals(cartItems, taxRate = TAX_RATE) {
+  const subtotal = cartItems.reduce(
+    (sum, item) => sum + getItemUnitPrice(item) * item.quantity,
+    0,
+  );
+  const savings = cartItems.reduce((sum, item) => {
+    if (item.discountedPrice !== undefined && item.discountedPrice < item.price) {
+      return sum + (item.price - item.discountedPrice) * item.quantity;
+    }
+    return sum;
+  }, 0);
+  const tax = subtotal * taxRate;
+  const total = subtotal + tax;
+  return { subtotal, tax, total, savings };
+}
+
+export function getMaxUsableCoins(totalAmount, availableCoins, minPayment = MINIMUM_PAYMENT) {
+  const maxAllowedDiscount = Math.max(0, totalAmount - minPayment);
+  return Math.min(availableCoins, Math.floor(maxAllowedDiscount));
+}
+
 export function buildCartItem(product, quantity = 1) {
   return {
     id: product.id,

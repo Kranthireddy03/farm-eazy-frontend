@@ -55,6 +55,12 @@
   --icon-md: 1.25rem;
   --icon-lg: 1.5rem;
 
+  /* FE brand identity */
+  --fe-brand: 142 71% 36%;
+  --fe-brand-foreground: 0 0% 100%;
+  --fe-accent: 32 95% 52%;
+  --fe-accent-muted: 142 40% 92%;
+  --fe-gradient-start: 142 71% 36%;
   /* Motion */
   --duration-fast: 150ms;
   --duration-normal: 250ms;

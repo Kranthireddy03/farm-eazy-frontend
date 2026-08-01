@@ -102,7 +102,7 @@ const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const Checkout = lazy(() => import('./pages/Checkout'));
 const ChangePassword = lazy(() => import('./pages/ChangePassword'));
 const Orders = lazy(() => import('./pages/Orders'));
-import OrderConfirmation from './pages/OrderConfirmation';
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
 const RefundDetails = lazy(() => import('./pages/RefundDetails'));
 const AddressBook = lazy(() => import('./pages/AddressBook'));
 const ContactSettings = lazy(() => import('./pages/ContactSettings'));
