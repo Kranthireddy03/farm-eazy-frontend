@@ -8,7 +8,9 @@ import { useSession } from '../../context/SessionContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useLocationContext } from '../../context/LocationContext'
 import { Button } from '../ui/button'
+import LocationWizardMap from './LocationWizardMap'
 
+const DEFAULT_MAP_CENTER = { latitude: 17.385, longitude: 78.4867 }
 const NOMINATIM_SEARCH = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&q='
 const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1'
 
@@ -43,6 +45,7 @@ export default function LocationWizard() {
     recentLocations,
     setSelectedLocation,
     isSavingLocation,
+    selectedLocation,
     selectedLocationLabel,
   } = useLocationContext()
 
@@ -54,6 +57,11 @@ export default function LocationWizard() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState([])
   const [confirming, setConfirming] = useState(null)
+  const [mapLatitude, setMapLatitude] = useState(DEFAULT_MAP_CENTER.latitude)
+  const [mapLongitude, setMapLongitude] = useState(DEFAULT_MAP_CENTER.longitude)
+  const [mapLabel, setMapLabel] = useState('')
+  const [mapLabelLoading, setMapLabelLoading] = useState(false)
+  const [mapMeta, setMapMeta] = useState({ city: '', state: '', postalCode: '' })
 
   const mustStayOpen = isAuthenticated && !isBootstrapping && !hasEffectiveLocation
   const show = isSelectorOpen || mustStayOpen
@@ -86,6 +94,79 @@ export default function LocationWizard() {
   }, [show, isAuthenticated])
 
   useEffect(() => {
+    if (!show) return
+
+    if (selectedLocation?.latitude != null && selectedLocation?.longitude != null) {
+      setMapLatitude(Number(selectedLocation.latitude))
+      setMapLongitude(Number(selectedLocation.longitude))
+      if (selectedLocation.label) setMapLabel(selectedLocation.label)
+      return
+    }
+
+    const recent = Array.isArray(recentLocations) ? recentLocations[0] : null
+    if (recent?.latitude != null && recent?.longitude != null) {
+      setMapLatitude(Number(recent.latitude))
+      setMapLongitude(Number(recent.longitude))
+      if (recent.label) setMapLabel(recent.label)
+      return
+    }
+
+    setMapLatitude(DEFAULT_MAP_CENTER.latitude)
+    setMapLongitude(DEFAULT_MAP_CENTER.longitude)
+    setMapLabel('')
+    updateMapFromCoords(DEFAULT_MAP_CENTER.latitude, DEFAULT_MAP_CENTER.longitude)
+  }, [show, selectedLocation, recentLocations])
+
+  const updateMapFromCoords = async (latitude, longitude, labelHint = '', meta = {}) => {
+    setMapLatitude(latitude)
+    setMapLongitude(longitude)
+
+    let resolvedLabel = labelHint
+    let resolvedMeta = {
+      city: meta.city || '',
+      state: meta.state || '',
+      postalCode: meta.postalCode || '',
+    }
+
+    if (!labelHint) {
+      setMapLabelLoading(true)
+      try {
+        const reverse = await reverseGeocode(latitude, longitude)
+        resolvedLabel = reverse?.label || `Lat ${latitude.toFixed(3)}, Lon ${longitude.toFixed(3)}`
+        resolvedMeta = {
+          city: reverse?.city || '',
+          state: reverse?.state || '',
+          postalCode: reverse?.postalCode || '',
+        }
+      } catch {
+        resolvedLabel = `Lat ${latitude.toFixed(3)}, Lon ${longitude.toFixed(3)}`
+      } finally {
+        setMapLabelLoading(false)
+      }
+    }
+
+    setMapLabel(resolvedLabel)
+    setMapMeta(resolvedMeta)
+    return { label: resolvedLabel, ...resolvedMeta }
+  }
+
+  const handleMapLocationChange = (latitude, longitude) => {
+    updateMapFromCoords(latitude, longitude)
+  }
+
+  const confirmMapSelection = () => {
+    chooseCoords({
+      type: 'coords',
+      latitude: mapLatitude,
+      longitude: mapLongitude,
+      label: mapLabel || `Lat ${mapLatitude.toFixed(3)}, Lon ${mapLongitude.toFixed(3)}`,
+      city: mapMeta.city,
+      state: mapMeta.state,
+      postalCode: mapMeta.postalCode,
+    })
+  }
+
+  useEffect(() => {
     let active = true
     const runSearch = async () => {
       const query = searchQuery.trim()
@@ -104,6 +185,9 @@ export default function LocationWizard() {
               label: item.display_name,
               latitude: Number(item.lat),
               longitude: Number(item.lon),
+              city: item.address?.city || item.address?.town || item.address?.village || '',
+              state: item.address?.state || '',
+              postalCode: item.address?.postcode || '',
             }))
           : []
         setSearchResults(mapped)
@@ -132,6 +216,10 @@ export default function LocationWizard() {
   }
 
   const chooseAddress = (address) => {
+    if (address?.latitude != null && address?.longitude != null) {
+      setMapLatitude(Number(address.latitude))
+      setMapLongitude(Number(address.longitude))
+    }
     setConfirming({
       type: 'address',
       id: address.id,
@@ -143,6 +231,11 @@ export default function LocationWizard() {
   }
 
   const chooseCoords = (coordsPayload) => {
+    if (coordsPayload?.latitude != null && coordsPayload?.longitude != null) {
+      setMapLatitude(Number(coordsPayload.latitude))
+      setMapLongitude(Number(coordsPayload.longitude))
+      if (coordsPayload.label) setMapLabel(coordsPayload.label)
+    }
     setConfirming(coordsPayload)
   }
 
@@ -158,12 +251,15 @@ export default function LocationWizard() {
       async (position) => {
         const latitude = Number(position.coords.latitude)
         const longitude = Number(position.coords.longitude)
-        const reverse = await reverseGeocode(latitude, longitude)
+        const resolved = await updateMapFromCoords(latitude, longitude)
         chooseCoords({
           type: 'coords',
           latitude,
           longitude,
-          label: reverse?.label || `Lat ${latitude.toFixed(3)}, Lon ${longitude.toFixed(3)}`,
+          label: resolved.label,
+          city: resolved.city,
+          state: resolved.state,
+          postalCode: resolved.postalCode,
         })
         setAskingGps(false)
       },
@@ -238,6 +334,35 @@ export default function LocationWizard() {
           </div>
         ) : (
           <>
+            <div className="mt-5">
+              <LocationWizardMap
+                latitude={mapLatitude}
+                longitude={mapLongitude}
+                onLocationChange={handleMapLocationChange}
+                height={220}
+              />
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Drag the pin or tap the map to set your location
+              </p>
+              {(mapLabel || mapLabelLoading) && (
+                <div className={`mt-3 rounded-xl border p-3 ${isDark ? 'border-border bg-muted/40' : 'border-border bg-muted/20'}`}>
+                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Map selection</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {mapLabelLoading ? 'Loading address…' : mapLabel}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="mt-3 bg-emerald-600 hover:bg-emerald-700"
+                    disabled={mapLabelLoading || isSavingLocation}
+                    onClick={confirmMapSelection}
+                  >
+                    Use map location
+                  </Button>
+                </div>
+              )}
+            </div>
+
             <div className="mt-5 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <input

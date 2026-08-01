@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import apiClient from '../services/apiClient'
 import { flushLocationRetryQueue } from '../services/locationApiBridge'
+import { persistCoordsAsCurrentAddress } from '../services/locationPersistenceService'
 import { useSession } from './SessionContext'
 
 const LOCATION_STORAGE_KEY = 'farmeazy_selected_location'
@@ -71,7 +72,7 @@ function mergeRecent(nextLocation, previousRecent) {
 }
 
 export function LocationProvider({ children }) {
-  const { refreshProfile, hasEffectiveLocation } = useSession()
+  const { refreshProfile, hasEffectiveLocation, profile } = useSession()
   const [selectedLocation, setSelectedLocationState] = useState(null)
   const [recentLocations, setRecentLocations] = useState([])
   const [isSelectorOpen, setIsSelectorOpen] = useState(false)
@@ -107,13 +108,17 @@ export function LocationProvider({ children }) {
   }, [])
 
   const persistSelection = useCallback(async (payload, options = {}) => {
-    const normalized = normalizeLocationPayload(payload)
+    let normalized = normalizeLocationPayload(payload)
     if (!normalized) {
       return null
     }
 
     setIsSavingLocation(true)
     try {
+      if (normalized.type === 'coords') {
+        normalized = await persistCoordsAsCurrentAddress(payload, profile)
+      }
+
       if (normalized.type === 'address' && normalized.id != null && options.syncCurrentAddress !== false) {
         await apiClient.patch('/addresses/current', { addressId: normalized.id })
       }
@@ -131,7 +136,7 @@ export function LocationProvider({ children }) {
     } finally {
       setIsSavingLocation(false)
     }
-  }, [applySelectionState, refreshProfile])
+  }, [applySelectionState, refreshProfile, profile])
 
   const syncFromProfile = useCallback((locationSelection) => {
     const normalized = normalizeLocationPayload(locationSelection)

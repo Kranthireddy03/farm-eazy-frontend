@@ -216,6 +216,16 @@ function SupportPortalRedirect({
   );
 }
 
+function LogoutRoute() {
+  const { logout } = useAuth();
+
+  useEffect(() => {
+    logout('user');
+  }, [logout]);
+
+  return <PageLoader message="Signing out…" />;
+}
+
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -326,6 +336,7 @@ function AppContent() {
         />
         <Route element={<PublicLayout />}>
           <Route path="/login" element={<Login />} />
+          <Route path="/logout" element={<LogoutRoute />} />
           <Route path="/register" element={<Register />} />
           <Route path="/complete-google-profile" element={<ProtectedRoute><CompleteGoogleProfile /></ProtectedRoute>} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -413,6 +424,7 @@ function AppContent() {
         >
           <Route path="/dashboard" element={<DashboardEnhanced />} />
           <Route path="/settings" element={<ProtectedRoute><UserPreferences /></ProtectedRoute>} />
+          <Route path="/profile" element={<Navigate to="/settings" replace />} />
           <Route path="/communication-preferences" element={<CommunicationPreferences />} />
           <Route path="/farms" element={<Farms />} />
           <Route path="/farms/:farmId" element={<FarmDetail />} />

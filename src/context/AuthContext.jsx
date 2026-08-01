@@ -246,8 +246,10 @@ export function AuthProvider({ children }) {
     // Dispatch event for cross-tab sync
     window.dispatchEvent(new CustomEvent('authStateChange', { detail: { isAuthenticated: false, reason } }));
 
-    // Redirect to session-expired page for non-user initiated logouts
-    if (reason === 'inactivity' || reason === 'expired' || reason === 'unauthorized') {
+    // Redirect after session cleanup
+    if (reason === 'user') {
+      window.location.href = '/login';
+    } else if (reason === 'inactivity' || reason === 'expired' || reason === 'unauthorized') {
       // Use direct navigation to ensure redirect works from any context
       window.location.href = `/session-expired?reason=${reason}`;
     }
