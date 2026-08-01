@@ -9,6 +9,16 @@ import { useGlobalToast } from '../../context/ToastContext';
 import { useAuth } from '../../context/AuthContext';
 import AppPage from '../layout/AppPage';
 import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { FormField } from '../ui/form-field';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { CheckoutStepIndicator } from './CheckoutStepIndicator';
+import { cn } from '../../lib/utils';
+
+const selectClass =
+  'flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+
+const SELLING_STEPS = ['Basic', 'Pricing', 'Stock', 'Details', 'Media'];
 
 export function SellingProductForm({ editingProduct: initialProduct, onClose, onSuccess }) {
   const navigate = useNavigate();
@@ -71,15 +81,33 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
   }, [])
 
   const categories = [
-    { value: 'seeds', label: '🌱 Seeds', color: 'from-green-400 to-green-600' },
-    { value: 'fertilizers', label: '🌿 Fertilizers', color: 'from-emerald-400 to-emerald-600' },
-    { value: 'pesticides', label: '🛡️ Pesticides', color: 'from-teal-400 to-teal-600' },
-    { value: 'tools', label: '🔧 Tools', color: 'from-blue-400 to-blue-600' },
-    { value: 'machinery', label: '🚜 Machinery', color: 'from-indigo-400 to-indigo-600' },
-    { value: 'irrigation', label: '💧 Irrigation', color: 'from-cyan-400 to-cyan-600' },
-    { value: 'produce', label: '🥕 Fresh Produce', color: 'from-orange-400 to-orange-600' },
-    { value: 'others', label: '📦 Others', color: 'from-gray-400 to-gray-600' }
+    { value: 'seeds', label: 'Seeds' },
+    { value: 'fertilizers', label: 'Fertilizers' },
+    { value: 'pesticides', label: 'Pesticides' },
+    { value: 'tools', label: 'Tools' },
+    { value: 'machinery', label: 'Machinery' },
+    { value: 'irrigation', label: 'Irrigation' },
+    { value: 'produce', label: 'Fresh produce' },
+    { value: 'others', label: 'Others' },
   ];
+
+  const sellingStepIndex = currentStep >= 2 ? currentStep - 1 : 1;
+
+  const discountedPrice = useMemo(() => {
+    const price = parseFloat(formData.price) || 0;
+    const discount = parseFloat(formData.discountPercentage) || 0;
+    return (price * (1 - discount / 100)).toFixed(2);
+  }, [formData.price, formData.discountPercentage]);
+
+  const imagePreviewUrls = useMemo(() => {
+    if (!formData.imageFiles?.length) return [];
+    return formData.imageFiles.map((file) => URL.createObjectURL(file));
+  }, [formData.imageFiles]);
+
+  const videoPreviewUrls = useMemo(() => {
+    if (!formData.videoFiles?.length) return [];
+    return formData.videoFiles.map((file) => URL.createObjectURL(file));
+  }, [formData.videoFiles]);
 
   useEffect(() => {
     if (timer > 0) {
@@ -145,11 +173,6 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
   };
 
   const handleEditProduct = (product) => {
-    if (!eligibility?.eligible) {
-      showToast(eligibility?.verificationMessage || 'Complete vendor verification first.', 'warning');
-      navigate(eligibility?.verificationRedirectPath || '/vendor-dashboard');
-      return;
-    }
     setEditingProduct(product);
     setFormData({
       productName: product.productName || '',
@@ -353,38 +376,13 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
       actions={<Button variant="outline" onClick={onClose}>Back to listings</Button>}
     >
       <div className="max-w-4xl mx-auto space-y-6">
-          {/* Progress Steps - OTP removed, steps 2-6 shown as 1-5 */}
-          <div className={`rounded-2xl shadow-lg p-6 mb-6 border border-border bg-card`}>
-            <div className="flex items-center justify-between">
-              {[2, 3, 4, 5, 6].map((step, idx) => (
-                <React.Fragment key={step}>
-                  <div className="flex flex-col items-center">
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                      currentStep >= step 
-                        ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-lg' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {currentStep > step ? '✓' : idx + 1}
-                    </div>
-                    <span className={`text-xs mt-1 hidden sm:block text-muted-foreground`}>
-                      {step === 2 && 'Basic'}
-                      {step === 3 && 'Pricing'}
-                      {step === 4 && 'Stock'}
-                      {step === 5 && 'Details'}
-                      {step === 6 && 'Media'}
-                    </span>
-                  </div>
-                  {step < 6 && (
-                    <div className={`flex-1 h-1 mx-2 rounded transition-all ${
-                      currentStep > step ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-muted'
-                    }`} />
-                  )}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
+          <CheckoutStepIndicator
+            steps={SELLING_STEPS}
+            currentStep={sellingStepIndex}
+            totalSteps={SELLING_STEPS.length}
+          />
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Step 1: OTP Verification */}
             {currentStep === 1 && (
               <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border border-border bg-card`}>
@@ -448,231 +446,184 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
 
             {/* Step 2: Basic Info */}
             {currentStep === 2 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border border-border bg-card`}>
-                <h2 className={`text-2xl font-bold mb-6 text-foreground`}>📝 Basic Information</h2>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Product Name *</label>
-                    <input
-                      type="text"
+              <Card>
+                <CardHeader>
+                  <CardTitle>Basic information</CardTitle>
+                  <CardDescription>Product name, vendor details, and category.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField label="Product name" id="productName" required>
+                    <Input
+                      id="productName"
                       name="productName"
                       value={formData.productName}
                       onChange={handleInputChange}
                       required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
-                      placeholder="e.g., Organic Tomato Seeds"
+                      placeholder="e.g., Organic tomato seeds"
                     />
-                  </div>
-
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Vendor Name *</label>
-                    <input
-                      type="text"
+                  </FormField>
+                  <FormField label="Vendor name" id="vendorName" required>
+                    <Input
+                      id="vendorName"
                       name="vendorName"
                       value={formData.vendorName}
                       onChange={handleInputChange}
                       required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
-                      placeholder="e.g., Seller Name"
+                      placeholder="Seller or business name"
                     />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Vendor ID</label>
-                    <input
-                      type="text"
-                      name="vendorId"
-                      value={formData.vendorId}
-                      readOnly
-                      className={`w-full px-4 py-3 border-2 rounded-xl cursor-not-allowed focus:outline-none text-muted-foreground`}
-                      placeholder="Vendor ID (auto-filled)"
-                    />
-                  </div>
-                  {/* Seller email and phone are not shown in the form, auto-filled from registration */}
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Vendor Location *</label>
-                    <input
-                      type="text"
+                  </FormField>
+                  <FormField label="Vendor ID" id="vendorId" hint="Auto-filled from your account">
+                    <Input id="vendorId" name="vendorId" value={formData.vendorId} readOnly className="bg-muted" />
+                  </FormField>
+                  <FormField label="Vendor location" id="vendorLocation" required>
+                    <Input
+                      id="vendorLocation"
                       name="vendorLocation"
                       value={formData.vendorLocation}
                       onChange={handleInputChange}
                       required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
-                      placeholder="e.g., District, State"
+                      placeholder="District, state"
                     />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Vendor Type *</label>
+                  </FormField>
+                  <FormField label="Vendor type" id="vendorType" required>
                     <select
+                      id="vendorType"
                       name="vendorType"
                       value={formData.vendorType}
                       onChange={handleInputChange}
                       required
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
+                      className={selectClass}
                     >
-                      <option value="">Select type...</option>
+                      <option value="">Select type…</option>
                       <option value="FARMER">Farmer</option>
                       <option value="DISTRIBUTOR">Distributor</option>
                       <option value="RETAILER">Retailer</option>
                       <option value="COOPERATIVE">Cooperative</option>
                       <option value="OTHER">Other</option>
                     </select>
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-3 text-foreground`}>Category *</label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {categories.map(cat => (
-                        <button
+                  </FormField>
+                  <FormField label="Category" id="category" required>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                      {categories.map((cat) => (
+                        <Button
                           key={cat.value}
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
-                          className={`p-4 rounded-xl font-semibold text-sm transition-all ${
-                            formData.category === cat.value
-                              ? `bg-gradient-to-r ${cat.color} text-white shadow-lg scale-105`
-                              : 'bg-muted text-foreground hover:bg-muted/80'
-                          }`}
+                          variant={formData.category === cat.value ? 'default' : 'outline'}
+                          className="h-auto py-2.5 text-xs"
+                          onClick={() => setFormData((prev) => ({ ...prev, category: cat.value }))}
                         >
                           {cat.label}
-                        </button>
+                        </Button>
                       ))}
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Description</label>
+                  </FormField>
+                  <FormField label="Description" id="description" hint={`${formData.description.length} characters`}>
                     <textarea
+                      id="description"
                       name="description"
                       value={formData.description}
                       onChange={handleInputChange}
-                      rows="4"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
-                      placeholder="Describe your product..."
+                      rows={4}
+                      className={cn(selectClass, 'h-auto min-h-[100px] py-2')}
+                      placeholder="Describe your product…"
                     />
-                    <p className={`text-sm mt-1 text-muted-foreground`}>{formData.description.length} characters</p>
-                  </div>
-                </div>
-                
-                <button
-                  type="button"
-                  onClick={() => setCurrentStep(3)}
-                  disabled={!formData.productName || !formData.category}
-                  className="w-full mt-6 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-                >
-                  Next: Pricing →
-                </button>
-              </div>
+                  </FormField>
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={() => setCurrentStep(3)}
+                    disabled={!formData.productName || !formData.category}
+                  >
+                    Next: Pricing
+                  </Button>
+                </CardContent>
+              </Card>
             )}
 
             {/* Step 3: Pricing */}
             {currentStep === 3 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border border-border bg-card`}>
-                <h2 className={`text-2xl font-bold mb-6 text-foreground`}>💰 Pricing</h2>
-                
-                <div className="space-y-6">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Price (₹) *</label>
-                    <input
+              <Card>
+                <CardHeader>
+                  <CardTitle>Pricing</CardTitle>
+                  <CardDescription>Set list price and optional discount.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField label="Price (₹)" id="price" required>
+                    <Input
+                      id="price"
                       type="number"
                       name="price"
                       value={formData.price}
                       onChange={handleInputChange}
                       required
                       step="0.01"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
                       placeholder="0.00"
                     />
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>
-                      Discount: {formData.discountPercentage}%
-                    </label>
+                  </FormField>
+                  <FormField label={`Discount: ${formData.discountPercentage}%`} id="discountPercentage">
                     <input
+                      id="discountPercentage"
                       type="range"
                       name="discountPercentage"
                       value={formData.discountPercentage}
                       onChange={handleInputChange}
                       min="0"
                       max="50"
-                      className="w-full h-3 bg-gradient-to-r from-blue-200 to-indigo-400 rounded-lg appearance-none cursor-pointer"
+                      className="w-full h-2 rounded-lg appearance-none cursor-pointer accent-primary"
                     />
-                    <div className={`flex justify-between text-xs mt-1 text-muted-foreground`}>
-                      <span>0%</span>
-                      <span>25%</span>
-                      <span>50%</span>
-                    </div>
-                  </div>
-                  
+                  </FormField>
                   {formData.price && (
-                    <div className={`p-6 rounded-xl border-2 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/20`}>
-                      <h3 className={`font-semibold mb-2 text-foreground`}>Price Preview</h3>
-                      <div className="flex items-center gap-4">
+                    <div className="p-4 rounded-lg border border-border bg-muted/40">
+                      <p className="text-sm font-medium mb-2">Price preview</p>
+                      <div className="flex items-center gap-3 flex-wrap">
                         {formData.discountPercentage > 0 && (
-                          <span className={`text-2xl line-through text-muted-foreground`}>₹{formData.price}</span>
+                          <span className="text-lg line-through text-muted-foreground">₹{formData.price}</span>
                         )}
-                        <span className="text-3xl font-bold text-green-500">₹{discountedPrice}</span>
+                        <span className="text-2xl font-bold text-primary">₹{discountedPrice}</span>
                         {formData.discountPercentage > 0 && (
-                          <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                            {formData.discountPercentage}% OFF
+                          <span className="bg-destructive text-destructive-foreground px-2 py-0.5 rounded text-xs font-semibold">
+                            {formData.discountPercentage}% off
                           </span>
                         )}
                       </div>
                     </div>
                   )}
-                </div>
-                
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(2)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all text-foreground`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(4)}
-                    disabled={!formData.price}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-                  >
-                    Next: Stock →
-                  </button>
-                </div>
-              </div>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setCurrentStep(2)}>
+                      Back
+                    </Button>
+                    <Button type="button" className="flex-1" onClick={() => setCurrentStep(4)} disabled={!formData.price}>
+                      Next: Stock
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Step 4: Stock/Inventory */}
             {currentStep === 4 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border border-border bg-card`}>
-                <h2 className={`text-2xl font-bold mb-6 text-foreground`}>📦 Inventory</h2>
-                
-                <div className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Inventory</CardTitle>
+                  <CardDescription>Stock quantity, units, and delivery window.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 text-foreground`}>Quantity *</label>
-                      <input
+                    <FormField label="Quantity" id="quantity" required>
+                      <Input
+                        id="quantity"
                         type="number"
                         name="quantity"
                         value={formData.quantity}
                         onChange={handleInputChange}
                         required
                         min="1"
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
                         placeholder="0"
                       />
-                    </div>
-                    
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 text-foreground`}>Unit *</label>
-                      <select
-                        name="unit"
-                        value={formData.unit}
-                        onChange={handleInputChange}
-                        required
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
-                      >
-                        <option value="">Select...</option>
+                    </FormField>
+                    <FormField label="Unit" id="unit" required>
+                      <select id="unit" name="unit" value={formData.unit} onChange={handleInputChange} required className={selectClass}>
+                        <option value="">Select…</option>
                         <option value="kg">Kilogram (kg)</option>
                         <option value="g">Gram (g)</option>
                         <option value="l">Liter (l)</option>
@@ -682,219 +633,174 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                         <option value="bag">Bag</option>
                         <option value="box">Box</option>
                       </select>
-                    </div>
+                    </FormField>
                   </div>
-
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 text-foreground`}>Delivery Min Days *</label>
-                      <input
+                    <FormField label="Delivery min days" id="deliveryDaysMin" required>
+                      <Input
+                        id="deliveryDaysMin"
                         type="number"
                         name="deliveryDaysMin"
                         value={formData.deliveryDaysMin}
                         onChange={handleInputChange}
                         min="1"
                         required
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
                       />
-                    </div>
-                    <div>
-                      <label className={`block text-sm font-semibold mb-2 text-foreground`}>Delivery Max Days *</label>
-                      <input
+                    </FormField>
+                    <FormField label="Delivery max days" id="deliveryDaysMax" required>
+                      <Input
+                        id="deliveryDaysMax"
                         type="number"
                         name="deliveryDaysMax"
                         value={formData.deliveryDaysMax}
                         onChange={handleInputChange}
                         min="1"
                         required
-                        className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
                       />
-                    </div>
+                    </FormField>
                   </div>
-
-                  <div className={`rounded-xl p-4 border bg-muted border-border text-foreground`}>
-                    Estimated delivery shown to buyers: <span className="font-semibold">{formData.deliveryDaysMin || 3}-{formData.deliveryDaysMax || 5} days</span>
-                  </div>
-                  
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Weight/Size (optional)</label>
-                    <input
-                      type="text"
+                  <p className="text-sm rounded-md border border-border bg-muted/40 px-3 py-2">
+                    Buyers see delivery: <span className="font-semibold">{formData.deliveryDaysMin || 3}–{formData.deliveryDaysMax || 5} days</span>
+                  </p>
+                  <FormField label="Weight or size" id="weight" hint="Optional">
+                    <Input
+                      id="weight"
                       name="weight"
                       value={formData.weight}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
-                      placeholder="e.g., 1kg, 500g, 2L"
+                      placeholder="e.g., 1 kg, 500 g"
                     />
+                  </FormField>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setCurrentStep(3)}>Back</Button>
+                    <Button type="button" className="flex-1" onClick={() => setCurrentStep(5)} disabled={!formData.quantity || !formData.unit}>
+                      Next: Details
+                    </Button>
                   </div>
-                </div>
-                
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(3)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all text-foreground`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(5)}
-                    disabled={!formData.quantity || !formData.unit}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50"
-                  >
-                    Next: Details →
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Step 5: Additional Details */}
             {currentStep === 5 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border border-border bg-card`}>
-                <h2 className={`text-2xl font-bold mb-6 text-foreground`}>📋 Additional Details</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Specifications</label>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Additional details</CardTitle>
+                  <CardDescription>Specifications, geofence, and buyer contact.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField label="Specifications" id="specifications">
                     <textarea
+                      id="specifications"
                       name="specifications"
                       value={formData.specifications}
                       onChange={handleInputChange}
-                      rows="3"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
+                      rows={3}
+                      className={cn(selectClass, 'h-auto min-h-[80px] py-2')}
                       placeholder="Technical specifications, ingredients, etc."
                     />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Warranty Information</label>
-                    <input
-                      type="text"
+                  </FormField>
+                  <FormField label="Warranty information" id="warrantyInfo">
+                    <Input
+                      id="warrantyInfo"
                       name="warrantyInfo"
                       value={formData.warrantyInfo}
                       onChange={handleInputChange}
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
                       placeholder="e.g., 1 year manufacturer warranty"
                     />
-                  </div>
-                  {/* Geofence selection for this product */}
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Delivery Geofence (optional)</label>
-                    <div className="rounded-xl overflow-hidden border mb-3">
+                  </FormField>
+                  <FormField label="Delivery geofence" id="geofence" hint="Optional delivery radius on map">
+                    <div className="rounded-lg overflow-hidden border border-border mb-3">
                       <LocationPicker
-                        onLocationSelect={(lat, lng) => setFormData(prev => ({ ...prev, geofenceLatitude: lat, geofenceLongitude: lng }))}
-                        onAddressSubmit={(addr) => setFormData(prev => ({ ...prev, geofenceLatitude: addr.latitude, geofenceLongitude: addr.longitude }))}
+                        onLocationSelect={(lat, lng) => setFormData((prev) => ({ ...prev, geofenceLatitude: lat, geofenceLongitude: lng }))}
+                        onAddressSubmit={(addr) => setFormData((prev) => ({ ...prev, geofenceLatitude: addr.latitude, geofenceLongitude: addr.longitude }))}
                         initialAddress={null}
                       />
                     </div>
-
-                    <div className="mt-2">
-                      <label className={`block text-sm font-semibold mb-1 text-foreground`}>Deliver Within</label>
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {[5, 10, 20, 50].map((radius) => (
-                          <button
-                            key={radius}
-                            type="button"
-                            onClick={() => setFormData(prev => ({ ...prev, geofenceRadiusKm: radius }))}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${Number(formData.geofenceRadiusKm || 5) === radius
-                              ? 'bg-emerald-600 text-white border-emerald-600'
-                              : 'bg-background text-foreground border-border hover:border-primary'}`}
-                          >
-                            {radius} km
-                          </button>
-                        ))}
-                        <button
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {[5, 10, 20, 50].map((radius) => (
+                        <Button
+                          key={radius}
                           type="button"
-                          onClick={() => setFormData(prev => ({ ...prev, geofenceRadiusKm: prev.geofenceRadiusKm || 5 }))}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${[5, 10, 20, 50].includes(Number(formData.geofenceRadiusKm || 5))
-                            ? 'bg-background text-foreground border-border'
-                            : 'bg-blue-600 text-white border-blue-600'}`}
+                          size="sm"
+                          variant={Number(formData.geofenceRadiusKm || 5) === radius ? 'default' : 'outline'}
+                          onClick={() => setFormData((prev) => ({ ...prev, geofenceRadiusKm: radius }))}
                         >
-                          Custom
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="range"
-                          min="0"
-                          max="50"
-                          step="0.5"
-                          value={formData.geofenceRadiusKm || 5}
-                          onChange={(e) => setFormData(prev => ({ ...prev, geofenceRadiusKm: Number(e.target.value) }))}
-                          className="flex-1"
-                        />
-                        <input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.5"
-                          value={formData.geofenceRadiusKm || 5}
-                          onChange={(e) => setFormData(prev => ({ ...prev, geofenceRadiusKm: e.target.value === '' ? '' : Number(e.target.value) }))}
-                          className="w-24 px-3 py-2 border rounded-lg"
-                        />
-                      </div>
-                      <p className={`text-xs mt-2 text-muted-foreground`}>Current geofence: {formData.geofenceLatitude ? formData.geofenceLatitude.toFixed(5) : '—'}, {formData.geofenceLongitude ? formData.geofenceLongitude.toFixed(5) : '—'} • {formData.geofenceRadiusKm || 5} km</p>
+                          {radius} km
+                        </Button>
+                      ))}
                     </div>
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Contact Email *</label>
-                    <input
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="range"
+                        min="0"
+                        max="50"
+                        step="0.5"
+                        value={formData.geofenceRadiusKm || 5}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, geofenceRadiusKm: Number(e.target.value) }))}
+                        className="flex-1 accent-primary"
+                      />
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={formData.geofenceRadiusKm || 5}
+                        onChange={(e) => setFormData((prev) => ({ ...prev, geofenceRadiusKm: e.target.value === '' ? '' : Number(e.target.value) }))}
+                        className="w-24"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      {formData.geofenceLatitude ? formData.geofenceLatitude.toFixed(5) : '—'}, {formData.geofenceLongitude ? formData.geofenceLongitude.toFixed(5) : '—'} · {formData.geofenceRadiusKm || 5} km
+                    </p>
+                  </FormField>
+                  <FormField label="Contact email" id="contactEmail" required>
+                    <Input
+                      id="contactEmail"
                       type="email"
                       name="contactEmail"
                       value={formData.contactEmail}
                       onChange={handleInputChange}
                       required
-                      pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
                       placeholder="your@email.com"
                     />
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Contact Phone *</label>
-                    <input
-                      type="text"
+                  </FormField>
+                  <FormField label="Contact phone" id="contactPhone" required hint="10-digit mobile number">
+                    <Input
+                      id="contactPhone"
                       name="contactPhone"
                       value={formData.contactPhone}
                       onChange={handleInputChange}
                       required
                       pattern="^[0-9]{10}$"
-                      className={`w-full px-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:outline-none transition-all text-foreground`}
                       placeholder="10-digit phone number"
                     />
+                  </FormField>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setCurrentStep(4)}>Back</Button>
+                    <Button type="button" className="flex-1" onClick={() => setCurrentStep(6)}>Next: Media</Button>
                   </div>
-                </div>
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(4)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all text-foreground`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(6)}
-                    className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all"
-                  >
-                    Next: Media →
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
 
             {/* Step 6: Media */}
             {currentStep === 6 && (
-              <div className={`rounded-2xl shadow-lg p-8 animate-fadeIn border border-border bg-card`}>
-                <h2 className={`text-2xl font-bold mb-6 text-foreground`}>📸 Upload Product Media</h2>
-                <div className="space-y-4">
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Upload Images (Max 5, jpg/jpeg/png/webp, ≤5MB each)</label>
-                    <input
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product media</CardTitle>
+                  <CardDescription>Up to 5 images and 3 videos per listing.</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <FormField label="Images" id="imageFiles" hint="JPG, PNG, or WebP · max 5 files · 5 MB each">
+                    <Input
+                      id="imageFiles"
                       type="file"
                       accept="image/jpeg,image/png,image/webp,image/jpg"
                       multiple
-                      onChange={e => {
+                      onChange={(e) => {
                         const newFiles = Array.from(e.target.files);
-                        setFormData(prev => {
+                        setFormData((prev) => {
                           const combined = [...(prev.imageFiles || []), ...newFiles];
                           if (combined.length > 5) {
                             showToast('Only 5 images are allowed per product.', 'error');
@@ -902,30 +808,37 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                           }
                           return { ...prev, imageFiles: combined };
                         });
-                        e.target.value = "";
+                        e.target.value = '';
                       }}
-                      className="w-full"
                     />
-                    {formData.imageFiles && formData.imageFiles.length > 0 && (
+                    {formData.imageFiles?.length > 0 && (
                       <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-2">
                         {formData.imageFiles.map((file, idx) => (
                           <div key={idx} className="relative">
-                            <img src={imagePreviewUrls[idx]} alt="preview" className="rounded-xl w-full h-32 object-cover" />
-                            <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, imageFiles: prev.imageFiles.filter((_, i) => i !== idx) }))}>✕</button>
+                            <img src={imagePreviewUrls[idx]} alt="Preview" className="rounded-lg w-full h-32 object-cover" />
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              className="absolute top-1 right-1 h-7 px-2"
+                              onClick={() => setFormData((prev) => ({ ...prev, imageFiles: prev.imageFiles.filter((_, i) => i !== idx) }))}
+                            >
+                              Remove
+                            </Button>
                           </div>
                         ))}
                       </div>
                     )}
-                  </div>
-                  <div>
-                    <label className={`block text-sm font-semibold mb-2 text-foreground`}>Upload Videos (mp4/webm, ≤50MB each, optional, multiple)</label>
-                    <input
+                  </FormField>
+                  <FormField label="Videos" id="videoFiles" hint="MP4 or WebM · optional · max 3 files">
+                    <Input
+                      id="videoFiles"
                       type="file"
                       accept="video/mp4,video/webm"
                       multiple
-                      onChange={e => {
+                      onChange={(e) => {
                         const newFiles = Array.from(e.target.files);
-                        setFormData(prev => {
+                        setFormData((prev) => {
                           const combined = [...(prev.videoFiles || []), ...newFiles];
                           if (combined.length > 3) {
                             showToast('Only 3 videos are allowed per product.', 'error');
@@ -933,42 +846,38 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                           }
                           return { ...prev, videoFiles: combined };
                         });
-                        e.target.value = "";
+                        e.target.value = '';
                       }}
-                      className="w-full"
                     />
-                    {formData.videoFiles && formData.videoFiles.length > 0 && (
+                    {formData.videoFiles?.length > 0 && (
                       <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-2">
                         {formData.videoFiles.map((file, idx) => (
                           <div key={idx} className="relative">
-                            <video controls playsInline preload="metadata" className="rounded-xl w-full h-40 object-cover bg-black">
+                            <video controls playsInline preload="metadata" className="rounded-lg w-full h-40 object-cover bg-black">
                               <source src={videoPreviewUrls[idx]} type={file.type || 'video/mp4'} />
-                              Your browser cannot preview this video file.
                             </video>
-                            <button type="button" className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 py-1 text-xs" onClick={() => setFormData(prev => ({ ...prev, videoFiles: prev.videoFiles.filter((_, i) => i !== idx) }))}>✕</button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="destructive"
+                              className="absolute top-1 right-1 h-7 px-2"
+                              onClick={() => setFormData((prev) => ({ ...prev, videoFiles: prev.videoFiles.filter((_, i) => i !== idx) }))}
+                            >
+                              Remove
+                            </Button>
                           </div>
                         ))}
                       </div>
                     )}
+                  </FormField>
+                  <div className="flex gap-3">
+                    <Button type="button" variant="outline" className="flex-1" onClick={() => setCurrentStep(5)}>Back</Button>
+                    <Button type="submit" className="flex-1" disabled={loading}>
+                      {loading ? (editingProduct ? 'Updating…' : 'Publishing…') : (editingProduct ? 'Update product' : 'Publish product')}
+                    </Button>
                   </div>
-                </div>
-                <div className="flex gap-4 mt-6">
-                  <button
-                    type="button"
-                    onClick={() => setCurrentStep(5)}
-                    className={`flex-1 border-2 py-4 rounded-xl font-semibold transition-all text-foreground`}
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {loading ? (editingProduct ? 'Updating...' : 'Publishing...') : (editingProduct ? '💾 Update Product' : '✨ Publish Product')}
-                  </button>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             )}
           </form>
       </div>

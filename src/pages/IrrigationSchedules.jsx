@@ -14,6 +14,10 @@ import apiClient from '../services/apiClient'
 import { API_ENDPOINTS } from '../config/api'
 import { useTheme } from '../context/ThemeContext'
 import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { PageSkeleton } from '../components/ui/Skeleton'
+import { Button } from '../components/ui/button'
+import { IrrigationPageAside } from '../components/irrigation/IrrigationPageAside'
 
 function IrrigationSchedules() {
     const { isDark } = useTheme()
@@ -219,20 +223,19 @@ function IrrigationSchedules() {
 
   if (loading) {
     return (
-      <AppPage title="Irrigation Schedules" description="Plan and track irrigation for your crops.">
-        <div className="flex items-center justify-center h-96">
-          <p className={isDark ? 'text-slate-400' : 'text-gray-600'}>Loading schedules...</p>
-        </div>
+      <AppPage title="Irrigation schedules" description="Plan and track irrigation for your crops.">
+        <PageSkeleton rows={5} />
       </AppPage>
     )
   }
 
   return (
     <AppPage
-      title="Irrigation Schedules"
+      title="Irrigation schedules"
       description="Plan and track irrigation for your crops."
       actions={
-        <button
+        <Button
+          variant={showAddForm ? 'outline' : 'default'}
           onClick={() => {
             setShowAddForm(!showAddForm)
             setEditingSchedule(null)
@@ -246,12 +249,23 @@ function IrrigationSchedules() {
               notes: '',
             })
           }}
-          className={`px-5 py-2.5 rounded-xl font-semibold transition ${isDark ? 'bg-slate-900/60 text-white hover:bg-slate-900/80' : 'bg-white text-cyan-700 hover:bg-cyan-50 border border-cyan-200'}`}
         >
-          {showAddForm ? 'Cancel' : '+ New Schedule'}
-        </button>
+          {showAddForm ? 'Cancel' : 'Create schedule'}
+        </Button>
       }
     >
+      <PageScaffold
+        aside={
+          <IrrigationPageAside
+            summary={[
+              { label: 'Total schedules', value: String(schedules.length) },
+              { label: 'Today', value: String(todaySchedules) },
+              { label: 'Planned water', value: `${plannedWater.toFixed(0)} L` },
+              { label: 'Crops linked', value: String(crops.length) },
+            ]}
+          />
+        }
+      >
       <div className="space-y-8">
 
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -583,6 +597,7 @@ function IrrigationSchedules() {
         </div>
       )}
       </div>
+      </PageScaffold>
     </AppPage>
   )
 }

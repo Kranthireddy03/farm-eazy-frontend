@@ -3,21 +3,19 @@ import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import { useCheckout } from '../hooks/useCheckout'
 import apiClient from '../services/apiClient'
-import LocationPicker from '../components/LocationPicker'
 import { sendNotification } from '../components/NotificationCenter'
 import AppPage from '../components/layout/AppPage'
 import { Card, CardContent } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
 import { InfoPanel } from '../components/platform/InfoPanel'
-import {
-  getMaxUsableCoins,
-  MINIMUM_PAYMENT,
-} from '../lib/marketplace'
 import { CheckoutStepIndicator } from '../components/marketplace/CheckoutStepIndicator'
 import { CheckoutProcessingOverlay } from '../components/marketplace/CheckoutProcessingOverlay'
 import { CheckoutRetryPanel } from '../components/marketplace/CheckoutRetryPanel'
 import { OrderSummaryPanel } from '../components/marketplace/OrderSummaryPanel'
+import { CheckoutOrderReviewSection } from '../components/marketplace/CheckoutOrderReviewSection'
+import { CheckoutPaymentSection } from '../components/marketplace/CheckoutPaymentSection'
+import { CheckoutAddressSection } from '../components/marketplace/CheckoutAddressSection'
 
 // Razorpay script loader
 function loadRazorpayScript() {
@@ -576,182 +574,24 @@ function Checkout() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
           {/* Main Checkout */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Order Items Review */}
-            <div className={`interactive-card rounded-2xl shadow-lg p-6 border border border-border bg-card`}> 
-              <h2 className={`text-2xl font-bold mb-4 text-foreground`}>Order Summary</h2>
-              <div className="space-y-4">
-                {cartItems.map(item => {
-                  const itemPrice = (item.discountedPrice && item.discountedPrice > 0) ? item.discountedPrice : item.price
-                  const hasDiscount = item.discountPercentage && item.discountPercentage > 0
-
-                  return (
-                    <div key={item.id} className={`flex justify-between items-start pb-4 border-b border-border`}>
-                      <div className="flex-1">
-                        <p className={`font-semibold text-foreground`}>{item.productName}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          {hasDiscount ? (
-                            <>
-                              <p className={`text-sm text-muted-foreground`}>Qty: {item.quantity} × ₹{itemPrice.toFixed(2)}</p>
-                              <span className={`line-through text-xs text-muted-foreground`}>₹{item.price.toFixed(2)}</span>
-                              <span className="bg-green-600 text-white text-xs font-bold px-1.5 py-0.5 rounded">
-                                {item.discountPercentage}% OFF
-                              </span>
-                            </>
-                          ) : (
-                            <p className={`text-sm text-muted-foreground`}>Qty: {item.quantity} × ₹{item.price.toFixed(2)}</p>
-                          )}
-                        </div>
-                        {hasDiscount && (
-                          <p className="text-xs text-green-400 font-semibold mt-1">
-                            Saving ₹{((item.price - itemPrice) * item.quantity).toFixed(2)}
-                          </p>
-                        )}
-                          {/* Vendor Transparency UI - Razorpay Compliance */}
-                          <div className={`mt-2 p-4 rounded-xl border bg-orange-50 border-orange-200 dark:bg-orange-950/20 dark:border-orange-800`}>
-                            <div className={`font-semibold mb-2 flex items-center gap-2 text-foreground`}>
-                              <span>🏷️</span> Vendor Information
-                            </div>
-                            <div className={`grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-foreground`}>
-                              <div><span className="font-semibold">Sold by:</span> {item.vendorName || 'Not specified'}{item.vendorType ? ` (${item.vendorType})` : ''}</div>
-                              <div><span className="font-semibold">Vendor ID:</span> {item.vendorId || 'Not specified'}</div>
-                              <div><span className="font-semibold">Location:</span> {item.vendorLocation || 'Not specified'}</div>
-                              <div><span className="font-semibold">Type:</span> {item.vendorType || 'Not specified'}</div>
-                            </div>
-                          </div>
-                      </div>
-                      <p className={`font-bold text-foreground`}>₹{(itemPrice * item.quantity).toFixed(2)}</p>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-
-            {/* Payment Methods */}
-            <div className={`interactive-card rounded-2xl shadow-lg p-6 border border border-border bg-card`}> 
-              <h2 className={`text-2xl font-bold mb-4 text-foreground`}>💳 Payment Method</h2>
-              <div className="space-y-3">
-                {/* Cash on Delivery */}
-                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition"
-                       style={{ borderColor: selectedPayment === 'CASH_ON_DELIVERY' ? '#f97316' : '#475569',
-                               backgroundColor: selectedPayment === 'CASH_ON_DELIVERY' ? 'rgba(249, 115, 22, 0.1)' : 'transparent' }}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="CASH_ON_DELIVERY"
-                    checked={selectedPayment === 'CASH_ON_DELIVERY'}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="w-4 h-4 cursor-pointer"
-                  />
-                  <div className="ml-4">
-                    <p className={`font-semibold text-foreground`}>💵 Cash on Delivery</p>
-                    <p className={`text-sm text-muted-foreground`}>Pay when your order arrives</p>
-                    <p className="text-xs text-green-400 mt-1">✓ Free | Delivery in 3-5 days</p>
-                  </div>
-                </label>
-                {/* Razorpay */}
-                <label className="flex items-center p-4 border-2 rounded-lg cursor-pointer transition"
-                       style={{ borderColor: selectedPayment === 'RAZORPAY' ? '#22c55e' : '#475569',
-                               backgroundColor: selectedPayment === 'RAZORPAY' ? 'rgba(34, 197, 94, 0.1)' : 'transparent' }}>
-                  <input
-                    type="radio"
-                    name="payment"
-                    value="RAZORPAY"
-                    checked={selectedPayment === 'RAZORPAY'}
-                    onChange={(e) => setSelectedPayment(e.target.value)}
-                    className="w-4 h-4 cursor-pointer"
-                  />
-                  <div className="ml-4 flex-1">
-                    <p className={`font-semibold text-foreground`}>🪙 Razorpay (UPI/Card/Netbanking)</p>
-                    <p className={`text-sm text-muted-foreground`}>Pay securely online with Razorpay</p>
-                  </div>
-                </label>
-              </div>
-            </div>
-
-            {/* Address selection & form - Enhanced with Map */}
-            <div className={`interactive-card rounded-2xl shadow-lg p-6 border border border-border bg-card`}> 
-              <h2 className={`text-2xl font-bold mb-4 text-foreground`}>📍 Delivery Address</h2>
-
-              {/* Existing addresses dropdown */}
-              {addresses.length > 0 && !showAddressForm && (
-                <div className="mb-4 space-y-3">
-                  <p className={`text-sm text-muted-foreground`}>Select from saved addresses:</p>
-                  <div className="space-y-2">
-                    {addresses.map(addr => (
-                      <label 
-                        key={addr.id} 
-                        className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition ${
-                          selectedAddress === addr.id 
-                            ? 'border-orange-500 bg-orange-500/10' 
-                            : 'border-slate-600 hover:border-slate-500'
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          name="address"
-                          value={addr.id}
-                          checked={selectedAddress === addr.id}
-                          onChange={(e) => setSelectedAddress(Number(e.target.value))}
-                          className="mt-1 mr-3"
-                        />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2">
-                            <span className="text-lg">
-                              {addr.addressType === 'Home' ? '🏠' : addr.addressType === 'Work' ? '🏢' : '📍'}
-                            </span>
-                            <span className={`font-semibold text-foreground`}>{addr.fullName}</span>
-                            <span className={`text-xs px-2 py-0.5 rounded bg-muted text-muted-foreground`}>{addr.addressType}</span>
-                          </div>
-                          <p className={`text-sm mt-1 text-foreground`}>{addr.addressLine1}</p>
-                          {addr.addressLine2 && <p className={`text-sm text-muted-foreground`}>{addr.addressLine2}</p>}
-                          <p className={`text-sm text-muted-foreground`}>{addr.city}, {addr.state} - {addr.postalCode}</p>
-                          <p className={`text-sm mt-1 text-muted-foreground`}>📱 {addr.phoneNumber}</p>
-                        </div>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Add new address button */}
-              <button
-                type="button"
-                onClick={() => setShowAddressForm(!showAddressForm)}
-                className={`w-full px-4 py-3 rounded-lg transition font-semibold flex items-center justify-center gap-2 ${
-                  showAddressForm 
-                    ? 'bg-red-600 hover:bg-red-700 text-white' 
-                    : 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white'
-                }`}
-              >
-                {showAddressForm ? (
-                  <><span>❌</span> Cancel</>
-                ) : (
-                  <><span>➕</span> Add New Address</>
-                )}
-              </button>
-
-              {/* LocationPicker component */}
-              {showAddressForm && (
-                <div className="mt-4">
-                  <LocationPicker
-                    onAddressSubmit={async (addressData) => {
-                      try {
-                        const response = await apiClient.post('/addresses', addressData)
-                        showToast('Address added successfully!', 'success')
-                        setShowAddressForm(false)
-                        fetchAddresses()
-                        // Auto-select the new address
-                        if (response.data && response.data.id) {
-                          setSelectedAddress(response.data.id)
-                        }
-                      } catch (error) {
-                        showToast('Failed to add address: ' + (error.response?.data?.message || error.message), 'error')
-                      }
-                    }}
-                  />
-                </div>
-              )}
-            </div>
+            <CheckoutOrderReviewSection cartItems={cartItems} />
+            <CheckoutPaymentSection
+              selectedPayment={selectedPayment}
+              onSelect={setSelectedPayment}
+            />
+            <CheckoutAddressSection
+              addresses={addresses}
+              selectedAddress={selectedAddress}
+              onSelectAddress={setSelectedAddress}
+              showAddressForm={showAddressForm}
+              onToggleAddressForm={() => setShowAddressForm((prev) => !prev)}
+              onAddressAdded={(newId) => {
+                setShowAddressForm(false);
+                fetchAddresses();
+                if (newId) setSelectedAddress(newId);
+              }}
+              showToast={showToast}
+            />
           </div>
 
           {/* Order Summary Sidebar */}

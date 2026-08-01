@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useTheme } from '../context/ThemeContext'
 import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { PageSkeleton } from '../components/ui/Skeleton'
+import { IrrigationPageAside } from '../components/irrigation/IrrigationPageAside'
+import { buttonVariants } from '../components/ui/button'
+import { cn } from '../lib/utils'
 import apiClient from '../services/apiClient'
 
 const SENSOR_TYPES = {
@@ -168,35 +174,27 @@ function IrrigationSensorDashboard() {
 
   if (loading) {
     return (
-      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
-        <div className="text-center">
-          <div className="animate-spin w-12 h-12 border-4 border-green-500 border-t-transparent rounded-full mx-auto"></div>
-          <p className={`mt-4 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>Loading sensor data...</p>
-        </div>
-      </div>
+      <AppPage title="Irrigation sensors" description="Monitor farm conditions and automation rules.">
+        <PageSkeleton rows={5} />
+      </AppPage>
     )
   }
 
   if (farms.length === 0) {
     return (
-      <div className={`premium-shell min-h-screen flex items-center justify-center ${isDark ? 'bg-slate-950' : 'bg-gradient-to-br from-emerald-50 via-white to-cyan-50'}`}>
-        <div className="text-center">
-          <div className="text-6xl mb-4">🌾</div>
-          <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-800'}`}>
-            No Farms Found
-          </h2>
-          <p className={`mt-2 ${isDark ? 'text-slate-400' : 'text-gray-600'}`}>
-            Add a farm first to set up irrigation sensors
-          </p>
+      <AppPage title="Irrigation sensors" description="Monitor farm conditions and automation rules.">
+        <div className="text-center py-12 rounded-lg border border-dashed border-border">
+          <p className="text-muted-foreground mb-4">Add a farm before setting up sensors.</p>
+          <Link to="/farms" className={cn(buttonVariants())}>Create farm</Link>
         </div>
-      </div>
+      </AppPage>
     )
   }
 
   return (
     <AppPage
-      title="Irrigation Sensors"
-      description="Monitor your farm conditions and manage automation rules."
+      title="Irrigation sensors"
+      description="Monitor farm conditions and manage automation rules."
       actions={
         <select
           value={selectedFarm}
@@ -211,7 +209,18 @@ function IrrigationSensorDashboard() {
         </select>
       }
     >
-      <div className="max-w-7xl mx-auto">
+      <PageScaffold
+        aside={
+          <IrrigationPageAside
+            summary={[
+              { label: 'Sensors', value: String(sensors.length) },
+              { label: 'Automation rules', value: String(rules.length) },
+              { label: 'Farms', value: String(farms.length) },
+            ]}
+          />
+        }
+      >
+      <div className="space-y-6">
         {/* Message */}
         {message.text && (
           <div className={`mb-6 p-4 rounded-lg ${
@@ -491,6 +500,7 @@ function IrrigationSensorDashboard() {
           </button>
         </div>
       </div>
+      </PageScaffold>
     </AppPage>
   )
 }

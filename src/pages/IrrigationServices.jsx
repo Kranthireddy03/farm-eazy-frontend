@@ -5,6 +5,8 @@ import { useToast } from '../hooks/useToast'
 import { useTheme } from '../context/ThemeContext'
 import { useLocationContext } from '../context/LocationContext'
 import AppPage from '../components/layout/AppPage'
+import { PageScaffold } from '../components/app/PageScaffold'
+import { IrrigationPageAside } from '../components/irrigation/IrrigationPageAside'
 
 function IrrigationServices() {
   const { isDark } = useTheme()
@@ -567,8 +569,19 @@ function IrrigationServices() {
 
   return (
       <AppPage
-        title="Irrigation Services"
+        title="Irrigation services"
         description="Post services, accept requests, and book farm operations."
+      >
+      <PageScaffold
+        aside={
+          <IrrigationPageAside
+            summary={[
+              { label: 'My listings', value: String(listings.length) },
+              { label: 'Open bookings', value: String(bookings.filter((b) => b.status === 'PENDING').length) },
+              { label: 'Browse catalog', value: String(allListings.length) },
+            ]}
+          />
+        }
       >
       <div className="space-y-8">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -1854,6 +1867,7 @@ function IrrigationServices() {
           </>
         )}
       </div>
+      </PageScaffold>
     </AppPage>
   )
 }
