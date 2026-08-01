@@ -6,8 +6,10 @@ import { unwrapApiList } from '../utils/apiResponse';
 import { getUserFacingErrorMessage } from '../utils/userFacingError';
 import { useGlobalToast } from '../context/ToastContext';
 import { STORAGE_KEYS } from '../config/api';
+import { useLiveSupportChat } from '../hooks/useLiveSupportChat';
+import { disconnectSupportStomp } from '../services/supportStompClient';
 
-const DEFAULT_GREETING = 'Welcome to FarmEazy live chat. Messages sync with support agents on the support portal. Choose a quick topic or describe your issue.';
+const DEFAULT_GREETING = 'Welcome to FarmEazy live chat. You are connected in real time when support is available. Choose a quick topic or describe your issue.';
 const CHAT_POLL_MS = 5000;
 
 function extractUploadPath(url) {
@@ -174,7 +176,25 @@ export default function ChatSupport({ className = '' }) {
   const [ticketHistory, setTicketHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [allowAutoTicketSelection, setAllowAutoTicketSelection] = useState(true);
+  const [liveSessionKey, setLiveSessionKey] = useState(0);
+  const [ratingStars, setRatingStars] = useState(0);
+  const [ratingComment, setRatingComment] = useState('');
   const { showToast } = useGlobalToast();
+
+  const liveChat = useLiveSupportChat({
+    enabled: open && isAuthenticated,
+    sessionKey: liveSessionKey,
+    onFallback: () => {
+      // Legacy ticket/FAQ flow remains available when live bootstrap fails.
+    },
+  });
+
+  const viewingLegacyTicket = Boolean(ticketId);
+  const useLiveStream = liveChat.liveMode && !viewingLegacyTicket && open;
+  const displayMessages = useLiveStream
+    ? (liveChat.messages.length > 0 ? liveChat.messages : [{ sender: 'support', text: DEFAULT_GREETING }])
+    : messages;
+  const chatLoading = useLiveStream ? liveChat.loading || liveChat.connecting : loading;
 
   const fetchAttachmentBlob = async (url, activeTicketId) => {
     const uploadPath = extractUploadPath(url);
@@ -412,7 +432,7 @@ export default function ChatSupport({ className = '' }) {
   }, []);
 
   useEffect(() => {
-    if (!ticketId || !open || !isTabVisible) return undefined;
+    if (!ticketId || !open || !isTabVisible || useLiveStream) return undefined;
 
     const interval = setInterval(async () => {
       try {
@@ -437,7 +457,7 @@ export default function ChatSupport({ className = '' }) {
     }, CHAT_POLL_MS);
 
     return () => clearInterval(interval);
-  }, [ticketId, open, isTabVisible]);
+  }, [ticketId, open, isTabVisible, useLiveStream]);
 
   const quickSuggestions = useMemo(() => ([
     { label: 'Payment help', text: 'My payment or checkout is not working.' },
@@ -551,20 +571,31 @@ export default function ChatSupport({ className = '' }) {
   };
 
   const handleSend = async () => {
-    if (!input.trim() || loading) return;
+    if (!input.trim() || chatLoading) return;
     const text = input.trim();
     setInput('');
+
+    if (useLiveStream) {
+      const sent = await liveChat.sendMessage(text, attachment);
+      if (sent) setAttachment(null);
+      return;
+    }
+
     await routeMessage(text);
   };
 
   const handleFAQ = async (question) => {
-    if (loading) return;
+    if (chatLoading) return;
     setInput('');
+    if (useLiveStream) {
+      await liveChat.sendMessage(question, null);
+      return;
+    }
     await routeMessage(question);
   };
 
   const handleSelectTicket = async (displayId) => {
-    if (!displayId || displayId === ticketId || loading) return;
+    if (!displayId || displayId === ticketId || chatLoading) return;
 
     setLoading(true);
     try {
@@ -595,7 +626,26 @@ export default function ChatSupport({ className = '' }) {
     setAttachment(null);
     setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
     setAllowAutoTicketSelection(false);
+    setRatingStars(0);
+    setRatingComment('');
     localStorage.removeItem(storageKey);
+    disconnectSupportStomp();
+    setLiveSessionKey((key) => key + 1);
+  };
+
+  const submitRating = async () => {
+    if (!ratingStars) {
+      showToast('Please select a star rating.', 'error');
+      return;
+    }
+    try {
+      await liveChat.submitRating(ratingStars, ratingComment);
+      showToast('Thank you for your feedback!', 'success');
+      setRatingStars(0);
+      setRatingComment('');
+    } catch (err) {
+      showToast(getUserFacingErrorMessage(err, 'Could not save rating.'), 'error');
+    }
   };
 
   if (!isAuthenticated) {
@@ -620,7 +670,9 @@ export default function ChatSupport({ className = '' }) {
             <div>
               <span className="font-bold block">FarmEazy Live Chat</span>
               <span className="text-xs text-white/80">
-                {ticketId ? `Case ${ticketId}` : 'FAQ first, live handoff when needed'}
+                {viewingLegacyTicket
+                  ? `Case ${ticketId}`
+                  : (liveChat.conversationId ? `Live ${liveChat.conversationId}` : 'Real-time support')}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -630,8 +682,13 @@ export default function ChatSupport({ className = '' }) {
           </div>
 
           <div className="px-4 pt-3 text-xs text-muted-foreground flex items-center justify-between gap-2">
-            <span>{liveStatus === 'available' ? 'Support executives are available now.' : 'Support executives are offline right now.'}</span>
-            {ticketId && <span className="text-cyan-300">Ticket polling on</span>}
+            <span>
+              {useLiveStream
+                ? (liveChat.liveAvailable ? 'Support executives are online — real-time chat.' : 'AI assistant or queue — agents offline.')
+                : (liveStatus === 'available' ? 'Support executives are available now.' : 'Support executives are offline right now.')}
+            </span>
+            {useLiveStream && <span className="text-cyan-300">Live</span>}
+            {viewingLegacyTicket && ticketId && <span className="text-amber-300">Ticket view</span>}
           </div>
 
           <div className="px-3 pt-2">
@@ -654,7 +711,7 @@ export default function ChatSupport({ className = '' }) {
                       type="button"
                       onClick={() => handleSelectTicket(id)}
                       className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] border ${isActive ? 'bg-cyan-600/25 text-cyan-200 border-cyan-500/50' : 'bg-muted text-muted-foreground border-border hover:bg-muted'}`}
-                      disabled={loading}
+                      disabled={chatLoading}
                     >
                       {id}
                     </button>
@@ -679,7 +736,7 @@ export default function ChatSupport({ className = '' }) {
           </div>
 
           <div className="flex-1 p-3 overflow-y-auto space-y-2" style={{ maxHeight: 360 }}>
-            {messages.map((msg, idx) => {
+            {displayMessages.map((msg, idx) => {
                 const attachmentsSource = []
                   .concat(msg?.attachments || [])
                   .concat(parseAttachmentsFromMessage(msg) || [])
@@ -730,6 +787,43 @@ export default function ChatSupport({ className = '' }) {
             })}
           </div>
 
+            {liveChat.typingFrom && useLiveStream && (
+              <div className="text-xs text-cyan-300/80 px-1">{liveChat.typingFrom} is typing…</div>
+            )}
+
+            {liveChat.showRating && useLiveStream && (
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/40 p-3 space-y-2">
+                <p className="text-sm font-semibold text-cyan-100">Rate this conversation</p>
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`text-lg ${ratingStars >= star ? 'text-amber-400' : 'text-muted-foreground'}`}
+                      onClick={() => setRatingStars(star)}
+                      aria-label={`${star} stars`}
+                    >
+                      ★
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  className="w-full rounded-lg bg-muted border border-border text-sm p-2 text-foreground"
+                  rows={2}
+                  placeholder="Optional feedback"
+                  value={ratingComment}
+                  onChange={(e) => setRatingComment(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="rounded-lg bg-cyan-600 text-white text-xs px-3 py-1.5"
+                  onClick={submitRating}
+                >
+                  Submit rating
+                </button>
+              </div>
+            )}
+
             {faqLoading && (
               <div className="text-xs text-muted-foreground">Loading help articles...</div>
             )}
@@ -743,11 +837,16 @@ export default function ChatSupport({ className = '' }) {
               className="flex-1 bg-muted border border-border text-foreground dark:text-white placeholder-slate-400 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
               type="text"
               value={input}
-              onChange={(event) => setInput(event.target.value)}
+              onChange={(event) => {
+                setInput(event.target.value);
+                if (useLiveStream && event.target.value.trim()) {
+                  liveChat.notifyTyping(true);
+                }
+              }}
               placeholder="Ask about orders, payment, vendor help..."
               aria-label="Chat input"
               onKeyDown={(event) => event.key === 'Enter' && handleSend()}
-              disabled={loading}
+              disabled={chatLoading}
             />
             <input
               type="file"
@@ -757,7 +856,7 @@ export default function ChatSupport({ className = '' }) {
               onChange={handleFileUpload}
             />
             <label htmlFor="chat-file-upload" className="bg-muted text-muted-foreground px-3 py-2 rounded-xl cursor-pointer hover:bg-muted border border-border">📎</label>
-            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-primary/50 hover:to-blue-500 disabled:opacity-60" onClick={handleSend} aria-label="Send message" disabled={loading}>
+            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-primary/50 hover:to-blue-500 disabled:opacity-60" onClick={handleSend} aria-label="Send message" disabled={chatLoading}>
               Send
             </button>
           </div>
