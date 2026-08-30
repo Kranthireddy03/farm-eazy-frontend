@@ -433,7 +433,12 @@ async function getOrRefreshAccessToken() {
 }
 
 async function refreshAccessToken() {
-  const refreshResponse = await apiClient.post('/auth/refresh', null, {
+  // Send an encrypted (empty) payload: the backend's ApiRequestDecryptionFilter requires
+  // encrypted JSON for POST /auth/refresh. The refresh token itself travels in the HttpOnly
+  // cookie (withCredentials), so the body only needs to be a valid encrypted object — sending
+  // `null` previously produced `ENCRYPTED_PAYLOAD_REQUIRED` (400), which made every genuine
+  // 401 → refresh attempt fail and incorrectly logged the user out.
+  const refreshResponse = await apiClient.post('/auth/refresh', {}, {
     _skipAuthRefresh: true,
     timeout: 15000,
     withCredentials: true,
