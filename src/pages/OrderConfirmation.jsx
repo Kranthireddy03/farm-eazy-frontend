@@ -12,6 +12,7 @@ import { PageSkeleton } from '../components/ui/Skeleton'
 import { BrandLoader } from '../components/ui/brand-loader'
 import { CheckoutStepIndicator } from '../components/marketplace/CheckoutStepIndicator'
 import { SummaryPanel } from '../components/platform/SummaryPanel'
+import { cn } from '../lib/utils'
 
 function OrderConfirmation() {
   const { orderId } = useParams()
