@@ -1,0 +1,340 @@
+import React, { useEffect, useState } from 'react';
+import apiClient from '../services/apiClient';
+import { unwrapApiList } from '../utils/apiResponse';
+import { useToast } from '../hooks/useToast';
+import { useTheme } from '../context/ThemeContext';
+import AppPage from '../components/layout/AppPage';
+import { PageScaffold } from '../components/app/PageScaffold';
+import { InfoPanel } from '../components/platform/InfoPanel';
+import { FePanel } from '../components/platform/FeOpsPrimitives';
+import { EmptyState } from '../components/ui/empty-state';
+import { PageSkeleton } from '../components/ui/Skeleton';
+import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
+import { cn } from '../lib/utils';
+
+const Activities = () => {
+    const { isDark } = useTheme();
+    const [activities, setActivities] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(false);
+    const [filter, setFilter] = useState('all');
+    const { showToast } = useToast();
+
+    useEffect(() => {
+        const fetchActivities = async () => {
+            setLoading(true);
+            try {
+                const response = await apiClient.get(`/activities?page=${page}&size=20`);
+                const list = unwrapApiList(response?.data);
+                const filtered = list.filter((activity) => {
+                    const desc = String(activity?.description || '').toLowerCase();
+                    return !desc.includes('logged in') && !desc.includes('login');
+                });
+                setActivities(filtered);
+                setHasMore(list.length === 20);
+                setLoading(false);
+            } catch (error) {
+                showToast('Failed to fetch activities', 'error');
+                setLoading(false);
+            }
+        };
+        fetchActivities();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page]);
+
+    const getActivityCategory = (description) => {
+        const desc = description.toLowerCase();
+        if (desc.includes('coin')) return 'Coins';
+        if (desc.includes('farm')) return 'Farm';
+        if (desc.includes('crop')) return 'Crop';
+        if (desc.includes('product')) return 'Product';
+        if (desc.includes('service') || desc.includes('irrigation')) return 'Service';
+        if (desc.includes('order')) return 'Order';
+        if (desc.includes('password')) return 'Security';
+        if (desc.includes('registered') || desc.includes('profile')) return 'Account';
+        return 'Other';
+    };
+
+    const getActivityType = (description) => {
+        const desc = description.toLowerCase();
+        if (desc.includes('created') || desc.includes('added') || desc.includes('listed') || desc.includes('registered')) return 'Created';
+        if (desc.includes('updated') || desc.includes('changed') || desc.includes('edited')) return 'Updated';
+        if (desc.includes('deleted') || desc.includes('removed')) return 'Deleted';
+        if (desc.includes('placed') || desc.includes('ordered')) return 'Placed';
+        if (desc.includes('confirmed')) return 'Confirmed';
+        if (desc.includes('cancelled')) return 'Cancelled';
+        if (desc.includes('earned') || desc.includes('received')) return 'Earned';
+        if (desc.includes('spent') || desc.includes('used')) return 'Spent';
+        return 'Action';
+    };
+
+    const getActivityIcon = (category) => {
+        switch(category) {
+            case 'Coins': return '🪙';
+            case 'Farm': return '🌾';
+            case 'Crop': return '🌱';
+            case 'Product': return '📦';
+            case 'Service': return '🚜';
+            case 'Order': return '🛒';
+            case 'Security': return '🔒';
+            case 'Account': return '👤';
+            default: return '📝';
+        }
+    };
+
+    const getTypeColor = (type) => {
+        const colors = {
+            'Created': isDark ? 'bg-green-900/50 text-green-400 border-green-700' : 'bg-green-100 text-green-700 border-green-300',
+            'Updated': isDark ? 'bg-blue-900/50 text-blue-400 border-blue-700' : 'bg-blue-100 text-blue-700 border-blue-300',
+            'Deleted': isDark ? 'bg-red-900/50 text-red-400 border-red-700' : 'bg-red-100 text-red-700 border-red-300',
+            'Placed': isDark ? 'bg-purple-900/50 text-purple-400 border-purple-700' : 'bg-purple-100 text-purple-700 border-purple-300',
+            'Confirmed': isDark ? 'bg-teal-900/50 text-teal-400 border-teal-700' : 'bg-teal-100 text-teal-700 border-teal-300',
+            'Cancelled': isDark ? 'bg-orange-900/50 text-orange-400 border-orange-700' : 'bg-orange-100 text-orange-700 border-orange-300',
+            'Earned': isDark ? 'bg-yellow-900/50 text-yellow-400 border-yellow-700' : 'bg-yellow-100 text-yellow-700 border-yellow-300',
+            'Spent': isDark ? 'bg-pink-900/50 text-pink-400 border-pink-700' : 'bg-pink-100 text-pink-700 border-pink-300'
+        };
+        return colors[type] || (isDark ? 'bg-muted text-muted-foreground border-border' : 'bg-muted text-muted-foreground border-border');
+    };
+
+    const getCategoryColor = (category) => {
+        const colors = {
+            'Coins': isDark ? 'bg-yellow-900/40 text-yellow-400 border-yellow-700' : 'bg-yellow-100 text-yellow-700 border-yellow-300',
+            'Farm': isDark ? 'bg-green-900/40 text-green-400 border-green-700' : 'bg-green-100 text-green-700 border-green-300',
+            'Crop': isDark ? 'bg-lime-900/40 text-lime-400 border-lime-700' : 'bg-lime-100 text-lime-700 border-lime-300',
+            'Product': isDark ? 'bg-blue-900/40 text-blue-400 border-blue-700' : 'bg-blue-100 text-blue-700 border-blue-300',
+            'Service': isDark ? 'bg-purple-900/40 text-purple-400 border-purple-700' : 'bg-purple-100 text-purple-700 border-purple-300',
+            'Order': isDark ? 'bg-orange-900/40 text-orange-400 border-orange-700' : 'bg-orange-100 text-orange-700 border-orange-300',
+            'Security': isDark ? 'bg-red-900/40 text-red-400 border-red-700' : 'bg-red-100 text-red-700 border-red-300',
+            'Account': isDark ? 'bg-indigo-900/40 text-indigo-400 border-indigo-700' : 'bg-indigo-100 text-indigo-700 border-indigo-300'
+        };
+        return colors[category] || (isDark ? 'bg-muted text-muted-foreground border-border' : 'bg-muted text-muted-foreground border-border');
+    };
+
+    const formatDateTime = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const seconds = String(date.getSeconds()).padStart(2, '0');
+
+        return {
+            date: `${day}/${month}/${year}`,
+            time: `${hours}:${minutes}:${seconds}`
+        };
+    };
+
+    const filteredActivities = filter === 'all'
+        ? activities
+        : activities.filter(a => getActivityCategory(a.description).toLowerCase() === filter.toLowerCase());
+
+    return (
+        <AppPage
+            title="Activity timeline"
+            description="Track farming operations, orders, and account events."
+            actions={<Badge variant="secondary">{filteredActivities.length} activities</Badge>}
+        >
+            <PageScaffold
+                aside={
+                    <InfoPanel title="Activity feed" description="Filtered view of your recent farm operations.">
+                        <p className="text-sm text-muted-foreground mt-2">
+                            Login events are hidden. Use filters to focus on orders, crops, farms, and marketplace actions.
+                        </p>
+                    </InfoPanel>
+                }
+            >
+            <div className="flex flex-wrap gap-2 mb-4">
+                {['all', 'coins', 'farm', 'crop', 'product', 'service', 'order'].map((filterType) => (
+                    <button
+                        key={filterType}
+                        type="button"
+                        onClick={() => setFilter(filterType)}
+                        className={cn('ops-chip', filter === filterType && 'ops-chip-active')}
+                    >
+                        {filterType.charAt(0).toUpperCase() + filterType.slice(1)}
+                    </button>
+                ))}
+            </div>
+
+                {loading ? (
+                    <PageSkeleton variant="table" />
+                ) : filteredActivities.length === 0 ? (
+                    <EmptyState title="No activities" description="No events match this filter yet." />
+                ) : (
+                    <>
+                                {/* Desktop Table View */}
+                                <div className={`interactive-card hidden lg:block rounded-2xl shadow-lg overflow-hidden border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
+                                    <div className="overflow-x-auto">
+                                        <table className={`min-w-full divide-y ${isDark ? 'divide-border' : 'divide-border'}`}>
+                                            <thead className={isDark ? 'bg-gradient-to-r from-muted to-muted/80' : 'bg-gradient-to-r from-muted to-muted/50'}>
+                                                <tr>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                        Icon
+                                                    </th>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                        Category
+                                                    </th>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                        Activity Description
+                                                    </th>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                        Action Type
+                                                    </th>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                        Date
+                                                    </th>
+                                                    <th className={`px-6 py-4 text-left text-xs font-bold uppercase tracking-wider ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                        Time
+                                                    </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className={`divide-y ${isDark ? 'bg-muted divide-border' : 'bg-background divide-border'}`}>
+                                                {filteredActivities.map((activity, idx) => {
+                                                    const category = getActivityCategory(activity.description);
+                                                    const type = getActivityType(activity.description);
+                                                    const dateTime = formatDateTime(activity.createdAt);
+
+                                                    return (
+                                                        <tr
+                                                            key={activity.id}
+                                                            className={`transition-colors ${isDark ? 'hover:bg-muted' : 'hover:bg-muted/50'} ${idx % 2 === 0 ? (isDark ? 'bg-muted' : 'bg-background') : (isDark ? 'bg-muted' : 'bg-muted/50')}`}
+                                                        >
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm ${isDark ? 'bg-gradient-to-br from-green-900/50 to-green-800/50' : 'bg-gradient-to-br from-green-100 to-green-200'}`}>
+                                                                    <span className="text-2xl">{getActivityIcon(category)}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <span className={`px-3 py-1.5 text-xs font-semibold rounded-full border ${getCategoryColor(category)}`}>
+                                                                    {category}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4">
+                                                                <div className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
+                                                                    {activity.description}
+                                                                </div>
+                                                                {activity.details && (
+                                                                    <div className={`text-xs mt-1 ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                                        {activity.details}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <span className={`px-3 py-1.5 text-xs font-semibold rounded-lg border ${getTypeColor(type)}`}>
+                                                                    {type}
+                                                                </span>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                                    <span className="text-lg">📅</span>
+                                                                    <span className="font-mono font-medium">{dateTime.date}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                                <div className={`flex items-center gap-2 text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                                    <span className="text-lg">⏰</span>
+                                                                    <span className="font-mono font-medium">{dateTime.time}</span>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* Mobile Card View */}
+                                <div className="lg:hidden space-y-4">
+                                    {filteredActivities.map((activity) => {
+                                        const category = getActivityCategory(activity.description);
+                                        const type = getActivityType(activity.description);
+                                        const dateTime = formatDateTime(activity.createdAt);
+
+                                        return (
+                                                            <div key={activity.id} className={`interactive-card rounded-2xl shadow-md overflow-hidden hover:shadow-lg transition-shadow border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
+                                                <div className="p-5 space-y-4">
+                                                    {/* Header */}
+                                                    <div className="flex items-start justify-between">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm ${isDark ? 'bg-gradient-to-br from-green-900/50 to-green-800/50' : 'bg-gradient-to-br from-green-100 to-green-200'}`}>
+                                                                <span className="text-2xl">{getActivityIcon(category)}</span>
+                                                            </div>
+                                                            <div>
+                                                                <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-full border ${getCategoryColor(category)}`}>
+                                                                    {category}
+                                                                </span>
+                                                                <div className="mt-1">
+                                                                    <span className={`inline-block px-3 py-1 text-xs font-semibold rounded-lg border ${getTypeColor(type)}`}>
+                                                                        {type}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Description */}
+                                                    <div>
+                                                        <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-foreground'}`}>
+                                                            {activity.description}
+                                                        </p>
+                                                        {activity.details && (
+                                                            <p className={`text-xs mt-1 p-2 rounded ${isDark ? 'text-muted-foreground bg-muted' : 'text-muted-foreground bg-muted'}`}>
+                                                                {activity.details}
+                                                            </p>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Date & Time */}
+                                                    <div className={`flex items-center justify-between pt-3 border-t ${isDark ? 'border-border' : 'border-border'}`}>
+                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                            <span>📅</span>
+                                                            <span className="font-mono font-medium">{dateTime.date}</span>
+                                                        </div>
+                                                        <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                                                            <span>⏰</span>
+                                                            <span className="font-mono font-medium">{dateTime.time}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Pagination */}
+                                <div className={`interactive-card rounded-2xl shadow-md p-6 border ${isDark ? 'bg-muted/95 border-border' : 'bg-background/95 border-border'}`}>
+                                    <div className="flex justify-between items-center">
+                                        <button
+                                            className={`px-6 py-3 font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 ${isDark ? 'bg-muted hover:bg-muted text-muted-foreground' : 'bg-muted hover:bg-border text-muted-foreground'}`}
+                                            onClick={() => setPage(page - 1)}
+                                            disabled={page === 0}
+                                        >
+                                            <span>←</span>
+                                            Previous
+                                        </button>
+                                        <div className="text-center">
+                                            <div className={`text-sm font-medium ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>Page {page + 1}</div>
+                                            <div className={`text-xs ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>{filteredActivities.length} activities</div>
+                                        </div>
+                                        <button
+                                            className="px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                                            onClick={() => setPage(page + 1)}
+                                            disabled={!hasMore}
+                                        >
+                                            Next
+                                            <span>→</span>
+                                        </button>
+                                    </div>
+                                </div>
+                    </>
+                )}
+            </PageScaffold>
+        </AppPage>
+    );
+};
+
+export default Activities;

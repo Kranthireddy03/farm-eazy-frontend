@@ -1,0 +1,218 @@
+/**
+ * FarmEazy Premium Visual Layer
+ * Evolves the design system — mesh backgrounds, bento surfaces, editorial typography.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Instrument+Serif:ital@0;1&display=swap');
+
+:root {
+  --premium-display: 'Instrument Serif', Georgia, serif;
+  --premium-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --premium-mesh-light:
+    radial-gradient(ellipse 80% 60% at 10% -10%, hsl(142 71% 36% / 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 0%, hsl(217 91% 60% / 0.08), transparent 45%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, hsl(32 95% 52% / 0.06), transparent 50%);
+  --premium-mesh-dark:
+    radial-gradient(ellipse 80% 60% at 10% -10%, hsl(142 70% 42% / 0.18), transparent 50%),
+    radial-gradient(ellipse 60% 50% at 90% 0%, hsl(217 91% 60% / 0.12), transparent 45%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, hsl(32 95% 52% / 0.08), transparent 50%);
+  --premium-glow: 0 0 0 1px hsl(var(--border)), 0 8px 40px -12px hsl(142 71% 36% / 0.15);
+  --premium-glow-hover: 0 0 0 1px hsl(var(--primary) / 0.35), 0 20px 50px -16px hsl(142 71% 36% / 0.25);
+}
+
+body {
+  font-family: var(--premium-sans);
+}
+
+.fe-display {
+  font-family: var(--premium-display);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* App canvas */
+.fe-premium-canvas {
+  position: relative;
+  min-height: 100%;
+  background-image: var(--premium-mesh-light);
+  background-attachment: fixed;
+}
+
+.dark .fe-premium-canvas {
+  background-image: var(--premium-mesh-dark);
+}
+
+/* Surfaces */
+.fe-surface {
+  border-radius: var(--radius-xl);
+  border: 1px solid hsl(var(--border) / 0.8);
+  background: hsl(var(--card) / 0.85);
+  backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+  transition:
+    box-shadow var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out),
+    border-color var(--duration-normal) var(--ease-out);
+}
+
+.fe-surface:hover {
+  box-shadow: var(--premium-glow);
+}
+
+.fe-surface-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--premium-glow-hover);
+  border-color: hsl(var(--primary) / 0.25);
+}
+
+.fe-surface-hero {
+  border-radius: calc(var(--radius-xl) + 4px);
+  border: 1px solid hsl(var(--border) / 0.6);
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.95) 0%,
+    hsl(var(--card) / 0.75) 50%,
+    hsl(var(--muted) / 0.4) 100%
+  );
+  box-shadow: var(--premium-glow);
+  overflow: hidden;
+}
+
+.dark .fe-surface-hero {
+  background: linear-gradient(
+    135deg,
+    hsl(var(--card) / 0.9) 0%,
+    hsl(222 47% 10% / 0.95) 60%,
+    hsl(var(--muted) / 0.3) 100%
+  );
+}
+
+/* Gradient border accent */
+.fe-gradient-border {
+  position: relative;
+  border: none;
+  background: hsl(var(--card));
+}
+
+.fe-gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    hsl(var(--primary) / 0.5),
+    hsl(217 91% 60% / 0.3),
+    hsl(var(--border))
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Bento grid */
+.fe-bento {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .fe-bento {
+    gap: 1.25rem;
+  }
+}
+
+.fe-bento-12 {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+}
+
+.fe-span-3 { grid-column: span 3; }
+.fe-span-4 { grid-column: span 4; }
+.fe-span-6 { grid-column: span 6; }
+.fe-span-8 { grid-column: span 8; }
+.fe-span-12 { grid-column: span 12; }
+
+@media (max-width: 1023px) {
+  .fe-span-3,
+  .fe-span-4,
+  .fe-span-6,
+  .fe-span-8 {
+    grid-column: span 12;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .fe-span-3 {
+    grid-column: span 6;
+  }
+}
+
+/* Logo mark */
+.fe-logo-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 2rem;
+  width: 2rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, hsl(var(--primary)), hsl(142 71% 28%));
+  color: hsl(var(--primary-foreground));
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  box-shadow: 0 4px 14px hsl(var(--primary) / 0.35);
+}
+
+/* Chips */
+.fe-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--background) / 0.6);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.fe-chip:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  background: hsl(var(--primary) / 0.08);
+}
+
+.fe-chip-active {
+  border-color: hsl(var(--primary) / 0.5);
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+}
+
+/* Insight strip */
+.fe-insight-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--primary) / 0.2);
+  background: linear-gradient(90deg, hsl(var(--primary) / 0.08), transparent);
+}
+
+/* Footer premium */
+.fe-footer-premium {
+  border-top: 1px solid hsl(var(--border) / 0.6);
+  background: hsl(var(--card) / 0.5);
+  backdrop-filter: blur(8px);
+}
+
+/* Sidebar nav active */
+.fe-nav-active {
+  background: linear-gradient(90deg, hsl(var(--primary) / 0.14), transparent);
+  color: hsl(var(--primary));
+  border-left: 2px solid hsl(var(--primary));
+}

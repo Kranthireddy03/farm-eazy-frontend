@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.openweathermap.org; font-src 'self';" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FarmEazy – Smart Agriculture & Farm Management Platform India</title>
+  <meta name="description" content="FarmEazy is a smart agriculture platform for farmers to manage crops, irrigation, and farm services online in India.">
+  <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/logo.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#22c55e" />
+  <!-- Open Graph Meta Tags -->
+  <meta property="og:title" content="FarmEazy – Smart Agriculture Platform">
+  <meta property="og:description" content="Manage crops, irrigation and farming services digitally.">
+  <meta property="og:image" content="https://farm-eazy.com/logo.png" />
+  <meta property="og:image:alt" content="FarmEazy Logo" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
+  <meta property="og:url" content="https://farm-eazy.com">
+  <meta property="og:type" content="website">
+  <!-- Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "FarmEazy",
+    "url": "https://farm-eazy.com",
+    "logo": [
+      "https://farm-eazy.com/logo.png",
+      "https://farm-eazy.com/favicon.ico"
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/serviceWorker.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+    }
+  </script>
+</body>
+</html>
