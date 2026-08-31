@@ -9,6 +9,7 @@ import LandingHome from './pages/LandingHome';
 import PublicHome from './pages/PublicHome';
 import AskQuestion from './pages/AskQuestion';
 import PublicServices from './pages/PublicServices';
+import apiClient from './services/apiClient';
 
 // Global Error Boundary
 class ErrorBoundary extends React.Component {
@@ -245,7 +246,7 @@ function LogoutRoute() {
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isAuthenticated, isLoading, getUserId, getUserEmail } = useAuth();
+  const { isAuthenticated, isLoading, getUserId, getUserEmail, isAdmin, getUserRoles } = useAuth();
   const { locationVersion } = useLocationContext();
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -310,6 +311,34 @@ function AppContent() {
     window.addEventListener('farmeazy:fallback', handleFallback);
     return () => window.removeEventListener('farmeazy:fallback', handleFallback);
   }, [location.pathname, navigate]);
+
+  useEffect(() => {
+    const checkLocationAccess = async () => {
+      // If user is admin/support, bypass location check
+      const isExcludedRole = isAdmin?.() || (getUserRoles?.() || []).some(r => ['SUPPORT', 'ROLE_SUPPORT'].includes(r));
+      if (isExcludedRole) return;
+
+      // If they are already on /service-unavailable, don't check
+      if (location.pathname === '/service-unavailable') return;
+
+      // If they are on fallback, complete-google-profile or logout reasons, bypass
+      if (['/fallback', '/complete-google-profile'].includes(location.pathname)) return;
+
+      try {
+        const res = await apiClient.get('/location-access/status');
+        if (res.data && !res.data.allowed) {
+          const isNotAvailable = res.data.message?.includes('not yet available') || res.data.message?.includes('not live');
+          if (isNotAvailable) {
+            navigate('/service-unavailable', { replace: true, state: { message: res.data.message } });
+          }
+        }
+      } catch (err) {
+        // ignore public errors to prevent blocking the app
+      }
+    };
+
+    checkLocationAccess();
+  }, [location.pathname, locationVersion, isAuthenticated, navigate, isAdmin, getUserRoles]);
 
   const handleOnboardingFinish = () => {
     localStorage.setItem(getOnboardingStorageKey(), 'true');

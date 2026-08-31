@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, MessageCircle, Send } from 'lucide-react';
+import { MapPin, MessageCircle, Send, Globe } from 'lucide-react';
 import apiClient from '../services/apiClient';
 import { getUserFacingErrorMessage } from '../utils/userFacingError';
+import { useLocationContext } from '../context/LocationContext';
 import {
   ExperienceAlert,
   ExperiencePageShell,
@@ -20,9 +21,11 @@ const SERVICE_OPTIONS = [
 export default function ServiceUnavailableLocation() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { openSelector } = useLocationContext();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [requestCount, setRequestCount] = useState(0);
 
   const [form, setForm] = useState({
     city: '',
@@ -36,6 +39,20 @@ export default function ServiceUnavailableLocation() {
   const accessMessage = useMemo(() => {
     return location.state?.message || 'FarmEazy is not live in your area yet, but we are expanding.';
   }, [location.state]);
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const res = await apiClient.get('/location-access/status');
+        if (res.data && res.data.requestCount !== undefined) {
+          setRequestCount(res.data.requestCount);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchStatus();
+  }, []);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -78,6 +95,15 @@ export default function ServiceUnavailableLocation() {
         households: '',
         notes: '',
       }));
+      // Refresh request count after successful submission!
+      try {
+        const res = await apiClient.get('/location-access/status');
+        if (res.data && res.data.requestCount !== undefined) {
+          setRequestCount(res.data.requestCount);
+        }
+      } catch (e) {
+        // ignore
+      }
     } catch (err) {
       setError(getUserFacingErrorMessage(err, 'Unable to submit your launch request right now.'));
     } finally {
@@ -92,31 +118,36 @@ export default function ServiceUnavailableLocation() {
       title="FarmEazy is growing toward you"
       description={accessMessage}
       meta={
-        <p>
-          Marketplace buying may be paused here, but you can still manage farms, chat with support, and track launch requests.
-        </p>
+        <div className="space-y-3">
+          {requestCount > 0 && (
+            <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/5 px-3 py-1 text-xs text-amber-400 font-semibold">
+              <Globe className="h-3.5 w-3.5" />
+              <span>{requestCount} {requestCount === 1 ? 'person' : 'people'} in your area already requested launch here!</span>
+            </div>
+          )}
+          <p className="text-sm text-slate-300">
+            Marketplace buying may be paused here, but you can still manage farms, chat with support, and track launch requests.
+          </p>
+        </div>
       }
       actions={
         <button
           type="button"
-          onClick={() => navigate('/dashboard')}
-          className="rounded-xl border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold hover:bg-white/15"
+          onClick={() => openSelector({ blocking: true })}
+          className="rounded-xl border border-amber-400 bg-amber-500/10 text-amber-400 px-4 py-2 text-sm font-semibold hover:bg-amber-500/20"
         >
-          Back to dashboard
+          Change location
         </button>
       }
       aside={
         <ExperiencePanel
           title="Talk to support"
-          description="Live chat on the main app connects to agents on the support portal (port 5173). Open chat from the dashboard."
+          description="Live chat on the main app connects to agents on the support portal (port 5173). Open chat from here."
         >
           <button
             type="button"
             onClick={() => {
-              navigate('/dashboard');
-              window.setTimeout(() => {
-                window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
-              }, 400);
+              window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
             }}
             className="w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-amber-500 text-slate-900 font-bold py-2.5 hover:bg-amber-400"
           >

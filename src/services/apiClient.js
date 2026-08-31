@@ -517,18 +517,15 @@ apiClient.interceptors.request.use(
       config.headers['Content-Type'] = 'application/json';
     }
 
-    const hasAuthHeader = Boolean(config.headers.Authorization || config.headers.authorization);
-    if (hasAuthHeader) {
-      const locationHeaders = await resolveUserLocationHeaders();
-      if (locationHeaders?.legacy) {
-        config.headers['X-User-Location'] = locationHeaders.legacy;
-        if (locationHeaders.latitude && locationHeaders.longitude) {
-          config.headers['X-Current-Latitude'] = locationHeaders.latitude;
-          config.headers['X-Current-Longitude'] = locationHeaders.longitude;
-        }
-        if (locationHeaders.addressId) {
-          config.headers['Current-Address-Id'] = locationHeaders.addressId;
-        }
+    const locationHeaders = await resolveUserLocationHeaders();
+    if (locationHeaders?.legacy) {
+      config.headers['X-User-Location'] = locationHeaders.legacy;
+      if (locationHeaders.latitude && locationHeaders.longitude) {
+        config.headers['X-Current-Latitude'] = locationHeaders.latitude;
+        config.headers['X-Current-Longitude'] = locationHeaders.longitude;
+      }
+      if (locationHeaders.addressId) {
+        config.headers['Current-Address-Id'] = locationHeaders.addressId;
       }
     }
 
