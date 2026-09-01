@@ -19,6 +19,7 @@ import BidPanel from '../components/marketplace/BidPanel'
 import { useWishlist } from '../hooks/useWishlist'
 import { useAuth } from '../context/AuthContext'
 import { buildCartItem, addToCartStorage } from '../lib/marketplace'
+import ProductReviewsSection from '../components/ProductReviewsSection'
 import {
   ArrowLeft, Heart, MapPin, Mail, Phone, Truck, Share2, ShoppingCart,
 } from 'lucide-react'
@@ -214,14 +215,40 @@ function ProductDetail() {
                   </p>
                 </div>
               </div>
+              {/* Policy Highlights */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 space-y-2 mt-4 text-xs">
+                <p className="font-bold text-slate-800 uppercase tracking-wider text-[10px] flex items-center space-x-1">
+                  <span>🛡️</span> <span>Policies & Assurance</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="bg-white p-2 rounded-lg border border-slate-200/60">
+                    <span className="text-slate-500 block text-[10px]">Return Window</span>
+                    <span className="font-bold text-slate-800">{product.returnWindowDays ? `${product.returnWindowDays} Days Return` : 'Non-Returnable'}</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200/60">
+                    <span className="text-slate-500 block text-[10px]">Exchange</span>
+                    <span className="font-bold text-slate-800">{product.exchangeAllowed ? 'Allowed' : 'Not Applicable'}</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-lg border border-slate-200/60 col-span-2">
+                    <span className="text-slate-500 block text-[10px]">Refund Terms</span>
+                    <span className="font-bold text-slate-800">{product.refundPolicy || 'Full Refund on Return'}</span>
+                  </div>
+                </div>
+                {product.cancellationPolicy && (
+                  <p className="text-[10px] text-slate-500 pt-1 border-t border-slate-200">
+                    ℹ️ {product.cancellationPolicy}
+                  </p>
+                )}
+              </div>
+
               {product.pricingType !== 'BIDDING' && (
                 <Button
                   className="w-full mt-4 gap-2"
                   onClick={handleAddToCart}
-                  disabled={outOfStock || isNotDeliverable || isOwnProduct || addingToCart}
+                  disabled={outOfStock || isNotDeliverable || isOwnProduct || addingToCart || product.isSuspended}
                 >
                   <ShoppingCart className="h-4 w-4" />
-                  {addingToCart ? 'Adding…' : 'Add to cart'}
+                  {product.isSuspended ? 'Listing Paused' : addingToCart ? 'Adding…' : 'Add to cart'}
                 </Button>
               )}
               {product.pricingType === 'BIDDING' && (
@@ -229,7 +256,26 @@ function ProductDetail() {
                   <BidPanel listing={product} />
                 </div>
               )}
+
+              {/* Owner / Admin Analytics Shortcut */}
+              {isOwnProduct && (
+                <button
+                  onClick={() => navigate(`/selling/product/${product.id}/analytics`)}
+                  className="w-full mt-3 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition flex items-center justify-center space-x-1.5 shadow-sm"
+                >
+                  <span>📈 View Performance & Buyer Registry</span>
+                </button>
+              )}
             </SummaryPanel>
+
+            {product.isSuspended && (
+              <InfoPanel
+                variant="warning"
+                title="Listing Paused by Administration"
+                description={`This listing is currently suspended: ${product.suspensionReason || 'Operational review in progress.'}`}
+              />
+            )}
+
             {isNotDeliverable && (
               <InfoPanel
                 variant="warning"
@@ -308,6 +354,16 @@ function ProductDetail() {
             </div>
           )}
         </DetailPanel>
+
+        {/* Customer Reviews & Feedback */}
+        <div className="pt-2">
+          <ProductReviewsSection
+            targetType="PRODUCT"
+            targetId={product.id}
+            targetTitle={product.productName}
+            isOwner={isOwnProduct}
+          />
+        </div>
 
         {product.imageUrls && product.imageUrls.split(',').length > 1 && (
           <DetailPanel title="Gallery">

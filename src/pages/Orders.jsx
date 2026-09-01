@@ -6,6 +6,8 @@ import { useToast } from '../hooks/useToast'
 import AppPage from '../components/layout/AppPage'
 import CancelOrderModal from '../components/CancelOrderModal'
 import RefundDetailsModal from '../components/RefundDetailsModal'
+import InvoiceModal from '../components/InvoiceModal'
+import ReviewModal from '../components/ReviewModal'
 import { KpiCard } from '../components/ui/kpi-card'
 import { Button } from '../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../components/ui/card'
@@ -67,6 +69,8 @@ function Orders() {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [showReturnModal, setShowReturnModal] = useState(false)
   const [showRefundDetailsModal, setShowRefundDetailsModal] = useState(false)
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [showReviewModal, setShowReviewModal] = useState(false)
   const [selectedOrder, setSelectedOrder] = useState(null)
 
   const fetchOrders = async () => {
@@ -355,6 +359,34 @@ function Orders() {
                 )}
 
                 <CardContent className="pt-0 flex flex-wrap gap-2 border-t border-border">
+                  {/* Invoice Download Action */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 bg-slate-50 hover:bg-slate-100 border-slate-300 font-semibold"
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setShowInvoiceModal(true);
+                    }}
+                  >
+                    🧾 Tax Invoice
+                  </Button>
+
+                  {/* Rate & Review Button for Delivered Orders */}
+                  {order.orderStatus === 'DELIVERED' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1 bg-amber-50 text-amber-900 hover:bg-amber-100 border-amber-200 font-semibold"
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setShowReviewModal(true);
+                      }}
+                    >
+                      ⭐ Rate & Review
+                    </Button>
+                  )}
+
                   {order.refundStatus === 'REFUND_DETAILS_REQUIRED' && (
                     <Button size="sm" variant="secondary" onClick={() => handleRefundDetailsClick(order)}>
                       Add refund details
@@ -381,6 +413,36 @@ function Orders() {
           </div>
         )}
       </PageScaffold>
+
+      {/* Tax Invoice Modal */}
+      {showInvoiceModal && selectedOrder && (
+        <InvoiceModal
+          isOpen={showInvoiceModal}
+          orderId={selectedOrder.id}
+          onClose={() => {
+            setShowInvoiceModal(false);
+            setSelectedOrder(null);
+          }}
+        />
+      )}
+
+      {/* Review Modal */}
+      {showReviewModal && selectedOrder && (
+        <ReviewModal
+          isOpen={showReviewModal}
+          targetType="PRODUCT"
+          targetId={selectedOrder.items?.[0]?.productId || selectedOrder.id}
+          targetTitle={selectedOrder.items?.[0]?.productName || `Order #${selectedOrder.id}`}
+          orderId={selectedOrder.id}
+          onClose={() => {
+            setShowReviewModal(false);
+            setSelectedOrder(null);
+          }}
+          onReviewSubmitted={() => {
+            showToast('Review submitted successfully! Thank you for your feedback.', 'success');
+          }}
+        />
+      )}
 
       <CancelOrderModal
         isOpen={showCancelModal}

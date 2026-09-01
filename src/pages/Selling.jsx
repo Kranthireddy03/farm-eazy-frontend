@@ -192,6 +192,14 @@ function Selling() {
         header: '',
         cell: ({ row }) => (
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/selling/product/${row.original.id}/analytics`)}
+              className="gap-1 bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100 font-semibold"
+            >
+              📈 Analytics & Buyers
+            </Button>
             {row.original.pricingType === 'BIDDING' && (
               <Button
                 variant="outline"

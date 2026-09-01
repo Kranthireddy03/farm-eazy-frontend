@@ -36,7 +36,10 @@ const emptyForm = {
   driverOption: 'NOT_AVAILABLE', fuelIncluded: false, operatorIncluded: false, minimumHours: 1, maximumHours: '', serviceRadiusKm: 50,
   locationScope: 'INDIA', locationState: '', locationDistrict: '', locationCity: '', locationPincode: '', availableFrom: '', availableUntil: '', availabilityStartTime: '06:00', availabilityEndTime: '18:00', availableDaysOfWeek: 'MONDAY,TUESDAY,WEDNESDAY,THURSDAY,FRIDAY,SATURDAY', blackoutDates: '',
   quantityTotal: 1, pickupDropAvailable: false, pickupCharge: '', dropCharge: '', transportPerKm: '', equipmentPower: '', equipmentModel: '', implementsAvailable: '', workersCount: '', toolsIncluded: false, experienceYears: '', servicePurposes: [], customAttributes: {}, unitConfigurations: [],
-  sameUnitConfig: true
+  sameUnitConfig: true,
+  cancellationPolicy: 'Free cancellation up to 24 hours prior to service start',
+  refundPolicy: 'FULL_REFUND',
+  rescheduleAllowed: true
 };
 
 function testVideoPlayable(file) {

@@ -133,6 +133,8 @@ const About = lazy(() => import('./pages/About'));
 const Contact = lazy(() => import('./pages/Contact'));
 const Services = lazy(() => import('./pages/Services'));
 const Products = lazy(() => import('./pages/Products'));
+const ProductAnalyticsPage = lazy(() => import('./pages/ProductAnalyticsPage'));
+const ServiceAnalyticsPage = lazy(() => import('./pages/ServiceAnalyticsPage'));
 const Blog = lazy(() => import('./pages/Blog'));
 const BlogDetail = lazy(() => import('./pages/BlogDetail'));
 const BlogSubmit = lazy(() => import('./pages/BlogSubmit'));
@@ -486,6 +488,10 @@ function AppContent() {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/products/:id" element={<ProductDetail />} />
+          <Route path="/product/:id/analytics" element={<ProductAnalyticsPage />} />
+          <Route path="/products/:id/analytics" element={<ProductAnalyticsPage />} />
+          <Route path="/selling/product/:id/analytics" element={<ProductAnalyticsPage />} />
           <Route path="/products" element={<Products />} />
           <Route path="/products/post" element={<Products />} />
           <Route path="/products/listings" element={<Products />} />
@@ -507,6 +513,7 @@ function AppContent() {
           <Route path="/services/requests" element={<Services />} />
           <Route path="/services/history" element={<Services />} />
           <Route path="/services/provider-history" element={<Services />} />
+          <Route path="/services/:id/analytics" element={<ServiceAnalyticsPage />} />
           <Route path="/blog/submit" element={<BlogSubmit />} />
           <Route path="/blog/my-submissions" element={<MyBlogSubmissions />} />
           <Route path="/service-requests" element={<ServiceRequests />} />

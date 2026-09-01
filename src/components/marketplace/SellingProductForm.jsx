@@ -75,12 +75,15 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
     vendorName: getUserName() || '',
     vendorLocation: '',
     deliveryLocationId: null,
-    vendorType: '',
     pricingType: 'FIXED_PRICE',
     locationScope: 'INDIA',
     locationState: '',
     locationPincode: '',
-    minBidQuantity: 1
+    minBidQuantity: 1,
+    returnWindowDays: 7,
+    exchangeAllowed: false,
+    refundPolicy: 'FULL_REFUND',
+    cancellationPolicy: 'Free cancellation before dispatch'
   });
 
   useEffect(() => {
@@ -245,7 +248,11 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
       ,
       geofenceLatitude: product.geofenceLatitude || null,
       geofenceLongitude: product.geofenceLongitude || null,
-      geofenceRadiusKm: product.geofenceRadiusKm || 5
+      geofenceRadiusKm: product.geofenceRadiusKm || 5,
+      returnWindowDays: product.returnWindowDays !== undefined ? product.returnWindowDays : 7,
+      exchangeAllowed: Boolean(product.exchangeAllowed),
+      refundPolicy: product.refundPolicy || 'FULL_REFUND',
+      cancellationPolicy: product.cancellationPolicy || 'Free cancellation before dispatch'
     });
     setCurrentStep(2); // Start at Basic step
     ;
@@ -908,6 +915,72 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                       </select>
                     </FormField>
                   )}
+                  {/* Policies Section */}
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-4">
+                    <p className="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center space-x-1.5">
+                      <span>🛡️</span> <span>Return, Refund & Cancellation Policies</span>
+                    </p>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField label="Return Window" id="returnWindowDays" hint="Days after delivery customer can return">
+                        <select
+                          id="returnWindowDays"
+                          name="returnWindowDays"
+                          value={formData.returnWindowDays ?? 7}
+                          onChange={(e) => setFormData(prev => ({ ...prev, returnWindowDays: parseInt(e.target.value, 10) }))}
+                          className={selectClass}
+                        >
+                          <option value="0">0 Days (Non-Returnable)</option>
+                          <option value="3">3 Days Return Window</option>
+                          <option value="7">7 Days Return Window</option>
+                          <option value="10">10 Days Return Window</option>
+                          <option value="15">15 Days Return Window</option>
+                          <option value="30">30 Days Return Window</option>
+                        </select>
+                      </FormField>
+
+                      <FormField label="Exchange Allowed" id="exchangeAllowed" hint="Can customer request product exchange?">
+                        <select
+                          id="exchangeAllowed"
+                          name="exchangeAllowed"
+                          value={formData.exchangeAllowed ? 'true' : 'false'}
+                          onChange={(e) => setFormData(prev => ({ ...prev, exchangeAllowed: e.target.value === 'true' }))}
+                          className={selectClass}
+                        >
+                          <option value="false">No (No Exchanges)</option>
+                          <option value="true">Yes (Exchange Allowed)</option>
+                        </select>
+                      </FormField>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <FormField label="Refund Policy" id="refundPolicy">
+                        <select
+                          id="refundPolicy"
+                          name="refundPolicy"
+                          value={formData.refundPolicy || 'FULL_REFUND'}
+                          onChange={handleInputChange}
+                          className={selectClass}
+                        >
+                          <option value="FULL_REFUND">100% Full Refund</option>
+                          <option value="PARTIAL_REFUND">Partial Refund (Deduct Logistics)</option>
+                          <option value="REPLACEMENT_ONLY">Replacement Only (No Cash Refund)</option>
+                          <option value="NON_REFUNDABLE">Non-Refundable</option>
+                        </select>
+                      </FormField>
+
+                      <FormField label="Cancellation Policy" id="cancellationPolicy">
+                        <Input
+                          id="cancellationPolicy"
+                          name="cancellationPolicy"
+                          value={formData.cancellationPolicy}
+                          onChange={handleInputChange}
+                          placeholder="e.g. Free cancellation before dispatch"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+
                   <FormField label="Buyer contact" id="buyerContact" hint="Buyers contact you via your account on file.">
                     <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
                       Contact details are taken from your verified account. No need to enter them here.
