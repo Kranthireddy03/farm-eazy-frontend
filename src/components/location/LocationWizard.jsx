@@ -205,18 +205,39 @@ export default function LocationWizard() {
     updateMapFromCoords(latitude, longitude)
   }
 
-  const prepareConfirmation = async (payload) => {
-    setConfirming(payload)
+  const finalizeSelection = async (payload) => {
+    setAddressError('')
+    try {
+      const result = await setSelectedLocation(payload)
+      if (result?.status?.allowed || payload.isServiceable) {
+        markSessionVerified()
+        closeSelector()
+        navigate('/dashboard')
+      }
+      setConfirming(null)
+      setConfirmingCheck(null)
+    } catch (err) {
+      setAddressError(getUserFacingErrorMessage(err, 'Could not save your location. Please try again.'))
+    }
+  }
+
+  const handleLocationSelect = async (payload) => {
     setCheckingZone(true)
     setAddressError('')
     setRequestSubmitted(false)
     setRequestError('')
     try {
       const checkResult = await checkLocationServiceable(payload)
-      setConfirmingCheck(checkResult)
-
-      if (!checkResult.allowed) {
-        // Fetch real-time demand count
+      if (checkResult?.allowed) {
+        // ACTIVE ZONE: Directly enter dashboard without intermediate confirmation
+        payload.isServiceable = true
+        payload.matchedZoneName = checkResult.matchedLocationName || null
+        payload.matchedZoneId = checkResult.matchedLocationId || null
+        await finalizeSelection(payload)
+      } else {
+        // INACTIVE ZONE: Show inactive notice, demand counter, and request form
+        setConfirming(payload)
+        setConfirmingCheck(checkResult)
         setLoadingDemand(true)
         const count = await getLocationDemand({
           city: payload.city,
@@ -228,6 +249,7 @@ export default function LocationWizard() {
         setLoadingDemand(false)
       }
     } catch (_err) {
+      setConfirming(payload)
       setConfirmingCheck({ allowed: false, message: 'Could not verify active zone status' })
     } finally {
       setCheckingZone(false)
@@ -235,7 +257,7 @@ export default function LocationWizard() {
   }
 
   const confirmMapSelection = () => {
-    prepareConfirmation({
+    handleLocationSelect({
       type: 'coords',
       latitude: mapLatitude,
       longitude: mapLongitude,
@@ -285,20 +307,16 @@ export default function LocationWizard() {
     }
   }, [searchQuery])
 
-  const finalizeSelection = async (payload) => {
-    setAddressError('')
-    try {
-      const result = await setSelectedLocation(payload)
-      if (result?.status?.allowed || payload.isServiceable) {
-        markSessionVerified()
-        closeSelector()
-        navigate('/dashboard')
-      }
-      setConfirming(null)
-      setConfirmingCheck(null)
-    } catch (err) {
-      setAddressError(getUserFacingErrorMessage(err, 'Could not save your location. Please try again.'))
-    }
+  const chooseCoords = (coords) => {
+    handleLocationSelect({
+      type: 'coords',
+      label: coords.label,
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      city: coords.city,
+      state: coords.state,
+      postalCode: coords.postalCode,
+    })
   }
 
   const chooseActiveZone = async (zone) => {
@@ -327,7 +345,7 @@ export default function LocationWizard() {
       setMapLatitude(Number(address.latitude))
       setMapLongitude(Number(address.longitude))
     }
-    prepareConfirmation({
+    handleLocationSelect({
       type: 'address',
       id: address.id,
       label: buildAddressLabel(address),
@@ -381,7 +399,7 @@ export default function LocationWizard() {
         const longitude = Number(position.coords.longitude)
         const resolved = await updateMapFromCoords(latitude, longitude)
         setAskingGps(false)
-        prepareConfirmation({
+        handleLocationSelect({
           type: 'coords',
           latitude,
           longitude,
@@ -462,185 +480,155 @@ export default function LocationWizard() {
 
               <p className="mt-2 text-sm sm:text-base font-semibold text-foreground leading-relaxed">{confirming.label}</p>
 
-              {/* Real-time Active Zone Status & Restricted Flow */}
-              {!checkingZone && confirmingCheck && (
+              {/* Real-time Inactive Zone Notice & Demand Request */}
+              {!checkingZone && confirmingCheck && !confirmingCheck.allowed && (
                 <div className="mt-4">
-                  {confirmingCheck.allowed ? (
-                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-start gap-3">
-                      <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
-                          ✓ Service is Active in this Area!
+                  <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 sm:p-5 space-y-4">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-base font-bold text-amber-800 dark:text-amber-200">
+                          We don&apos;t operate in this location yet
                         </p>
-                        <p className="text-xs sm:text-sm text-emerald-600/90 dark:text-emerald-400/90">
-                          Covered by active operating zone: <strong className="font-semibold">{confirmingCheck.matchedLocationName || 'Active Zone'}</strong>
-                          {confirmingCheck.distanceKm != null && ` (${confirmingCheck.distanceKm.toFixed(1)} km from zone center)`}
-                        </p>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 pt-1 font-medium">
-                          You can now proceed directly to your FarmEazy Dashboard.
+                        <p className="text-xs sm:text-sm text-amber-800/90 dark:text-amber-300/90 mt-1 leading-relaxed">
+                          {confirmingCheck.message || 'FarmEazy marketplace delivery and farm services are currently restricted to our active operating zones.'}
                         </p>
                       </div>
                     </div>
-                  ) : (
-                    /* INACTIVE LOCATION - RESTRICT USER & SHOW DEMAND COUNTER + REQUEST FORM */
-                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 sm:p-5 space-y-4">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+
+                    {/* Live Demand Counter Badge */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/20 p-3 flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">🔥</span>
                         <div>
-                          <p className="text-base font-bold text-amber-800 dark:text-amber-200">
-                            We don&apos;t operate in this location yet
-                          </p>
-                          <p className="text-xs sm:text-sm text-amber-800/90 dark:text-amber-300/90 mt-1 leading-relaxed">
-                            {confirmingCheck.message || 'FarmEazy marketplace delivery and farm services are currently restricted to our active operating zones.'}
-                          </p>
+                          <span className="text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-200 block">Community Demand</span>
+                          <span className="text-sm font-black text-amber-950 dark:text-amber-100">
+                            {loadingDemand ? 'Calculating demand…' : `${demandCount} user${demandCount === 1 ? '' : 's'} have requested service in this region`}
+                          </span>
                         </div>
                       </div>
-
-                      {/* Live Demand Counter Badge */}
-                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/20 p-3 flex items-center justify-between flex-wrap gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">🔥</span>
-                          <div>
-                            <span className="text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-200 block">Community Demand</span>
-                            <span className="text-sm font-black text-amber-950 dark:text-amber-100">
-                              {loadingDemand ? 'Calculating demand…' : `${demandCount} user${demandCount === 1 ? '' : 's'} have requested service in this region`}
-                            </span>
-                          </div>
-                        </div>
-                        <Badge className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs">
-                          High Expansion Priority
-                        </Badge>
-                      </div>
-
-                      {/* What you should do guide */}
-                      <div className="bg-background/80 rounded-xl p-3.5 border border-border space-y-2">
-                        <p className="text-xs font-bold uppercase tracking-wider text-foreground">What you can do:</p>
-                        <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
-                          <li><strong>Submit your request below:</strong> Our operations team reviews top-requested areas weekly to launch new delivery zones.</li>
-                          <li><strong>Instant Notification:</strong> You will be notified via Email &amp; SMS as soon as FarmEazy goes live in your area.</li>
-                          <li><strong>Or switch to an active zone:</strong> You can select any active delivery zone below to explore and place orders immediately.</li>
-                        </ul>
-                      </div>
-
-                      {/* Request Access Form */}
-                      {requestSubmitted ? (
-                        <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-center space-y-2 animate-fadeIn">
-                          <div className="h-10 w-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto">
-                            <CheckCircle2 className="h-6 w-6" />
-                          </div>
-                          <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
-                            🎉 Your Coverage Request Has Been Recorded!
-                          </p>
-                          <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                            You are request #{demandCount}. Our operations team will notify you via Email and SMS as soon as this zone becomes active.
-                          </p>
-                        </div>
-                      ) : (
-                        <form onSubmit={handleRequestSubmit} className="space-y-3 pt-2">
-                          <p className="text-xs font-bold uppercase tracking-wider text-foreground">
-                            Request Service Launch in this Area:
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <div>
-                              <label className="text-[11px] font-semibold text-muted-foreground">Your Name</label>
-                              <input
-                                type="text"
-                                required
-                                value={requestForm.userName}
-                                onChange={(e) => setRequestForm({ ...requestForm, userName: e.target.value })}
-                                placeholder="Full Name"
-                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[11px] font-semibold text-muted-foreground">Email Address (for notification)</label>
-                              <input
-                                type="email"
-                                required
-                                value={requestForm.userEmail}
-                                onChange={(e) => setRequestForm({ ...requestForm, userEmail: e.target.value })}
-                                placeholder="name@example.com"
-                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
-                              />
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <div>
-                              <label className="text-[11px] font-semibold text-muted-foreground">Mobile Phone (optional for SMS)</label>
-                              <input
-                                type="tel"
-                                value={requestForm.userPhone}
-                                onChange={(e) => setRequestForm({ ...requestForm, userPhone: e.target.value })}
-                                placeholder="9876543210"
-                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-[11px] font-semibold text-muted-foreground">Additional Notes / Landmarks</label>
-                              <input
-                                type="text"
-                                value={requestForm.notes}
-                                onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
-                                placeholder="e.g. Near Market Yard, 50+ farms in area"
-                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
-                              />
-                            </div>
-                          </div>
-
-                          {requestError && (
-                            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{requestError}</p>
-                          )}
-
-                          <Button
-                            type="submit"
-                            disabled={submittingRequest}
-                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 shadow-md"
-                          >
-                            {submittingRequest ? 'Submitting request…' : '🚀 Request FarmEazy Coverage in this Area'}
-                          </Button>
-                        </form>
-                      )}
-
-                      {/* Active Zones Switch Options */}
-                      {activeZones.length > 0 && (
-                        <div className="pt-3 border-t border-amber-500/20">
-                          <p className="text-xs font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-1.5">
-                            <span>📍</span> Switch to an Active Delivery Zone to Continue:
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {activeZones.map((z) => (
-                              <button
-                                key={z.id}
-                                type="button"
-                                onClick={() => chooseActiveZone(z)}
-                                className="px-3 py-1.5 text-xs rounded-xl font-bold bg-amber-500/20 hover:bg-emerald-600 hover:text-white text-amber-950 dark:text-amber-100 transition-all border border-amber-500/30 flex items-center gap-1.5 shadow-sm cursor-pointer"
-                              >
-                                <span>📍</span>
-                                <span>{z.locationName}</span>
-                                <span className="opacity-75 text-[10px]">({z.city || z.state})</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                      <Badge className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs">
+                        High Expansion Priority
+                      </Badge>
                     </div>
-                  )}
+
+                    {/* What you should do guide */}
+                    <div className="bg-background/80 rounded-xl p-3.5 border border-border space-y-2">
+                      <p className="text-xs font-bold uppercase tracking-wider text-foreground">What you can do:</p>
+                      <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
+                        <li><strong>Submit your request below:</strong> Our operations team reviews top-requested areas weekly to launch new delivery zones.</li>
+                        <li><strong>Instant Notification:</strong> You will be notified via Email &amp; SMS as soon as FarmEazy goes live in your area.</li>
+                        <li><strong>Or switch to an active zone:</strong> You can select any active delivery zone below to explore and place orders immediately.</li>
+                      </ul>
+                    </div>
+
+                    {/* Request Access Form */}
+                    {requestSubmitted ? (
+                      <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-center space-y-2 animate-fadeIn">
+                        <div className="h-10 w-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto">
+                          <CheckCircle2 className="h-6 w-6" />
+                        </div>
+                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                          🎉 Your Coverage Request Has Been Recorded!
+                        </p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                          You are request #{demandCount}. Our operations team will notify you via Email and SMS as soon as this zone becomes active.
+                        </p>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleRequestSubmit} className="space-y-3 pt-2">
+                        <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+                          Request Service Launch in this Area:
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="text-[11px] font-semibold text-muted-foreground">Your Name</label>
+                            <input
+                              type="text"
+                              required
+                              value={requestForm.userName}
+                              onChange={(e) => setRequestForm({ ...requestForm, userName: e.target.value })}
+                              placeholder="Full Name"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-muted-foreground">Email Address (for notification)</label>
+                            <input
+                              type="email"
+                              required
+                              value={requestForm.userEmail}
+                              onChange={(e) => setRequestForm({ ...requestForm, userEmail: e.target.value })}
+                              placeholder="name@example.com"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          <div>
+                            <label className="text-[11px] font-semibold text-muted-foreground">Mobile Phone (optional for SMS)</label>
+                            <input
+                              type="tel"
+                              value={requestForm.userPhone}
+                              onChange={(e) => setRequestForm({ ...requestForm, userPhone: e.target.value })}
+                              placeholder="9876543210"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-[11px] font-semibold text-muted-foreground">Additional Notes / Landmarks</label>
+                            <input
+                              type="text"
+                              value={requestForm.notes}
+                              onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                              placeholder="e.g. Near Market Yard, 50+ farms in area"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                            />
+                          </div>
+                        </div>
+
+                        {requestError && (
+                          <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{requestError}</p>
+                        )}
+
+                        <Button
+                          type="submit"
+                          disabled={submittingRequest}
+                          className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 shadow-md cursor-pointer"
+                        >
+                          {submittingRequest ? 'Submitting request…' : '🚀 Request FarmEazy Coverage in this Area'}
+                        </Button>
+                      </form>
+                    )}
+
+                    {/* Active Zones Switch Options */}
+                    {activeZones.length > 0 && (
+                      <div className="pt-3 border-t border-amber-500/20">
+                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-1.5">
+                          <span>📍</span> Switch to an Active Delivery Zone to Continue:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {activeZones.map((z) => (
+                            <button
+                              key={z.id}
+                              type="button"
+                              onClick={() => chooseActiveZone(z)}
+                              className="px-3 py-1.5 text-xs rounded-xl font-bold bg-amber-500/20 hover:bg-emerald-600 hover:text-white text-amber-950 dark:text-amber-100 transition-all border border-amber-500/30 flex items-center gap-1.5 shadow-sm cursor-pointer"
+                            >
+                              <span>📍</span>
+                              <span>{z.locationName}</span>
+                              <span className="opacity-75 text-[10px]">({z.city || z.state})</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
               {/* Action Buttons */}
               <div className="mt-5 flex flex-wrap gap-3">
-                {confirmingCheck?.allowed ? (
-                  <Button
-                    type="button"
-                    disabled={isSavingLocation || checkingZone}
-                    onClick={() => finalizeSelection(confirming)}
-                    className="flex-1 font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-sm py-2.5 shadow-lg cursor-pointer"
-                  >
-                    {isSavingLocation ? 'Validating & Entering Dashboard…' : '✓ Confirm & Go to Dashboard'}
-                  </Button>
-                ) : null}
-
                 <Button
                   type="button"
                   variant="outline"
