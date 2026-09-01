@@ -126,8 +126,12 @@ export function LocationProvider({ children }) {
     fetchActiveZones()
   }, [fetchActiveZones])
 
-  // Prompt location selection on every new session
+  // Prompt location selection for authenticated user sessions
   useEffect(() => {
+    const hasAuthToken = Boolean(localStorage.getItem('token') || localStorage.getItem('farmEazy_token'))
+    if (!hasAuthToken && !profile) {
+      return
+    }
     try {
       const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
       if (!verified) {
@@ -137,6 +141,21 @@ export function LocationProvider({ children }) {
     } catch (_e) {
       // sessionStorage unavailable
     }
+  }, [profile])
+
+  // Listen for login event to immediately trigger location check
+  useEffect(() => {
+    const onLogin = () => {
+      try {
+        const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
+        if (!verified) {
+          setIsSelectorOpen(true)
+          setWizardDetail({ reason: 'POST_LOGIN', blocking: true })
+        }
+      } catch (_e) {}
+    }
+    window.addEventListener('farmeazy:auth-login', onLogin)
+    return () => window.removeEventListener('farmeazy:auth-login', onLogin)
   }, [])
 
   useEffect(() => {
@@ -316,12 +335,13 @@ export function LocationProvider({ children }) {
   }, [])
 
   const closeSelector = useCallback(() => {
-    const sessionRestricted = !isSessionVerified && wizardDetail?.reason === 'SESSION_START'
+    const hasAuthToken = Boolean(localStorage.getItem('token') || localStorage.getItem('farmEazy_token'))
+    const sessionRestricted = hasAuthToken && !isSessionVerified && (wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN')
     const mustStayOpen = sessionRestricted
-      || (!hasEffectiveLocation && !isSessionVerified)
-      || wizardDetail?.blocking
-      || wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP'
-      || wizardDetail?.reason === 'LOCATION_REQUIRED';
+      || (hasAuthToken && !hasEffectiveLocation && !isSessionVerified)
+      || (hasAuthToken && wizardDetail?.blocking)
+      || (hasAuthToken && wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP')
+      || (hasAuthToken && wizardDetail?.reason === 'LOCATION_REQUIRED');
     if (mustStayOpen) {
       return;
     }

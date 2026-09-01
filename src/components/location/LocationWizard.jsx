@@ -103,16 +103,19 @@ export default function LocationWizard() {
     }
   }, [profile])
 
-  const mustStayOpen = (!isSessionVerified && wizardDetail?.reason === 'SESSION_START')
-    || (isAuthenticated && !isAuthLoading && !isBootstrapping && !hasEffectiveLocation && !isSessionVerified)
-  const show = isSelectorOpen || mustStayOpen
-  const isLocationRequired = wizardDetail?.reason === 'LOCATION_REQUIRED' || wizardDetail?.reason === 'SESSION_START' || mustStayOpen
+  const mustStayOpen = isAuthenticated
+    && !isAuthLoading
+    && !isBootstrapping
+    && !isSessionVerified
+    && (wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || !hasEffectiveLocation)
+  const show = isAuthenticated && (isSelectorOpen || mustStayOpen)
+  const isLocationRequired = wizardDetail?.reason === 'LOCATION_REQUIRED' || wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || mustStayOpen
 
   useEffect(() => {
-    if (mustStayOpen && !isSelectorOpen) {
+    if (isAuthenticated && mustStayOpen && !isSelectorOpen) {
       openSelector({ reason: 'SESSION_START', blocking: true })
     }
-  }, [mustStayOpen, isSelectorOpen, openSelector])
+  }, [isAuthenticated, mustStayOpen, isSelectorOpen, openSelector])
 
   const fetchSavedAddresses = async () => {
     setLoadingAddresses(true)
@@ -298,16 +301,12 @@ export default function LocationWizard() {
     }
   }
 
-  const chooseActiveZone = (zone) => {
+  const chooseActiveZone = async (zone) => {
     const lat = zone.latitude != null ? Number(zone.latitude) : DEFAULT_MAP_CENTER.latitude
     const lng = zone.longitude != null ? Number(zone.longitude) : DEFAULT_MAP_CENTER.longitude
     const label = `${zone.locationName} (${zone.city}, ${zone.state})`
 
-    setMapLatitude(lat)
-    setMapLongitude(lng)
-    setMapLabel(label)
-
-    prepareConfirmation({
+    const payload = {
       type: 'coords',
       latitude: lat,
       longitude: lng,
@@ -318,7 +317,9 @@ export default function LocationWizard() {
       isServiceable: true,
       matchedZoneName: zone.locationName,
       matchedZoneId: zone.id,
-    })
+    }
+
+    await finalizeSelection(payload)
   }
 
   const chooseAddress = (address) => {

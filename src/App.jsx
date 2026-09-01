@@ -9,6 +9,7 @@ import LandingHome from './pages/LandingHome';
 import PublicHome from './pages/PublicHome';
 import AskQuestion from './pages/AskQuestion';
 import PublicServices from './pages/PublicServices';
+import ActiveLocationsPage from './pages/ActiveLocationsPage';
 import apiClient from './services/apiClient';
 
 // Global Error Boundary
@@ -316,6 +317,9 @@ function AppContent() {
 
   useEffect(() => {
     const checkLocationAccess = async () => {
+      // Only check location for authenticated users
+      if (!isAuthenticated) return;
+
       // If user is admin/support, bypass location check
       const isExcludedRole = isAdmin?.() || (getUserRoles?.() || []).some(r => ['SUPPORT', 'ROLE_SUPPORT'].includes(r));
       if (isExcludedRole) return;
@@ -324,7 +328,7 @@ function AppContent() {
       if (location.pathname === '/service-unavailable') return;
 
       // If they are on fallback, complete-google-profile or logout reasons, bypass
-      if (['/fallback', '/complete-google-profile'].includes(location.pathname)) return;
+      if (['/fallback', '/complete-google-profile', '/coverage', '/active-locations', '/locations'].includes(location.pathname)) return;
 
       try {
         const res = await apiClient.get('/location-access/status');
@@ -411,6 +415,9 @@ function AppContent() {
           }
         />
 
+        <Route path="/coverage" element={renderContextAwarePage(ActiveLocationsPage)} />
+        <Route path="/active-locations" element={renderContextAwarePage(ActiveLocationsPage)} />
+        <Route path="/locations" element={renderContextAwarePage(ActiveLocationsPage)} />
         <Route path="/privacy-policy" element={renderContextAwarePage(PrivacyPolicy)} />
         <Route path="/terms" element={renderContextAwarePage(Terms)} />
         <Route path="/refund-policy" element={renderContextAwarePage(RefundPolicy)} />

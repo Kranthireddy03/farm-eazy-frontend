@@ -3,6 +3,7 @@
 export const PUBLIC_NAV = [
   { to: '/', label: 'Home' },
   { to: '/about', label: 'About' },
+  { to: '/coverage', label: 'Coverage' },
   { to: '/public-services', label: 'Platform' },
   { to: '/blog', label: 'Blog' },
   { to: '/faq', label: 'FAQ' },

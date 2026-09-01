@@ -31,6 +31,7 @@ export default function LandingHome() {
         actions={
           <>
             <PillButton to="/register" active>Start free</PillButton>
+            <PillButton to="/coverage">Active Zones</PillButton>
             <PillButton to="/login">Sign in</PillButton>
           </>
         }

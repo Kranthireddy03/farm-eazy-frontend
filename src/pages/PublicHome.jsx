@@ -46,6 +46,7 @@ export default function PublicHome() {
         actions={
           <>
             <PillButton to="/register" active>Get started</PillButton>
+            <PillButton to="/coverage">Active Zones</PillButton>
             <PillButton to="/public-services">Explore platform</PillButton>
           </>
         }

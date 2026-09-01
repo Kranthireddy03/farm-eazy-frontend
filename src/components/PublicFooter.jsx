@@ -26,7 +26,7 @@ function PublicFooter() {
             <div>
               <p className={`text-xs font-bold uppercase tracking-[0.3em] mb-4 ${isDark ? 'text-primary' : 'text-primary'}`}>Public Pages</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                {['/', '/about', '/public-services', '/blog', '/faq', '/contact'].map((path) => (
+                {['/', '/coverage', '/about', '/public-services', '/blog', '/faq', '/contact'].map((path) => (
                   <Link
                     key={path}
                     to={path}
