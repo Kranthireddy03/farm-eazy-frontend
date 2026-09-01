@@ -85,6 +85,8 @@ function mergeRecent(nextLocation, previousRecent) {
   return [nextLocation, ...deduped].slice(0, MAX_RECENT)
 }
 
+const SESSION_LOCATION_KEY = 'farmeazy_session_location_selected'
+
 export function LocationProvider({ children }) {
   const { refreshProfile, hasEffectiveLocation, profile } = useSession()
   const [selectedLocation, setSelectedLocationState] = useState(null)
@@ -96,6 +98,13 @@ export function LocationProvider({ children }) {
   const [locationVersion, setLocationVersion] = useState(0)
   const [isSavingLocation, setIsSavingLocation] = useState(false)
   const [loadingActiveZones, setLoadingActiveZones] = useState(false)
+  const [isSessionVerified, setIsSessionVerified] = useState(() => {
+    try {
+      return sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
+    } catch {
+      return false
+    }
+  })
 
   const fetchActiveZones = useCallback(async () => {
     setLoadingActiveZones(true)
@@ -116,6 +125,19 @@ export function LocationProvider({ children }) {
   useEffect(() => {
     fetchActiveZones()
   }, [fetchActiveZones])
+
+  // Prompt location selection on every new session
+  useEffect(() => {
+    try {
+      const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
+      if (!verified) {
+        setIsSelectorOpen(true)
+        setWizardDetail({ reason: 'SESSION_START', blocking: true })
+      }
+    } catch (_e) {
+      // sessionStorage unavailable
+    }
+  }, [])
 
   useEffect(() => {
     const fromStorage = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
@@ -141,6 +163,23 @@ export function LocationProvider({ children }) {
       addressId: payload.id || null,
     }
     return await LocationService.checkLocationStatus(checkPayload)
+  }, [])
+
+  const submitLocationRequest = useCallback(async (payload) => {
+    return await LocationService.submitLocationRequest(payload)
+  }, [])
+
+  const getLocationDemand = useCallback(async (params) => {
+    return await LocationService.getLocationDemand(params)
+  }, [])
+
+  const markSessionVerified = useCallback(() => {
+    try {
+      sessionStorage.setItem(SESSION_LOCATION_KEY, 'true')
+      setIsSessionVerified(true)
+    } catch (_e) {
+      setIsSessionVerified(true)
+    }
   }, [])
 
   const applySelectionState = useCallback((normalized) => {
@@ -177,6 +216,10 @@ export function LocationProvider({ children }) {
         matchedLocationName: status?.matchedLocationName || null,
       })
 
+      if (normalized.isServiceable) {
+        markSessionVerified()
+      }
+
       if (normalized.type === 'coords') {
         normalized = await persistCoordsAsCurrentAddress(normalized, profile)
       }
@@ -201,13 +244,16 @@ export function LocationProvider({ children }) {
         // Non-blocking
       }
 
-      setIsSelectorOpen(false)
-      setWizardDetail(null)
-      return normalized
+      if (normalized.isServiceable || options.forceClose) {
+        setIsSelectorOpen(false)
+        setWizardDetail(null)
+      }
+
+      return { location: normalized, status }
     } finally {
       setIsSavingLocation(false)
     }
-  }, [applySelectionState, refreshProfile, profile, checkLocationServiceable])
+  }, [applySelectionState, refreshProfile, profile, checkLocationServiceable, markSessionVerified])
 
   const syncFromProfile = useCallback((locationSelection) => {
     const normalized = normalizeLocationPayload(locationSelection)
@@ -237,22 +283,14 @@ export function LocationProvider({ children }) {
   }, [])
 
   useEffect(() => {
-    if (hasEffectiveLocation && isSelectorOpen) {
-      const blockingBootstrap =
-        wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP'
-        || wizardDetail?.reason === 'LOCATION_REQUIRED';
-      if (blockingBootstrap || wizardDetail?.blocking) {
-        setIsSelectorOpen(false)
-        setWizardDetail(null)
-      }
-    }
-  }, [hasEffectiveLocation, isSelectorOpen, wizardDetail])
-
-  useEffect(() => {
     const onLogout = () => {
       setSelectedLocationState(null)
       setLocationVersion((previous) => previous + 1)
       localStorage.removeItem(LOCATION_STORAGE_KEY)
+      try {
+        sessionStorage.removeItem(SESSION_LOCATION_KEY)
+      } catch (_e) {}
+      setIsSessionVerified(false)
       setIsSelectorOpen(false)
       setWizardDetail(null)
       window.dispatchEvent(new CustomEvent('farmeazy:location-cleared'))
@@ -265,6 +303,10 @@ export function LocationProvider({ children }) {
     setSelectedLocationState(null)
     setLocationVersion((previous) => previous + 1)
     localStorage.removeItem(LOCATION_STORAGE_KEY)
+    try {
+      sessionStorage.removeItem(SESSION_LOCATION_KEY)
+    } catch (_e) {}
+    setIsSessionVerified(false)
     window.dispatchEvent(new CustomEvent('farmeazy:location-cleared'))
   }, [])
 
@@ -274,7 +316,9 @@ export function LocationProvider({ children }) {
   }, [])
 
   const closeSelector = useCallback(() => {
-    const mustStayOpen = !hasEffectiveLocation
+    const sessionRestricted = !isSessionVerified && wizardDetail?.reason === 'SESSION_START'
+    const mustStayOpen = sessionRestricted
+      || (!hasEffectiveLocation && !isSessionVerified)
       || wizardDetail?.blocking
       || wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP'
       || wizardDetail?.reason === 'LOCATION_REQUIRED';
@@ -283,7 +327,7 @@ export function LocationProvider({ children }) {
     }
     setIsSelectorOpen(false);
     setWizardDetail(null);
-  }, [hasEffectiveLocation, wizardDetail]);
+  }, [hasEffectiveLocation, wizardDetail, isSessionVerified]);
 
   const isServiceable = selectedLocation?.isServiceable !== false
 
@@ -293,6 +337,7 @@ export function LocationProvider({ children }) {
     hasSelectedLocation: Boolean(selectedLocation),
     hasEffectiveLocation,
     isServiceable,
+    isSessionVerified,
     activeZones,
     activeZoneStatus,
     loadingActiveZones,
@@ -303,6 +348,9 @@ export function LocationProvider({ children }) {
     wizardDetail,
     fetchActiveZones,
     checkLocationServiceable,
+    submitLocationRequest,
+    getLocationDemand,
+    markSessionVerified,
     openSelector,
     closeSelector,
     setSelectedLocation: persistSelection,
@@ -311,6 +359,7 @@ export function LocationProvider({ children }) {
     selectedLocation,
     hasEffectiveLocation,
     isServiceable,
+    isSessionVerified,
     activeZones,
     activeZoneStatus,
     loadingActiveZones,
@@ -321,6 +370,9 @@ export function LocationProvider({ children }) {
     wizardDetail,
     fetchActiveZones,
     checkLocationServiceable,
+    submitLocationRequest,
+    getLocationDemand,
+    markSessionVerified,
     openSelector,
     closeSelector,
     persistSelection,

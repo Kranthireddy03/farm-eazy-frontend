@@ -50,11 +50,17 @@ export default function LocationWizard() {
     recentLocations,
     activeZones,
     checkLocationServiceable,
+    submitLocationRequest,
+    getLocationDemand,
     setSelectedLocation,
     isSavingLocation,
     selectedLocation,
     selectedLocationLabel,
+    isSessionVerified,
+    markSessionVerified,
   } = useLocationContext()
+
+  const { profile } = useSession()
 
   const [savedAddresses, setSavedAddresses] = useState([])
   const [loadingAddresses, setLoadingAddresses] = useState(false)
@@ -72,13 +78,39 @@ export default function LocationWizard() {
   const [mapLabelLoading, setMapLabelLoading] = useState(false)
   const [mapMeta, setMapMeta] = useState({ city: '', state: '', postalCode: '' })
 
-  const mustStayOpen = isAuthenticated && !isAuthLoading && !isBootstrapping && !hasEffectiveLocation
+  // Location Access Request & Demand State
+  const [demandCount, setDemandCount] = useState(0)
+  const [loadingDemand, setLoadingDemand] = useState(false)
+  const [submittingRequest, setSubmittingRequest] = useState(false)
+  const [requestSubmitted, setRequestSubmitted] = useState(false)
+  const [requestError, setRequestError] = useState('')
+  const [requestForm, setRequestForm] = useState({
+    userName: '',
+    userEmail: '',
+    userPhone: '',
+    notes: '',
+  })
+
+  // Prefill request form if authenticated user
+  useEffect(() => {
+    if (profile) {
+      setRequestForm((prev) => ({
+        ...prev,
+        userName: prev.userName || profile.username || '',
+        userEmail: prev.userEmail || profile.email || '',
+        userPhone: prev.userPhone || profile.phone || '',
+      }))
+    }
+  }, [profile])
+
+  const mustStayOpen = (!isSessionVerified && wizardDetail?.reason === 'SESSION_START')
+    || (isAuthenticated && !isAuthLoading && !isBootstrapping && !hasEffectiveLocation && !isSessionVerified)
   const show = isSelectorOpen || mustStayOpen
-  const isLocationRequired = wizardDetail?.reason === 'LOCATION_REQUIRED' || mustStayOpen
+  const isLocationRequired = wizardDetail?.reason === 'LOCATION_REQUIRED' || wizardDetail?.reason === 'SESSION_START' || mustStayOpen
 
   useEffect(() => {
     if (mustStayOpen && !isSelectorOpen) {
-      openSelector({ reason: 'MISSING_ON_BOOTSTRAP', blocking: true })
+      openSelector({ reason: 'SESSION_START', blocking: true })
     }
   }, [mustStayOpen, isSelectorOpen, openSelector])
 
@@ -174,9 +206,24 @@ export default function LocationWizard() {
     setConfirming(payload)
     setCheckingZone(true)
     setAddressError('')
+    setRequestSubmitted(false)
+    setRequestError('')
     try {
       const checkResult = await checkLocationServiceable(payload)
       setConfirmingCheck(checkResult)
+
+      if (!checkResult.allowed) {
+        // Fetch real-time demand count
+        setLoadingDemand(true)
+        const count = await getLocationDemand({
+          city: payload.city,
+          postalCode: payload.postalCode,
+          lat: payload.latitude,
+          lng: payload.longitude,
+        })
+        setDemandCount(count || checkResult.requestCount || 0)
+        setLoadingDemand(false)
+      }
     } catch (_err) {
       setConfirmingCheck({ allowed: false, message: 'Could not verify active zone status' })
     } finally {
@@ -238,7 +285,12 @@ export default function LocationWizard() {
   const finalizeSelection = async (payload) => {
     setAddressError('')
     try {
-      await setSelectedLocation(payload)
+      const result = await setSelectedLocation(payload)
+      if (result?.status?.allowed || payload.isServiceable) {
+        markSessionVerified()
+        closeSelector()
+        navigate('/dashboard')
+      }
       setConfirming(null)
       setConfirmingCheck(null)
     } catch (err) {
@@ -287,13 +339,31 @@ export default function LocationWizard() {
     })
   }
 
-  const chooseCoords = (coordsPayload) => {
-    if (coordsPayload?.latitude != null && coordsPayload?.longitude != null) {
-      setMapLatitude(Number(coordsPayload.latitude))
-      setMapLongitude(Number(coordsPayload.longitude))
-      if (coordsPayload.label) setMapLabel(coordsPayload.label)
+  const handleRequestSubmit = async (e) => {
+    e.preventDefault()
+    setRequestError('')
+    setSubmittingRequest(true)
+    try {
+      const payload = {
+        userName: requestForm.userName || 'Valued User',
+        userEmail: requestForm.userEmail,
+        userPhone: requestForm.userPhone,
+        locationName: confirming?.label || mapLabel,
+        city: confirming?.city || mapMeta.city,
+        state: confirming?.state || mapMeta.state,
+        postalCode: confirming?.postalCode || mapMeta.postalCode,
+        latitude: confirming?.latitude != null ? confirming.latitude : mapLatitude,
+        longitude: confirming?.longitude != null ? confirming.longitude : mapLongitude,
+        notes: requestForm.notes,
+      }
+      await submitLocationRequest(payload)
+      setRequestSubmitted(true)
+      setDemandCount((prev) => prev + 1)
+    } catch (err) {
+      setRequestError(getUserFacingErrorMessage(err, 'Failed to record coverage request. Please try again.'))
+    } finally {
+      setSubmittingRequest(false)
     }
-    prepareConfirmation(coordsPayload)
   }
 
   const useCurrentLocation = async () => {
@@ -332,15 +402,15 @@ export default function LocationWizard() {
     )
   }
 
-  const canClose = !mustStayOpen && !isLocationRequired
+  const canClose = isSessionVerified && !mustStayOpen && !isLocationRequired
   const recents = useMemo(() => (Array.isArray(recentLocations) ? recentLocations : []), [recentLocations])
 
   if (!show) return null
 
   const title = isLocationRequired
-    ? 'Choose your delivery location'
-    : 'Change delivery location'
-  const subtitle = 'FarmEazy services and marketplace deliveries are available in active zones configured by operations.'
+    ? 'Choose your service location'
+    : 'Change service location'
+  const subtitle = 'Select your delivery area. If active, you will be redirected to the dashboard. If inactive, you can request service launch in your area.'
 
   return (
     <div
@@ -356,7 +426,7 @@ export default function LocationWizard() {
           <div>
             <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
               <MapPin className="h-5 w-5 animate-pulse" aria-hidden="true" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Active Delivery Zones</span>
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">Service Zone Selection</span>
             </div>
             <h2 id="location-wizard-title" className="text-xl sm:text-2xl font-black tracking-tight">
               {title}
@@ -378,63 +448,175 @@ export default function LocationWizard() {
           )}
         </div>
 
-        {/* Confirmation Stage */}
+        {/* Confirmation & Active Zone Gate Stage */}
         {confirming ? (
           <div className="mt-5 space-y-4 animate-fadeIn">
-            <div className={`rounded-2xl border p-4 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+            <div className={`rounded-2xl border p-4 sm:p-5 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Selected Location</span>
                 {checkingZone && (
-                  <span className="text-xs text-muted-foreground animate-pulse">Checking active zone…</span>
+                  <span className="text-xs text-muted-foreground animate-pulse">Verifying active zone…</span>
                 )}
               </div>
 
-              <p className="mt-2 text-sm font-semibold text-foreground leading-relaxed">{confirming.label}</p>
+              <p className="mt-2 text-sm sm:text-base font-semibold text-foreground leading-relaxed">{confirming.label}</p>
 
-              {/* Real-time Active Zone Status Badge */}
+              {/* Real-time Active Zone Status & Restricted Flow */}
               {!checkingZone && confirmingCheck && (
-                <div className="mt-3">
+                <div className="mt-4">
                   {confirmingCheck.allowed ? (
-                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-start gap-3">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
-                      <div className="space-y-0.5">
-                        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
-                          ✓ Serviceable in this area
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 flex items-start gap-3">
+                      <CheckCircle2 className="h-6 w-6 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="space-y-1">
+                        <p className="text-base font-bold text-emerald-700 dark:text-emerald-300">
+                          ✓ Service is Active in this Area!
                         </p>
-                        <p className="text-xs text-emerald-600/90 dark:text-emerald-400/90">
-                          Covered by active zone: <strong className="font-semibold">{confirmingCheck.matchedLocationName || 'Active Zone'}</strong>
-                          {confirmingCheck.distanceKm != null && ` (${confirmingCheck.distanceKm.toFixed(1)} km from center)`}
+                        <p className="text-xs sm:text-sm text-emerald-600/90 dark:text-emerald-400/90">
+                          Covered by active operating zone: <strong className="font-semibold">{confirmingCheck.matchedLocationName || 'Active Zone'}</strong>
+                          {confirmingCheck.distanceKm != null && ` (${confirmingCheck.distanceKm.toFixed(1)} km from zone center)`}
+                        </p>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 pt-1 font-medium">
+                          You can now proceed directly to your FarmEazy Dashboard.
                         </p>
                       </div>
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 space-y-2">
-                      <div className="flex items-start gap-2.5">
-                        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    /* INACTIVE LOCATION - RESTRICT USER & SHOW DEMAND COUNTER + REQUEST FORM */
+                    <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 sm:p-5 space-y-4">
+                      <div className="flex items-start gap-3">
+                        <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
-                            We don&apos;t deliver to this location yet
+                          <p className="text-base font-bold text-amber-800 dark:text-amber-200">
+                            We don&apos;t operate in this location yet
                           </p>
-                          <p className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-0.5">
-                            {confirmingCheck.message || 'FarmEazy delivery operations are not active in this area.'}
+                          <p className="text-xs sm:text-sm text-amber-800/90 dark:text-amber-300/90 mt-1 leading-relaxed">
+                            {confirmingCheck.message || 'FarmEazy marketplace delivery and farm services are currently restricted to our active operating zones.'}
                           </p>
                         </div>
                       </div>
 
-                      {activeZones.length > 0 && (
-                        <div className="pt-2 border-t border-amber-500/20">
-                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1.5">
-                            Currently serving in these active zones:
+                      {/* Live Demand Counter Badge */}
+                      <div className="rounded-xl border border-amber-500/30 bg-amber-500/20 p-3 flex items-center justify-between flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-lg">🔥</span>
+                          <div>
+                            <span className="text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-200 block">Community Demand</span>
+                            <span className="text-sm font-black text-amber-950 dark:text-amber-100">
+                              {loadingDemand ? 'Calculating demand…' : `${demandCount} user${demandCount === 1 ? '' : 's'} have requested service in this region`}
+                            </span>
+                          </div>
+                        </div>
+                        <Badge className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs">
+                          High Expansion Priority
+                        </Badge>
+                      </div>
+
+                      {/* What you should do guide */}
+                      <div className="bg-background/80 rounded-xl p-3.5 border border-border space-y-2">
+                        <p className="text-xs font-bold uppercase tracking-wider text-foreground">What you can do:</p>
+                        <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
+                          <li><strong>Submit your request below:</strong> Our operations team reviews top-requested areas weekly to launch new delivery zones.</li>
+                          <li><strong>Instant Notification:</strong> You will be notified via Email &amp; SMS as soon as FarmEazy goes live in your area.</li>
+                          <li><strong>Or switch to an active zone:</strong> You can select any active delivery zone below to explore and place orders immediately.</li>
+                        </ul>
+                      </div>
+
+                      {/* Request Access Form */}
+                      {requestSubmitted ? (
+                        <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-center space-y-2 animate-fadeIn">
+                          <div className="h-10 w-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto">
+                            <CheckCircle2 className="h-6 w-6" />
+                          </div>
+                          <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
+                            🎉 Your Coverage Request Has Been Recorded!
                           </p>
-                          <div className="flex flex-wrap gap-1.5">
+                          <p className="text-xs text-emerald-700 dark:text-emerald-300">
+                            You are request #{demandCount}. Our operations team will notify you via Email and SMS as soon as this zone becomes active.
+                          </p>
+                        </div>
+                      ) : (
+                        <form onSubmit={handleRequestSubmit} className="space-y-3 pt-2">
+                          <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+                            Request Service Launch in this Area:
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="text-[11px] font-semibold text-muted-foreground">Your Name</label>
+                              <input
+                                type="text"
+                                required
+                                value={requestForm.userName}
+                                onChange={(e) => setRequestForm({ ...requestForm, userName: e.target.value })}
+                                placeholder="Full Name"
+                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] font-semibold text-muted-foreground">Email Address (for notification)</label>
+                              <input
+                                type="email"
+                                required
+                                value={requestForm.userEmail}
+                                onChange={(e) => setRequestForm({ ...requestForm, userEmail: e.target.value })}
+                                placeholder="name@example.com"
+                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <div>
+                              <label className="text-[11px] font-semibold text-muted-foreground">Mobile Phone (optional for SMS)</label>
+                              <input
+                                type="tel"
+                                value={requestForm.userPhone}
+                                onChange={(e) => setRequestForm({ ...requestForm, userPhone: e.target.value })}
+                                placeholder="9876543210"
+                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[11px] font-semibold text-muted-foreground">Additional Notes / Landmarks</label>
+                              <input
+                                type="text"
+                                value={requestForm.notes}
+                                onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
+                                placeholder="e.g. Near Market Yard, 50+ farms in area"
+                                className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              />
+                            </div>
+                          </div>
+
+                          {requestError && (
+                            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400">{requestError}</p>
+                          )}
+
+                          <Button
+                            type="submit"
+                            disabled={submittingRequest}
+                            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 shadow-md"
+                          >
+                            {submittingRequest ? 'Submitting request…' : '🚀 Request FarmEazy Coverage in this Area'}
+                          </Button>
+                        </form>
+                      )}
+
+                      {/* Active Zones Switch Options */}
+                      {activeZones.length > 0 && (
+                        <div className="pt-3 border-t border-amber-500/20">
+                          <p className="text-xs font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-1.5">
+                            <span>📍</span> Switch to an Active Delivery Zone to Continue:
+                          </p>
+                          <div className="flex flex-wrap gap-2">
                             {activeZones.map((z) => (
                               <button
                                 key={z.id}
                                 type="button"
                                 onClick={() => chooseActiveZone(z)}
-                                className="px-2.5 py-1 text-xs rounded-lg font-medium bg-amber-500/20 text-amber-900 dark:text-amber-200 hover:bg-amber-500/30 transition"
+                                className="px-3 py-1.5 text-xs rounded-xl font-bold bg-amber-500/20 hover:bg-emerald-600 hover:text-white text-amber-950 dark:text-amber-100 transition-all border border-amber-500/30 flex items-center gap-1.5 shadow-sm cursor-pointer"
                               >
-                                📍 {z.locationName}
+                                <span>📍</span>
+                                <span>{z.locationName}</span>
+                                <span className="opacity-75 text-[10px]">({z.city || z.state})</span>
                               </button>
                             ))}
                           </div>
@@ -445,40 +627,30 @@ export default function LocationWizard() {
                 </div>
               )}
 
+              {/* Action Buttons */}
               <div className="mt-5 flex flex-wrap gap-3">
-                <Button
-                  type="button"
-                  disabled={isSavingLocation || checkingZone}
-                  onClick={() => finalizeSelection(confirming)}
-                  className={`flex-1 font-bold ${
-                    confirmingCheck?.allowed
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      : 'bg-amber-600 hover:bg-amber-700 text-white'
-                  }`}
-                >
-                  {isSavingLocation
-                    ? 'Saving…'
-                    : confirmingCheck?.allowed
-                    ? 'Confirm & Deliver Here'
-                    : 'Select for Viewing Only'}
-                </Button>
-
-                {!confirmingCheck?.allowed && (
+                {confirmingCheck?.allowed ? (
                   <Button
                     type="button"
-                    variant="outline"
-                    onClick={() => {
-                      navigate('/service-unavailable', { state: { message: confirmingCheck?.message } })
-                      closeSelector()
-                    }}
-                    className="border-amber-400 text-amber-600 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
+                    disabled={isSavingLocation || checkingZone}
+                    onClick={() => finalizeSelection(confirming)}
+                    className="flex-1 font-bold bg-emerald-600 hover:bg-emerald-700 text-white text-sm py-2.5 shadow-lg cursor-pointer"
                   >
-                    Request Launch Here
+                    {isSavingLocation ? 'Validating & Entering Dashboard…' : '✓ Confirm & Go to Dashboard'}
                   </Button>
-                )}
+                ) : null}
 
-                <Button type="button" variant="outline" onClick={() => { setConfirming(null); setConfirmingCheck(null); }}>
-                  Back
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setConfirming(null)
+                    setConfirmingCheck(null)
+                    setRequestSubmitted(false)
+                  }}
+                  className="font-semibold"
+                >
+                  ← Choose Different Location
                 </Button>
               </div>
             </div>

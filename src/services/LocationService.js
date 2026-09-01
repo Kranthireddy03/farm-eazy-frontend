@@ -50,6 +50,20 @@ const LocationService = {
       };
     }
   },
+
+  submitLocationRequest: async (payload = {}) => {
+    const response = await apiClient.post('/location-access/requests', payload);
+    return response.data;
+  },
+
+  getLocationDemand: async (params = {}) => {
+    try {
+      const response = await apiClient.get('/location-access/demand', { params });
+      return response.data?.demandCount || 0;
+    } catch (_err) {
+      return 0;
+    }
+  },
 };
 
 export default LocationService;
