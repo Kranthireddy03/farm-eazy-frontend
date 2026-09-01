@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Circle, Tooltip, useMapEvents, useMap } from 'react-leaflet'
 import * as L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 
@@ -68,11 +68,19 @@ export default function LocationWizardMap({
   latitude,
   longitude,
   onLocationChange,
+  activeZones = [],
   height = 240,
 }) {
   const lat = Number.isFinite(Number(latitude)) ? Number(latitude) : DEFAULT_CENTER.latitude
   const lng = Number.isFinite(Number(longitude)) ? Number(longitude) : DEFAULT_CENTER.longitude
   const position = [lat, lng]
+
+  const validActiveZones = useMemo(() => {
+    if (!Array.isArray(activeZones)) return []
+    return activeZones.filter(
+      (z) => z && z.latitude != null && z.longitude != null && Number.isFinite(Number(z.latitude)) && Number.isFinite(Number(z.longitude))
+    )
+  }, [activeZones])
 
   return (
     <div
@@ -82,7 +90,7 @@ export default function LocationWizardMap({
     >
       <MapContainer
         center={position}
-        zoom={15}
+        zoom={14}
         style={{ height: '100%', width: '100%' }}
         scrollWheelZoom
       >
@@ -92,6 +100,34 @@ export default function LocationWizardMap({
           maxZoom={19}
           crossOrigin="true"
         />
+
+        {/* Render active delivery zones boundary circles */}
+        {validActiveZones.map((zone) => {
+          const zLat = Number(zone.latitude)
+          const zLng = Number(zone.longitude)
+          const radiusMeters = Math.max(500, Number(zone.radiusKm || 5) * 1000)
+          return (
+            <Circle
+              key={`zone-circle-${zone.id || `${zLat}-${zLng}`}`}
+              center={[zLat, zLng]}
+              radius={radiusMeters}
+              pathOptions={{
+                color: '#10b981',
+                fillColor: '#10b981',
+                fillOpacity: 0.15,
+                weight: 2,
+                dashArray: '4, 4',
+              }}
+            >
+              <Tooltip direction="top" opacity={0.9} permanent={false}>
+                <span className="font-semibold text-xs text-emerald-700 dark:text-emerald-300">
+                  📍 {zone.locationName} ({zone.radiusKm || 5} km radius)
+                </span>
+              </Tooltip>
+            </Circle>
+          )
+        })}
+
         <DraggableMarker position={position} onPositionChange={onLocationChange} />
         <MapClickHandler onPositionChange={onLocationChange} />
         <RecenterMap position={position} />

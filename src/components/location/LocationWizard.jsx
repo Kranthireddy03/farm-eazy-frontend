@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MapPin, Navigation, Search, Clock, Home } from 'lucide-react'
+import {
+  MapPin, Navigation, Search, Clock, Home, CheckCircle2,
+  AlertTriangle, ArrowRight, ShieldCheck, Sparkles, Building2,
+} from 'lucide-react'
 import apiClient from '../../services/apiClient'
 import { unwrapApiList } from '../../utils/apiResponse'
 import { getUserFacingErrorMessage } from '../../utils/userFacingError'
@@ -9,10 +12,11 @@ import { useSession } from '../../context/SessionContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useLocationContext } from '../../context/LocationContext'
 import { Button } from '../ui/button'
+import { Badge } from '../ui/badge'
 import LocationWizardMap from './LocationWizardMap'
 
 const DEFAULT_MAP_CENTER = { latitude: 17.385, longitude: 78.4867 }
-const NOMINATIM_SEARCH = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&q='
+const NOMINATIM_SEARCH = 'https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=6&countrycodes=in&q='
 const NOMINATIM_REVERSE = 'https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1'
 
 function buildAddressLabel(address) {
@@ -27,7 +31,7 @@ async function reverseGeocode(latitude, longitude) {
   const data = await response.json()
   return {
     label: data?.display_name || '',
-    city: data?.address?.city || data?.address?.town || data?.address?.village || '',
+    city: data?.address?.city || data?.address?.town || data?.address?.village || data?.address?.county || '',
     state: data?.address?.state || '',
     postalCode: data?.address?.postcode || '',
   }
@@ -44,6 +48,8 @@ export default function LocationWizard() {
     openSelector,
     wizardDetail,
     recentLocations,
+    activeZones,
+    checkLocationServiceable,
     setSelectedLocation,
     isSavingLocation,
     selectedLocation,
@@ -58,6 +64,8 @@ export default function LocationWizard() {
   const [searchLoading, setSearchLoading] = useState(false)
   const [searchResults, setSearchResults] = useState([])
   const [confirming, setConfirming] = useState(null)
+  const [confirmingCheck, setConfirmingCheck] = useState(null)
+  const [checkingZone, setCheckingZone] = useState(false)
   const [mapLatitude, setMapLatitude] = useState(DEFAULT_MAP_CENTER.latitude)
   const [mapLongitude, setMapLongitude] = useState(DEFAULT_MAP_CENTER.longitude)
   const [mapLabel, setMapLabel] = useState('')
@@ -112,11 +120,18 @@ export default function LocationWizard() {
       return
     }
 
+    if (activeZones && activeZones.length > 0 && activeZones[0].latitude != null && activeZones[0].longitude != null) {
+      setMapLatitude(Number(activeZones[0].latitude))
+      setMapLongitude(Number(activeZones[0].longitude))
+      setMapLabel(activeZones[0].locationName)
+      return
+    }
+
     setMapLatitude(DEFAULT_MAP_CENTER.latitude)
     setMapLongitude(DEFAULT_MAP_CENTER.longitude)
     setMapLabel('')
     updateMapFromCoords(DEFAULT_MAP_CENTER.latitude, DEFAULT_MAP_CENTER.longitude)
-  }, [show, selectedLocation, recentLocations])
+  }, [show, selectedLocation, recentLocations, activeZones])
 
   const updateMapFromCoords = async (latitude, longitude, labelHint = '', meta = {}) => {
     setMapLatitude(latitude)
@@ -133,14 +148,14 @@ export default function LocationWizard() {
       setMapLabelLoading(true)
       try {
         const reverse = await reverseGeocode(latitude, longitude)
-        resolvedLabel = reverse?.label || `Lat ${latitude.toFixed(3)}, Lon ${longitude.toFixed(3)}`
+        resolvedLabel = reverse?.label || `Lat ${latitude.toFixed(4)}, Lon ${longitude.toFixed(4)}`
         resolvedMeta = {
           city: reverse?.city || '',
           state: reverse?.state || '',
           postalCode: reverse?.postalCode || '',
         }
       } catch {
-        resolvedLabel = `Lat ${latitude.toFixed(3)}, Lon ${longitude.toFixed(3)}`
+        resolvedLabel = `Lat ${latitude.toFixed(4)}, Lon ${longitude.toFixed(4)}`
       } finally {
         setMapLabelLoading(false)
       }
@@ -155,12 +170,26 @@ export default function LocationWizard() {
     updateMapFromCoords(latitude, longitude)
   }
 
+  const prepareConfirmation = async (payload) => {
+    setConfirming(payload)
+    setCheckingZone(true)
+    setAddressError('')
+    try {
+      const checkResult = await checkLocationServiceable(payload)
+      setConfirmingCheck(checkResult)
+    } catch (_err) {
+      setConfirmingCheck({ allowed: false, message: 'Could not verify active zone status' })
+    } finally {
+      setCheckingZone(false)
+    }
+  }
+
   const confirmMapSelection = () => {
-    chooseCoords({
+    prepareConfirmation({
       type: 'coords',
       latitude: mapLatitude,
       longitude: mapLongitude,
-      label: mapLabel || `Lat ${mapLatitude.toFixed(3)}, Lon ${mapLongitude.toFixed(3)}`,
+      label: mapLabel || `Lat ${mapLatitude.toFixed(4)}, Lon ${mapLongitude.toFixed(4)}`,
       city: mapMeta.city,
       state: mapMeta.state,
       postalCode: mapMeta.postalCode,
@@ -186,7 +215,7 @@ export default function LocationWizard() {
               label: item.display_name,
               latitude: Number(item.lat),
               longitude: Number(item.lon),
-              city: item.address?.city || item.address?.town || item.address?.village || '',
+              city: item.address?.city || item.address?.town || item.address?.village || item.address?.county || '',
               state: item.address?.state || '',
               postalCode: item.address?.postcode || '',
             }))
@@ -199,7 +228,7 @@ export default function LocationWizard() {
       }
     }
 
-    const timeout = setTimeout(runSearch, 300)
+    const timeout = setTimeout(runSearch, 350)
     return () => {
       active = false
       clearTimeout(timeout)
@@ -211,9 +240,33 @@ export default function LocationWizard() {
     try {
       await setSelectedLocation(payload)
       setConfirming(null)
+      setConfirmingCheck(null)
     } catch (err) {
       setAddressError(getUserFacingErrorMessage(err, 'Could not save your location. Please try again.'))
     }
+  }
+
+  const chooseActiveZone = (zone) => {
+    const lat = zone.latitude != null ? Number(zone.latitude) : DEFAULT_MAP_CENTER.latitude
+    const lng = zone.longitude != null ? Number(zone.longitude) : DEFAULT_MAP_CENTER.longitude
+    const label = `${zone.locationName} (${zone.city}, ${zone.state})`
+
+    setMapLatitude(lat)
+    setMapLongitude(lng)
+    setMapLabel(label)
+
+    prepareConfirmation({
+      type: 'coords',
+      latitude: lat,
+      longitude: lng,
+      label,
+      city: zone.city,
+      state: zone.state,
+      postalCode: zone.postalCode,
+      isServiceable: true,
+      matchedZoneName: zone.locationName,
+      matchedZoneId: zone.id,
+    })
   }
 
   const chooseAddress = (address) => {
@@ -221,12 +274,15 @@ export default function LocationWizard() {
       setMapLatitude(Number(address.latitude))
       setMapLongitude(Number(address.longitude))
     }
-    setConfirming({
+    prepareConfirmation({
       type: 'address',
       id: address.id,
       label: buildAddressLabel(address),
       latitude: address.latitude,
       longitude: address.longitude,
+      city: address.city,
+      state: address.state,
+      postalCode: address.postalCode,
       address,
     })
   }
@@ -237,7 +293,7 @@ export default function LocationWizard() {
       setMapLongitude(Number(coordsPayload.longitude))
       if (coordsPayload.label) setMapLabel(coordsPayload.label)
     }
-    setConfirming(coordsPayload)
+    prepareConfirmation(coordsPayload)
   }
 
   const useCurrentLocation = async () => {
@@ -253,7 +309,8 @@ export default function LocationWizard() {
         const latitude = Number(position.coords.latitude)
         const longitude = Number(position.coords.longitude)
         const resolved = await updateMapFromCoords(latitude, longitude)
-        chooseCoords({
+        setAskingGps(false)
+        prepareConfirmation({
           type: 'coords',
           latitude,
           longitude,
@@ -262,11 +319,14 @@ export default function LocationWizard() {
           state: resolved.state,
           postalCode: resolved.postalCode,
         })
-        setAskingGps(false)
       },
-      () => {
+      (geoError) => {
         setAskingGps(false)
-        setAddressError('Unable to access GPS. Search for an area or pick a saved address.')
+        if (geoError.code === 1) {
+          setAddressError('Location permission was denied. Please allow browser location access or search your city.')
+        } else {
+          setAddressError('Unable to access GPS location. Please search for your area or pick an active zone below.')
+        }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     )
@@ -275,203 +335,360 @@ export default function LocationWizard() {
   const canClose = !mustStayOpen && !isLocationRequired
   const recents = useMemo(() => (Array.isArray(recentLocations) ? recentLocations : []), [recentLocations])
 
-  if (!show || !isAuthenticated) return null
+  if (!show) return null
 
   const title = isLocationRequired
-    ? 'Choose your preferred location'
-    : 'Update your location'
-  const subtitle = 'We use your location to show nearby products, services, and vendors.'
+    ? 'Choose your delivery location'
+    : 'Change delivery location'
+  const subtitle = 'FarmEazy services and marketplace deliveries are available in active zones configured by operations.'
 
   return (
     <div
-      className="fixed inset-0 z-[120] bg-black/55 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
       role="dialog"
       aria-modal="true"
       aria-labelledby="location-wizard-title"
     >
-      <div className={`w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 ${isDark ? 'bg-slate-950/95 border-sky-500/20 text-slate-100' : 'bg-white border-sky-200/60 text-foreground'}`}>
-        <div className="flex items-start justify-between gap-4">
+      <div className={`w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 transition-all ${isDark ? 'bg-slate-950 border-sky-500/20 text-slate-100' : 'bg-white border-border text-foreground'}`}>
+        
+        {/* Header */}
+        <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">
           <div>
-            <div className="flex items-center gap-2 text-primary mb-2">
-              <MapPin className="h-5 w-5" aria-hidden="true" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Location</span>
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
+              <MapPin className="h-5 w-5 animate-pulse" aria-hidden="true" />
+              <span className="text-xs font-bold uppercase tracking-[0.2em]">Active Delivery Zones</span>
             </div>
             <h2 id="location-wizard-title" className="text-xl sm:text-2xl font-black tracking-tight">
               {title}
             </h2>
-            <p className={`mt-2 text-sm leading-relaxed ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+            <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {subtitle}
             </p>
             {selectedLocationLabel && hasEffectiveLocation && !mustStayOpen && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Current: {selectedLocationLabel}
-              </p>
+              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs font-medium text-muted-foreground">
+                <span>Current:</span>
+                <span className="text-foreground font-semibold truncate max-w-xs">{selectedLocationLabel}</span>
+              </div>
             )}
           </div>
           {canClose && (
-            <Button type="button" variant="outline" size="sm" onClick={closeSelector}>
+            <Button type="button" variant="outline" size="sm" onClick={closeSelector} className="rounded-full px-3">
               Close
             </Button>
           )}
         </div>
 
+        {/* Confirmation Stage */}
         {confirming ? (
-          <div className={`mt-5 rounded-2xl border p-4 ${isDark ? 'border-border bg-muted/40' : 'border-border bg-muted/20'}`}>
-            <p className="text-sm font-semibold">Confirm this location</p>
-            <p className="mt-2 text-sm text-muted-foreground">{confirming.label}</p>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button
-                type="button"
-                disabled={isSavingLocation}
-                onClick={() => finalizeSelection(confirming)}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                {isSavingLocation ? 'Saving…' : 'Select location'}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setConfirming(null)}>
-                Back
-              </Button>
+          <div className="mt-5 space-y-4 animate-fadeIn">
+            <div className={`rounded-2xl border p-4 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Selected Location</span>
+                {checkingZone && (
+                  <span className="text-xs text-muted-foreground animate-pulse">Checking active zone…</span>
+                )}
+              </div>
+
+              <p className="mt-2 text-sm font-semibold text-foreground leading-relaxed">{confirming.label}</p>
+
+              {/* Real-time Active Zone Status Badge */}
+              {!checkingZone && confirmingCheck && (
+                <div className="mt-3">
+                  {confirmingCheck.allowed ? (
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-start gap-3">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
+                      <div className="space-y-0.5">
+                        <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                          ✓ Serviceable in this area
+                        </p>
+                        <p className="text-xs text-emerald-600/90 dark:text-emerald-400/90">
+                          Covered by active zone: <strong className="font-semibold">{confirmingCheck.matchedLocationName || 'Active Zone'}</strong>
+                          {confirmingCheck.distanceKm != null && ` (${confirmingCheck.distanceKm.toFixed(1)} km from center)`}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3.5 space-y-2">
+                      <div className="flex items-start gap-2.5">
+                        <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm font-bold text-amber-700 dark:text-amber-300">
+                            We don&apos;t deliver to this location yet
+                          </p>
+                          <p className="text-xs text-amber-800/90 dark:text-amber-300/90 mt-0.5">
+                            {confirmingCheck.message || 'FarmEazy delivery operations are not active in this area.'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {activeZones.length > 0 && (
+                        <div className="pt-2 border-t border-amber-500/20">
+                          <p className="text-xs font-semibold text-amber-700 dark:text-amber-300 mb-1.5">
+                            Currently serving in these active zones:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {activeZones.map((z) => (
+                              <button
+                                key={z.id}
+                                type="button"
+                                onClick={() => chooseActiveZone(z)}
+                                className="px-2.5 py-1 text-xs rounded-lg font-medium bg-amber-500/20 text-amber-900 dark:text-amber-200 hover:bg-amber-500/30 transition"
+                              >
+                                📍 {z.locationName}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Button
+                  type="button"
+                  disabled={isSavingLocation || checkingZone}
+                  onClick={() => finalizeSelection(confirming)}
+                  className={`flex-1 font-bold ${
+                    confirmingCheck?.allowed
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-amber-600 hover:bg-amber-700 text-white'
+                  }`}
+                >
+                  {isSavingLocation
+                    ? 'Saving…'
+                    : confirmingCheck?.allowed
+                    ? 'Confirm & Deliver Here'
+                    : 'Select for Viewing Only'}
+                </Button>
+
+                {!confirmingCheck?.allowed && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      navigate('/service-unavailable', { state: { message: confirmingCheck?.message } })
+                      closeSelector()
+                    }}
+                    className="border-amber-400 text-amber-600 hover:bg-amber-50 dark:text-amber-300 dark:hover:bg-amber-950/30"
+                  >
+                    Request Launch Here
+                  </Button>
+                )}
+
+                <Button type="button" variant="outline" onClick={() => { setConfirming(null); setConfirmingCheck(null); }}>
+                  Back
+                </Button>
+              </div>
             </div>
           </div>
         ) : (
           <>
-            <div className="mt-5">
+            {/* Primary Action: Swiggy-like GPS Geolocation button */}
+            <div className="mt-4">
+              <button
+                type="button"
+                disabled={askingGps}
+                onClick={useCurrentLocation}
+                className="w-full rounded-2xl p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md transition flex items-center justify-between group cursor-pointer disabled:opacity-75"
+              >
+                <div className="flex items-center gap-3 text-left">
+                  <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                    <Navigation className={`h-5 w-5 ${askingGps ? 'animate-spin' : 'group-hover:scale-110 transition-transform'}`} />
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm sm:text-base">
+                      {askingGps ? 'Detecting current GPS location…' : 'Use Current Location (GPS)'}
+                    </p>
+                    <p className="text-xs text-white/80">
+                      Instantly check if you are within an active delivery zone
+                    </p>
+                  </div>
+                </div>
+                <ArrowRight className="h-5 w-5 text-white/70 group-hover:translate-x-1 transition-transform shrink-0" />
+              </button>
+            </div>
+
+            {/* Active Delivery Zones Quick Selection Chips */}
+            {activeZones && activeZones.length > 0 && (
+              <section className="mt-4" aria-label="Configured active zones">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Serving in Active Zones
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">Admin verified</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {activeZones.map((zone) => (
+                    <button
+                      key={zone.id}
+                      type="button"
+                      onClick={() => chooseActiveZone(zone)}
+                      className={`group flex items-center gap-1.5 rounded-xl border px-3 py-2 text-left text-xs transition ${isDark ? 'border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 text-slate-200' : 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-950'}`}
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                      <div>
+                        <span className="font-bold">{zone.locationName}</span>
+                        <span className="text-[10px] text-muted-foreground ml-1">({zone.city || zone.state})</span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Map Preview with Active Zones Circles */}
+            <div className="mt-4">
               <LocationWizardMap
                 latitude={mapLatitude}
                 longitude={mapLongitude}
                 onLocationChange={handleMapLocationChange}
-                height={220}
+                activeZones={activeZones}
+                height={210}
               />
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                Drag the pin or tap the map to set your location
-              </p>
+              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                <span>📍 Drag pin to check any area</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-medium">🟢 Green circles = Active delivery zones</span>
+              </div>
+
               {(mapLabel || mapLabelLoading) && (
-                <div className={`mt-3 rounded-xl border p-3 ${isDark ? 'border-border bg-muted/40' : 'border-border bg-muted/20'}`}>
-                  <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Map selection</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    {mapLabelLoading ? 'Loading address…' : mapLabel}
-                  </p>
+                <div className={`mt-3 rounded-xl border p-3 flex items-center justify-between gap-3 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">Map Selection</p>
+                    <p className="text-xs text-foreground font-medium truncate">
+                      {mapLabelLoading ? 'Resolving address…' : mapLabel}
+                    </p>
+                  </div>
                   <Button
                     type="button"
                     size="sm"
-                    className="mt-3 bg-emerald-600 hover:bg-emerald-700"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shrink-0"
                     disabled={mapLabelLoading || isSavingLocation}
                     onClick={confirmMapSelection}
                   >
-                    Use map location
+                    Check this pin
                   </Button>
                 </div>
               )}
             </div>
 
-            <div className="mt-5 relative">
+            {/* Search Input */}
+            <div className="mt-4 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Search address, area, or pincode"
+                placeholder="Search area, landmark, city, or 6-digit pincode…"
                 aria-label="Search for a location"
-                className={`w-full rounded-xl border pl-10 pr-3 py-2.5 text-sm ${isDark ? 'bg-muted border-border text-white' : 'bg-white border-border text-foreground'}`}
+                className={`w-full rounded-xl border pl-10 pr-3 py-2.5 text-sm ${isDark ? 'bg-muted/60 border-border text-white placeholder:text-slate-400' : 'bg-white border-border text-foreground placeholder:text-muted-foreground'}`}
               />
             </div>
 
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Button
-                type="button"
-                disabled={askingGps}
-                onClick={useCurrentLocation}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-              >
-                <Navigation className="h-4 w-4 mr-2" aria-hidden="true" />
-                {askingGps ? 'Fetching GPS…' : 'Use current location'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/address-book')}
-              >
-                <Home className="h-4 w-4 mr-2" aria-hidden="true" />
-                Manage saved addresses
-              </Button>
-            </div>
-
             {addressError && (
-              <div className={`mt-3 rounded-lg border px-3 py-2 text-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
-                {addressError}
+              <div className={`mt-3 rounded-xl border px-3.5 py-2.5 text-sm flex items-start gap-2 ${isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+                <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
+                <span>{addressError}</span>
               </div>
             )}
 
-            <section className="mt-5" aria-label="Search results">
-              <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-2">
-                <Search className="h-3.5 w-3.5" aria-hidden="true" />
-                Search results
-              </h3>
-              <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-border bg-muted/50' : 'border-border bg-muted/30'}`}>
-                {searchLoading && <div className="px-2 py-3 text-sm">Searching…</div>}
-                {!searchLoading && searchQuery.trim().length >= 3 && searchResults.length === 0 && (
-                  <div className="px-2 py-3 text-sm">No matches found.</div>
-                )}
-                {!searchLoading && searchResults.map((result, index) => (
-                  <button
-                    type="button"
-                    key={`${result.latitude}:${result.longitude}:${index}`}
-                    onClick={() => chooseCoords(result)}
-                    className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-muted' : 'hover:bg-white'}`}
-                  >
-                    <p className="text-sm font-semibold">{result.label}</p>
-                  </button>
-                ))}
-              </div>
-            </section>
+            {/* Search Results */}
+            {searchQuery.trim().length >= 3 && (
+              <section className="mt-4" aria-label="Search results">
+                <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-1.5">
+                  <Search className="h-3.5 w-3.5" aria-hidden="true" />
+                  Search Results
+                </h3>
+                <div className={`mt-1.5 rounded-xl border p-1 max-h-48 overflow-y-auto ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                  {searchLoading && <div className="px-3 py-3 text-xs text-muted-foreground">Searching places…</div>}
+                  {!searchLoading && searchResults.length === 0 && (
+                    <div className="px-3 py-3 text-xs text-muted-foreground">No matches found for &quot;{searchQuery}&quot;. Try a nearby city or pincode.</div>
+                  )}
+                  {!searchLoading && searchResults.map((result, index) => (
+                    <button
+                      type="button"
+                      key={`${result.latitude}:${result.longitude}:${index}`}
+                      onClick={() => chooseCoords(result)}
+                      className={`w-full text-left rounded-lg px-3 py-2.5 transition flex items-center justify-between gap-2 ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold truncate text-foreground">{result.label}</p>
+                        <p className="text-[10px] text-muted-foreground">{result.city || result.state || 'India'}</p>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
-            <section className="mt-5" aria-label="Saved addresses">
-              <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-2">
-                <Home className="h-3.5 w-3.5" aria-hidden="true" />
-                Saved addresses
-              </h3>
-              <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-border bg-muted/50' : 'border-border bg-muted/30'}`}>
-                {loadingAddresses && <div className="px-2 py-3 text-sm">Loading saved addresses…</div>}
-                {!loadingAddresses && savedAddresses.length === 0 && (
-                  <div className="px-2 py-3 text-sm">No saved addresses yet.</div>
-                )}
-                {!loadingAddresses && savedAddresses.map((address) => (
+            {/* Saved Addresses (if authenticated) */}
+            {isAuthenticated && (
+              <section className="mt-4" aria-label="Saved addresses">
+                <div className="flex items-center justify-between mb-1.5">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-1.5">
+                    <Home className="h-3.5 w-3.5" aria-hidden="true" />
+                    Saved Addresses
+                  </h3>
                   <button
                     type="button"
-                    key={address.id}
-                    onClick={() => chooseAddress(address)}
-                    className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-muted' : 'hover:bg-white'}`}
+                    onClick={() => { closeSelector(); navigate('/address-book'); }}
+                    className="text-[10px] font-semibold text-primary hover:underline"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold truncate">{buildAddressLabel(address)}</p>
-                      {address.isDefault && (
-                        <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-primary">Default</span>
-                      )}
-                    </div>
+                    + Manage addresses
                   </button>
-                ))}
-              </div>
-            </section>
+                </div>
+                <div className={`rounded-xl border p-1 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                  {loadingAddresses && <div className="px-3 py-2.5 text-xs text-muted-foreground">Loading saved addresses…</div>}
+                  {!loadingAddresses && savedAddresses.length === 0 && (
+                    <div className="px-3 py-2.5 text-xs text-muted-foreground">No saved addresses yet.</div>
+                  )}
+                  {!loadingAddresses && savedAddresses.map((address) => (
+                    <button
+                      type="button"
+                      key={address.id}
+                      onClick={() => chooseAddress(address)}
+                      className={`w-full text-left rounded-lg px-3 py-2 transition flex items-center justify-between gap-2 ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
+                    >
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-semibold truncate text-foreground">{buildAddressLabel(address)}</p>
+                          {address.isDefault && (
+                            <Badge variant="outline" className="text-[9px] py-0 px-1 font-bold uppercase">Default</Badge>
+                          )}
+                        </div>
+                      </div>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
 
-            <section className="mt-5" aria-label="Recent locations">
-              <h3 className="text-sm font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-2">
-                <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                Recent locations
-              </h3>
-              <div className={`mt-2 rounded-xl border p-2 ${isDark ? 'border-border bg-muted/50' : 'border-border bg-muted/30'}`}>
-                {recents.length === 0 && <div className="px-2 py-3 text-sm">No recent locations.</div>}
-                {recents.map((recent, index) => (
-                  <button
-                    type="button"
-                    key={`${recent.type}:${recent.id || index}:${recent.latitude || ''}:${recent.longitude || ''}`}
-                    onClick={() => chooseCoords(recent)}
-                    className={`w-full text-left rounded-lg px-3 py-2 mb-1 last:mb-0 ${isDark ? 'hover:bg-muted' : 'hover:bg-white'}`}
-                  >
-                    <p className="text-sm font-semibold">{recent.label || `Recent ${index + 1}`}</p>
-                  </button>
-                ))}
-              </div>
-            </section>
+            {/* Recent Locations */}
+            {recents.length > 0 && (
+              <section className="mt-4" aria-label="Recent locations">
+                <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-1.5 mb-1.5">
+                  <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                  Recent Locations
+                </h3>
+                <div className={`rounded-xl border p-1 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                  {recents.map((recent, index) => (
+                    <button
+                      type="button"
+                      key={`${recent.type}:${recent.id || index}:${recent.latitude || ''}:${recent.longitude || ''}`}
+                      onClick={() => chooseCoords(recent)}
+                      className={`w-full text-left rounded-lg px-3 py-2 transition flex items-center justify-between gap-2 ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
+                    >
+                      <p className="text-xs font-medium truncate text-foreground">{recent.label || `Recent ${index + 1}`}</p>
+                      <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </button>
+                  ))}
+                </div>
+              </section>
+            )}
           </>
         )}
       </div>

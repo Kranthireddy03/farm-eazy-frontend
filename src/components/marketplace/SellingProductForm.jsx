@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { AlertTriangle, CheckCircle2, MapPin, ShieldCheck } from 'lucide-react';
 import OtpService from '../../services/OtpService';
 import ProductService from '../../services/ProductService';
+import LocationService from '../../services/LocationService';
 import apiClient from '../../services/apiClient';
 import LocationPicker from '../LocationPicker';
 import LocationScopePicker from '../location/LocationScopePicker';
@@ -32,6 +34,8 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
   const [timer, setTimer] = useState(0);
   const [loading, setLoading] = useState(false);
   const [editingProduct, setEditingProduct] = useState(initialProduct || null);
+  const [activeZones, setActiveZones] = useState([]);
+  const [vendorLocationCheck, setVendorLocationCheck] = useState(null);
   const { executeRecaptcha } = useGoogleReCaptcha();
 
   const getCaptchaToken = async (action) => {
@@ -70,6 +74,7 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
     vendorId: getUserId() || '',
     vendorName: getUserName() || '',
     vendorLocation: '',
+    deliveryLocationId: null,
     vendorType: '',
     pricingType: 'FIXED_PRICE',
     locationScope: 'INDIA',
@@ -77,6 +82,37 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
     locationPincode: '',
     minBidQuantity: 1
   });
+
+  useEffect(() => {
+    LocationService.getActiveZones()
+      .then((zones) => setActiveZones(zones || []))
+      .catch(() => {});
+  }, []);
+
+  // Real-time verification of vendor location against active zones
+  useEffect(() => {
+    let active = true;
+    const loc = formData.vendorLocation?.trim();
+    if (!loc) {
+      setVendorLocationCheck(null);
+      return;
+    }
+
+    const t = setTimeout(async () => {
+      const res = await LocationService.checkLocationStatus({
+        city: loc,
+        state: loc,
+      });
+      if (active) {
+        setVendorLocationCheck(res);
+      }
+    }, 300);
+
+    return () => {
+      active = false;
+      clearTimeout(t);
+    };
+  }, [formData.vendorLocation]);
   // Ensure geofence fields are present in formData
   useEffect(() => {
     setFormData(prev => ({
@@ -488,15 +524,70 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                   <FormField label="Vendor ID" id="vendorId" hint="Auto-filled from your account">
                     <Input id="vendorId" name="vendorId" value={formData.vendorId} readOnly className="bg-muted" />
                   </FormField>
-                  <FormField label="Vendor location" id="vendorLocation" required>
+                  <FormField label="Vendor location" id="vendorLocation" required hint="Base location for dispatch and customer delivery verification">
                     <Input
                       id="vendorLocation"
                       name="vendorLocation"
                       value={formData.vendorLocation}
                       onChange={handleInputChange}
                       required
-                      placeholder="District, state"
+                      placeholder="e.g. Hyderabad, Telangana or 500001"
                     />
+
+                    {/* Active Zones Quick-Pick Chips */}
+                    {activeZones.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        <span className="text-[11px] font-bold text-muted-foreground flex items-center gap-1 uppercase tracking-wider">
+                          <ShieldCheck className="h-3 w-3 text-emerald-600" />
+                          Active Delivery Zones (Configured by Admin):
+                        </span>
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeZones.map((zone) => (
+                            <button
+                              key={zone.id}
+                              type="button"
+                              onClick={() => {
+                                setFormData((prev) => ({
+                                  ...prev,
+                                  vendorLocation: `${zone.locationName}, ${zone.city || zone.state}`,
+                                  deliveryLocationId: zone.id,
+                                  locationState: zone.state || prev.locationState,
+                                  locationPincode: zone.postalCode || prev.locationPincode,
+                                }));
+                              }}
+                              className="px-2 py-1 rounded-lg text-xs font-medium border border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 hover:bg-emerald-500/20 transition flex items-center gap-1"
+                            >
+                              <MapPin className="h-3 w-3" />
+                              {zone.locationName}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Prominent Real-time Validation Banner */}
+                    {formData.vendorLocation && vendorLocationCheck && (
+                      <div className="mt-2">
+                        {vendorLocationCheck.allowed ? (
+                          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-2.5 flex items-center gap-2 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>
+                              ✓ Matches active delivery zone: <strong>{vendorLocationCheck.matchedLocationName}</strong>
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="rounded-xl border border-amber-500/50 bg-amber-500/15 p-3 space-y-1.5 text-xs">
+                            <div className="flex items-start gap-2 text-amber-900 dark:text-amber-200 font-bold">
+                              <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                              <span>⚠️ Selected location is outside currently active service zones</span>
+                            </div>
+                            <p className="text-amber-800/90 dark:text-amber-300/90 text-[11px] leading-relaxed">
+                              Deliveries for this product will only be available to buyers within active operational zones. We recommend selecting or servicing an active zone above.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </FormField>
                   <FormField label="Vendor type" id="vendorType" required>
                     <select
@@ -772,13 +863,51 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                       placeholder="e.g., 1 year manufacturer warranty"
                     />
                   </FormField>
-                  <FormField label="Availability" id="availability" hint="Delivery area is set by the marketplace availability scope (India / State / Pincode).">
-                    <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
-                      {formData.locationScope === 'INDIA' && 'Available across India'}
-                      {formData.locationScope === 'STATE' && `Available in ${formData.locationState || 'your selected state'}`}
-                      {formData.locationScope === 'PINCODE' && `Available at pincode ${formData.locationPincode || '—'}`}
-                    </p>
+                  <FormField label="Delivery Availability & Service Zone" id="availability" hint="Configure the geographic boundary where this product can be delivered.">
+                    <LocationScopePicker
+                      value={{
+                        scope: formData.locationScope,
+                        state: formData.locationState,
+                        pincode: formData.locationPincode,
+                      }}
+                      onChange={(next) => {
+                        setFormData((prev) => ({
+                          ...prev,
+                          locationScope: next.scope,
+                          locationState: next.state,
+                          locationPincode: next.pincode,
+                        }));
+                      }}
+                    />
                   </FormField>
+
+                  {activeZones.length > 0 && (
+                    <FormField label="Linked Admin Active Zone" id="deliveryLocationId" hint="Link this product directly to an operations-approved delivery hub">
+                      <select
+                        id="deliveryLocationId"
+                        name="deliveryLocationId"
+                        value={formData.deliveryLocationId || ''}
+                        onChange={(e) => {
+                          const val = e.target.value ? Number(e.target.value) : null;
+                          const found = activeZones.find((z) => z.id === val);
+                          setFormData((prev) => ({
+                            ...prev,
+                            deliveryLocationId: val,
+                            locationState: found?.state || prev.locationState,
+                            locationPincode: found?.postalCode || prev.locationPincode,
+                          }));
+                        }}
+                        className={selectClass}
+                      >
+                        <option value="">-- Optional: Select Hub Zone --</option>
+                        {activeZones.map((z) => (
+                          <option key={z.id} value={z.id}>
+                            📍 {z.locationName} ({z.city}, {z.state}) • {z.radiusKm || 5} km radius
+                          </option>
+                        ))}
+                      </select>
+                    </FormField>
+                  )}
                   <FormField label="Buyer contact" id="buyerContact" hint="Buyers contact you via your account on file.">
                     <p className="text-sm text-muted-foreground rounded-lg border border-border p-3">
                       Contact details are taken from your verified account. No need to enter them here.

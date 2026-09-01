@@ -1,11 +1,13 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import apiClient from '../services/apiClient'
+import LocationService from '../services/LocationService'
 import { flushLocationRetryQueue } from '../services/locationApiBridge'
 import { persistCoordsAsCurrentAddress } from '../services/locationPersistenceService'
 import { useSession } from './SessionContext'
 
 const LOCATION_STORAGE_KEY = 'farmeazy_selected_location'
 const RECENT_STORAGE_KEY = 'farmeazy_recent_locations'
+const ACTIVE_ZONES_KEY = 'farmeazy_active_zones'
 const MAX_RECENT = 5
 
 const LocationContext = createContext(null)
@@ -27,6 +29,12 @@ function normalizeLocationPayload(payload) {
       latitude: Number(payload.latitude),
       longitude: Number(payload.longitude),
       label: payload.label || payload.address || null,
+      city: payload.city || '',
+      state: payload.state || '',
+      postalCode: payload.postalCode || '',
+      isServiceable: payload.isServiceable !== undefined ? Boolean(payload.isServiceable) : null,
+      matchedZoneName: payload.matchedZoneName || null,
+      matchedZoneId: payload.matchedZoneId || null,
       timestamp: Date.now(),
     }
   }
@@ -38,7 +46,13 @@ function normalizeLocationPayload(payload) {
       label: payload.label || payload.addressLine1 || 'Saved address',
       latitude: payload.latitude != null ? Number(payload.latitude) : null,
       longitude: payload.longitude != null ? Number(payload.longitude) : null,
+      city: payload.city || payload.address?.city || '',
+      state: payload.state || payload.address?.state || '',
+      postalCode: payload.postalCode || payload.address?.postalCode || '',
       address: payload.address || null,
+      isServiceable: payload.isServiceable !== undefined ? Boolean(payload.isServiceable) : null,
+      matchedZoneName: payload.matchedZoneName || null,
+      matchedZoneId: payload.matchedZoneId || null,
       timestamp: Date.now(),
     }
   }
@@ -75,10 +89,33 @@ export function LocationProvider({ children }) {
   const { refreshProfile, hasEffectiveLocation, profile } = useSession()
   const [selectedLocation, setSelectedLocationState] = useState(null)
   const [recentLocations, setRecentLocations] = useState([])
+  const [activeZones, setActiveZones] = useState([])
+  const [activeZoneStatus, setActiveZoneStatus] = useState({ allowed: true, message: '', matchedLocationName: null })
   const [isSelectorOpen, setIsSelectorOpen] = useState(false)
   const [wizardDetail, setWizardDetail] = useState(null)
   const [locationVersion, setLocationVersion] = useState(0)
   const [isSavingLocation, setIsSavingLocation] = useState(false)
+  const [loadingActiveZones, setLoadingActiveZones] = useState(false)
+
+  const fetchActiveZones = useCallback(async () => {
+    setLoadingActiveZones(true)
+    try {
+      const zones = await LocationService.getActiveZones()
+      setActiveZones(zones)
+      localStorage.setItem(ACTIVE_ZONES_KEY, JSON.stringify(zones))
+      return zones
+    } catch (_err) {
+      const fromStorage = safeParse(localStorage.getItem(ACTIVE_ZONES_KEY), [])
+      setActiveZones(fromStorage)
+      return fromStorage
+    } finally {
+      setLoadingActiveZones(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchActiveZones()
+  }, [fetchActiveZones])
 
   useEffect(() => {
     const fromStorage = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
@@ -91,6 +128,19 @@ export function LocationProvider({ children }) {
     if (Array.isArray(recent)) {
       setRecentLocations(recent.map((entry) => normalizeLocationPayload(entry)).filter(Boolean))
     }
+  }, [])
+
+  const checkLocationServiceable = useCallback(async (payload) => {
+    if (!payload) return { allowed: false, message: 'No location provided', activeZones: [] }
+    const checkPayload = {
+      latitude: payload.latitude != null ? payload.latitude : null,
+      longitude: payload.longitude != null ? payload.longitude : null,
+      city: payload.city || null,
+      state: payload.state || null,
+      postalCode: payload.postalCode || null,
+      addressId: payload.id || null,
+    }
+    return await LocationService.checkLocationStatus(checkPayload)
   }, [])
 
   const applySelectionState = useCallback((normalized) => {
@@ -115,8 +165,20 @@ export function LocationProvider({ children }) {
 
     setIsSavingLocation(true)
     try {
+      // Validate serviceability against active delivery zones
+      const status = await checkLocationServiceable(normalized)
+      normalized.isServiceable = Boolean(status?.allowed)
+      normalized.matchedZoneName = status?.matchedLocationName || null
+      normalized.matchedZoneId = status?.matchedLocationId || null
+
+      setActiveZoneStatus({
+        allowed: Boolean(status?.allowed),
+        message: status?.message || '',
+        matchedLocationName: status?.matchedLocationName || null,
+      })
+
       if (normalized.type === 'coords') {
-        normalized = await persistCoordsAsCurrentAddress(payload, profile)
+        normalized = await persistCoordsAsCurrentAddress(normalized, profile)
       }
 
       if (normalized.type === 'address' && normalized.id != null && options.syncCurrentAddress !== false) {
@@ -130,8 +192,7 @@ export function LocationProvider({ children }) {
           await refreshProfile()
         }
       } catch (_e) {
-        // Profile refresh is best-effort after a selection; the location is already
-        // persisted locally, so never keep the selector open on a refresh failure.
+        // Profile refresh is best-effort after selection
       }
 
       try {
@@ -146,7 +207,7 @@ export function LocationProvider({ children }) {
     } finally {
       setIsSavingLocation(false)
     }
-  }, [applySelectionState, refreshProfile, profile])
+  }, [applySelectionState, refreshProfile, profile, checkLocationServiceable])
 
   const syncFromProfile = useCallback((locationSelection) => {
     const normalized = normalizeLocationPayload(locationSelection)
@@ -224,16 +285,24 @@ export function LocationProvider({ children }) {
     setWizardDetail(null);
   }, [hasEffectiveLocation, wizardDetail]);
 
+  const isServiceable = selectedLocation?.isServiceable !== false
+
   const value = useMemo(() => ({
     selectedLocation,
     selectedLocationLabel: buildLocationLabel(selectedLocation),
     hasSelectedLocation: Boolean(selectedLocation),
     hasEffectiveLocation,
+    isServiceable,
+    activeZones,
+    activeZoneStatus,
+    loadingActiveZones,
     locationVersion,
     isSavingLocation,
     recentLocations,
     isSelectorOpen,
     wizardDetail,
+    fetchActiveZones,
+    checkLocationServiceable,
     openSelector,
     closeSelector,
     setSelectedLocation: persistSelection,
@@ -241,11 +310,17 @@ export function LocationProvider({ children }) {
   }), [
     selectedLocation,
     hasEffectiveLocation,
+    isServiceable,
+    activeZones,
+    activeZoneStatus,
+    loadingActiveZones,
     locationVersion,
     isSavingLocation,
     recentLocations,
     isSelectorOpen,
     wizardDetail,
+    fetchActiveZones,
+    checkLocationServiceable,
     openSelector,
     closeSelector,
     persistSelection,

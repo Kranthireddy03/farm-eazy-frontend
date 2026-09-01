@@ -15,6 +15,41 @@ const LocationService = {
     const response = await apiClient.get(`/locations/pincodes/${pincode}`);
     return response.data;
   },
+
+  getActiveZones: async () => {
+    try {
+      const response = await apiClient.get('/location-access/active-zones');
+      return Array.isArray(response.data) ? response.data : [];
+    } catch (_err) {
+      return [];
+    }
+  },
+
+  checkLocationStatus: async (payload = {}) => {
+    try {
+      const response = await apiClient.post('/location-access/check', payload);
+      return response.data;
+    } catch (err) {
+      return {
+        allowed: false,
+        message: err?.response?.data?.message || 'Unable to verify location serviceability',
+        activeZones: [],
+      };
+    }
+  },
+
+  getCurrentLocationStatus: async () => {
+    try {
+      const response = await apiClient.get('/location-access/status');
+      return response.data;
+    } catch (err) {
+      return {
+        allowed: false,
+        message: err?.response?.data?.message || 'Location access required',
+        activeZones: [],
+      };
+    }
+  },
 };
 
 export default LocationService;

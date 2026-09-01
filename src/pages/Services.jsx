@@ -3,13 +3,14 @@ import { useSearchParams, useNavigate, useLocation, Link } from 'react-router-do
 import { 
   CalendarDays, CheckCircle2, Clock3, Coins, Filter, MapPin, 
   PackagePlus, Tractor, Users, Wrench, XCircle, ChevronRight, 
-  Plus, RefreshCw, AlertCircle, ArrowLeft, Trash2, Sparkles, 
+  Plus, RefreshCw, AlertCircle, AlertTriangle, ArrowLeft, Trash2, Sparkles, 
   Store, Check, Info, ShieldCheck, HelpCircle, Pencil, Lock, Volume2, VolumeX
 } from 'lucide-react';
 import AppPage from '../components/layout/AppPage';
 import { Button } from '../components/ui/button';
 import { GlassPanel, StrongPanel, SectionTitle } from '../components/ui/PremiumSurface';
 import apiClient from '../services/apiClient';
+import LocationService from '../services/LocationService';
 import { toast } from 'sonner';
 
 const TYPES = [
@@ -316,6 +317,8 @@ export default function Services() {
   });
 
   const [eligibility, setEligibility] = useState({ eligible: true, verificationMessage: '' });
+  const [activeZones, setActiveZones] = useState([]);
+  const [serviceZoneCheck, setServiceZoneCheck] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [filterType, setFilterType] = useState('');
@@ -340,7 +343,7 @@ export default function Services() {
   const load = async () => {
     setLoading(true);
     try {
-      const [eligRes, ls, bs, ps, myLs, hs, phs, fs, cs] = await Promise.all([
+      const [eligRes, ls, bs, ps, myLs, hs, phs, fs, cs, azs] = await Promise.all([
         apiClient.get('/vendors/listing-eligibility?listingType=SERVICE', { validateStatus: (status) => status < 500 }).catch(() => null),
         apiClient.get('/services/listings', { params: { page: 0, size: 30 } }),
         apiClient.get('/services/bookings/my-bookings', { params: { page: 0, size: 30 } }),
@@ -350,6 +353,7 @@ export default function Services() {
         apiClient.get('/services/bookings/provider-history', { params: { page: 0, size: 100 } }).catch(() => ({ data: { content: [] } })),
         apiClient.get('/farms'),
         apiClient.get('/crops'),
+        LocationService.getActiveZones().catch(() => []),
       ]);
 
       if (eligRes) setEligibility(eligRes.data);
@@ -361,12 +365,37 @@ export default function Services() {
       setHistoryRequests(phs?.data?.content || []);
       setFarms(fs?.data?.content || fs?.data || []);
       setCrops(cs?.data?.content || cs?.data || []);
+      setActiveZones(Array.isArray(azs) ? azs : []);
     } catch (e) {
       toast.error(e?.response?.data?.message || 'Unable to load services data');
     } finally {
       setLoading(false);
     }
   };
+
+  // Real-time verification of service coverage against active zones
+  useEffect(() => {
+    let active = true;
+    const verifyServiceLocation = async () => {
+      if (currentStep !== 5) return;
+
+      const payload = {
+        latitude: form.latitude ? Number(form.latitude) : null,
+        longitude: form.longitude ? Number(form.longitude) : null,
+        city: form.locationCity || null,
+        state: form.locationState || null,
+        postalCode: form.locationPincode || null,
+      };
+
+      const res = await LocationService.checkLocationStatus(payload);
+      if (active) {
+        setServiceZoneCheck(res);
+      }
+    };
+
+    verifyServiceLocation();
+    return () => { active = false; };
+  }, [currentStep, form.locationScope, form.locationState, form.locationDistrict, form.locationCity, form.locationPincode, form.latitude, form.longitude]);
 
   useEffect(() => {
     load();
@@ -1642,6 +1671,63 @@ export default function Services() {
                 {currentStep === 5 && (
                   <StrongPanel className="p-6 space-y-6 rounded-3xl animate-fadeIn">
                     <SectionTitle eyebrow="Step 5" title="Geographic Service Area" text="Select coverage filter boundaries and base coordinates." />
+
+                    {/* Active Zones Quick-Selection Chips */}
+                    {activeZones.length > 0 && (
+                      <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-2">
+                        <span className="text-xs font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 uppercase tracking-wider">
+                          <ShieldCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                          Operations Active Zones (Admin Verified):
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {activeZones.map((zone) => (
+                            <button
+                              key={zone.id}
+                              type="button"
+                              onClick={() => {
+                                setField('locationScope', 'STATE');
+                                setField('locationState', zone.state || '');
+                                setField('locationCity', zone.city || '');
+                                if (zone.latitude && zone.longitude) {
+                                  setField('latitude', Number(zone.latitude));
+                                  setField('longitude', Number(zone.longitude));
+                                }
+                                toast.success(`Selected active zone: ${zone.locationName}`);
+                              }}
+                              className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-emerald-500/30 bg-emerald-500/10 text-emerald-900 dark:text-emerald-200 hover:bg-emerald-500/20 transition flex items-center gap-1.5"
+                            >
+                              <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                              <span>{zone.locationName}</span>
+                              <span className="text-[10px] text-muted-foreground">({zone.city || zone.state})</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Real-time Verification Warning / Success Banner */}
+                    {serviceZoneCheck && (
+                      <div className="animate-fadeIn">
+                        {serviceZoneCheck.allowed ? (
+                          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-300 font-semibold">
+                            <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                            <span>
+                              ✓ Service coverage matches active operational zone: <strong>{serviceZoneCheck.matchedLocationName}</strong>
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="rounded-2xl border border-amber-500/50 bg-amber-500/15 p-4 space-y-2 text-xs">
+                            <div className="flex items-start gap-2.5 text-amber-900 dark:text-amber-200 font-bold text-sm">
+                              <AlertTriangle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                              <span>⚠️ Notice: Selected coverage is outside active operational zones</span>
+                            </div>
+                            <p className="text-amber-800/90 dark:text-amber-300/90 leading-relaxed text-xs">
+                              FarmEazy operational services are currently limited to admin-configured active zones. Customers outside these zones will be notified that services are not yet available in their area.
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                     
                     <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 pt-3">
                       <Field label="Coverage Type">
