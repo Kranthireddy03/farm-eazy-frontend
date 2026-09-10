@@ -36,7 +36,8 @@ export function SessionProvider({ children }) {
   const [bootstrapError, setBootstrapError] = useState(null);
   const bootstrapRunRef = useRef(0);
 
-  const hasEffectiveLocation = Boolean(effectiveLocation?.present);
+  const hasLocalLocation = Boolean(localStorage.getItem('farmeazy_selected_location')) || Boolean(localStorage.getItem('farmeazy_location_configured'));
+  const hasEffectiveLocation = Boolean(effectiveLocation?.present) || hasLocalLocation;
   const isSessionReady = Boolean(profile) && hasEffectiveLocation;
 
   const applyProfileResult = useCallback((result) => {
@@ -91,7 +92,8 @@ export function SessionProvider({ children }) {
         })
       );
 
-      if (!result.hasEffectiveLocation) {
+      const hasLocalLoc = Boolean(localStorage.getItem('farmeazy_selected_location')) || Boolean(localStorage.getItem('farmeazy_location_configured'));
+      if (!result.hasEffectiveLocation && !hasLocalLoc) {
         window.dispatchEvent(
           new CustomEvent('farmeazy:open-location-modal', {
             detail: { reason: 'MISSING_ON_BOOTSTRAP', blocking: true },
@@ -169,6 +171,26 @@ export function SessionProvider({ children }) {
     });
     return () => unregisterLocationApiHandlers();
   }, [refreshNotificationCount]);
+
+  useEffect(() => {
+    const onLocationChanged = (event) => {
+      const loc = event?.detail;
+      if (loc) {
+        setEffectiveLocation({
+          present: true,
+          label: loc.label,
+          city: loc.city,
+          state: loc.state,
+          postalCode: loc.postalCode,
+          latitude: loc.latitude,
+          longitude: loc.longitude,
+          addressId: loc.id,
+        });
+      }
+    };
+    window.addEventListener('farmeazy:location-changed', onLocationChanged);
+    return () => window.removeEventListener('farmeazy:location-changed', onLocationChanged);
+  }, []);
 
   const permissions = useMemo(() => {
     const roles = profile?.roles || [];

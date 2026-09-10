@@ -103,11 +103,19 @@ export default function LocationWizard() {
     }
   }, [profile])
 
+  const hasExistingLocation = Boolean(
+    (selectedLocation?.latitude != null && selectedLocation?.longitude != null) ||
+    selectedLocation?.id ||
+    hasEffectiveLocation ||
+    localStorage.getItem('farmeazy_selected_location')
+  )
+
   const mustStayOpen = isAuthenticated
     && !isAuthLoading
     && !isBootstrapping
     && !isSessionVerified
-    && (wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || !hasEffectiveLocation)
+    && !hasExistingLocation
+    && (wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP')
   const show = isAuthenticated && (isSelectorOpen || mustStayOpen)
   const isLocationRequired = wizardDetail?.reason === 'LOCATION_REQUIRED' || wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || mustStayOpen
 
@@ -208,10 +216,10 @@ export default function LocationWizard() {
   const finalizeSelection = async (payload) => {
     setAddressError('')
     try {
-      const result = await setSelectedLocation(payload)
+      const result = await setSelectedLocation(payload, { forceClose: true })
       if (result?.status?.allowed || payload.isServiceable) {
         markSessionVerified()
-        closeSelector()
+        closeSelector(true)
         navigate('/dashboard')
       }
       setConfirming(null)
@@ -421,7 +429,7 @@ export default function LocationWizard() {
     )
   }
 
-  const canClose = isSessionVerified && !mustStayOpen && !isLocationRequired
+  const canClose = (isSessionVerified || hasExistingLocation) && !mustStayOpen
   const recents = useMemo(() => (Array.isArray(recentLocations) ? recentLocations : []), [recentLocations])
 
   if (!show) return null

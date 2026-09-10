@@ -47,8 +47,9 @@ export default function SessionBootstrapGate({ children }) {
     )
   }
 
+  const hasLocalLocation = Boolean(localStorage.getItem('farmeazy_selected_location')) || Boolean(localStorage.getItem('farmeazy_location_configured'))
   const profileReady = Boolean(profile)
-  const locationReady = deferLocationRequirement ? true : isSessionReady
+  const locationReady = deferLocationRequirement ? true : (isSessionReady || hasLocalLocation)
 
   if (!profileReady || !locationReady) {
     return <PageLoader message="Choose your location to continue" />

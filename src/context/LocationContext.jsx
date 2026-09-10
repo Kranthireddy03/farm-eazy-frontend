@@ -5,7 +5,9 @@ import { flushLocationRetryQueue } from '../services/locationApiBridge'
 import { persistCoordsAsCurrentAddress } from '../services/locationPersistenceService'
 import { useSession } from './SessionContext'
 
+
 const LOCATION_STORAGE_KEY = 'farmeazy_selected_location'
+const LOCATION_CONFIGURED_KEY = 'farmeazy_location_configured'
 const RECENT_STORAGE_KEY = 'farmeazy_recent_locations'
 const ACTIVE_ZONES_KEY = 'farmeazy_active_zones'
 const MAX_RECENT = 5
@@ -100,11 +102,25 @@ export function LocationProvider({ children }) {
   const [loadingActiveZones, setLoadingActiveZones] = useState(false)
   const [isSessionVerified, setIsSessionVerified] = useState(() => {
     try {
-      return sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
+      return (
+        localStorage.getItem(LOCATION_CONFIGURED_KEY) === 'true' ||
+        sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true' ||
+        Boolean(localStorage.getItem(LOCATION_STORAGE_KEY))
+      )
     } catch {
       return false
     }
   })
+
+  const markSessionVerified = useCallback(() => {
+    try {
+      localStorage.setItem(LOCATION_CONFIGURED_KEY, 'true')
+      sessionStorage.setItem(SESSION_LOCATION_KEY, 'true')
+      setIsSessionVerified(true)
+    } catch (_e) {
+      setIsSessionVerified(true)
+    }
+  }, [])
 
   const fetchActiveZones = useCallback(async () => {
     setLoadingActiveZones(true)
@@ -126,37 +142,43 @@ export function LocationProvider({ children }) {
     fetchActiveZones()
   }, [fetchActiveZones])
 
-  // Prompt location selection for authenticated user sessions
+  // Prompt location selection for authenticated user sessions only once if no location exists
   useEffect(() => {
     const hasAuthToken = Boolean(localStorage.getItem('token') || localStorage.getItem('farmEazy_token'))
     if (!hasAuthToken && !profile) {
       return
     }
-    try {
-      const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
-      if (!verified) {
-        setIsSelectorOpen(true)
-        setWizardDetail({ reason: 'SESSION_START', blocking: true })
-      }
-    } catch (_e) {
-      // sessionStorage unavailable
-    }
-  }, [profile])
+    const hasStoredLocation = Boolean(localStorage.getItem(LOCATION_STORAGE_KEY))
+    const isConfigured = localStorage.getItem(LOCATION_CONFIGURED_KEY) === 'true'
+    const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
 
-  // Listen for login event to immediately trigger location check
+    if (hasStoredLocation || isConfigured || verified || hasEffectiveLocation) {
+      markSessionVerified()
+      return
+    }
+
+    setIsSelectorOpen(true)
+    setWizardDetail({ reason: 'SESSION_START', blocking: true })
+  }, [profile, hasEffectiveLocation, markSessionVerified])
+
+  // Listen for login event to check location once if not already selected
   useEffect(() => {
     const onLogin = () => {
       try {
+        const hasStoredLocation = Boolean(localStorage.getItem(LOCATION_STORAGE_KEY))
+        const isConfigured = localStorage.getItem(LOCATION_CONFIGURED_KEY) === 'true'
         const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
-        if (!verified) {
-          setIsSelectorOpen(true)
-          setWizardDetail({ reason: 'POST_LOGIN', blocking: true })
+        if (hasStoredLocation || isConfigured || verified) {
+          markSessionVerified()
+          return
         }
+        setIsSelectorOpen(true)
+        setWizardDetail({ reason: 'POST_LOGIN', blocking: true })
       } catch (_e) {}
     }
     window.addEventListener('farmeazy:auth-login', onLogin)
     return () => window.removeEventListener('farmeazy:auth-login', onLogin)
-  }, [])
+  }, [markSessionVerified])
 
   useEffect(() => {
     const fromStorage = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
@@ -190,15 +212,6 @@ export function LocationProvider({ children }) {
 
   const getLocationDemand = useCallback(async (params) => {
     return await LocationService.getLocationDemand(params)
-  }, [])
-
-  const markSessionVerified = useCallback(() => {
-    try {
-      sessionStorage.setItem(SESSION_LOCATION_KEY, 'true')
-      setIsSessionVerified(true)
-    } catch (_e) {
-      setIsSessionVerified(true)
-    }
   }, [])
 
   const applySelectionState = useCallback((normalized) => {
@@ -240,14 +253,23 @@ export function LocationProvider({ children }) {
       }
 
       if (normalized.type === 'coords') {
-        normalized = await persistCoordsAsCurrentAddress(normalized, profile)
+        try {
+          normalized = await persistCoordsAsCurrentAddress(normalized, profile)
+        } catch (addrErr) {
+          console.warn('Backend address creation failed, proceeding with local coordinates selection:', addrErr)
+        }
       }
 
       if (normalized.type === 'address' && normalized.id != null && options.syncCurrentAddress !== false) {
-        await apiClient.patch('/addresses/current', { addressId: normalized.id })
+        try {
+          await apiClient.patch('/addresses/current', { addressId: normalized.id })
+        } catch (addrErr) {
+          console.warn('Current address update failed:', addrErr)
+        }
       }
 
       applySelectionState(normalized)
+      markSessionVerified()
 
       try {
         if (options.refreshProfile !== false) {
@@ -303,13 +325,10 @@ export function LocationProvider({ children }) {
 
   useEffect(() => {
     const onLogout = () => {
-      setSelectedLocationState(null)
       setLocationVersion((previous) => previous + 1)
-      localStorage.removeItem(LOCATION_STORAGE_KEY)
       try {
         sessionStorage.removeItem(SESSION_LOCATION_KEY)
       } catch (_e) {}
-      setIsSessionVerified(false)
       setIsSelectorOpen(false)
       setWizardDetail(null)
       window.dispatchEvent(new CustomEvent('farmeazy:location-cleared'))
@@ -322,6 +341,7 @@ export function LocationProvider({ children }) {
     setSelectedLocationState(null)
     setLocationVersion((previous) => previous + 1)
     localStorage.removeItem(LOCATION_STORAGE_KEY)
+    localStorage.removeItem(LOCATION_CONFIGURED_KEY)
     try {
       sessionStorage.removeItem(SESSION_LOCATION_KEY)
     } catch (_e) {}
@@ -334,20 +354,39 @@ export function LocationProvider({ children }) {
     setIsSelectorOpen(true)
   }, [])
 
-  const closeSelector = useCallback(() => {
+  const closeSelector = useCallback((force = false) => {
+    if (force === true) {
+      setIsSelectorOpen(false)
+      setWizardDetail(null)
+      return
+    }
+
     const hasAuthToken = Boolean(localStorage.getItem('token') || localStorage.getItem('farmEazy_token'))
+    const hasLocation = Boolean(
+      selectedLocation ||
+      localStorage.getItem(LOCATION_STORAGE_KEY) ||
+      hasEffectiveLocation
+    )
+
+    // If verified or has location, permit closing cleanly
+    if (isSessionVerified || hasLocation) {
+      setIsSelectorOpen(false)
+      setWizardDetail(null)
+      return
+    }
+
     const sessionRestricted = hasAuthToken && !isSessionVerified && (wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN')
     const mustStayOpen = sessionRestricted
       || (hasAuthToken && !hasEffectiveLocation && !isSessionVerified)
-      || (hasAuthToken && wizardDetail?.blocking)
       || (hasAuthToken && wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP')
-      || (hasAuthToken && wizardDetail?.reason === 'LOCATION_REQUIRED');
+      || (hasAuthToken && wizardDetail?.reason === 'LOCATION_REQUIRED')
+
     if (mustStayOpen) {
-      return;
+      return
     }
-    setIsSelectorOpen(false);
-    setWizardDetail(null);
-  }, [hasEffectiveLocation, wizardDetail, isSessionVerified]);
+    setIsSelectorOpen(false)
+    setWizardDetail(null)
+  }, [hasEffectiveLocation, wizardDetail, isSessionVerified, selectedLocation])
 
   const isServiceable = selectedLocation?.isServiceable !== false
 

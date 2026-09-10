@@ -30,7 +30,7 @@ function Login() {
   const { isDark } = useTheme()
   const { executeRecaptcha } = useGoogleReCaptcha()
   const { login, isAuthenticated } = useAuth()
-  const redirectTo = location.state?.from || '/'
+  const redirectTo = (location.state?.from && location.state.from !== '/') ? location.state.from : '/dashboard'
   
   const getCaptchaToken = async (action) => {
     if (typeof executeRecaptcha !== 'function') return null
