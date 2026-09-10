@@ -1069,7 +1069,7 @@ function Products() {
             )}
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); toggleWishlist(p.id); }}
+              onClick={(e) => { e.stopPropagation(); toggleWishlist(p); }}
               className={`absolute top-2 right-2 h-8 w-8 rounded-full backdrop-blur flex items-center justify-center transition shadow-sm border ${saved ? 'bg-rose-500 text-white border-rose-500' : 'bg-background/90 text-muted-foreground border-border hover:text-rose-500'}`}
               title={saved ? 'Remove from saved' : 'Save product'}
             >
@@ -1143,7 +1143,7 @@ function Products() {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => toggleWishlist(p.id)}
+                onClick={() => toggleWishlist(p)}
                 className={`h-8 w-8 rounded-full flex items-center justify-center transition border ${isWishlisted(p.id) ? 'bg-rose-500 text-white border-rose-500' : 'bg-muted text-muted-foreground border-border hover:text-rose-500'}`}
                 title={isWishlisted(p.id) ? 'Remove from saved' : 'Save product'}
               >

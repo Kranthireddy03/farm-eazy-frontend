@@ -220,6 +220,10 @@ export default function LocationWizard() {
       if (result?.status?.allowed || payload.isServiceable) {
         markSessionVerified()
         closeSelector(true)
+        // Warm up dashboard data APIs upon approved location selection
+        try {
+          apiClient.get('/dashboard/summary').catch(() => {})
+        } catch (_e) {}
         navigate('/dashboard')
       }
       setConfirming(null)

@@ -161,14 +161,12 @@ export function LocationProvider({ children }) {
     setWizardDetail({ reason: 'SESSION_START', blocking: true })
   }, [profile, hasEffectiveLocation, markSessionVerified])
 
-  // Listen for login event to check location once if not already selected
+  // Listen for login event: prompt location selection once per session
   useEffect(() => {
     const onLogin = () => {
       try {
-        const hasStoredLocation = Boolean(localStorage.getItem(LOCATION_STORAGE_KEY))
-        const isConfigured = localStorage.getItem(LOCATION_CONFIGURED_KEY) === 'true'
         const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
-        if (hasStoredLocation || isConfigured || verified) {
+        if (verified) {
           markSessionVerified()
           return
         }

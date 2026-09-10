@@ -160,7 +160,7 @@ function ProductDetail() {
             variant="outline"
             size="sm"
             onClick={() => {
-              const added = toggleWishlist(product.id)
+              const added = toggleWishlist(product)
               showToast(added ? 'Product saved to your wishlist.' : 'Product removed from saved products.', 'success')
             }}
             className="gap-2"

@@ -2,11 +2,12 @@
  * Saved products (local wishlist) — browse saved marketplace items.
  */
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart, ShoppingCart, Store, Trash2 } from 'lucide-react'
 import apiClient from '../services/apiClient'
 import { useToast } from '../hooks/useToast'
+import { unwrapApiList } from '../utils/apiResponse'
 import AppPage from '../components/layout/AppPage'
 import { PageScaffold } from '../components/app/PageScaffold'
 import { ProductCard } from '../components/marketplace/ProductCard'
@@ -22,31 +23,85 @@ import { buildCartItem, addToCartStorage } from '../lib/marketplace'
 function Wishlist() {
   const navigate = useNavigate()
   const { showToast } = useToast()
-  const { wishlistIds, isWishlisted, toggleWishlist } = useWishlist()
+  const { wishlistIds, wishlistDetails, isWishlisted, toggleWishlist } = useWishlist()
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true)
-        const response = await apiClient.get('/products')
-        setProducts(Array.isArray(response.data) ? response.data : [])
-      } catch {
-        showToast('Could not load products. Try again.', 'error')
-      } finally {
-        setLoading(false)
-      }
+  const fetchProducts = useCallback(async () => {
+    if (!wishlistIds.length) {
+      setProducts([])
+      setLoading(false)
+      return
     }
+
+    try {
+      setLoading(true)
+      const response = await apiClient.get('/products', { params: { page: 0, size: 80 } })
+      const bulkList = unwrapApiList(response?.data)
+      const bulkIdSet = new Set(bulkList.map((p) => Number(p.id)))
+
+      // Check which wishlist IDs were not returned in the bulk list
+      const missingIds = wishlistIds.filter((id) => !bulkIdSet.has(Number(id)))
+
+      let extraProducts = []
+      if (missingIds.length > 0) {
+        const fetchedExtras = await Promise.allSettled(
+          missingIds.map((id) => apiClient.get(`/products/${id}`))
+        )
+        extraProducts = fetchedExtras
+          .map((res, idx) => {
+            if (res.status === 'fulfilled' && res.value?.data) {
+              return res.value.data
+            }
+            // Fall back to cached snapshot in wishlistDetails if available
+            const fallbackSnapshot = wishlistDetails?.[missingIds[idx]]
+            return fallbackSnapshot || null
+          })
+          .filter(Boolean)
+      }
+
+      const combined = [...bulkList, ...extraProducts]
+      setProducts(combined)
+    } catch (_err) {
+      // Fallback: if bulk API fails, construct from cached wishlist snapshots
+      const cached = wishlistIds.map((id) => wishlistDetails?.[id]).filter(Boolean)
+      if (cached.length) {
+        setProducts(cached)
+      } else {
+        showToast('Could not load products. Try again.', 'error')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [wishlistIds, wishlistDetails, showToast])
+
+  useEffect(() => {
     fetchProducts()
-  }, [showToast])
+  }, [fetchProducts])
 
   const savedProducts = useMemo(() => {
     if (!wishlistIds.length) return []
     const idSet = new Set(wishlistIds.map(Number))
-    return products.filter((p) => idSet.has(Number(p.id)))
-  }, [products, wishlistIds])
+    const map = new Map()
+
+    // First check products state
+    products.forEach((p) => {
+      if (p && idSet.has(Number(p.id))) {
+        map.set(Number(p.id), p)
+      }
+    })
+
+    // Next check cached snapshots for any missing
+    wishlistIds.forEach((id) => {
+      const numId = Number(id)
+      if (!map.has(numId) && wishlistDetails?.[numId]) {
+        map.set(numId, wishlistDetails[numId])
+      }
+    })
+
+    return Array.from(map.values())
+  }, [products, wishlistIds, wishlistDetails])
 
   const handleQuickAdd = (product) => {
     if (product.deliverable === false) {
@@ -54,13 +109,14 @@ function Wishlist() {
       return
     }
     addToCartStorage(buildCartItem(product, 1))
-    showToast(`${product.productName} added to cart.`, 'success')
+    showToast(`${product.productName || 'Product'} added to cart.`, 'success')
   }
 
   const handleRemove = (product) => {
-    toggleWishlist(product.id)
+    toggleWishlist(product.id || product)
     showToast('Product removed from saved products.', 'success')
   }
+
 
   return (
     <AppPage

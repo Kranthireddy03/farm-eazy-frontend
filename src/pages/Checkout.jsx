@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../hooks/useToast'
 import { useCheckout } from '../hooks/useCheckout'
@@ -6,9 +6,10 @@ import apiClient from '../services/apiClient'
 import { sendNotification } from '../components/NotificationCenter'
 import AppPage from '../components/layout/AppPage'
 import { PageScaffold } from '../components/app/PageScaffold'
-import { Card, CardContent } from '../components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
+import { Tag, Sparkles, HelpCircle, X, CheckCircle2 } from 'lucide-react'
 import { InfoPanel } from '../components/platform/InfoPanel'
 import { CheckoutStepIndicator } from '../components/marketplace/CheckoutStepIndicator'
 import { CheckoutProcessingOverlay } from '../components/marketplace/CheckoutProcessingOverlay'
@@ -43,10 +44,9 @@ function Checkout() {
         await fetchCoins();
         await fetchAddresses();
       } catch (error) {
-        showToast('Failed to load checkout data', 'error');
+        console.error('Error loading checkout data:', error);
       }
     };
-  // State for payment retry logic
   const [pendingOrderId, setPendingOrderId] = useState(null);
   const [retryTimer, setRetryTimer] = useState(0);
   const [retryInterval, setRetryInterval] = useState(null);
@@ -60,6 +60,9 @@ function Checkout() {
   const [couponCode, setCouponCode] = useState('')
   const [couponDiscount, setCouponDiscount] = useState(0)
   const [couponApplying, setCouponApplying] = useState(false)
+  const [availableCoupons, setAvailableCoupons] = useState([])
+  const [loadingCoupons, setLoadingCoupons] = useState(false)
+  const [selectedCouponTerms, setSelectedCouponTerms] = useState(null)
 
   const {
     totals: { subtotal, tax, total },
@@ -218,19 +221,58 @@ function Checkout() {
     }
   }
 
-  const applyCoupon = async () => {
-    const code = couponCode.trim();
-    if (!code) { setCouponDiscount(0); showToast('Enter a coupon code.', 'warning'); return; }
+  const fetchAvailableCoupons = useCallback(async (orderTotal) => {
+    try {
+      setLoadingCoupons(true)
+      const res = await apiClient.get('/coupons/available', {
+        params: { amount: orderTotal ?? total, applicableTo: 'PRODUCT' }
+      })
+      const list = Array.isArray(res.data) ? res.data : []
+      setAvailableCoupons(list)
+    } catch (_e) {
+      setAvailableCoupons([])
+    } finally {
+      setLoadingCoupons(false)
+    }
+  }, [total])
+
+  useEffect(() => {
+    if (total > 0) {
+      fetchAvailableCoupons(total)
+    }
+  }, [total, fetchAvailableCoupons])
+
+  const applyCoupon = async (codeToApply) => {
+    const code = (typeof codeToApply === 'string' ? codeToApply : couponCode).trim().toUpperCase();
+    if (!code) {
+      setCouponDiscount(0);
+      showToast('Enter a coupon code.', 'warning');
+      return;
+    }
     setCouponApplying(true);
     try {
-      const response = await apiClient.get('/coupons/validate', { params: { code, amount: total, applicableTo: 'PRODUCT' } });
-      setCouponDiscount(Number(response.data?.discount || 0));
-      showToast(`Coupon applied: ₹${Number(response.data?.discount || 0).toFixed(2)} off`, 'success');
+      const response = await apiClient.get('/coupons/validate', {
+        params: { code, amount: total, applicableTo: 'PRODUCT' }
+      });
+      const discount = Number(response.data?.discount || 0);
+      setCouponCode(code);
+      setCouponDiscount(discount);
+      showToast(`Coupon applied: ₹${discount.toFixed(2)} off`, 'success');
+      sendNotification(`Coupon ${code} applied (-₹${discount.toFixed(2)})`, 'success', '🏷️');
     } catch (error) {
       setCouponDiscount(0);
       showToast(error?.response?.data?.message || 'Coupon is not valid for this order.', 'error');
-    } finally { setCouponApplying(false); }
+    } finally {
+      setCouponApplying(false);
+    }
   };
+
+  const removeCoupon = () => {
+    setCouponCode('');
+    setCouponDiscount(0);
+    showToast('Coupon removed.', 'info');
+  };
+
 
   const handleCheckout = async () => {
     if (hasOutOfAreaItems) {
@@ -590,6 +632,19 @@ function Checkout() {
           totalSteps={3}
         />
 
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-950/20 p-3.5 flex items-start gap-3 mt-4">
+          <Sparkles className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+          <div className="text-xs space-y-1">
+            <div className="font-semibold text-emerald-900 dark:text-emerald-200 flex items-center gap-2">
+              <span>🌾 Seasonal Offers & 7-Day Hassle-Free Returns</span>
+              <Badge variant="outline" className="text-[10px] text-emerald-600 border-emerald-300 dark:border-emerald-700 bg-white/60 dark:bg-black/20">Active Coupons</Badge>
+            </div>
+            <p className="text-emerald-800 dark:text-emerald-300">
+              Apply valid coupon codes on eligible farm seeds, bio-fertilizers, pesticides, tools, and supplies. All marketplace orders are backed by standard 7-day hassle-free replacement or return.
+            </p>
+          </div>
+        </div>
+
         {hasOutOfAreaItems && (
           <InfoPanel
             variant="destructive"
@@ -601,12 +656,126 @@ function Checkout() {
 
         <PageScaffold
           aside={<>
-            <Card className="mb-4"><CardContent className="pt-5"><div className="flex flex-col sm:flex-row gap-2"><input aria-label="Coupon code" value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="Coupon code" className="h-10 flex-1 rounded-md border border-input bg-background px-3" maxLength={64} /><Button type="button" variant="outline" onClick={applyCoupon} disabled={couponApplying}>{couponApplying ? 'Applying…' : 'Apply coupon'}</Button></div>{couponDiscount > 0 && <div className="text-sm text-emerald-600 mt-2">Coupon discount: ₹{Number(couponDiscount).toFixed(2)}</div>}</CardContent></Card>
-          <OrderSummaryPanel
+            <Card className="mb-4 shadow-sm border-border">
+              <CardHeader className="pb-2 pt-4 px-4">
+                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                  <Tag className="h-4 w-4 text-primary" />
+                  Coupons & Offers
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="px-4 pb-4 pt-1 space-y-3">
+                {/* Manual Input */}
+                <div className="flex gap-2">
+                  <input
+                    aria-label="Coupon code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                    placeholder="Enter coupon code"
+                    className="h-9 flex-1 rounded-lg border border-input bg-background px-3 text-sm font-mono uppercase"
+                    maxLength={32}
+                  />
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => applyCoupon(couponCode)}
+                    disabled={couponApplying || !couponCode.trim()}
+                  >
+                    {couponApplying ? 'Applying…' : 'Apply'}
+                  </Button>
+                </div>
+
+                {/* Applied Coupon Info */}
+                {couponDiscount > 0 && (
+                  <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 flex items-center justify-between text-xs">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                      <div>
+                        <span className="font-bold text-emerald-700 dark:text-emerald-300">{couponCode}</span>
+                        <span className="text-muted-foreground ml-1.5">(saved ₹{Number(couponDiscount).toFixed(2)})</span>
+                      </div>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={removeCoupon}
+                      className="h-6 px-2 text-[11px] text-destructive hover:text-destructive"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                )}
+
+                {/* Available Coupons List */}
+                {availableCoupons.length > 0 && (
+                  <div className="pt-2 border-t border-border/60 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground font-medium">
+                      <span>Available for you ({availableCoupons.length})</span>
+                      {loadingCoupons && <span className="text-[10px]">Updating…</span>}
+                    </div>
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {availableCoupons.map((c) => {
+                        const isApplied = couponCode === c.code && couponDiscount > 0;
+                        const meetsMin = !c.minimumOrderAmount || total >= Number(c.minimumOrderAmount);
+                        return (
+                          <div
+                            key={c.code}
+                            className={`rounded-lg border p-2.5 text-xs space-y-1.5 transition-all ${
+                              isApplied
+                                ? 'border-emerald-500 bg-emerald-500/5'
+                                : 'border-border/80 hover:border-primary/50 bg-background/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-mono font-bold tracking-wide text-foreground px-1.5 py-0.5 rounded border border-dashed border-primary/50 bg-primary/5">
+                                {c.code}
+                              </span>
+                              {isApplied ? (
+                                <Badge variant="success" className="text-[10px] py-0 px-2">Applied</Badge>
+                              ) : (
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-xs font-semibold text-primary hover:bg-primary/10"
+                                  disabled={couponApplying || !meetsMin}
+                                  onClick={() => applyCoupon(c.code)}
+                                >
+                                  {meetsMin ? 'Apply' : `Min ₹${c.minimumOrderAmount}`}
+                                </Button>
+                              )}
+                            </div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {c.discountType === 'PERCENTAGE'
+                                ? `${c.discountValue}% off${c.maximumDiscount ? ` up to ₹${c.maximumDiscount}` : ''}`
+                                : `Flat ₹${c.discountValue} off on your order`}
+                              {c.minimumOrderAmount ? ` · Min cart: ₹${c.minimumOrderAmount}` : ''}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setSelectedCouponTerms(c)}
+                              className="text-[10px] text-primary hover:underline inline-flex items-center gap-1 font-medium"
+                            >
+                              <HelpCircle className="h-3 w-3" />
+                              View terms & return policy
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <OrderSummaryPanel
               subtotal={subtotal}
               tax={tax}
               total={total}
-              finalAmount={finalAmount}
+              finalAmount={discountedFinalAmount}
+              couponDiscount={couponDiscount}
+              couponCode={couponCode}
               coins={coins}
               useCoins={useCoins}
               coinsToUse={coinsToUse}
@@ -661,6 +830,90 @@ function Checkout() {
             showToast={showToast}
           />
         </PageScaffold>
+
+      {/* Terms & Conditions and Exchange/Return Modal */}
+      {selectedCouponTerms && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm p-4 flex items-center justify-center animate-fadeIn"
+          onClick={() => setSelectedCouponTerms(null)}
+        >
+          <div
+            className="max-w-md w-full bg-background border border-border rounded-2xl p-5 shadow-2xl space-y-4 animate-scaleUp"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b border-border pb-3">
+              <div className="flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                <h3 className="font-bold text-foreground">Coupon: {selectedCouponTerms.code}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedCouponTerms(null)}
+                className="rounded-full p-1 hover:bg-muted text-muted-foreground"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 space-y-1">
+                <div className="font-semibold text-primary">
+                  {selectedCouponTerms.discountType === 'PERCENTAGE'
+                    ? `${selectedCouponTerms.discountValue}% Discount${selectedCouponTerms.maximumDiscount ? ` (Max ₹${selectedCouponTerms.maximumDiscount})` : ''}`
+                    : `Flat ₹${selectedCouponTerms.discountValue} Discount`}
+                </div>
+                <div className="text-muted-foreground">
+                  {selectedCouponTerms.minimumOrderAmount ? `Requires minimum purchase of ₹${selectedCouponTerms.minimumOrderAmount}` : 'No minimum order required'}
+                </div>
+              </div>
+
+              <div>
+                <div className="font-semibold text-foreground flex items-center gap-1.5 mb-1">
+                  🌾 Eligible Items
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  {selectedCouponTerms.eligibleItems || 'Applicable on verified agricultural products: seeds, bio-fertilizers, farm equipment, tools, and organic inputs.'}
+                </p>
+              </div>
+
+              <div>
+                <div className="font-semibold text-foreground flex items-center gap-1.5 mb-1">
+                  📋 Terms & Conditions
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  {selectedCouponTerms.termsAndConditions || '1. Valid on product purchases. 2. Cannot be combined with other offers. 3. Valid once per user account.'}
+                </p>
+              </div>
+
+              <div>
+                <div className="font-semibold text-foreground flex items-center gap-1.5 mb-1">
+                  🔄 Exchange & Return Policy
+                </div>
+                <p className="text-muted-foreground leading-relaxed">
+                  {selectedCouponTerms.returnExchangePolicy || 'Standard 7-day hassle-free replacement or return applies on eligible agricultural goods. If any item is returned or refunded, the coupon discount is prorated across eligible items and cannot be refunded as cash.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 flex justify-end gap-2 border-t border-border">
+              <Button variant="outline" size="sm" onClick={() => setSelectedCouponTerms(null)}>
+                Close
+              </Button>
+              {couponCode !== selectedCouponTerms.code && (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    applyCoupon(selectedCouponTerms.code);
+                    setSelectedCouponTerms(null);
+                  }}
+                >
+                  Apply Coupon
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </AppPage>
   )
 }

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Home, LayoutDashboard, Sprout, Droplets, ShoppingCart, Store,
   LifeBuoy, Settings, Bell, MapPin, Search, Menu, ChevronLeft,
-  LogOut, Package,
+  LogOut, Package, Heart,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -20,9 +20,11 @@ import { useShell } from '../shell/ShellContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCoin } from '../../context/CoinContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useWishlist } from '../../hooks/useWishlist';
 import useSessionTimeout from '../../hooks/useSessionTimeout';
 import AuthService from '../../services/AuthService';
 import apiClient from '../../services/apiClient';
+
 
 const NAV = [
   { name: 'Home', path: '/', icon: Home, title: 'Go to your main dashboard overview' },
@@ -55,7 +57,7 @@ const NAV = [
       { name: 'Post Product', path: '/products/post', title: 'Add a new product listing to the marketplace' },
       { name: 'My Listings', path: '/products/listings', title: 'View and manage products you have listed' },
       { name: 'My Orders', path: '/products/orders', title: 'Orders you placed as a buyer' },
-      { name: 'Saved / Wishlist', path: '/products/saved', title: 'Products you saved — add them to your cart anytime' },
+      { name: 'Saved / Wishlist', path: '/wishlist', title: 'Products you saved — add them to your cart anytime' },
       { name: 'Sales', path: '/products/sales', title: 'Orders received for your products' },
       { name: 'Product History', path: '/products/history', title: 'Your past purchases and sales' },
     ]
@@ -71,6 +73,7 @@ export default function AppShell({ children, onShowTour }) {
   const { isDark } = useTheme();
   const { logout: authLogout, getUserEmail, getUserName, isAuthenticated } = useAuth();
   const { coins, refreshCoins } = useCoin();
+  const { count: wishlistCount } = useWishlist();
   const [collapsed, setCollapsed] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [expandedMenu, setExpandedMenu] = useState(
@@ -253,6 +256,22 @@ export default function AppShell({ children, onShowTour }) {
               </Button>
 
               <NotificationBell />
+
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate('/wishlist')}
+                className="relative"
+                aria-label="Wishlist"
+                title="Saved products / Wishlist"
+              >
+                <Heart className={cn("h-4 w-4 transition-colors", wishlistCount > 0 ? "fill-rose-500 text-rose-500" : "text-muted-foreground")} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-4 min-w-4 px-1 rounded-full bg-rose-500 text-[10px] text-white flex items-center justify-center font-bold">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Button>
 
               <Button variant="outline" size="icon" onClick={() => navigate('/cart')} className="relative" aria-label="Cart">
                 <ShoppingCart className="h-4 w-4" />

@@ -13,6 +13,8 @@ export function OrderSummaryPanel({
   total,
   savings = 0,
   finalAmount,
+  couponDiscount = 0,
+  couponCode = '',
   coins = 0,
   useCoins = false,
   coinsToUse = 0,
@@ -48,6 +50,12 @@ export function OrderSummaryPanel({
             <div className="flex justify-between text-primary font-medium">
               <span>Product savings</span>
               <span>₹{savings.toFixed(2)}</span>
+            </div>
+          )}
+          {couponDiscount > 0 && (
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-semibold">
+              <span>Coupon discount {couponCode ? `(${couponCode})` : ''}</span>
+              <span>- ₹{Number(couponDiscount).toFixed(2)}</span>
             </div>
           )}
           <div className="flex justify-between font-semibold border-t border-border pt-2">
