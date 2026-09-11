@@ -10,7 +10,7 @@ import { getUserFacingErrorMessage } from '../../utils/userFacingError'
 import { useAuth } from '../../context/AuthContext'
 import { useSession } from '../../context/SessionContext'
 import { useTheme } from '../../context/ThemeContext'
-import { useLocationContext } from '../../context/LocationContext'
+import { useLocationContext, findMatchingActiveZone } from '../../context/LocationContext'
 import { Button } from '../ui/button'
 import { Badge } from '../ui/badge'
 import LocationWizardMap from './LocationWizardMap'
@@ -213,31 +213,43 @@ export default function LocationWizard() {
     updateMapFromCoords(latitude, longitude)
   }
 
-  const finalizeSelection = async (payload) => {
+  const finalizeSelection = (payload) => {
     setAddressError('')
+    markSessionVerified()
+    closeSelector(true)
+    navigate('/dashboard')
+    setConfirming(null)
+    setConfirmingCheck(null)
     try {
-      const result = await setSelectedLocation(payload, { forceClose: true })
-      if (result?.status?.allowed || payload.isServiceable) {
-        markSessionVerified()
-        closeSelector(true)
-        // Warm up dashboard data APIs upon approved location selection
-        try {
-          apiClient.get('/dashboard/summary').catch(() => {})
-        } catch (_e) {}
-        navigate('/dashboard')
-      }
-      setConfirming(null)
-      setConfirmingCheck(null)
-    } catch (err) {
-      setAddressError(getUserFacingErrorMessage(err, 'Could not save your location. Please try again.'))
-    }
+      apiClient.get('/dashboard/summary').catch(() => {})
+    } catch (_e) {}
+    setSelectedLocation(payload, { forceClose: true }).catch((err) => {
+      console.warn('Location selection background persist error:', err)
+    })
   }
 
   const handleLocationSelect = async (payload) => {
-    setCheckingZone(true)
     setAddressError('')
     setRequestSubmitted(false)
     setRequestError('')
+
+    // 1. Instant check: already marked serviceable or matches active delivery zones locally
+    if (payload.isServiceable) {
+      finalizeSelection(payload)
+      return
+    }
+
+    const localMatch = findMatchingActiveZone(payload, activeZones)
+    if (localMatch) {
+      payload.isServiceable = true
+      payload.matchedZoneName = localMatch.locationName
+      payload.matchedZoneId = localMatch.id
+      finalizeSelection(payload)
+      return
+    }
+
+    // 2. Otherwise check with backend
+    setCheckingZone(true)
     try {
       const checkResult = await checkLocationServiceable(payload)
       if (checkResult?.allowed) {
@@ -245,7 +257,7 @@ export default function LocationWizard() {
         payload.isServiceable = true
         payload.matchedZoneName = checkResult.matchedLocationName || null
         payload.matchedZoneId = checkResult.matchedLocationId || null
-        await finalizeSelection(payload)
+        finalizeSelection(payload)
       } else {
         // INACTIVE ZONE: Show inactive notice, demand counter, and request form
         setConfirming(payload)
@@ -331,10 +343,10 @@ export default function LocationWizard() {
     })
   }
 
-  const chooseActiveZone = async (zone) => {
+  const chooseActiveZone = (zone) => {
     const lat = zone.latitude != null ? Number(zone.latitude) : DEFAULT_MAP_CENTER.latitude
     const lng = zone.longitude != null ? Number(zone.longitude) : DEFAULT_MAP_CENTER.longitude
-    const label = `${zone.locationName} (${zone.city}, ${zone.state})`
+    const label = `${zone.locationName} (${zone.city || zone.state || 'Active Zone'})`
 
     const payload = {
       type: 'coords',
@@ -349,7 +361,7 @@ export default function LocationWizard() {
       matchedZoneId: zone.id,
     }
 
-    await finalizeSelection(payload)
+    finalizeSelection(payload)
   }
 
   const chooseAddress = (address) => {
@@ -397,7 +409,7 @@ export default function LocationWizard() {
     }
   }
 
-  const useCurrentLocation = async () => {
+  const useCurrentLocation = () => {
     if (!navigator.geolocation) {
       setAddressError('Geolocation is not supported in this browser.')
       return
@@ -406,19 +418,54 @@ export default function LocationWizard() {
     setAddressError('')
     setAskingGps(true)
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
+      (position) => {
         const latitude = Number(position.coords.latitude)
         const longitude = Number(position.coords.longitude)
-        const resolved = await updateMapFromCoords(latitude, longitude)
         setAskingGps(false)
-        handleLocationSelect({
-          type: 'coords',
-          latitude,
-          longitude,
-          label: resolved.label,
-          city: resolved.city,
-          state: resolved.state,
-          postalCode: resolved.postalCode,
+
+        // Instant local match against active delivery zones
+        const localMatch = findMatchingActiveZone({ latitude, longitude }, activeZones)
+        if (localMatch) {
+          const payload = {
+            type: 'coords',
+            latitude,
+            longitude,
+            label: `${localMatch.locationName} (${localMatch.city || 'Active Zone'})`,
+            city: localMatch.city,
+            state: localMatch.state,
+            postalCode: localMatch.postalCode,
+            isServiceable: true,
+            matchedZoneName: localMatch.locationName,
+            matchedZoneId: localMatch.id,
+          }
+          finalizeSelection(payload)
+          // Asynchronously enrich the label in the background via reverse geocoding
+          reverseGeocode(latitude, longitude).then((rev) => {
+            if (rev?.label) {
+              setSelectedLocation({ ...payload, label: rev.label }, { forceClose: true }).catch(() => {})
+            }
+          }).catch(() => {})
+          return
+        }
+
+        // If not immediate active zone match, update map and check serviceability
+        updateMapFromCoords(latitude, longitude).then((resolved) => {
+          handleLocationSelect({
+            type: 'coords',
+            latitude,
+            longitude,
+            label: resolved?.label || `Lat ${latitude.toFixed(4)}, Lon ${longitude.toFixed(4)}`,
+            city: resolved?.city || '',
+            state: resolved?.state || '',
+            postalCode: resolved?.postalCode || '',
+          })
+        }).catch(() => {
+          handleLocationSelect({
+            type: 'coords',
+            latitude,
+            longitude,
+            label: `Lat ${latitude.toFixed(4)}, Lon ${longitude.toFixed(4)}`,
+          })
         })
       },
       (geoError) => {
@@ -433,7 +480,7 @@ export default function LocationWizard() {
     )
   }
 
-  const canClose = (isSessionVerified || hasExistingLocation) && !mustStayOpen
+  const canClose = isSessionVerified && hasExistingLocation && !mustStayOpen && !confirming
   const recents = useMemo(() => (Array.isArray(recentLocations) ? recentLocations : []), [recentLocations])
 
   if (!show) return null
@@ -441,110 +488,147 @@ export default function LocationWizard() {
   const title = isLocationRequired
     ? 'Choose your service location'
     : 'Change service location'
-  const subtitle = 'Select your delivery area. If active, you will be redirected to the dashboard. If inactive, you can request service launch in your area.'
+  const subtitle = 'Select your delivery area. Marketplace orders & logistics are verified for active delivery zones.'
+
+  const isFullGating = !canClose || mustStayOpen || (confirming && confirmingCheck && !confirmingCheck.allowed)
 
   return (
     <div
-      className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 animate-fadeIn"
+      className={`fixed inset-0 z-[150] flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all duration-300 ${
+        isFullGating
+          ? 'bg-slate-950 overflow-y-auto'
+          : 'bg-black/75 backdrop-blur-md'
+      }`}
       role="dialog"
       aria-modal="true"
       aria-labelledby="location-wizard-title"
     >
-      <div className={`w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-6 transition-all ${isDark ? 'bg-slate-950 border-sky-500/20 text-slate-100' : 'bg-white border-border text-foreground'}`}>
+      {/* Ambient background glows for full gating mode */}
+      {isFullGating && (
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute top-[-15%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[140px]" />
+          <div className="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] rounded-full bg-teal-500/10 blur-[140px]" />
+        </div>
+      )}
+
+      <div className={`relative w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border shadow-2xl p-5 sm:p-7 transition-all ${isDark ? 'bg-slate-900/95 border-emerald-500/20 text-slate-100 backdrop-blur-xl' : 'bg-white border-slate-200 text-slate-900'}`}>
         
         {/* Header */}
-        <div className="flex items-start justify-between gap-4 border-b border-border/60 pb-4">
+        <div className="flex items-start justify-between gap-4 border-b border-border/70 pb-4">
           <div>
-            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-1">
-              <MapPin className="h-5 w-5 animate-pulse" aria-hidden="true" />
-              <span className="text-xs font-bold uppercase tracking-[0.2em]">Service Zone Selection</span>
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 mb-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+              <span className="text-[11px] font-bold uppercase tracking-[0.18em]">FarmEazy Service Zone Network</span>
             </div>
-            <h2 id="location-wizard-title" className="text-xl sm:text-2xl font-black tracking-tight">
+            <h2 id="location-wizard-title" className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
               {title}
             </h2>
             <p className="mt-1 text-xs sm:text-sm text-muted-foreground leading-relaxed">
               {subtitle}
             </p>
             {selectedLocationLabel && hasEffectiveLocation && !mustStayOpen && (
-              <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs font-medium text-muted-foreground">
+              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-muted text-xs font-medium text-muted-foreground">
                 <span>Current:</span>
-                <span className="text-foreground font-semibold truncate max-w-xs">{selectedLocationLabel}</span>
+                <span className="text-foreground font-bold truncate max-w-xs">{selectedLocationLabel}</span>
               </div>
             )}
           </div>
           {canClose && (
-            <Button type="button" variant="outline" size="sm" onClick={closeSelector} className="rounded-full px-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={closeSelector}
+              className="rounded-full px-3.5 py-1 text-xs font-semibold cursor-pointer shrink-0"
+            >
               Close
             </Button>
           )}
         </div>
 
-        {/* Confirmation & Active Zone Gate Stage */}
+        {/* Confirmation & Inactive Zone Gate Stage */}
         {confirming ? (
           <div className="mt-5 space-y-4 animate-fadeIn">
-            <div className={`rounded-2xl border p-4 sm:p-5 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+            <div className={`rounded-2xl border p-4 sm:p-5 ${isDark ? 'border-border bg-slate-950/60' : 'border-border bg-slate-50'}`}>
               <div className="flex items-center justify-between gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Selected Location</span>
                 {checkingZone && (
-                  <span className="text-xs text-muted-foreground animate-pulse">Verifying active zone…</span>
+                  <span className="text-xs text-emerald-500 font-semibold animate-pulse">Verifying active zone access…</span>
                 )}
               </div>
 
               <p className="mt-2 text-sm sm:text-base font-semibold text-foreground leading-relaxed">{confirming.label}</p>
 
-              {/* Real-time Inactive Zone Notice & Demand Request */}
+              {/* Inactive Zone Notice & Community Demand */}
               {!checkingZone && confirmingCheck && !confirmingCheck.allowed && (
-                <div className="mt-4">
+                <div className="mt-4 space-y-4">
                   <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 sm:p-5 space-y-4">
                     <div className="flex items-start gap-3">
-                      <AlertTriangle className="h-6 w-6 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                      <div className="h-9 w-9 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 mt-0.5">
+                        <AlertTriangle className="h-5 w-5 text-amber-500" />
+                      </div>
                       <div>
                         <p className="text-base font-bold text-amber-800 dark:text-amber-200">
                           We don&apos;t operate in this location yet
                         </p>
                         <p className="text-xs sm:text-sm text-amber-800/90 dark:text-amber-300/90 mt-1 leading-relaxed">
-                          {confirmingCheck.message || 'FarmEazy marketplace delivery and farm services are currently restricted to our active operating zones.'}
+                          {confirmingCheck.message || 'FarmEazy marketplace delivery and farm operations are restricted to active verified hubs.'}
                         </p>
                       </div>
                     </div>
 
                     {/* Live Demand Counter Badge */}
-                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/20 p-3 flex items-center justify-between flex-wrap gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">🔥</span>
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-500/20 p-3.5 flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-xl animate-bounce">🔥</span>
                         <div>
-                          <span className="text-xs uppercase font-bold tracking-wider text-amber-900 dark:text-amber-200 block">Community Demand</span>
+                          <span className="text-[10px] uppercase font-bold tracking-wider text-amber-900 dark:text-amber-300 block">Community Demand</span>
                           <span className="text-sm font-black text-amber-950 dark:text-amber-100">
-                            {loadingDemand ? 'Calculating demand…' : `${demandCount} user${demandCount === 1 ? '' : 's'} have requested service in this region`}
+                            {loadingDemand ? 'Calculating demand…' : `${demandCount} user${demandCount === 1 ? '' : 's'} requested service in this region`}
                           </span>
                         </div>
                       </div>
-                      <Badge className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs">
+                      <Badge className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-2.5 py-1 shadow-sm">
                         High Expansion Priority
                       </Badge>
                     </div>
 
-                    {/* What you should do guide */}
-                    <div className="bg-background/80 rounded-xl p-3.5 border border-border space-y-2">
-                      <p className="text-xs font-bold uppercase tracking-wider text-foreground">What you can do:</p>
-                      <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside">
-                        <li><strong>Submit your request below:</strong> Our operations team reviews top-requested areas weekly to launch new delivery zones.</li>
-                        <li><strong>Instant Notification:</strong> You will be notified via Email &amp; SMS as soon as FarmEazy goes live in your area.</li>
-                        <li><strong>Or switch to an active zone:</strong> You can select any active delivery zone below to explore and place orders immediately.</li>
-                      </ul>
-                    </div>
+                    {/* Direct 1-Click Active Zone Switcher */}
+                    {activeZones.length > 0 && (
+                      <div className="rounded-xl bg-background/80 border border-border p-3.5 space-y-2.5">
+                        <p className="text-xs font-bold uppercase tracking-wider text-foreground flex items-center gap-1.5">
+                          <span>📍</span> Instant Access — Switch to an Active Delivery Zone:
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {activeZones.map((z) => (
+                            <button
+                              key={z.id}
+                              type="button"
+                              onClick={() => chooseActiveZone(z)}
+                              className="p-2.5 rounded-xl text-left bg-emerald-500/10 hover:bg-emerald-600 hover:text-white text-emerald-950 dark:text-emerald-100 transition-all border border-emerald-500/30 flex items-center justify-between group shadow-xs cursor-pointer"
+                            >
+                              <div>
+                                <p className="font-bold text-xs">{z.locationName}</p>
+                                <p className="text-[10px] opacity-75">{z.city || z.state} • {z.radiusKm || 5} km radius</p>
+                              </div>
+                              <ArrowRight className="h-4 w-4 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-transform shrink-0" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-                    {/* Request Access Form */}
+                    {/* Request Coverage Form */}
                     {requestSubmitted ? (
                       <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-center space-y-2 animate-fadeIn">
-                        <div className="h-10 w-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto">
+                        <div className="h-10 w-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
                           <CheckCircle2 className="h-6 w-6" />
                         </div>
                         <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
                           🎉 Your Coverage Request Has Been Recorded!
                         </p>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300">
-                          You are request #{demandCount}. Our operations team will notify you via Email and SMS as soon as this zone becomes active.
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 max-w-md mx-auto">
+                          You are request #{demandCount}. Our operations team reviews weekly rollouts and will notify you via Email and SMS as soon as FarmEazy goes live in this area.
                         </p>
                       </div>
                     ) : (
@@ -561,7 +645,7 @@ export default function LocationWizard() {
                               value={requestForm.userName}
                               onChange={(e) => setRequestForm({ ...requestForm, userName: e.target.value })}
                               placeholder="Full Name"
-                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                             />
                           </div>
                           <div>
@@ -572,7 +656,7 @@ export default function LocationWizard() {
                               value={requestForm.userEmail}
                               onChange={(e) => setRequestForm({ ...requestForm, userEmail: e.target.value })}
                               placeholder="name@example.com"
-                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                             />
                           </div>
                         </div>
@@ -584,7 +668,7 @@ export default function LocationWizard() {
                               value={requestForm.userPhone}
                               onChange={(e) => setRequestForm({ ...requestForm, userPhone: e.target.value })}
                               placeholder="9876543210"
-                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                             />
                           </div>
                           <div>
@@ -594,7 +678,7 @@ export default function LocationWizard() {
                               value={requestForm.notes}
                               onChange={(e) => setRequestForm({ ...requestForm, notes: e.target.value })}
                               placeholder="e.g. Near Market Yard, 50+ farms in area"
-                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500"
+                              className="w-full mt-1 px-3 py-2 text-xs rounded-lg border bg-background text-foreground focus:ring-2 focus:ring-amber-500 outline-none"
                             />
                           </div>
                         </div>
@@ -608,32 +692,9 @@ export default function LocationWizard() {
                           disabled={submittingRequest}
                           className="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-2.5 shadow-md cursor-pointer"
                         >
-                          {submittingRequest ? 'Submitting request…' : '🚀 Request FarmEazy Coverage in this Area'}
+                          {submittingRequest ? 'Submitting request…' : '🚀 Submit FarmEazy Coverage Request'}
                         </Button>
                       </form>
-                    )}
-
-                    {/* Active Zones Switch Options */}
-                    {activeZones.length > 0 && (
-                      <div className="pt-3 border-t border-amber-500/20">
-                        <p className="text-xs font-bold text-amber-900 dark:text-amber-200 mb-2 flex items-center gap-1.5">
-                          <span>📍</span> Switch to an Active Delivery Zone to Continue:
-                        </p>
-                        <div className="flex flex-wrap gap-2">
-                          {activeZones.map((z) => (
-                            <button
-                              key={z.id}
-                              type="button"
-                              onClick={() => chooseActiveZone(z)}
-                              className="px-3 py-1.5 text-xs rounded-xl font-bold bg-amber-500/20 hover:bg-emerald-600 hover:text-white text-amber-950 dark:text-amber-100 transition-all border border-amber-500/30 flex items-center gap-1.5 shadow-sm cursor-pointer"
-                            >
-                              <span>📍</span>
-                              <span>{z.locationName}</span>
-                              <span className="opacity-75 text-[10px]">({z.city || z.state})</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
                     )}
                   </div>
                 </div>
@@ -649,7 +710,7 @@ export default function LocationWizard() {
                     setConfirmingCheck(null)
                     setRequestSubmitted(false)
                   }}
-                  className="font-semibold"
+                  className="font-semibold text-xs cursor-pointer"
                 >
                   ← Choose Different Location
                 </Button>
@@ -658,28 +719,28 @@ export default function LocationWizard() {
           </div>
         ) : (
           <>
-            {/* Primary Action: Swiggy-like GPS Geolocation button */}
+            {/* Primary Action: Swiggy/Zepto-like GPS Geolocation button */}
             <div className="mt-4">
               <button
                 type="button"
                 disabled={askingGps}
                 onClick={useCurrentLocation}
-                className="w-full rounded-2xl p-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-md transition flex items-center justify-between group cursor-pointer disabled:opacity-75"
+                className="w-full rounded-2xl p-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white shadow-lg transition-all duration-200 flex items-center justify-between group cursor-pointer disabled:opacity-75"
               >
-                <div className="flex items-center gap-3 text-left">
-                  <div className="h-10 w-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <div className="flex items-center gap-3.5 text-left">
+                  <div className="h-11 w-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0 shadow-xs">
                     <Navigation className={`h-5 w-5 ${askingGps ? 'animate-spin' : 'group-hover:scale-110 transition-transform'}`} />
                   </div>
                   <div>
                     <p className="font-bold text-sm sm:text-base">
-                      {askingGps ? 'Detecting current GPS location…' : 'Use Current Location (GPS)'}
+                      {askingGps ? 'Detecting GPS location…' : 'Use Current Location (GPS)'}
                     </p>
                     <p className="text-xs text-white/80">
                       Instantly check if you are within an active delivery zone
                     </p>
                   </div>
                 </div>
-                <ArrowRight className="h-5 w-5 text-white/70 group-hover:translate-x-1 transition-transform shrink-0" />
+                <ArrowRight className="h-5 w-5 text-white/70 group-hover:translate-x-1.5 transition-transform shrink-0" />
               </button>
             </div>
 
@@ -688,24 +749,35 @@ export default function LocationWizard() {
               <section className="mt-4" aria-label="Configured active zones">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold uppercase tracking-[0.16em] text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                    <ShieldCheck className="h-3.5 w-3.5" />
-                    Serving in Active Zones
+                    <ShieldCheck className="h-4 w-4" />
+                    Serving in Active Operational Hubs
                   </span>
-                  <span className="text-[10px] text-muted-foreground">Admin verified</span>
+                  <span className="text-[10px] text-muted-foreground font-medium">1-Click Launch</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {activeZones.map((zone) => (
                     <button
                       key={zone.id}
                       type="button"
                       onClick={() => chooseActiveZone(zone)}
-                      className={`group flex items-center gap-1.5 rounded-xl border px-3 py-2 text-left text-xs transition ${isDark ? 'border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/15 text-slate-200' : 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/70 text-emerald-950'}`}
+                      className={`group flex items-center justify-between gap-2 rounded-2xl border p-3 text-left text-xs transition-all shadow-xs cursor-pointer ${
+                        isDark
+                          ? 'border-emerald-500/25 bg-emerald-500/5 hover:bg-emerald-500/15 hover:border-emerald-500/40 text-slate-100'
+                          : 'border-emerald-200 bg-emerald-50/70 hover:bg-emerald-100/90 text-emerald-950'
+                      }`}
                     >
-                      <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                      <div>
-                        <span className="font-bold">{zone.locationName}</span>
-                        <span className="text-[10px] text-muted-foreground ml-1">({zone.city || zone.state})</span>
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-8 w-8 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
+                          <MapPin className="h-4 w-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold truncate text-foreground">{zone.locationName}</p>
+                          <p className="text-[10px] text-muted-foreground">{zone.city || zone.state} • {zone.radiusKm || 5} km radius</p>
+                        </div>
                       </div>
+                      <Badge className="bg-emerald-600 group-hover:bg-emerald-700 text-white text-[10px] font-bold shrink-0">
+                        Active Hub
+                      </Badge>
                     </button>
                   ))}
                 </div>
@@ -723,11 +795,11 @@ export default function LocationWizard() {
               />
               <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                 <span>📍 Drag pin to check any area</span>
-                <span className="text-emerald-600 dark:text-emerald-400 font-medium">🟢 Green circles = Active delivery zones</span>
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold">🟢 Green circles = Active delivery zones</span>
               </div>
 
               {(mapLabel || mapLabelLoading) && (
-                <div className={`mt-3 rounded-xl border p-3 flex items-center justify-between gap-3 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                <div className={`mt-3 rounded-2xl border p-3 flex items-center justify-between gap-3 ${isDark ? 'border-border bg-slate-950/60' : 'border-border bg-muted/20'}`}>
                   <div className="min-w-0">
                     <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">Map Selection</p>
                     <p className="text-xs text-foreground font-medium truncate">
@@ -737,7 +809,7 @@ export default function LocationWizard() {
                   <Button
                     type="button"
                     size="sm"
-                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs shrink-0"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shrink-0 cursor-pointer shadow-sm"
                     disabled={mapLabelLoading || isSavingLocation}
                     onClick={confirmMapSelection}
                   >
@@ -749,19 +821,19 @@ export default function LocationWizard() {
 
             {/* Search Input */}
             <div className="mt-4 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
               <input
                 type="search"
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
                 placeholder="Search area, landmark, city, or 6-digit pincode…"
                 aria-label="Search for a location"
-                className={`w-full rounded-xl border pl-10 pr-3 py-2.5 text-sm ${isDark ? 'bg-muted/60 border-border text-white placeholder:text-slate-400' : 'bg-white border-border text-foreground placeholder:text-muted-foreground'}`}
+                className={`w-full rounded-2xl border pl-10 pr-4 py-2.5 text-xs sm:text-sm outline-none transition ${isDark ? 'bg-slate-950/80 border-border text-white placeholder:text-slate-500 focus:border-emerald-500/50' : 'bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-emerald-500'}`}
               />
             </div>
 
             {addressError && (
-              <div className={`mt-3 rounded-xl border px-3.5 py-2.5 text-sm flex items-start gap-2 ${isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+              <div className={`mt-3 rounded-2xl border px-3.5 py-2.5 text-xs flex items-start gap-2 ${isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
                 <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
                 <span>{addressError}</span>
               </div>
@@ -770,11 +842,11 @@ export default function LocationWizard() {
             {/* Search Results */}
             {searchQuery.trim().length >= 3 && (
               <section className="mt-4" aria-label="Search results">
-                <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-1.5">
+                <h3 className="text-xs font-bold uppercase tracking-[0.18em] text-primary flex items-center gap-1.5 mb-1.5">
                   <Search className="h-3.5 w-3.5" aria-hidden="true" />
                   Search Results
                 </h3>
-                <div className={`mt-1.5 rounded-xl border p-1 max-h-48 overflow-y-auto ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                <div className={`rounded-2xl border p-1 max-h-48 overflow-y-auto ${isDark ? 'border-border bg-slate-950/60' : 'border-border bg-muted/20'}`}>
                   {searchLoading && <div className="px-3 py-3 text-xs text-muted-foreground">Searching places…</div>}
                   {!searchLoading && searchResults.length === 0 && (
                     <div className="px-3 py-3 text-xs text-muted-foreground">No matches found for &quot;{searchQuery}&quot;. Try a nearby city or pincode.</div>
@@ -784,7 +856,7 @@ export default function LocationWizard() {
                       type="button"
                       key={`${result.latitude}:${result.longitude}:${index}`}
                       onClick={() => chooseCoords(result)}
-                      className={`w-full text-left rounded-lg px-3 py-2.5 transition flex items-center justify-between gap-2 ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
+                      className={`w-full text-left rounded-xl px-3 py-2.5 transition flex items-center justify-between gap-2 cursor-pointer ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
                     >
                       <div className="min-w-0">
                         <p className="text-xs font-semibold truncate text-foreground">{result.label}</p>
@@ -808,12 +880,12 @@ export default function LocationWizard() {
                   <button
                     type="button"
                     onClick={() => { closeSelector(); navigate('/address-book'); }}
-                    className="text-[10px] font-semibold text-primary hover:underline"
+                    className="text-[10px] font-semibold text-primary hover:underline cursor-pointer"
                   >
                     + Manage addresses
                   </button>
                 </div>
-                <div className={`rounded-xl border p-1 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                <div className={`rounded-2xl border p-1 ${isDark ? 'border-border bg-slate-950/60' : 'border-border bg-muted/20'}`}>
                   {loadingAddresses && <div className="px-3 py-2.5 text-xs text-muted-foreground">Loading saved addresses…</div>}
                   {!loadingAddresses && savedAddresses.length === 0 && (
                     <div className="px-3 py-2.5 text-xs text-muted-foreground">No saved addresses yet.</div>
@@ -823,7 +895,7 @@ export default function LocationWizard() {
                       type="button"
                       key={address.id}
                       onClick={() => chooseAddress(address)}
-                      className={`w-full text-left rounded-lg px-3 py-2 transition flex items-center justify-between gap-2 ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
+                      className={`w-full text-left rounded-xl px-3 py-2 transition flex items-center justify-between gap-2 cursor-pointer ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
                     >
                       <div className="min-w-0">
                         <div className="flex items-center gap-2">
@@ -847,13 +919,13 @@ export default function LocationWizard() {
                   <Clock className="h-3.5 w-3.5" aria-hidden="true" />
                   Recent Locations
                 </h3>
-                <div className={`rounded-xl border p-1 ${isDark ? 'border-border bg-card/60' : 'border-border bg-muted/20'}`}>
+                <div className={`rounded-2xl border p-1 ${isDark ? 'border-border bg-slate-950/60' : 'border-border bg-muted/20'}`}>
                   {recents.map((recent, index) => (
                     <button
                       type="button"
                       key={`${recent.type}:${recent.id || index}:${recent.latitude || ''}:${recent.longitude || ''}`}
                       onClick={() => chooseCoords(recent)}
-                      className={`w-full text-left rounded-lg px-3 py-2 transition flex items-center justify-between gap-2 ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
+                      className={`w-full text-left rounded-xl px-3 py-2 transition flex items-center justify-between gap-2 cursor-pointer ${isDark ? 'hover:bg-muted/80' : 'hover:bg-white'}`}
                     >
                       <p className="text-xs font-medium truncate text-foreground">{recent.label || `Recent ${index + 1}`}</p>
                       <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />

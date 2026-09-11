@@ -73,8 +73,8 @@ export default function ServiceUnavailableLocation() {
       matchedZoneName: zone.locationName,
       matchedZoneId: zone.id,
     };
-    await setSelectedLocation(payload);
-    navigate('/');
+    await setSelectedLocation(payload, { forceClose: true });
+    navigate('/dashboard');
   };
 
   const submitLaunchRequest = async (event) => {

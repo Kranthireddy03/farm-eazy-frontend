@@ -89,6 +89,53 @@ function mergeRecent(nextLocation, previousRecent) {
 
 const SESSION_LOCATION_KEY = 'farmeazy_session_location_selected'
 
+export function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371 // Earth radius in km
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2)
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+  return R * c
+}
+
+export function findMatchingActiveZone(payload, zones) {
+  if (!payload || !Array.isArray(zones) || zones.length === 0) return null
+  const lat = Number(payload.latitude)
+  const lng = Number(payload.longitude)
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng)
+
+  for (const zone of zones) {
+    if (!zone) continue
+    if (payload.matchedZoneId && Number(zone.id) === Number(payload.matchedZoneId)) {
+      return zone
+    }
+    if (payload.matchedZoneName && String(zone.locationName).toLowerCase() === String(payload.matchedZoneName).toLowerCase()) {
+      return zone
+    }
+    // Check coordinate distance with zone radius
+    if (hasCoords && zone.latitude != null && zone.longitude != null) {
+      const zLat = Number(zone.latitude)
+      const zLng = Number(zone.longitude)
+      const radiusKm = Number(zone.radiusKm) || 10
+      const d = haversineDistance(lat, lng, zLat, zLng)
+      if (d <= radiusKm) {
+        return zone
+      }
+    }
+    // Check city / postal match
+    if (payload.postalCode && zone.postalCode && String(payload.postalCode).trim() === String(zone.postalCode).trim()) {
+      return zone
+    }
+    if (payload.city && zone.city && String(payload.city).trim().toLowerCase() === String(zone.city).trim().toLowerCase()) {
+      return zone
+    }
+  }
+  return null
+}
+
 export function LocationProvider({ children }) {
   const { refreshProfile, hasEffectiveLocation, profile } = useSession()
   const [selectedLocation, setSelectedLocationState] = useState(null)
@@ -234,65 +281,106 @@ export function LocationProvider({ children }) {
 
     setIsSavingLocation(true)
     try {
-      // Validate serviceability against active delivery zones
-      const status = await checkLocationServiceable(normalized)
-      normalized.isServiceable = Boolean(status?.allowed)
-      normalized.matchedZoneName = status?.matchedLocationName || null
-      normalized.matchedZoneId = status?.matchedLocationId || null
+      // 1. Instant check: already known serviceable or matches active zones locally
+      let isAllowed = normalized.isServiceable === true
+      let matchedZone = null
+
+      if (!isAllowed) {
+        matchedZone = findMatchingActiveZone(normalized, activeZones)
+        if (matchedZone) {
+          isAllowed = true
+          normalized.isServiceable = true
+          normalized.matchedZoneName = matchedZone.locationName
+          normalized.matchedZoneId = matchedZone.id
+        }
+      }
+
+      let checkStatus = { allowed: isAllowed, matchedLocationName: normalized.matchedZoneName || null }
+
+      // 2. Fallback to API check only if serviceability is still not determined
+      if (!isAllowed) {
+        try {
+          checkStatus = await checkLocationServiceable(normalized)
+          isAllowed = Boolean(checkStatus?.allowed)
+          normalized.isServiceable = isAllowed
+          if (isAllowed) {
+            normalized.matchedZoneName = checkStatus.matchedLocationName || null
+            normalized.matchedZoneId = checkStatus.matchedLocationId || null
+          }
+        } catch (_e) {
+          // If check fails, keep tentative
+        }
+      }
 
       setActiveZoneStatus({
-        allowed: Boolean(status?.allowed),
-        message: status?.message || '',
-        matchedLocationName: status?.matchedLocationName || null,
+        allowed: isAllowed,
+        message: checkStatus?.message || (isAllowed ? 'Service is available in your current location' : ''),
+        matchedLocationName: normalized.matchedZoneName || checkStatus?.matchedLocationName || null,
       })
 
-      if (normalized.isServiceable) {
+      if (isAllowed) {
         markSessionVerified()
       }
 
-      if (normalized.type === 'coords') {
-        try {
-          normalized = await persistCoordsAsCurrentAddress(normalized, profile)
-        } catch (addrErr) {
-          console.warn('Backend address creation failed, proceeding with local coordinates selection:', addrErr)
-        }
-      }
-
-      if (normalized.type === 'address' && normalized.id != null && options.syncCurrentAddress !== false) {
-        try {
-          await apiClient.patch('/addresses/current', { addressId: normalized.id })
-        } catch (addrErr) {
-          console.warn('Current address update failed:', addrErr)
-        }
-      }
-
+      // 3. Immediately apply selection state to storage & context (Instant UI update)
       applySelectionState(normalized)
       markSessionVerified()
 
-      try {
-        if (options.refreshProfile !== false) {
-          await refreshProfile()
-        }
-      } catch (_e) {
-        // Profile refresh is best-effort after selection
-      }
-
-      try {
-        await flushLocationRetryQueue()
-      } catch (_e) {
-        // Non-blocking
-      }
-
-      if (normalized.isServiceable || options.forceClose) {
+      if (isAllowed || options.forceClose) {
         setIsSelectorOpen(false)
         setWizardDetail(null)
       }
 
-      return { location: normalized, status }
+      // 4. Background persistence: asynchronously save address and refresh profile without blocking navigation
+      const syncBackendAsync = async () => {
+        try {
+          let updatedPayload = { ...normalized }
+          if (normalized.type === 'coords') {
+            try {
+              const persisted = await persistCoordsAsCurrentAddress(normalized, profile)
+              if (persisted?.id) {
+                updatedPayload = { ...updatedPayload, id: persisted.id, address: persisted.address }
+                applySelectionState(updatedPayload)
+              }
+            } catch (addrErr) {
+              console.warn('Backend address creation failed, proceeding with coordinates selection:', addrErr)
+            }
+          }
+
+          if (normalized.type === 'address' && normalized.id != null && options.syncCurrentAddress !== false) {
+            try {
+              await apiClient.patch('/addresses/current', { addressId: normalized.id })
+            } catch (addrErr) {
+              console.warn('Current address update failed:', addrErr)
+            }
+          }
+
+          if (options.refreshProfile !== false) {
+            try {
+              await refreshProfile()
+            } catch (_e) {
+              // Best-effort
+            }
+          }
+
+          try {
+            await flushLocationRetryQueue()
+          } catch (_e) {
+            // Non-blocking
+          }
+        } catch (syncErr) {
+          console.warn('Background location sync error:', syncErr)
+        }
+      }
+
+      // Fire in background
+      syncBackendAsync()
+
+      return { location: normalized, status: checkStatus }
     } finally {
       setIsSavingLocation(false)
     }
-  }, [applySelectionState, refreshProfile, profile, checkLocationServiceable, markSessionVerified])
+  }, [applySelectionState, refreshProfile, profile, checkLocationServiceable, markSessionVerified, activeZones])
 
   const syncFromProfile = useCallback((locationSelection) => {
     const normalized = normalizeLocationPayload(locationSelection)
