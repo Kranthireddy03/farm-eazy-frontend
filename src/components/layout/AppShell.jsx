@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Home, LayoutDashboard, Sprout, Droplets, ShoppingCart, Store,
   LifeBuoy, Settings, Bell, MapPin, Search, Menu, ChevronLeft,
-  LogOut, Package, Heart,
+  LogOut, Package, Heart, X,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
@@ -75,11 +75,16 @@ export default function AppShell({ children, onShowTour }) {
   const { coins, refreshCoins } = useCoin();
   const { count: wishlistCount } = useWishlist();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [expandedMenu, setExpandedMenu] = useState(
     location.pathname.startsWith('/services') ? 'services'
       : location.pathname.startsWith('/products') ? 'products' : null,
   );
+
+  useEffect(() => {
+    setMobileNavOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     if (location.pathname.startsWith('/services')) {
@@ -161,6 +166,147 @@ export default function AppShell({ children, onShowTour }) {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex fe-premium-canvas">
+      {/* Mobile Navigation Drawer */}
+      {mobileNavOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+            onClick={() => setMobileNavOpen(false)}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Content */}
+          <div className="relative w-[85%] max-w-xs bg-card border-r border-border h-full shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200 overflow-hidden">
+            {/* Drawer Header */}
+            <div className="h-14 flex items-center justify-between px-4 border-b border-border bg-muted/30 shrink-0">
+              <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileNavOpen(false)}>
+                <div className="fe-logo-mark">FE</div>
+                <span className="font-bold text-sm tracking-tight text-foreground">FarmEazy</span>
+              </Link>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-lg"
+                onClick={() => setMobileNavOpen(false)}
+                aria-label="Close navigation"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {/* User Profile Summary */}
+            <div className="p-3.5 bg-muted/40 border-b border-border shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-sm border border-primary/30 shrink-0">
+                  {(userUsername || 'U').charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm truncate text-foreground">{userUsername || 'User'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50 text-xs">
+                {coins?.totalCoins != null && (
+                  <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium border border-amber-500/20">
+                    🪙 {coins.totalCoins} Coins
+                  </span>
+                )}
+                <span className="text-muted-foreground font-mono text-[11px] ml-auto">
+                  ⏱ {formatTimeDisplay(timeRemaining)}
+                </span>
+              </div>
+            </div>
+
+            {/* Navigation List */}
+            <nav className="flex-1 p-3 space-y-1 overflow-y-auto custom-scrollbar">
+              {NAV.map(({ name, path, icon: Icon, title, subItems }) => {
+                const parentActive = isActive(path);
+                const hasSubItems = subItems && expandedMenu === path.split('/')[1];
+                return (
+                  <div key={path} className="space-y-1">
+                    <div className="flex items-center">
+                      <Link
+                        to={path}
+                        onClick={(e) => {
+                          if (subItems) {
+                            handleMenuClick(path, path.split('/')[1])(e);
+                          } else {
+                            setMobileNavOpen(false);
+                          }
+                        }}
+                        title={title}
+                        className={cn(
+                          'flex-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                          parentActive
+                            ? 'bg-primary/15 text-primary font-semibold border border-primary/25 shadow-sm'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent',
+                        )}
+                      >
+                        <Icon className="h-4 w-4 shrink-0" strokeWidth={1.75} />
+                        <span className="flex-1 text-left">{name}</span>
+                        {subItems && (
+                          <ChevronLeft
+                            className={cn('h-4 w-4 ml-auto text-muted-foreground transition-transform', hasSubItems ? '-rotate-90' : '')}
+                          />
+                        )}
+                      </Link>
+                    </div>
+
+                    {hasSubItems && (
+                      <div className="pl-4 border-l-2 border-primary/30 ml-4 space-y-1 py-1 animate-fadeIn">
+                        {subItems.map((sub) => {
+                          const isSubActive = location.pathname === sub.path ||
+                            (sub.path === '/services' && location.pathname === '/services' && !location.search) ||
+                            (sub.path === '/products' && location.pathname === '/products' && !location.search);
+                          return (
+                            <Link
+                              key={sub.path}
+                              to={sub.path}
+                              title={sub.title}
+                              onClick={() => setMobileNavOpen(false)}
+                              className={cn(
+                                'block py-1.5 px-3 text-xs rounded-lg font-medium transition-all duration-150',
+                                isSubActive
+                                  ? 'text-primary bg-primary/10 font-bold shadow-sm'
+                                  : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                              )}
+                            >
+                              {sub.name}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </nav>
+
+            {/* Drawer Footer Actions */}
+            <div className="p-3 border-t border-border space-y-1.5 bg-muted/20 shrink-0">
+              <Link
+                to="/settings"
+                onClick={() => setMobileNavOpen(false)}
+                className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition"
+              >
+                <Settings className="h-4 w-4" /> Settings & Preferences
+              </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-destructive hover:bg-destructive/10 transition"
+              >
+                <LogOut className="h-4 w-4" /> Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <aside
         className={cn(
           'hidden lg:flex flex-col border-r border-border/70 bg-card/80 backdrop-blur-md transition-[width] duration-200 shrink-0 shadow-sm sticky top-0 self-start h-screen overflow-hidden',
@@ -238,7 +384,13 @@ export default function AppShell({ children, onShowTour }) {
         <header className="sticky top-0 z-40 h-14 border-b border-border/70 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70">
           <div className="h-full px-4 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
-              <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => navigate('/dashboard')} aria-label="Menu">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="lg:hidden h-9 w-9 rounded-lg"
+                onClick={() => setMobileNavOpen(true)}
+                aria-label="Open navigation menu"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
               <span className="font-semibold text-sm truncate hidden sm:block">Farm management</span>

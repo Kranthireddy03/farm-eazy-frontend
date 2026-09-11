@@ -757,17 +757,17 @@ function Layout({ onShowTour, children }) {
 
       {/* Inactivity Warning Modal - Remove from here */}
 
-      {/* Mobile Navigation - Slide Down */}
-      <div className="xl:hidden bg-gradient-to-r from-emerald-700 to-teal-700 border-b border-white/10">
-        <div className="container-main py-2">
-          <nav className="flex flex-wrap gap-2 pb-1">
+      {/* Mobile Navigation - Responsive Horizontal Touch Track */}
+      <div className="lg:hidden bg-gradient-to-r from-emerald-700 to-teal-700 border-b border-white/10 shadow-sm">
+        <div className="container-main py-2.5">
+          <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden touch-pan-x">
             {menuItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
                 data-tour={`nav-${item.name.toLowerCase()}`}
                 aria-current={isActivePath(item.path) ? 'page' : undefined}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${isActivePath(item.path) ? 'text-white bg-white/30 ring-1 ring-white/40' : 'text-white/90 hover:text-white hover:bg-white/20'}`}
+                className={`px-3.5 py-1.5 shrink-0 rounded-full text-xs sm:text-sm font-medium transition-all ${isActivePath(item.path) ? 'text-white bg-white/30 ring-1 ring-white/40 shadow-inner' : 'text-white/90 hover:text-white hover:bg-white/20'}`}
               >
                 {item.name}
               </Link>
@@ -777,7 +777,7 @@ function Layout({ onShowTour, children }) {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 container-main py-8">
+      <main className="flex-1 container-main py-4 sm:py-6 md:py-8">
         <div className={`variant-surface content-dense ${layoutVariant} rounded-2xl shadow-xl transition-all duration-500 ${isDark ? 'bg-muted/90 border-border' : 'bg-white/90 border-gray-200'} border min-h-auto animate-[fadeIn_.45s_ease-out]`}>
           {children || <Outlet />}
         </div>
@@ -785,19 +785,19 @@ function Layout({ onShowTour, children }) {
 
       {/* Footer */}
       <footer className={`${isDark ? 'bg-muted/90 border-border' : 'bg-white/90 border-gray-200'} border-t mt-4 shadow-inner backdrop-blur-md`}>
-        <div className="container-main py-8">
-          <div className="flex justify-between items-center">
-              <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} text-sm`}>
+        <div className="container-main py-6 sm:py-8">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+              <p className={`${isDark ? 'text-muted-foreground' : 'text-muted-foreground'} text-xs sm:text-sm`}>
                 © 2026 FarmEazy. Smart Farm Management.
               </p>
-              <div className="flex flex-wrap items-center gap-4">
-                <Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>About</Link>
-                <Link to="/privacy-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Privacy Policy</Link>
-                <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Terms & Conditions</Link>
-                <Link to="/refund-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Refund Policy</Link>
-                <Link to="/shipping-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Shipping Policy</Link>
-                <Link to="/marketplace-disclosure" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Marketplace Disclosure</Link>
-                <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-sm underline`}>Contact Us</Link>
+              <div className="flex flex-wrap items-center justify-center sm:justify-end gap-x-4 gap-y-2">
+                <Link to="/about" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-xs sm:text-sm underline`}>About</Link>
+                <Link to="/privacy-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-xs sm:text-sm underline`}>Privacy Policy</Link>
+                <Link to="/terms" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-xs sm:text-sm underline`}>Terms & Conditions</Link>
+                <Link to="/refund-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-xs sm:text-sm underline`}>Refund Policy</Link>
+                <Link to="/shipping-policy" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-xs sm:text-sm underline`}>Shipping Policy</Link>
+                <Link to="/marketplace-disclosure" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-xs sm:text-sm underline`}>Marketplace Disclosure</Link>
+                <Link to="/contact" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className={`${isDark ? 'text-muted-foreground hover:text-green-400' : 'text-muted-foreground hover:text-green-600'} text-xs sm:text-sm underline`}>Contact Us</Link>
               </div>
           </div>
         </div>

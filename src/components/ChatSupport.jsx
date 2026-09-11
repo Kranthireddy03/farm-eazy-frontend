@@ -1,6 +1,17 @@
-// FarmEazy In-App Chat Support Component
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets, getUserChatStats, TICKET_CATEGORIES, TICKET_PRIORITIES } from '../services/SupportTicketService';
+// FarmEazy In-App Unified Chat Support Component
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  addResponse,
+  addResponseWithAttachment,
+  createTicket,
+  createTicketWithAttachment,
+  getTicket,
+  getTicketMessages,
+  getTickets,
+  getUserChatStats,
+  TICKET_CATEGORIES,
+  TICKET_PRIORITIES,
+} from '../services/SupportTicketService';
 import apiClient from '../services/apiClient';
 import { unwrapApiList } from '../utils/apiResponse';
 import { getUserFacingErrorMessage } from '../utils/userFacingError';
@@ -9,10 +20,29 @@ import { STORAGE_KEYS } from '../config/api';
 import { releaseSupportStomp } from '../services/supportStompClient';
 import { useLiveSupportChat } from '../hooks/useLiveSupportChat';
 import { getAgentAvailability } from '../services/liveConversationApi';
-import { Loader2, Send, AlertCircle, Clock, CheckCircle2, FileText, PlusCircle } from 'lucide-react';
+import { Button } from './ui/button';
+import {
+  Loader2,
+  Send,
+  AlertCircle,
+  Clock,
+  CheckCircle2,
+  FileText,
+  PlusCircle,
+  Bell,
+  Sparkles,
+  MessageSquare,
+  ArrowLeft,
+  Paperclip,
+  X,
+  ChevronRight,
+  Headphones,
+  User,
+  ShieldCheck,
+  RefreshCw,
+} from 'lucide-react';
 
-
-const DEFAULT_GREETING = 'Welcome to FarmEazy chat support. Choose a quick topic or describe your issue to open a support ticket.';
+const DEFAULT_GREETING = '👋 Welcome to FarmEazy Support! Ask a question or chat with our support team.';
 const CHAT_POLL_MS = 5000;
 
 function extractUploadPath(url) {
@@ -43,7 +73,6 @@ function isGreeting(text) {
   return /^(hi|hello|hey|hii|namaste|good\s+(morning|afternoon|evening))\b/.test(normalizeText(text));
 }
 
-// Check if message explicitly requests human escalation
 function isHumanRequest(text) {
   return /(human|agent|executive|person|support team|real[- ]?time|live chat|talk to support|call me)/i.test(text);
 }
@@ -57,7 +86,6 @@ function inferCategory(text) {
   return 'GENERAL';
 }
 
-// Infer priority level
 function inferPriority(text) {
   const value = normalizeText(text);
   if (/(failed|error|urgent|blocked|cannot|can't|not working)/.test(value)) return 'HIGH';
@@ -67,11 +95,11 @@ function inferPriority(text) {
 function buildQuickReply(text, faqs) {
   const value = normalizeText(text);
   const matches = [
-    { keywords: ['add a farm', 'create a farm', 'farm'], answer: 'Go to Farms, open Add Farm, and complete the farm details. If you want, I can create a support ticket for a specific error.' },
-    { keywords: ['schedule irrigation', 'irrigation'], answer: 'Open Irrigation, choose a farm and crop, then save the schedule. If the page is failing, tell me the exact error and I will raise a ticket.' },
-    { keywords: ['order', 'checkout', 'payment', 'place order', 'razorpay'], answer: 'For orders, select an address first and then choose a payment method. If payment is failing, I can create a payment support ticket immediately.' },
-    { keywords: ['vendor', 'selling', 'listing', 'product', 'service'], answer: 'Vendor access is separate from listing approval. If verification is done but publishing still fails, I can raise a vendor support ticket.' },
-    { keywords: ['support', 'ticket', 'contact'], answer: 'You can talk here, or I can create a ticket for the support team and keep the conversation linked to it.' },
+    { keywords: ['add a farm', 'create a farm', 'farm'], answer: 'Go to Farms, open Add Farm, and complete the farm details. If you need help with a specific error, you can raise a ticket.' },
+    { keywords: ['schedule irrigation', 'irrigation'], answer: 'Open Irrigation, choose a farm and crop, then save the schedule. If the page is failing, our support team can assist.' },
+    { keywords: ['order', 'checkout', 'payment', 'place order', 'razorpay'], answer: 'For orders, select an address first and then choose a payment method. If payment is failing, you can create a payment support ticket.' },
+    { keywords: ['vendor', 'selling', 'listing', 'product', 'service'], answer: 'Vendor access is separate from listing approval. If verification is done but publishing still fails, our team can help.' },
+    { keywords: ['support', 'ticket', 'contact'], answer: 'You can chat with our team here or raise a dedicated ticket for follow-up.' },
   ];
 
   for (const item of matches) {
@@ -80,7 +108,7 @@ function buildQuickReply(text, faqs) {
     }
   }
 
-  const faqMatch = faqs.find((faq) => {
+  const faqMatch = (faqs || []).find((faq) => {
     const question = normalizeText(faq.question || faq.q);
     return question && (value.includes(question) || question.split(' ').some((word) => word.length > 4 && value.includes(word)));
   });
@@ -95,8 +123,8 @@ function buildQuickReply(text, faqs) {
 function normalizeIncomingMessage(message) {
   if (!message) return null;
   const senderType = String(message.senderType || '').toUpperCase();
-  const sender = senderType === 'USER' ? 'user' : 'support';
-  const text = String(message.message || '').trim();
+  const sender = senderType === 'USER' || senderType === 'CUSTOMER' ? 'user' : 'support';
+  const text = String(message.message || message.content || '').trim();
   if (!text) return null;
   return {
     sender,
@@ -152,40 +180,36 @@ const parseAttachmentsFromMessage = (message) => {
   return collected;
 };
 
-function buildTicketDescriptionFromChat(userText, messages) {
-  const transcript = (messages || [])
-    .filter((msg) => msg?.text)
-    .slice(-8)
-    .map((msg) => `${msg.sender === 'user' ? 'User' : 'Assistant'}: ${msg.text}`)
-    .join('\n');
-
-  return [
-    userText,
-    transcript ? `\n--- Chat context ---\n${transcript}` : '',
-  ].join('').trim();
-}
-
-
 export default function ChatSupport({ className = '' }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem(STORAGE_KEYS.USER_TOKEN)));
   const [open, setOpen] = useState(false);
   const [isTabVisible, setIsTabVisible] = useState(() => !document.hidden);
+  
+  // Single Unified Mode: 'chat' | 'ticket_form'
+  const [viewMode, setViewMode] = useState('chat');
+  const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
+  
+  // Agent Availability & Offline handling
+  const [liveStatus, setLiveStatus] = useState('unknown'); // 'unknown' | 'available' | 'offline'
+  const [agentAvailability, setAgentAvailability] = useState(null);
+  const [notifyWhenOnline, setNotifyWhenOnline] = useState(false);
+  const [hasOnlineAgentAlert, setHasOnlineAgentAlert] = useState(false);
+  const [offlineDismissed, setOfflineDismissed] = useState(false);
+
+  // Chat conversation state
   const [messages, setMessages] = useState([{ sender: 'support', text: DEFAULT_GREETING }]);
   const [input, setInput] = useState('');
   const [ticketId, setTicketId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [attachment, setAttachment] = useState(null);
   const [faqs, setFaqs] = useState([]);
-  const [faqLoading, setFaqLoading] = useState(false);
-  const [liveStatus, setLiveStatus] = useState('unknown');
   const [ticketHistory, setTicketHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
-  const [allowAutoTicketSelection, setAllowAutoTicketSelection] = useState(true);
   const [liveSessionKey, setLiveSessionKey] = useState(0);
   const [ratingStars, setRatingStars] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
-  const [viewMode, setViewMode] = useState('chat'); // 'chat' | 'ticket_form'
-  const [agentAvailability, setAgentAvailability] = useState(null);
+
+  // Ticket form state
   const [ticketSubject, setTicketSubject] = useState('');
   const [ticketCategory, setTicketCategory] = useState('GENERAL');
   const [ticketPriority, setTicketPriority] = useState('MEDIUM');
@@ -194,77 +218,26 @@ export default function ChatSupport({ className = '' }) {
   const [ticketPhone, setTicketPhone] = useState(() => localStorage.getItem('farmEazy_phone') || '');
   const [ticketFile, setTicketFile] = useState(null);
   const [ticketSubmitting, setTicketSubmitting] = useState(false);
+
   const { showToast } = useGlobalToast();
+  const messagesEndRef = useRef(null);
 
   const viewingLegacyTicket = Boolean(ticketId);
 
+  // Live STOMP chat connection (only activated when open, authenticated, and not reviewing a specific ticket)
   const liveChat = useLiveSupportChat({
-    enabled: open && isAuthenticated && !viewingLegacyTicket,
+    enabled: open && isAuthenticated && !viewingLegacyTicket && liveStatus === 'available',
     sessionKey: liveSessionKey,
   });
 
-  const useLiveStream = liveChat.liveMode && !viewingLegacyTicket && open;
+  const useLiveStream = liveChat.liveMode && !viewingLegacyTicket && open && liveStatus === 'available';
   const displayMessages = useLiveStream ? liveChat.messages : messages;
   const chatLoading = useLiveStream ? liveChat.loading || liveChat.connecting : loading;
-
-  const fetchAttachmentBlob = async (url, activeTicketId) => {
-    const uploadPath = extractUploadPath(url);
-    if (uploadPath) {
-      const ticketDisplayId = activeTicketId || undefined;
-      const contactEmail = localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || undefined;
-      const response = await apiClient.get('/attachments/file', {
-        params: { path: uploadPath, ticketDisplayId, contactEmail },
-        responseType: 'blob',
-      });
-      return response.data;
-    }
-    const response = await apiClient.get(toAbsoluteAttachmentUrl(url), { responseType: 'blob' });
-    return response.data;
-  };
-
-  const openAttachment = async (url) => {
-    if (!url) {
-      showToast('Attachment URL is unavailable.', 'error');
-      return;
-    }
-
-    try {
-      const blob = await fetchAttachmentBlob(url, ticketId);
-      const blobUrl = window.URL.createObjectURL(blob);
-      window.open(blobUrl, '_blank', 'noopener,noreferrer');
-      window.setTimeout(() => window.URL.revokeObjectURL(blobUrl), 60 * 1000);
-    } catch (err) {
-      console.error('Failed to open attachment', err);
-      showToast('Could not open attachment. Please verify your login/session.', 'error');
-    }
-  };
-
-  const downloadAttachment = async (attachment) => {
-    if (!attachment?.url) {
-      showToast('Attachment URL is unavailable.', 'error');
-      return;
-    }
-
-    try {
-      const blob = await fetchAttachmentBlob(attachment.url);
-      const downloadUrl = window.URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = downloadUrl;
-      anchor.download = attachment.fileName || 'attachment';
-      document.body.appendChild(anchor);
-      anchor.click();
-      anchor.remove();
-      window.setTimeout(() => window.URL.revokeObjectURL(downloadUrl), 10 * 1000);
-      showToast('Attachment downloaded successfully.', 'success');
-    } catch (err) {
-      console.error('Failed to download attachment', err);
-      showToast('Could not download attachment. Please verify your login/session.', 'error');
-    }
-  };
 
   const currentUserId = localStorage.getItem(STORAGE_KEYS.USER_ID) || 'anonymous';
   const storageKey = `farmEazy_chat_history_${currentUserId}`;
 
+  // Auth sync
   useEffect(() => {
     const handleAuthState = () => {
       setIsAuthenticated(Boolean(localStorage.getItem(STORAGE_KEYS.USER_TOKEN)));
@@ -277,181 +250,130 @@ export default function ChatSupport({ className = '' }) {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setOpen(false);
-      setTicketId(null);
-      setAttachment(null);
-      setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
-      return;
-    }
-
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed?.messages) && parsed.messages.length > 0) {
-        setMessages(parsed.messages);
-      }
-      if (parsed?.ticketId) {
-        setTicketId(parsed.ticketId);
-      }
-    } catch {
-      setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
-    }
-  }, [isAuthenticated, storageKey]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    const payload = {
-      messages,
-      ticketId,
-      updatedAt: Date.now(),
-    };
-    localStorage.setItem(storageKey, JSON.stringify(payload));
-  }, [isAuthenticated, messages, ticketId, storageKey]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    let cancelled = false;
-
-    const bootstrapTicketHistory = async () => {
-      try {
-        const tickets = await getTickets();
-        if (cancelled) return;
-        const normalizedTickets = Array.isArray(tickets) ? tickets : [];
-        setTicketHistory(normalizedTickets);
-
-        if (ticketId) {
-          const syncedMessages = await getTicketMessages(ticketId);
-          if (cancelled) return;
-          const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
-          if (normalized.length > 0) {
-            setMessages((prev) => mergeMessages(prev, normalized));
-          }
-          return;
-        }
-
-        if (!allowAutoTicketSelection) return;
-        if (normalizedTickets.length === 0) return;
-
-        const latestTicketId = normalizedTickets[0]?.displayId;
-        if (!latestTicketId) return;
-
-        setTicketId(latestTicketId);
-        const syncedMessages = await getTicketMessages(latestTicketId);
-        if (cancelled) return;
-        const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
-        if (normalized.length > 0) {
-          setMessages((prev) => mergeMessages(prev, normalized));
-        }
-      } catch {
-        // Keep the widget usable even if bootstrap history fails.
-      }
-    };
-
-    bootstrapTicketHistory();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, ticketId]);
-
-  useEffect(() => {
-    if (!isAuthenticated || !open) return;
-
-    let cancelled = false;
-
-    const loadTicketHistory = async () => {
-      try {
-        setHistoryLoading(true);
-        const tickets = await getTickets();
-        if (cancelled) return;
-        setTicketHistory(Array.isArray(tickets) ? tickets : []);
-      } catch {
-        if (!cancelled) {
-          setTicketHistory([]);
-        }
-      } finally {
-        if (!cancelled) {
-          setHistoryLoading(false);
-        }
-      }
-    };
-
-    loadTicketHistory();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isAuthenticated, open, ticketId]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const loadFaqs = async () => {
-      try {
-        setFaqLoading(true);
-        const res = await apiClient.get('/faq-questions', { params: { source: 'user' } });
-        setFaqs(unwrapApiList(res.data));
-      } catch {
-        setFaqs([]);
-      } finally {
-        setFaqLoading(false);
-      }
-    };
-
-    loadFaqs();
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    const loadLiveStatus = async () => {
-      try {
-        const avail = await getAgentAvailability();
-        if (avail != null) {
-          setAgentAvailability(avail);
-          setLiveStatus(avail.available ? 'available' : 'offline');
-          return;
-        }
-      } catch {
-        // fall back to getUserChatStats
-      }
-      try {
-        const stats = await getUserChatStats();
-        if (stats?.agentsOnline != null) {
-          setLiveStatus(stats.agentsOnline ? 'available' : 'offline');
-          return;
-        }
-      } catch {
-        // fall back to business hours heuristic
-      }
-      const hour = new Date().getHours();
-      setLiveStatus(hour >= 9 && hour < 18 ? 'available' : 'offline');
-    };
-
-    loadLiveStatus();
-    const interval = setInterval(loadLiveStatus, 45000);
-    return () => clearInterval(interval);
-  }, [isAuthenticated]);
-
+  // Listen for open custom event from any button in the app
   useEffect(() => {
     const openChat = () => setOpen(true);
     window.addEventListener('farmeazy:open-live-chat', openChat);
     return () => window.removeEventListener('farmeazy:open-live-chat', openChat);
   }, []);
 
+  // Tab visibility tracker
   useEffect(() => {
     const handleVisibilityChange = () => {
       setIsTabVisible(!document.hidden);
     };
-
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    if (open && viewMode === 'chat') {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [displayMessages, open, viewMode, liveChat.typingUser]);
+
+  // CRITICAL: Agent Availability Check - ONLY runs when open & authenticated & tab visible!
+  // Zero background API calls when widget is closed!
+  useEffect(() => {
+    if (!isAuthenticated || !open) return;
+
+    let cancelled = false;
+
+    const checkAvailability = async () => {
+      if (!isTabVisible) return;
+      try {
+        const avail = await getAgentAvailability();
+        if (cancelled) return;
+        if (avail != null) {
+          setAgentAvailability(avail);
+          const isAvail = Boolean(avail.available);
+          const nextStatus = isAvail ? 'available' : 'offline';
+
+          // Notify user if they requested to be notified and agent just became online
+          if (isAvail && (notifyWhenOnline || hasOnlineAgentAlert)) {
+            showToast('🎉 Live Support Agent is now online! You can chat now.', 'success');
+            setHasOnlineAgentAlert(true);
+            setNotifyWhenOnline(false);
+          }
+
+          setLiveStatus(nextStatus);
+          return;
+        }
+      } catch {
+        // fall back to chat stats or business hours if live API fails
+      }
+
+      try {
+        const stats = await getUserChatStats();
+        if (cancelled) return;
+        if (stats?.agentsOnline != null) {
+          const isAvail = Boolean(stats.agentsOnline);
+          if (isAvail && notifyWhenOnline) {
+            showToast('🎉 Live Support Agent is now online! You can chat now.', 'success');
+            setHasOnlineAgentAlert(true);
+            setNotifyWhenOnline(false);
+          }
+          setLiveStatus(isAvail ? 'available' : 'offline');
+          return;
+        }
+      } catch {
+        // fall back to hours
+      }
+
+      const hour = new Date().getHours();
+      const isHours = hour >= 9 && hour < 19;
+      setLiveStatus(isHours ? 'available' : 'offline');
+    };
+
+    checkAvailability();
+    const interval = setInterval(checkAvailability, 30000); // 30s poll while open
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isAuthenticated, open, isTabVisible, notifyWhenOnline, hasOnlineAgentAlert, showToast]);
+
+  // Load ticket history and FAQs ONLY when open
+  useEffect(() => {
+    if (!isAuthenticated || !open) return;
+
+    let cancelled = false;
+
+    const loadData = async () => {
+      try {
+        setHistoryLoading(true);
+        const [ticketsRes, faqsRes] = await Promise.allSettled([
+          getTickets(),
+          apiClient.get('/faq-questions', { params: { source: 'user' } }),
+        ]);
+
+        if (cancelled) return;
+
+        if (ticketsRes.status === 'fulfilled') {
+          const normalized = Array.isArray(ticketsRes.value) ? ticketsRes.value : [];
+          setTicketHistory(normalized);
+        }
+
+        if (faqsRes.status === 'fulfilled') {
+          setFaqs(unwrapApiList(faqsRes.value?.data));
+        }
+      } catch {
+        // Non-blocking
+      } finally {
+        if (!cancelled) setHistoryLoading(false);
+      }
+    };
+
+    loadData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, open]);
+
+  // Poll ticket messages when viewing an active ticket
   useEffect(() => {
     if (!ticketId || !open || !isTabVisible) return undefined;
 
@@ -473,20 +395,14 @@ export default function ChatSupport({ className = '' }) {
           setMessages((prev) => mergeMessages(prev, normalized));
         }
       } catch {
-        // Keep polling silently; the user already has the ticket link.
+        // Silent poll
       }
     }, CHAT_POLL_MS);
 
     return () => clearInterval(interval);
   }, [ticketId, open, isTabVisible]);
 
-  const quickSuggestions = useMemo(() => ([
-    { label: 'Payment help', text: 'My payment or checkout is not working.' },
-    { label: 'Vendor help', text: 'Vendor dashboard or verification is not working.' },
-    { label: 'Irrigation help', text: 'How do I schedule irrigation?' },
-    { label: 'Talk to live agent', text: 'I want to talk to a support executive.' },
-  ]), []);
-
+  // Handlers
   const appendSupportMessage = (text) => {
     setMessages((prev) => [...prev, { sender: 'support', text }]);
   };
@@ -495,46 +411,22 @@ export default function ChatSupport({ className = '' }) {
     setMessages((prev) => [...prev, { sender: 'user', text }]);
   };
 
-  const sendAiReply = async (text) => {
-    const displayId = liveChat.conversationId;
-    if (!displayId) return false;
-    setLoading(true);
-    try {
-      const clientMessageId = `ai-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      const response = await apiClient.post(`/live/conversations/${displayId}/ai-reply`, { content: text, clientMessageId });
-      const reply = response?.data?.reply;
-      if (reply) appendSupportMessage(reply);
-      if (response?.data?.escalated) {
-        setLiveSessionKey((key) => key + 1);
-      }
-      return true;
-    } catch (err) {
-      appendSupportMessage(getUserFacingErrorMessage(err, 'The FarmEazy assistant is temporarily unavailable. You can ask for a support executive.'));
-      return true;
-    } finally { setLoading(false); }
+  const handleNotifyWhenOnline = () => {
+    setNotifyWhenOnline(true);
+    setOfflineDismissed(true);
+    showToast('Notification set! We will notify you right here when an agent is online.', 'info');
+    appendSupportMessage(
+      '🙏 We apologize for the inconvenience! We have set a notification for you. As soon as a support agent comes online, you will be notified immediately right here so you can chat.'
+    );
   };
 
-  const createSupportTicket = async ({ description, file = null, category, priority }) => {
-    const contactEmail = localStorage.getItem('farmEazy_email') || '';
-    const ticketPayload = {
-      subject: category === 'PAYMENT_ISSUE' ? 'Payment help from chat' : 'Support chat request',
-      description,
-      category,
-      priority,
-      contactEmail,
-      contactPhone: localStorage.getItem('farmEazy_phone') || '',
-      source: 'CHAT_SUPPORT',
-    };
-
-    const ticket = file
-      ? await createTicketWithAttachment(ticketPayload, file)
-      : await createTicket(ticketPayload);
-
-    setTicketId(ticket.displayId);
-    if (ticket?.contactEmail) {
-      try { localStorage.setItem('farmEazy_email', ticket.contactEmail); } catch(_) {}
-    }
-    return ticket;
+  const handleStartOnlineChatFromAlert = () => {
+    setHasOnlineAgentAlert(false);
+    setOfflineDismissed(false);
+    setTicketId(null);
+    setViewMode('chat');
+    setLiveSessionKey((k) => k + 1);
+    appendSupportMessage('👋 Connected with support! How can we help you today?');
   };
 
   const handleDirectTicketSubmit = async (e) => {
@@ -564,13 +456,16 @@ export default function ChatSupport({ className = '' }) {
       setTicketFile(null);
       setTicketId(ticket.displayId);
       setViewMode('chat');
-      
+
+      // Refresh ticket history
       try {
         const tickets = await getTickets();
         setTicketHistory(Array.isArray(tickets) ? tickets : []);
       } catch (_) {}
 
-      appendSupportMessage(`Support ticket ${ticket.displayId} opened. Our team will review your case.`);
+      appendSupportMessage(
+        `✅ Support ticket #${ticket.displayId} has been created! Our support team will review your request and reply here shortly.`
+      );
     } catch (err) {
       showToast(getUserFacingErrorMessage(err, 'Failed to submit support ticket.'), 'error');
     } finally {
@@ -578,17 +473,49 @@ export default function ChatSupport({ className = '' }) {
     }
   };
 
-  const routeMessage = async (text) => {
-    const clean = normalizeText(text);
-    if (!clean) return;
+  const handleSelectTicket = async (displayId) => {
+    if (!displayId || chatLoading) return;
+    setLoading(true);
+    try {
+      setTicketId(displayId);
+      setShowHistoryDrawer(false);
+      const syncedMessages = await getTicketMessages(displayId);
+      const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
+      if (normalized.length > 0) {
+        setMessages(normalized);
+      } else {
+        setMessages([{ sender: 'support', text: `Viewing support ticket #${displayId}. You can post your follow-up replies below.` }]);
+      }
+    } catch {
+      showToast('Could not load ticket conversation.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    appendUserMessage(text);
+  const resetToLiveChat = () => {
+    setTicketId(null);
+    setAttachment(null);
+    setShowHistoryDrawer(false);
+    setViewMode('chat');
+    setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
+    releaseSupportStomp();
+    setLiveSessionKey((k) => k + 1);
+  };
 
-    if (liveChat.conversationId && String(liveChat.conversation?.mode || '').toUpperCase() === 'AI_BOT') {
-      await sendAiReply(text);
+  const handleSend = async () => {
+    if (!input.trim() || chatLoading) return;
+    const text = input.trim();
+    setInput('');
+
+    if (useLiveStream) {
+      await liveChat.sendMessage(text);
       return;
     }
 
+    appendUserMessage(text);
+
+    // If active ticket, append response to ticket
     if (ticketId) {
       setLoading(true);
       try {
@@ -598,231 +525,236 @@ export default function ChatSupport({ className = '' }) {
         } else {
           await addResponse(ticketId, text);
         }
-
-        const syncedMessages = await getTicketMessages(ticketId);
-        const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
-        if (normalized.length > 0) {
-          setMessages((prev) => mergeMessages(prev, normalized));
-        }
+        const synced = await getTicketMessages(ticketId);
+        const norm = synced.map(normalizeIncomingMessage).filter(Boolean);
+        if (norm.length > 0) setMessages((prev) => mergeMessages(prev, norm));
       } catch (err) {
-        appendSupportMessage(getUserFacingErrorMessage(err, 'I could not sync your message to the support thread. Please retry.'));
+        appendSupportMessage(getUserFacingErrorMessage(err, 'Could not send message to ticket thread.'));
       } finally {
         setLoading(false);
       }
       return;
     }
 
-    const faqAnswer = buildQuickReply(text, faqs);
+    // Quick FAQ check
+    const faqAns = buildQuickReply(text, faqs);
     if (isGreeting(text)) {
-      appendSupportMessage('Hello. I can answer common questions, attach screenshots to a ticket, or help you create a support case. If you want support, say "talk to support".');
+      appendSupportMessage('Hello! How can we assist you with FarmEazy today?');
       return;
     }
 
-    if (faqAnswer && !isHumanRequest(text)) {
-      appendSupportMessage(faqAnswer);
-      appendSupportMessage('If that does not solve it, send a short summary and I will open a support ticket.');
+    if (faqAns && !isHumanRequest(text)) {
+      appendSupportMessage(faqAns);
+      appendSupportMessage('If you need more help, you can chat with our team or raise a support ticket.');
       return;
     }
 
-    if (isHumanRequest(text) || /create ticket|raise ticket|open ticket|report issue|issue|problem|bug/.test(clean)) {
-      if (ticketId) {
-        appendSupportMessage(`I have added your update to ticket ${ticketId}. A support executive will continue from this thread.`);
-        return;
-      }
-
-      setLoading(true);
-      try {
-        const ticket = await createSupportTicket({
-          description: buildTicketDescriptionFromChat(text, messages),
-          file: attachment,
-          category: inferCategory(text),
-          priority: inferPriority(text),
-        });
-        setAttachment(null);
-        const liveText = ticket?.assignedTo
-          ? `Connected to ${ticket.assignedTo}.`
-          : 'No support executive is online right now. The ticket is queued and will be picked up during support hours.';
-        appendSupportMessage(`Ticket ${ticket.displayId} created. ${liveText}`);
-        appendSupportMessage('You can keep chatting here. I will poll for updates and show executive replies when they arrive.');
-      } catch (err) {
-        appendSupportMessage(getUserFacingErrorMessage(err, 'I could not create the ticket. Please try again or email support@farm-eazy.com.'));
-      } finally {
-        setLoading(false);
-      }
+    // If agents are offline and user asks for human/ticket
+    if (liveStatus !== 'available' || isHumanRequest(text)) {
+      appendSupportMessage(
+        'Our live agents are currently offline (Support Hours: Mon–Sat 9AM–7PM IST). Would you like to raise a support ticket?'
+      );
       return;
     }
 
-    appendSupportMessage('I did not recognize that request. Please tell me if it is about payment, order checkout, vendor verification, irrigation, or a product issue. If you want, I can create a support ticket now.');
+    appendSupportMessage('I have recorded your request. Connecting you with our support team...');
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || chatLoading) return;
-    const text = input.trim();
-    setInput('');
-    if (useLiveStream) {
-      await liveChat.sendMessage(text);
-    } else {
-      await routeMessage(text);
-    }
-  };
-
-  const handleFAQ = async (question) => {
+  const handleFAQ = (question) => {
     if (chatLoading) return;
     setInput('');
     if (useLiveStream) {
-      await liveChat.sendMessage(question);
+      liveChat.sendMessage(question);
     } else {
-      await routeMessage(question);
+      appendUserMessage(question);
+      const ans = buildQuickReply(question, faqs);
+      if (ans) appendSupportMessage(ans);
     }
   };
 
-  const handleSelectTicket = async (displayId) => {
-    if (!displayId || displayId === ticketId || chatLoading) return;
-
-    setLoading(true);
-    try {
-      setTicketId(displayId);
-      const syncedMessages = await getTicketMessages(displayId);
-      const normalized = syncedMessages.map(normalizeIncomingMessage).filter(Boolean);
-      if (normalized.length > 0) {
-        setMessages(normalized);
-      } else {
-        setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
-      }
-    } catch {
-      appendSupportMessage('Unable to load that ticket conversation right now. Please retry.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files?.[0] || null;
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0] || null;
     if (!file) return;
     setAttachment(file);
-    appendSupportMessage(`Attachment ready: ${file.name}. Send a message and I will include it in the support ticket.`);
+    appendSupportMessage(`📎 Attachment ready: "${file.name}". Send your message to submit it.`);
   };
 
-  const resetConversation = () => {
-    setTicketId(null);
-    setAttachment(null);
-    setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
-    setAllowAutoTicketSelection(false);
-    localStorage.removeItem(storageKey);
-    releaseSupportStomp();
-    setLiveSessionKey((key) => key + 1);
-  };
+  const quickSuggestions = useMemo(
+    () => [
+      { label: '💳 Payment Help', text: 'My payment or checkout is having an issue.' },
+      { label: '🚜 Machinery/Service Help', text: 'How do I book or list farm machinery services?' },
+      { label: '💧 Irrigation Setup', text: 'How do I schedule irrigation on my farm?' },
+      { label: '👨‍💼 Talk to Agent', text: 'I want to speak with a customer support executive.' },
+    ],
+    []
+  );
 
-  const submitRating = async () => {
-    if (!ratingStars) {
-      showToast('Please select a star rating.', 'error');
-      return;
-    }
-    try {
-      await liveChat.submitRating(ratingStars, ratingComment);
-      showToast('Thank you for your feedback!', 'success');
-      setRatingStars(0);
-      setRatingComment('');
-    } catch (err) {
-      showToast(getUserFacingErrorMessage(err, 'Could not save rating.'), 'error');
-    }
-  };
-
-  if (!isAuthenticated) {
-    return null;
-  }
+  if (!isAuthenticated) return null;
 
   return (
-    <div className={`fixed bottom-24 left-2 right-2 sm:left-auto sm:right-6 z-50 flex justify-end ${className}`}>
+    <div className={`fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex justify-end ${className}`}>
+      {/* Floating Trigger Button */}
       {!open && (
         <button
-          className="group flex items-center gap-0 hover:gap-2 rounded-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white p-3.5 hover:px-5 shadow-2xl shadow-cyan-900/20 ring-1 ring-white/20 hover:from-primary/50 hover:to-blue-500 transition-all duration-300"
+          type="button"
           onClick={() => setOpen(true)}
+          className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white px-4 py-3.5 shadow-2xl shadow-emerald-950/40 hover:shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all duration-300 ring-2 ring-white/20 cursor-pointer"
           aria-label="Open support chat"
         >
-          <span className="text-lg">💬</span>
-          <span className="w-0 group-hover:w-auto max-w-0 group-hover:max-w-[150px] overflow-hidden whitespace-nowrap font-semibold transition-all duration-300 text-sm">
-            Support Chat
-          </span>
+          <Headphones className="w-5 h-5 animate-pulse" />
+          <span className="font-semibold text-xs tracking-wide">Live Support</span>
+          {hasOnlineAgentAlert && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 text-[10px] font-bold text-white items-center justify-center">!</span>
+            </span>
+          )}
         </button>
       )}
+
+      {/* Main Support Window */}
       {open && (
-        <div className="w-full sm:w-[24rem] max-w-[calc(100vw-1rem)] h-[35rem] max-h-[calc(100dvh-8rem)] overflow-hidden rounded-3xl border border-border bg-card/95 shadow-2xl shadow-slate-950/30 backdrop-blur-xl flex flex-col animate-[slideInRight_180ms_ease-out]">
-          <div className="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-3">
-            <div>
-              <span className="font-bold block text-sm">FarmEazy Support</span>
-              <span className="text-[11px] text-white/80">
-                {viewingLegacyTicket ? `Case ${ticketId}` : (liveChat.conversationId ? `Live Chat (${liveChat.conversationId})` : 'Live Chat & Support Tickets')}
-              </span>
+        <div className="w-[94vw] sm:w-[24.5rem] max-w-[420px] h-[36rem] max-h-[calc(100dvh-5.5rem)] rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-2xl shadow-slate-950/40 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+          
+          {/* Header Bar */}
+          <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 text-white px-4 py-3.5 flex items-center justify-between shrink-0 shadow-md">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative p-2 rounded-2xl bg-white/10 ring-1 ring-white/20 shrink-0">
+                <Headphones className="w-4 h-4 text-emerald-200" />
+                <span
+                  className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full ring-2 ring-teal-800 ${
+                    liveStatus === 'available' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
+                  }`}
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="font-bold text-xs sm:text-sm tracking-tight truncate flex items-center gap-1.5">
+                  FarmEazy Support
+                  {useLiveStream && <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-emerald-500/30 text-emerald-200 rounded-md border border-emerald-400/30">Live</span>}
+                  {viewingLegacyTicket && <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 bg-cyan-500/30 text-cyan-200 rounded-md border border-cyan-400/30">Ticket</span>}
+                </div>
+                <div className="text-[11px] text-emerald-100/85 truncate flex items-center gap-1">
+                  {viewMode === 'ticket_form' ? (
+                    'Create Support Ticket'
+                  ) : viewingLegacyTicket ? (
+                    `Ticket #${ticketId}`
+                  ) : useLiveStream && liveChat.conversation?.assignedAgentEmail ? (
+                    `Connected with ${liveChat.conversation.assignedAgentEmail}`
+                  ) : liveStatus === 'available' ? (
+                    '🟢 Support Agent Online'
+                  ) : (
+                    '🕒 Offline (Mon–Sat 9AM–7PM IST)'
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              <button className="text-[11px] font-semibold bg-white/15 hover:bg-white/25 rounded-full px-2.5 py-0.5" onClick={resetConversation} aria-label="Reset chat">New</button>
-              <button className="text-xl leading-none px-1 text-white/80 hover:text-white" onClick={() => setOpen(false)} aria-label="Close chat">×</button>
+
+            <div className="flex items-center gap-1.5 shrink-0">
+              {viewMode === 'ticket_form' || viewingLegacyTicket ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={resetToLiveChat}
+                  className="h-7 px-2 text-[11px] font-semibold text-white bg-white/15 hover:bg-white/25 rounded-full border border-white/20 hover:text-white"
+                  title="Return to Live Chat"
+                >
+                  <ArrowLeft className="w-3 h-3 mr-1" /> Chat
+                </Button>
+              ) : ticketHistory.length > 0 ? (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowHistoryDrawer(!showHistoryDrawer)}
+                  className="h-7 px-2 text-[11px] font-semibold text-white bg-white/15 hover:bg-white/25 rounded-full border border-white/20 hover:text-white"
+                  title="View Past Tickets"
+                >
+                  <FileText className="w-3 h-3 mr-1" /> Tickets ({ticketHistory.length})
+                </Button>
+              ) : null}
+
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => setOpen(false)}
+                className="h-7 w-7 text-white/80 hover:text-white hover:bg-white/15 rounded-full"
+                aria-label="Close support chat"
+              >
+                <X className="w-4 h-4" />
+              </Button>
             </div>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="flex items-center justify-around border-b border-border bg-muted/40 p-1">
-            <button
-              type="button"
-              onClick={() => setViewMode('chat')}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 ${
-                viewMode === 'chat'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span>💬</span> Chat {useLiveStream ? '(Live)' : ''}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('ticket_form')}
-              className={`flex-1 py-1.5 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 ${
-                viewMode === 'ticket_form'
-                  ? 'bg-card text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span>📝</span> Raise Ticket
-            </button>
-          </div>
+          {/* Past Tickets Drawer (Collapsible) */}
+          {showHistoryDrawer && (
+            <div className="bg-muted/70 border-b border-border p-3 max-h-48 overflow-y-auto space-y-1.5 text-xs animate-in slide-in-from-top-2 duration-150 shrink-0">
+              <div className="flex items-center justify-between font-semibold text-muted-foreground mb-1 text-[11px]">
+                <span>Your Support Tickets</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowHistoryDrawer(false);
+                    setViewMode('ticket_form');
+                  }}
+                  className="text-emerald-500 hover:text-emerald-400 flex items-center gap-1 font-bold text-[11px]"
+                >
+                  <PlusCircle className="w-3 h-3" /> New Ticket
+                </button>
+              </div>
+              {historyLoading && <div className="text-center py-2 text-muted-foreground">Loading tickets...</div>}
+              {!historyLoading && ticketHistory.length === 0 && (
+                <div className="text-center py-2 text-muted-foreground">No previous tickets found.</div>
+              )}
+              {!historyLoading &&
+                ticketHistory.map((t) => (
+                  <button
+                    key={t.displayId}
+                    type="button"
+                    onClick={() => handleSelectTicket(t.displayId)}
+                    className={`w-full text-left p-2 rounded-xl border flex items-center justify-between transition ${
+                      ticketId === t.displayId
+                        ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 font-semibold'
+                        : 'bg-card border-border hover:bg-muted text-foreground'
+                    }`}
+                  >
+                    <div className="min-w-0 pr-2">
+                      <div className="font-semibold truncate text-[11px]">#{t.displayId}: {t.subject || 'Support Case'}</div>
+                      <div className="text-[10px] text-muted-foreground truncate">{t.category} • {t.status}</div>
+                    </div>
+                    <ChevronRight className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                  </button>
+                ))}
+            </div>
+          )}
 
-          {/* Status Indicator */}
-          <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center justify-between gap-2 border-b border-border/50 bg-background">
-            <span className="flex items-center gap-1.5 truncate">
-              <span
-                className={`w-2 h-2 rounded-full shrink-0 ${
-                  liveStatus === 'available' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
-                }`}
-              />
-              <span className="truncate">
-                {useLiveStream
-                  ? (liveChat.conversation?.status === 'ASSIGNED'
-                      ? `Connected to agent (${liveChat.conversation?.assignedAgentEmail || 'Support'})`
-                      : 'Waiting for available agent...')
-                  : (liveStatus === 'available' ? 'Live support agents online.' : 'Live support offline (Mon-Sat 9AM-7PM IST)')}
-              </span>
-            </span>
-            {useLiveStream && <span className="text-[10px] font-bold text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded">LIVE</span>}
-            {viewingLegacyTicket && ticketId && <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded">TICKET</span>}
-          </div>
-
-          {/* VIEW 1: DEDICATED RAISE TICKET FORM */}
+          {/* VIEW MODE 1: RAISE SUPPORT TICKET FORM */}
           {viewMode === 'ticket_form' ? (
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-card">
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-card text-xs">
+              <div className="flex items-center justify-between border-b border-border pb-2.5">
+                <div>
+                  <h3 className="font-bold text-sm text-foreground">Raise a Support Ticket</h3>
+                  <p className="text-[11px] text-muted-foreground">We typically resolve tickets within 2–4 business hours.</p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setViewMode('chat')}
+                  className="h-7 text-xs rounded-xl"
+                >
+                  Cancel
+                </Button>
+              </div>
+
               {liveStatus !== 'available' && (
-                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 flex items-start gap-2 text-xs text-amber-800 dark:text-amber-300">
+                <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 flex items-start gap-2.5 text-amber-800 dark:text-amber-300">
                   <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
-                  <div>
-                    <p className="font-semibold">Support Agents Currently Offline</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Business hours: Mon–Sat, 9:00 AM – 7:00 PM IST. Submit your ticket below and our team will respond promptly.
-                    </p>
+                  <div className="text-[11px] leading-relaxed">
+                    <span className="font-bold">Live Agents Currently Offline:</span> Mon–Sat, 9:00 AM – 7:00 PM IST. Submit your ticket and our team will get back to you promptly.
                   </div>
                 </div>
               )}
 
-              <form onSubmit={handleDirectTicketSubmit} className="space-y-3 text-xs">
+              <form onSubmit={handleDirectTicketSubmit} className="space-y-3">
                 <div>
                   <label className="font-semibold text-foreground block mb-1">Issue Subject *</label>
                   <input
@@ -830,8 +762,8 @@ export default function ChatSupport({ className = '' }) {
                     required
                     value={ticketSubject}
                     onChange={(e) => setTicketSubject(e.target.value)}
-                    placeholder="e.g. Payment deduction issue, listing error"
-                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    placeholder="e.g. Payment deduction issue, machine rental booking"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                   />
                 </div>
 
@@ -841,7 +773,7 @@ export default function ChatSupport({ className = '' }) {
                     <select
                       value={ticketCategory}
                       onChange={(e) => setTicketCategory(e.target.value)}
-                      className="w-full rounded-xl border border-input bg-background px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input bg-background px-2.5 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     >
                       {TICKET_CATEGORIES.map((c) => (
                         <option key={c.value} value={c.value}>
@@ -856,7 +788,7 @@ export default function ChatSupport({ className = '' }) {
                     <select
                       value={ticketPriority}
                       onChange={(e) => setTicketPriority(e.target.value)}
-                      className="w-full rounded-xl border border-input bg-background px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input bg-background px-2.5 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     >
                       {TICKET_PRIORITIES.map((p) => (
                         <option key={p.value} value={p.value}>
@@ -874,8 +806,8 @@ export default function ChatSupport({ className = '' }) {
                     required
                     value={ticketDescription}
                     onChange={(e) => setTicketDescription(e.target.value)}
-                    placeholder="Describe the problem, order ID, error message, or steps to reproduce..."
-                    className="w-full rounded-xl border border-input bg-background p-2.5 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none resize-none"
+                    placeholder="Provide details, order/booking ID, error message, or steps to reproduce..."
+                    className="w-full rounded-xl border border-input bg-background p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none resize-none"
                   />
                 </div>
 
@@ -888,7 +820,7 @@ export default function ChatSupport({ className = '' }) {
                       value={ticketEmail}
                       onChange={(e) => setTicketEmail(e.target.value)}
                       placeholder="name@example.com"
-                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
                   </div>
 
@@ -899,7 +831,7 @@ export default function ChatSupport({ className = '' }) {
                       value={ticketPhone}
                       onChange={(e) => setTicketPhone(e.target.value)}
                       placeholder="10-digit mobile"
-                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -914,213 +846,260 @@ export default function ChatSupport({ className = '' }) {
                   />
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={ticketSubmitting}
-                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl py-2 text-xs font-semibold hover:from-cyan-500 hover:to-blue-500 flex items-center justify-center gap-1.5"
-                >
-                  {ticketSubmitting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting Ticket...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-3.5 h-3.5" /> Submit Support Ticket
-                    </>
-                  )}
-                </Button>
+                <div className="pt-1 flex gap-2">
+                  <Button
+                    type="submit"
+                    disabled={ticketSubmitting}
+                    className="flex-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white rounded-xl py-2 text-xs font-semibold hover:opacity-95 shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    {ticketSubmitting ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting Ticket...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" /> Submit Support Ticket
+                      </>
+                    )}
+                  </Button>
+                </div>
               </form>
             </div>
           ) : (
-            /* VIEW 2: CHAT & TICKETS CONVERSATION */
-            <>
-              <div className="px-3 pt-2">
-                <div className="rounded-xl border border-border bg-slate-950/60 p-2">
-                  <div className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
-                    <span>Recent Tickets</span>
-                    <button
-                      type="button"
-                      onClick={() => setViewMode('ticket_form')}
-                      className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1"
-                    >
-                      <PlusCircle className="w-3 h-3" /> New Ticket
-                    </button>
+            /* VIEW MODE 2: UNIFIED CHAT CONVERSATION */
+            <div className="flex-1 flex flex-col min-h-0 bg-background">
+              
+              {/* Alert: Agent came online notification banner */}
+              {hasOnlineAgentAlert && (
+                <div className="mx-3 mt-2 p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-2 animate-in slide-in-from-top-1 text-xs">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <span className="font-semibold text-emerald-800 dark:text-emerald-200 text-[11px]">
+                      A support agent is now online!
+                    </span>
                   </div>
-                  <div className="flex gap-2 overflow-x-auto pb-1">
-                    {historyLoading && (
-                      <span className="text-[11px] text-muted-foreground">Loading tickets...</span>
-                    )}
-                    {!historyLoading && ticketHistory.length === 0 && (
-                      <span className="text-[11px] text-muted-foreground">No previous tickets</span>
-                    )}
-                    {!historyLoading && ticketHistory.map((ticket) => {
-                      const id = ticket?.displayId;
-                      if (!id) return null;
-                      const isActive = id === ticketId;
-                      return (
-                        <button
-                          key={id}
-                          type="button"
-                          onClick={() => handleSelectTicket(id)}
-                          className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] border transition ${isActive ? 'bg-cyan-600/25 text-cyan-200 border-cyan-500/50' : 'bg-muted text-muted-foreground border-border hover:bg-muted'}`}
-                          disabled={chatLoading}
-                        >
-                          {id}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Offline fallback prompt if not in active ticket */}
-              {liveStatus !== 'available' && !ticketId && !useLiveStream && (
-                <div className="mx-3 mt-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs flex items-center justify-between gap-2">
-                  <span className="text-amber-800 dark:text-amber-300 text-[11px]">
-                    🕒 Live agents offline.
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('ticket_form')}
-                    className="text-[11px] font-bold text-cyan-500 hover:text-cyan-400 underline shrink-0"
+                  <Button
+                    size="sm"
+                    onClick={handleStartOnlineChatFromAlert}
+                    className="h-6 px-2.5 text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-sm"
                   >
-                    Raise a Ticket →
-                  </button>
+                    Start Chat
+                  </Button>
                 </div>
               )}
 
-              <div className="px-3 pt-2 flex flex-wrap gap-1.5">
-                {quickSuggestions.map((item) => (
-                  <button
-                    key={item.label}
-                    type="button"
-                    disabled={loading}
-                    onClick={() => handleFAQ(item.text)}
-                    className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-[10px] font-medium hover:bg-muted text-muted-foreground"
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
+              {/* Quick Topic Suggestions (Only if in live chat and not viewing a closed/legacy ticket) */}
+              {!viewingLegacyTicket && liveStatus === 'available' && (
+                <div className="px-3 pt-2.5 pb-1 flex flex-wrap gap-1.5 shrink-0">
+                  {quickSuggestions.map((item) => (
+                    <button
+                      key={item.label}
+                      type="button"
+                      disabled={chatLoading}
+                      onClick={() => handleFAQ(item.text)}
+                      className="rounded-full border border-border bg-muted/60 px-2.5 py-1 text-[10px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition active:scale-95"
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
+              )}
 
-              <div className="flex-1 p-3 overflow-y-auto space-y-2">
+              {/* Chat Message Stream */}
+              <div className="flex-1 p-3.5 overflow-y-auto space-y-2.5 text-xs">
                 {displayMessages.map((msg, idx) => {
                   const attachmentsSource = []
                     .concat(msg?.attachments || [])
-                    .concat(parseAttachmentsFromMessage(msg) || [])
+                    .concat(parseAttachmentsFromMessage(msg) || []);
 
-                  const seen = new Set()
-                  const attachments = (attachmentsSource || []).map((a) => {
-                    if (!a) return null
-                    const url = typeof a === 'string' ? (a.startsWith('/') ? window.location.origin + a : a) : (a.url || a.attachmentUrl || a.url)
-                    const fileName = a.fileName || a.name || (url ? decodeURIComponent(url.split('/').pop()) : 'attachment')
-                    const key = url || fileName
-                    if (!key || seen.has(key)) return null
-                    seen.add(key)
-                    return { url, fileName }
-                  }).filter(Boolean)
+                  const seen = new Set();
+                  const attachments = (attachmentsSource || [])
+                    .map((a) => {
+                      if (!a) return null;
+                      const url =
+                        typeof a === 'string'
+                          ? a.startsWith('/')
+                            ? window.location.origin + a
+                            : a
+                          : a.url || a.attachmentUrl || a.url;
+                      const fileName = a.fileName || a.name || (url ? decodeURIComponent(url.split('/').pop()) : 'attachment');
+                      const key = url || fileName;
+                      if (!key || seen.has(key)) return null;
+                      seen.add(key);
+                      return { url, fileName };
+                    })
+                    .filter(Boolean);
 
                   const displayText = msg.text || '';
-                  const stripped = stripAttachmentLines(displayText)
-                  const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '')
+                  const stripped = stripAttachmentLines(displayText);
+                  const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '');
+                  const isUser = msg.sender === 'user';
+
                   return (
-                    <div key={idx} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
-                      <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${msg.sender === 'user' ? 'bg-primary/50/15 text-primary/80 border border-primary/20' : 'bg-muted text-muted-foreground border border-border'}`}>
+                    <div key={idx} className={isUser ? 'text-right' : 'text-left'}>
+                      <div
+                        className={`inline-block max-w-[88%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${
+                          isUser
+                            ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-br-none shadow-sm'
+                            : 'bg-card text-foreground border border-border rounded-bl-none shadow-sm'
+                        }`}
+                      >
                         {bubbleText}
-                      </span>
+                      </div>
+
                       {attachments.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-2 justify-start">
-                          {attachments.map((attachment) => (
-                            <div key={`${idx}-${attachment.url}`} className="flex flex-wrap gap-2 items-center">
-                              <button
-                                type="button"
-                                onClick={() => openAttachment(attachment.url)}
-                                className="rounded-full bg-muted text-slate-100 px-2 py-1 text-[11px] hover:bg-slate-600"
-                              >
-                                Open {attachment.fileName}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => downloadAttachment(attachment)}
-                                className="rounded-full bg-cyan-600 text-white px-2 py-1 text-[11px] hover:bg-cyan-500"
-                              >
-                                Download
-                              </button>
-                            </div>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5 justify-start">
+                          {attachments.map((att) => (
+                            <a
+                              key={att.url}
+                              href={att.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl bg-muted border border-border text-[10px] font-medium text-foreground hover:bg-accent transition"
+                            >
+                              <Paperclip className="w-3 h-3 text-emerald-500" />
+                              <span className="truncate max-w-[120px]">{att.fileName}</span>
+                            </a>
                           ))}
                         </div>
                       )}
                     </div>
                   );
                 })}
+
+                {/* Offline Prompt Card inside Chat Flow */}
+                {liveStatus === 'offline' && !viewingLegacyTicket && !offlineDismissed && (
+                  <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3.5 space-y-2.5 text-xs text-foreground shadow-sm">
+                    <div className="flex items-start gap-2 text-amber-800 dark:text-amber-300">
+                      <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                      <div>
+                        <div className="font-bold text-xs">Live Support Executives Currently Offline</div>
+                        <div className="text-[11px] text-muted-foreground mt-0.5">
+                          Support Hours: Mon–Sat, 9:00 AM – 7:00 PM IST.
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Would you like to raise a support ticket instead so our team can follow up with you?
+                    </p>
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        onClick={() => setViewMode('ticket_form')}
+                        className="h-8 px-3 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl shadow-sm"
+                      >
+                        <FileText className="w-3.5 h-3.5 mr-1" /> Raise Support Ticket
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={handleNotifyWhenOnline}
+                        className="h-8 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted"
+                      >
+                        <Bell className="w-3.5 h-3.5 mr-1 text-amber-500" /> Notify Me When Online
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Typing Indicator */}
+                {liveChat.typingUser && useLiveStream && (
+                  <div className="text-[11px] text-emerald-500 px-2 py-1 font-semibold flex items-center gap-1.5 animate-pulse">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                    Support agent is typing...
+                  </div>
+                )}
+
+                {/* Rating Card when conversation is closed */}
+                {liveChat.showRating && useLiveStream && (
+                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-3.5 space-y-2.5 shadow-sm">
+                    <p className="text-xs font-bold text-foreground">Rate your support experience</p>
+                    <div className="flex gap-1.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          className={`text-xl transition ${ratingStars >= star ? 'text-amber-400 scale-110' : 'text-muted-foreground/40 hover:text-amber-300'}`}
+                          onClick={() => setRatingStars(star)}
+                        >
+                          ★
+                        </button>
+                      ))}
+                    </div>
+                    <textarea
+                      className="w-full rounded-xl bg-background border border-border text-xs p-2 text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                      rows={2}
+                      placeholder="Optional feedback..."
+                      value={ratingComment}
+                      onChange={(e) => setRatingComment(e.target.value)}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        if (!ratingStars) {
+                          showToast('Please choose a star rating.', 'error');
+                          return;
+                        }
+                        await liveChat.submitRating(ratingStars, ratingComment);
+                        showToast('Thank you for your rating!', 'success');
+                      }}
+                      className="h-7 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl"
+                    >
+                      Submit Rating
+                    </Button>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
 
-              {liveChat.typingUser && useLiveStream && (
-                <div className="text-[10px] text-cyan-300 px-3 py-1 font-semibold">Support agent is typing...</div>
-              )}
-
-              {liveChat.showRating && useLiveStream && (
-                <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/40 p-3 space-y-2 m-3">
-                  <p className="text-sm font-semibold text-cyan-100">Rate this conversation</p>
-                  <div className="flex gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        type="button"
-                        className={`text-lg ${ratingStars >= star ? 'text-amber-400' : 'text-muted-foreground'}`}
-                        onClick={() => setRatingStars(star)}
-                        aria-label={`${star} stars`}
-                      >
-                        ★
-                      </button>
-                    ))}
-                  </div>
-                  <textarea
-                    className="w-full rounded-lg bg-muted border border-border text-sm p-2 text-foreground"
-                    rows={2}
-                    placeholder="Optional feedback"
-                    value={ratingComment}
-                    onChange={(e) => setRatingComment(e.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="rounded-lg bg-cyan-600 text-white text-xs px-3 py-1.5"
-                    onClick={submitRating}
-                  >
-                    Submit rating
-                  </button>
-                </div>
-              )}
-
-              <div className="flex gap-2 p-3 border-t border-border bg-slate-950/80">
+              {/* Chat Input Bar */}
+              <div className="p-3 border-t border-border bg-card/90 flex items-center gap-2 shrink-0">
                 <input
-                  className="flex-1 bg-muted border border-border text-foreground dark:text-white placeholder-slate-400 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
                   type="text"
                   value={input}
-                  onChange={(event) => {
-                    setInput(event.target.value);
-                    if (useLiveStream) {
-                      liveChat.notifyTyping(event.target.value.trim().length > 0);
-                    }
+                  onChange={(e) => {
+                    setInput(e.target.value);
+                    if (useLiveStream) liveChat.notifyTyping(e.target.value.trim().length > 0);
                   }}
-                  placeholder="Ask about orders, payment, vendor help..."
-                  aria-label="Chat input"
-                  onKeyDown={(event) => event.key === 'Enter' && handleSend()}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                  placeholder={
+                    viewingLegacyTicket
+                      ? 'Reply to this ticket...'
+                      : liveStatus === 'available'
+                      ? 'Type your message...'
+                      : 'Ask a question or raise a ticket...'
+                  }
+                  className="flex-1 bg-background border border-border text-foreground placeholder-muted-foreground rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"
                   disabled={chatLoading}
                 />
+
                 <input
                   type="file"
                   accept="image/*,.pdf,.doc,.docx"
                   className="hidden"
-                  id="chat-file-upload"
+                  id="chat-file-upload-unified"
                   onChange={handleFileUpload}
                 />
-                <label htmlFor="chat-file-upload" className="bg-muted text-muted-foreground px-3 py-2 rounded-xl cursor-pointer hover:bg-muted border border-border text-xs">📎</label>
-                <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-3.5 py-2 rounded-xl hover:from-primary/50 hover:to-blue-500 disabled:opacity-60 text-xs font-semibold" onClick={handleSend} aria-label="Send message" disabled={chatLoading}>
-                  Send
-                </button>
+                <label
+                  htmlFor="chat-file-upload-unified"
+                  className="p-2.5 rounded-2xl bg-muted hover:bg-accent border border-border text-muted-foreground hover:text-foreground cursor-pointer transition active:scale-95 shrink-0"
+                  title="Attach file"
+                >
+                  <Paperclip className="w-4 h-4" />
+                </label>
+
+                <Button
+                  size="icon"
+                  onClick={handleSend}
+                  disabled={chatLoading || !input.trim()}
+                  className="h-9 w-9 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md hover:opacity-90 disabled:opacity-50 shrink-0"
+                  aria-label="Send message"
+                >
+                  {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                </Button>
               </div>
-            </>
+            </div>
           )}
         </div>
       )}

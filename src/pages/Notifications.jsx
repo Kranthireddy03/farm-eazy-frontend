@@ -439,58 +439,60 @@ export default function Notifications() {
                     !notification.isRead ? 'ring-1 ring-primary/30 bg-primary/[0.02]' : ''
                   }`}
                 >
-                  <div className="flex items-start gap-4">
-                    <span className="text-2xl shrink-0 select-none" aria-hidden="true">
-                      {NotificationService.getTypeIcon(notification.type)}
-                    </span>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className={`font-semibold ${!notification.isRead ? 'text-foreground font-bold' : 'text-foreground/90'}`}>
-                          {notification.title}
-                        </span>
-                        {!notification.isRead && (
-                          <span className="h-2 w-2 rounded-full bg-primary" aria-label="Unread" />
-                        )}
-                        {notification.priority && (
-                          <Badge variant={PRIORITY_VARIANT[notification.priority] || 'muted'}>
-                            {notification.priority}
-                          </Badge>
-                        )}
-                        {notification.contextType && (
-                          <Badge variant="outline" className="text-[10px] uppercase tracking-wider py-0">
-                            {notification.contextType}
-                          </Badge>
-                        )}
-                        {isSaved && (
-                          <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30 text-[10px]">
-                            <BookmarkCheck className="h-3 w-3" /> Saved
-                          </Badge>
-                        )}
-                      </div>
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                    <div className="flex items-start gap-3 flex-1 min-w-0">
+                      <span className="text-2xl shrink-0 select-none pt-0.5" aria-hidden="true">
+                        {NotificationService.getTypeIcon(notification.type)}
+                      </span>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                          <span className={`text-sm sm:text-base font-semibold ${!notification.isRead ? 'text-foreground font-bold' : 'text-foreground/90'}`}>
+                            {notification.title}
+                          </span>
+                          {!notification.isRead && (
+                            <span className="h-2 w-2 rounded-full bg-primary shrink-0" aria-label="Unread" />
+                          )}
+                          {notification.priority && (
+                            <Badge variant={PRIORITY_VARIANT[notification.priority] || 'muted'} className="text-[10px] px-1.5 py-0">
+                              {notification.priority}
+                            </Badge>
+                          )}
+                          {notification.contextType && (
+                            <Badge variant="outline" className="text-[9px] uppercase tracking-wider py-0 px-1.5">
+                              {notification.contextType}
+                            </Badge>
+                          )}
+                          {isSaved && (
+                            <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/30 text-[9px] px-1.5 py-0">
+                              <BookmarkCheck className="h-2.5 w-2.5" /> Saved
+                            </Badge>
+                          )}
+                        </div>
 
-                      <p className="mt-2 text-sm text-muted-foreground line-clamp-2">
-                        {notification.message}
-                      </p>
+                        <p className="mt-1.5 text-xs sm:text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                          {notification.message}
+                        </p>
 
-                      <div className="flex items-center gap-3 mt-3 text-xs text-muted-foreground">
-                        <span>{notification.timeAgo || 'Just now'}</span>
-                        <span>•</span>
-                        <span className="capitalize">{String(notification.type || '').toLowerCase()}</span>
-                        {notification.savedAt && (
-                          <>
-                            <span>•</span>
-                            <span>Saved {new Date(notification.savedAt).toLocaleDateString('en-IN')}</span>
-                          </>
-                        )}
+                        <div className="flex flex-wrap items-center gap-2 mt-2.5 text-[11px] text-muted-foreground">
+                          <span>{notification.timeAgo || 'Just now'}</span>
+                          <span>•</span>
+                          <span className="capitalize">{String(notification.type || '').toLowerCase()}</span>
+                          {notification.savedAt && (
+                            <>
+                              <span>•</span>
+                              <span>Saved {new Date(notification.savedAt).toLocaleDateString('en-IN')}</span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="flex flex-col gap-1.5 shrink-0">
+                    <div className="flex items-center sm:flex-col justify-between sm:justify-start gap-1.5 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border/40">
                       <Button 
                         size="sm" 
                         onClick={() => handleOpen(notification)} 
-                        className="gap-1.5 text-xs font-semibold shadow-sm"
+                        className="gap-1.5 text-xs font-semibold shadow-sm h-8 px-3"
                       >
                         <ExternalLink className="h-3.5 w-3.5" /> Open
                       </Button>
@@ -501,20 +503,20 @@ export default function Notifications() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleRemoveSaved(notification.id)}
-                            className="h-8 px-2 text-xs text-emerald-600 hover:text-red-500"
+                            className="h-8 w-8 p-0 text-xs text-emerald-600 hover:text-red-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                             title="Remove from saved"
                           >
-                            <BookmarkCheck className="h-3.5 w-3.5" />
+                            <BookmarkCheck className="h-4 w-4" />
                           </Button>
                         ) : (
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleSave(notification)}
-                            className="h-8 px-2 text-xs hover:text-emerald-600"
+                            className="h-8 w-8 p-0 text-xs hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
                             title="Save notification"
                           >
-                            <Bookmark className="h-3.5 w-3.5" />
+                            <Bookmark className="h-4 w-4" />
                           </Button>
                         )}
 
@@ -523,20 +525,20 @@ export default function Notifications() {
                             size="sm"
                             variant="ghost"
                             onClick={() => handleMarkUnread(notification.id)}
-                            className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+                            className="h-8 w-8 p-0 text-xs text-muted-foreground hover:text-foreground"
                             title="Mark as unread"
                           >
-                            <MailOpen className="h-3.5 w-3.5" />
+                            <MailOpen className="h-4 w-4" />
                           </Button>
                         ) : (
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={() => handleMarkRead(notification.id)}
-                            className="h-8 px-2 text-xs text-primary hover:bg-primary/10"
+                            className="h-8 w-8 p-0 text-xs text-primary hover:bg-primary/10"
                             title="Mark as read"
                           >
-                            <Mail className="h-3.5 w-3.5" />
+                            <Mail className="h-4 w-4" />
                           </Button>
                         )}
 
@@ -544,10 +546,10 @@ export default function Notifications() {
                           size="sm"
                           variant="ghost"
                           onClick={() => handleDismiss(notification.id)}
-                          className="h-8 px-2 text-xs text-muted-foreground hover:text-red-500"
+                          className="h-8 w-8 p-0 text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10"
                           title="Dismiss"
                         >
-                          <Trash2 className="h-3.5 w-3.5" />
+                          <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
                     </div>

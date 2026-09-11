@@ -18,6 +18,7 @@ import {
   PenTool,
   Send,
   Layers,
+  X,
 } from 'lucide-react'
 import { useTheme } from '../context/ThemeContext'
 import { useAuth } from '../context/AuthContext'
@@ -165,12 +166,10 @@ export default function Blog() {
   const filteredAndSortedPosts = useMemo(() => {
     let result = [...posts]
 
-    // Category filter
     if (selectedCategory !== 'All') {
       result = result.filter((p) => p.category === selectedCategory)
     }
 
-    // Tag filter
     if (selectedTag) {
       result = result.filter((p) =>
         p.tags.some((t) => t.toLowerCase() === selectedTag.toLowerCase()) ||
@@ -179,7 +178,6 @@ export default function Blog() {
       )
     }
 
-    // Search query filter
     const query = searchQuery.trim().toLowerCase()
     if (query) {
       result = result.filter((p) =>
@@ -191,7 +189,6 @@ export default function Blog() {
       )
     }
 
-    // Sorting
     if (sortBy === 'latest') {
       result.sort((a, b) => b.publishedAt - a.publishedAt)
     } else if (sortBy === 'rating') {
@@ -205,7 +202,7 @@ export default function Blog() {
     return result
   }, [posts, selectedCategory, selectedTag, searchQuery, sortBy])
 
-  // Featured Spotlight Post (Highest rated or newest)
+  // Featured Spotlight Post
   const spotlightPost = useMemo(() => {
     if (posts.length === 0) return null
     return [...posts].sort((a, b) => (b.averageRating * (b.ratingCount || 1)) - (a.averageRating * (a.ratingCount || 1)))[0]
@@ -215,28 +212,28 @@ export default function Blog() {
     <div className={`min-h-screen ${isDark ? 'bg-slate-950 text-slate-100' : 'bg-slate-50/50 text-slate-900'}`}>
       
       {/* Hero Header Section */}
-      <section className="relative overflow-hidden pt-12 pb-16 px-4 border-b border-border/60 bg-gradient-to-b from-emerald-500/5 via-transparent to-transparent">
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 -right-24 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden pt-8 pb-10 sm:pt-12 sm:pb-16 px-4 border-b border-border/60 bg-gradient-to-b from-emerald-500/5 via-transparent to-transparent">
+        <div className="absolute -top-24 -left-24 w-72 sm:w-96 h-72 sm:h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 -right-24 w-72 sm:w-96 h-72 sm:h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        <div className="max-w-6xl mx-auto text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-widest animate-fadeIn">
+        <div className="max-w-6xl mx-auto text-center space-y-3 sm:space-y-4">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider animate-fadeIn">
             <Sparkles className="h-3.5 w-3.5" />
             <span>FarmEazy Knowledge Hub & Field Insights</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-foreground max-w-4xl mx-auto leading-[1.15]">
+          <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight text-foreground max-w-4xl mx-auto leading-tight sm:leading-[1.15]">
             Modern Farming, Agritech Insights & Field Guides
           </h1>
 
-          <p className="text-sm sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xs sm:text-base lg:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed px-2">
             Curated agronomy practices, precision irrigation tips, crop disease prevention, and real-world farmer stories.
           </p>
 
-          <div className="flex items-center justify-center flex-wrap gap-3 pt-2">
+          <div className="flex items-center justify-center flex-col sm:flex-row gap-2.5 sm:gap-3 pt-2 w-full max-w-md mx-auto sm:max-w-none">
             <Button
               asChild
-              className="rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 shadow-md transition-all hover:scale-105 cursor-pointer"
+              className="w-full sm:w-auto rounded-xl sm:rounded-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 sm:py-2 text-xs sm:text-sm shadow-md transition-all active:scale-98 cursor-pointer"
             >
               <Link to={isAuthenticated ? '/blog/submit' : '/login'}>
                 <PenTool className="h-4 w-4 mr-2" />
@@ -247,7 +244,7 @@ export default function Blog() {
               <Button
                 asChild
                 variant="outline"
-                className="rounded-full border-border font-semibold px-5 cursor-pointer hover:bg-muted"
+                className="w-full sm:w-auto rounded-xl sm:rounded-full border-border font-semibold px-5 py-2.5 sm:py-2 text-xs sm:text-sm cursor-pointer hover:bg-muted"
               >
                 <Link to="/blog/my-submissions">
                   <BookOpen className="h-4 w-4 mr-2" />
@@ -258,21 +255,21 @@ export default function Blog() {
           </div>
 
           {/* Quick Stats Banner */}
-          <div className="pt-8 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto">
-            <div className={`p-3.5 rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
-              <div className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{posts.length}</div>
+          <div className="pt-6 sm:pt-8 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 max-w-3xl mx-auto">
+            <div className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
+              <div className="text-lg sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">{posts.length}</div>
               <div className="text-[10px] sm:text-xs uppercase font-bold text-muted-foreground tracking-wider mt-0.5">Published Articles</div>
             </div>
-            <div className={`p-3.5 rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
-              <div className="text-xl sm:text-2xl font-black text-teal-600 dark:text-teal-400">{categories.length}</div>
+            <div className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
+              <div className="text-lg sm:text-2xl font-black text-teal-600 dark:text-teal-400">{categories.length}</div>
               <div className="text-[10px] sm:text-xs uppercase font-bold text-muted-foreground tracking-wider mt-0.5">Topic Categories</div>
             </div>
-            <div className={`p-3.5 rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
-              <div className="text-xl sm:text-2xl font-black text-amber-500">4.8★</div>
+            <div className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
+              <div className="text-lg sm:text-2xl font-black text-amber-500">4.8★</div>
               <div className="text-[10px] sm:text-xs uppercase font-bold text-muted-foreground tracking-wider mt-0.5">Reader Rating</div>
             </div>
-            <div className={`p-3.5 rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
-              <div className="text-xl sm:text-2xl font-black text-primary">100%</div>
+            <div className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl border text-center ${isDark ? 'bg-slate-900/60 border-border/80' : 'bg-white border-border shadow-xs'}`}>
+              <div className="text-lg sm:text-2xl font-black text-primary">100%</div>
               <div className="text-[10px] sm:text-xs uppercase font-bold text-muted-foreground tracking-wider mt-0.5">Expert Verified</div>
             </div>
           </div>
@@ -280,36 +277,36 @@ export default function Blog() {
       </section>
 
       {/* Main Content Area */}
-      <div className="max-w-6xl mx-auto px-4 py-10 space-y-10">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-6 py-6 sm:py-10 space-y-6 sm:space-y-10">
 
         {/* Featured Spotlight Card */}
         {spotlightPost && !searchQuery && selectedCategory === 'All' && !selectedTag && (
           <div className="relative group">
             <Link
               to={`/blog/${spotlightPost.slug}`}
-              className={`block rounded-3xl border overflow-hidden transition-all duration-300 hover:shadow-2xl ${
+              className={`block rounded-2xl sm:rounded-3xl border overflow-hidden transition-all duration-300 hover:shadow-2xl active:scale-[0.99] ${
                 isDark ? 'bg-slate-900/80 border-emerald-500/20 hover:border-emerald-500/40' : 'bg-white border-border hover:border-emerald-500/50 shadow-md'
               }`}
             >
               <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-0">
-                <div className="relative h-64 sm:h-80 lg:h-full min-h-[280px] overflow-hidden">
+                <div className="relative h-48 sm:h-72 lg:h-full min-h-[200px] sm:min-h-[280px] overflow-hidden">
                   <img
                     src={spotlightPost.coverImageUrl}
                     alt={spotlightPost.title}
                     className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => { e.currentTarget.src = DEFAULT_COVER_IMAGES[0] }}
                   />
-                  <div className="absolute top-4 left-4">
-                    <Badge className="bg-emerald-600 text-white font-bold text-xs uppercase px-3 py-1 shadow-md">
+                  <div className="absolute top-3 left-3 sm:top-4 sm:left-4">
+                    <Badge className="bg-emerald-600 text-white font-bold text-[10px] sm:text-xs uppercase px-2.5 sm:px-3 py-1 shadow-md">
                       ⭐ Spotlight Article
                     </Badge>
                   </div>
                 </div>
 
-                <div className="p-6 sm:p-8 flex flex-col justify-between space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[10px]">
+                <div className="p-4 sm:p-6 md:p-8 flex flex-col justify-between space-y-3 sm:space-y-4">
+                  <div className="space-y-2 sm:space-y-3">
+                    <div className="flex items-center gap-2 sm:gap-3 text-[11px] sm:text-xs text-muted-foreground flex-wrap">
+                      <span className="px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider text-[9px] sm:text-[10px]">
                         {spotlightPost.category}
                       </span>
                       <span>•</span>
@@ -321,18 +318,18 @@ export default function Blog() {
                       <span>{spotlightPost.date}</span>
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl font-black text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight">
+                    <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight">
                       {spotlightPost.title}
                     </h2>
 
-                    <p className="text-sm sm:text-base text-muted-foreground line-clamp-3 leading-relaxed">
+                    <p className="text-xs sm:text-sm md:text-base text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-relaxed">
                       {spotlightPost.excerpt}
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-border flex items-center justify-between flex-wrap gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-9 w-9 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-xs">
+                  <div className="pt-3 sm:pt-4 border-t border-border flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2 sm:gap-2.5">
+                      <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-xs">
                         {spotlightPost.authorName.charAt(0)}
                       </div>
                       <div>
@@ -343,9 +340,9 @@ export default function Blog() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform">
                       <span>Read Spotlight</span>
-                      <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                     </div>
                   </div>
                 </div>
@@ -355,8 +352,8 @@ export default function Blog() {
         )}
 
         {/* Search, Filter & Sort Toolbar */}
-        <div className={`rounded-3xl border p-4 sm:p-6 space-y-4 shadow-sm ${isDark ? 'bg-slate-900/60 border-border' : 'bg-white border-border'}`}>
-          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+        <div className={`rounded-2xl sm:rounded-3xl border p-3.5 sm:p-6 space-y-3 sm:space-y-4 shadow-sm ${isDark ? 'bg-slate-900/60 border-border' : 'bg-white border-border'}`}>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
             {/* Search input */}
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -365,19 +362,28 @@ export default function Blog() {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search articles by title, crop, technique, author…"
-                className={`w-full rounded-2xl border pl-10 pr-4 py-2.5 text-sm outline-none transition ${
+                className={`w-full rounded-xl sm:rounded-2xl border pl-10 pr-8 py-2 sm:py-2.5 text-xs sm:text-sm outline-none transition ${
                   isDark ? 'bg-slate-950/80 border-border text-white placeholder:text-slate-500 focus:border-emerald-500' : 'bg-slate-50 border-border text-foreground focus:border-emerald-500'
                 }`}
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
 
             {/* Sort Dropdown */}
             <div className="flex items-center gap-2 shrink-0">
-              <Filter className="h-4 w-4 text-muted-foreground" />
+              <Filter className="h-4 w-4 text-muted-foreground shrink-0" />
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className={`rounded-xl border px-3 py-2 text-xs font-semibold outline-none transition ${
+                className={`w-full sm:w-auto rounded-xl border px-3 py-2 text-xs font-semibold outline-none transition cursor-pointer ${
                   isDark ? 'bg-slate-950 border-border text-slate-200' : 'bg-slate-50 border-border text-foreground'
                 }`}
               >
@@ -389,8 +395,8 @@ export default function Blog() {
             </div>
           </div>
 
-          {/* Category Pills with Count Badges */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {/* Category Pills with Touch Horizontal Scrolling */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none touch-pan-x -mx-1 px-1">
             {categories.map((cat) => {
               const count = categoriesWithCounts[cat] || 0
               const isActive = selectedCategory === cat
@@ -398,7 +404,7 @@ export default function Blog() {
                 <button
                   key={cat}
                   onClick={() => { setSelectedCategory(cat); setSelectedTag(null); }}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border cursor-pointer ${
+                  className={`px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 border cursor-pointer active:scale-95 ${
                     isActive
                       ? 'bg-emerald-600 border-emerald-600 text-white shadow-xs'
                       : isDark
@@ -417,8 +423,8 @@ export default function Blog() {
 
           {/* Popular Tag Cloud */}
           <div className="flex items-center gap-1.5 flex-wrap pt-1 text-xs text-muted-foreground">
-            <span className="flex items-center gap-1 font-semibold text-[11px] uppercase tracking-wider text-primary">
-              <Tag className="h-3 w-3" /> Popular Tags:
+            <span className="flex items-center gap-1 font-semibold text-[10px] sm:text-[11px] uppercase tracking-wider text-primary mr-1">
+              <Tag className="h-3 w-3" /> Tags:
             </span>
             {POPULAR_TAGS.map((tag) => {
               const isTagActive = selectedTag === tag
@@ -427,7 +433,7 @@ export default function Blog() {
                   key={tag}
                   type="button"
                   onClick={() => setSelectedTag(isTagActive ? null : tag)}
-                  className={`px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer border ${
+                  className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg text-[11px] sm:text-xs font-medium transition cursor-pointer border active:scale-95 ${
                     isTagActive
                       ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/40 font-bold'
                       : isDark
@@ -439,11 +445,11 @@ export default function Blog() {
                 </button>
               )
             })}
-            {(selectedTag || searchQuery) && (
+            {(selectedTag || searchQuery || selectedCategory !== 'All') && (
               <button
                 type="button"
                 onClick={() => { setSelectedTag(null); setSearchQuery(''); setSelectedCategory('All'); }}
-                className="text-xs font-bold text-rose-500 hover:underline ml-2 cursor-pointer"
+                className="text-xs font-bold text-rose-500 hover:underline ml-2 cursor-pointer py-1"
               >
                 Clear all filters
               </button>
@@ -453,22 +459,22 @@ export default function Blog() {
 
         {/* Loading / Error / Empty States */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3">
-            <div className="h-10 w-10 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
-            <p className="text-sm font-semibold text-muted-foreground">Loading knowledge feed…</p>
+          <div className="flex flex-col items-center justify-center py-16 sm:py-20 gap-3">
+            <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
+            <p className="text-xs sm:text-sm font-semibold text-muted-foreground">Loading knowledge feed…</p>
           </div>
         ) : error ? (
-          <div className={`rounded-2xl border p-5 text-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
+          <div className={`rounded-2xl border p-4 sm:p-5 text-xs sm:text-sm ${isDark ? 'bg-red-950/30 border-red-800 text-red-300' : 'bg-red-50 border-red-200 text-red-700'}`}>
             <p className="font-bold">Error loading articles</p>
             <p className="mt-1">{error}</p>
           </div>
         ) : filteredAndSortedPosts.length === 0 ? (
-          <div className={`rounded-3xl border p-10 text-center space-y-4 ${isDark ? 'bg-slate-900/40 border-border' : 'bg-white border-border shadow-xs'}`}>
-            <div className="h-14 w-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
-              <BookOpen className="h-7 w-7" />
+          <div className={`rounded-2xl sm:rounded-3xl border p-6 sm:p-10 text-center space-y-3 sm:space-y-4 ${isDark ? 'bg-slate-900/40 border-border' : 'bg-white border-border shadow-xs'}`}>
+            <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+              <BookOpen className="h-6 w-6 sm:h-7 sm:w-7" />
             </div>
-            <h3 className="text-xl font-black text-foreground">No matching articles found</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <h3 className="text-lg sm:text-xl font-black text-foreground">No matching articles found</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-md mx-auto">
               We couldn&apos;t find any published articles matching your current search or category filter.
             </p>
             <Button
@@ -481,7 +487,7 @@ export default function Blog() {
           </div>
         ) : (
           /* Article Cards Grid */
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {filteredAndSortedPosts.map((post) => {
               const isBookmarked = bookmarkedSlugs.includes(post.slug)
               const isCopied = copiedSlug === post.slug
@@ -489,7 +495,7 @@ export default function Blog() {
               return (
                 <article
                   key={post.id}
-                  className={`group rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${
+                  className={`group rounded-2xl sm:rounded-3xl border overflow-hidden flex flex-col justify-between transition-all duration-300 hover:shadow-xl sm:hover:-translate-y-1 ${
                     isDark
                       ? 'bg-slate-900/90 border-border/80 hover:border-emerald-500/40'
                       : 'bg-white border-border/80 hover:border-emerald-500/40 shadow-xs'
@@ -497,7 +503,7 @@ export default function Blog() {
                 >
                   <div>
                     {/* Card Thumbnail */}
-                    <div className="relative h-48 w-full overflow-hidden bg-muted">
+                    <div className="relative h-44 sm:h-48 w-full overflow-hidden bg-muted">
                       <Link to={`/blog/${post.slug}`}>
                         <img
                           src={post.coverImageUrl}
@@ -509,8 +515,8 @@ export default function Blog() {
                       </Link>
 
                       {/* Top Badges */}
-                      <div className="absolute top-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-                        <Badge className="bg-emerald-600 text-white font-bold text-[10px] uppercase shadow-md pointer-events-auto">
+                      <div className="absolute top-2.5 left-2.5 right-2.5 sm:top-3 sm:left-3 sm:right-3 flex items-center justify-between pointer-events-none">
+                        <Badge className="bg-emerald-600 text-white font-bold text-[9px] sm:text-[10px] uppercase shadow-md pointer-events-auto">
                           {post.category}
                         </Badge>
 
@@ -518,31 +524,31 @@ export default function Blog() {
                           <button
                             type="button"
                             onClick={(e) => toggleBookmark(post.slug, e)}
-                            className={`h-8 w-8 rounded-full flex items-center justify-center transition shadow-md cursor-pointer ${
+                            className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center transition shadow-md cursor-pointer active:scale-90 ${
                               isBookmarked
                                 ? 'bg-amber-500 text-white'
                                 : 'bg-black/60 text-white hover:bg-black/80'
                             }`}
                             aria-label={isBookmarked ? 'Remove bookmark' : 'Bookmark post'}
                           >
-                            <Bookmark className={`h-4 w-4 ${isBookmarked ? 'fill-white' : ''}`} />
+                            <Bookmark className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isBookmarked ? 'fill-white' : ''}`} />
                           </button>
 
                           <button
                             type="button"
                             onClick={(e) => handleShare(post, e)}
-                            className="h-8 w-8 rounded-full bg-black/60 text-white hover:bg-black/80 flex items-center justify-center transition shadow-md cursor-pointer"
+                            className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-black/60 text-white hover:bg-black/80 flex items-center justify-center transition shadow-md cursor-pointer active:scale-90"
                             aria-label="Share post"
                           >
-                            {isCopied ? <CheckCircle2 className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4" />}
+                            {isCopied ? <CheckCircle2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4" />}
                           </button>
                         </div>
                       </div>
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-5 space-y-3">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="p-4 sm:p-5 space-y-2.5 sm:space-y-3">
+                      <div className="flex items-center justify-between text-[11px] sm:text-xs text-muted-foreground">
                         <span className="flex items-center gap-1 font-medium">
                           <Clock className="h-3.5 w-3.5" />
                           {post.readTime}
@@ -551,12 +557,12 @@ export default function Blog() {
                       </div>
 
                       <Link to={`/blog/${post.slug}`} className="block">
-                        <h3 className="text-lg font-bold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug line-clamp-2">
+                        <h3 className="text-base sm:text-lg font-bold text-foreground group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-snug line-clamp-2">
                           {post.title}
                         </h3>
                       </Link>
 
-                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2 sm:line-clamp-3 leading-relaxed">
                         {post.excerpt}
                       </p>
 
@@ -577,24 +583,24 @@ export default function Blog() {
                   </div>
 
                   {/* Card Footer */}
-                  <div className="p-5 pt-3 border-t border-border/60 flex items-center justify-between">
+                  <div className="p-4 sm:p-5 pt-2.5 sm:pt-3 border-t border-border/60 flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-[10px]">
+                      <div className="h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold flex items-center justify-center text-[10px]">
                         {post.authorName.charAt(0)}
                       </div>
-                      <div className="min-w-0">
+                      <div className="min-w-0 max-w-[120px] sm:max-w-[160px]">
                         <p className="text-xs font-bold truncate text-foreground">{post.authorName}</p>
                         <div className="flex items-center gap-1 text-[10px] text-amber-500">
-                          <Star className="h-3 w-3 fill-amber-500" />
+                          <Star className="h-3 w-3 fill-amber-500 shrink-0" />
                           <span>{post.averageRating > 0 ? post.averageRating.toFixed(1) : 'New'}</span>
-                          {post.ratingCount > 0 && <span className="text-muted-foreground">({post.ratingCount})</span>}
+                          {post.ratingCount > 0 && <span className="text-muted-foreground truncate">({post.ratingCount})</span>}
                         </div>
                       </div>
                     </div>
 
                     <Link
                       to={`/blog/${post.slug}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform"
+                      className="inline-flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 group-hover:translate-x-1 transition-transform p-1"
                     >
                       <span>Read</span>
                       <ArrowRight className="h-3.5 w-3.5" />
@@ -607,31 +613,31 @@ export default function Blog() {
         )}
 
         {/* Newsletter & Community CTA Section */}
-        <section className={`rounded-3xl border p-6 sm:p-10 relative overflow-hidden shadow-lg ${
+        <section className={`rounded-2xl sm:rounded-3xl border p-5 sm:p-8 lg:p-10 relative overflow-hidden shadow-lg ${
           isDark ? 'bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-900 border-emerald-500/20' : 'bg-gradient-to-br from-emerald-50 via-white to-teal-50 border-emerald-200'
         }`}>
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
+          <div className="grid md:grid-cols-2 gap-6 sm:gap-8 items-center">
+            <div className="space-y-2 sm:space-y-3">
+              <div className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] sm:text-xs font-bold uppercase tracking-wider">
                 <Send className="h-3.5 w-3.5" /> Weekly Agronomy Digest
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-foreground">
+              <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-foreground leading-tight">
                 Get Weekly Farming Insights in Your Inbox
               </h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 Join 10,000+ farmers receiving seasonal crop guides, organic pest solutions, and marketplace price forecasts.
               </p>
             </div>
 
             <div>
               {newsletterSubscribed ? (
-                <div className="p-5 rounded-2xl border border-emerald-500/40 bg-emerald-500/15 text-center space-y-2 animate-fadeIn">
-                  <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto" />
-                  <p className="font-bold text-sm text-emerald-800 dark:text-emerald-200">You are subscribed to FarmEazy Digest!</p>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-300">We will send our curated agronomy updates every Tuesday morning.</p>
+                <div className="p-4 sm:p-5 rounded-xl sm:rounded-2xl border border-emerald-500/40 bg-emerald-500/15 text-center space-y-1.5 sm:space-y-2 animate-fadeIn">
+                  <CheckCircle2 className="h-7 w-7 sm:h-8 sm:w-8 text-emerald-500 mx-auto" />
+                  <p className="font-bold text-xs sm:text-sm text-emerald-800 dark:text-emerald-200">You are subscribed to FarmEazy Digest!</p>
+                  <p className="text-[11px] sm:text-xs text-emerald-700 dark:text-emerald-300">We will send our curated agronomy updates every Tuesday morning.</p>
                 </div>
               ) : (
-                <form onSubmit={handleNewsletterSubmit} className="space-y-3">
+                <form onSubmit={handleNewsletterSubmit} className="space-y-2.5 sm:space-y-3">
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input
                       type="email"
@@ -639,18 +645,18 @@ export default function Blog() {
                       value={newsletterEmail}
                       onChange={(e) => setNewsletterEmail(e.target.value)}
                       placeholder="Enter your email address…"
-                      className={`flex-1 rounded-2xl border px-4 py-3 text-sm outline-none transition ${
+                      className={`flex-1 rounded-xl sm:rounded-2xl border px-3.5 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm outline-none transition ${
                         isDark ? 'bg-slate-950 border-border text-white placeholder:text-slate-500 focus:border-emerald-500' : 'bg-white border-border text-foreground placeholder:text-muted-foreground focus:border-emerald-500'
                       }`}
                     />
                     <Button
                       type="submit"
-                      className="rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-3 cursor-pointer shadow-md"
+                      className="rounded-xl sm:rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm cursor-pointer shadow-md active:scale-98"
                     >
                       Subscribe
                     </Button>
                   </div>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[10px] sm:text-[11px] text-muted-foreground">
                     No spam ever. Unsubscribe at any time with 1-click.
                   </p>
                 </form>

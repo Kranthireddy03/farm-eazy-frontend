@@ -28,7 +28,7 @@ export default function UnifiedHeader() {
           </div>
         </Link>
 
-        <nav className="hidden xl:flex items-center gap-1">
+        <nav className="hidden lg:flex items-center gap-1">
           {PUBLIC_NAV.map((item) => {
             const active = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
             return (
@@ -67,26 +67,34 @@ export default function UnifiedHeader() {
               </Link>
             </>
           )}
-          <Button variant="ghost" size="icon" className="xl:hidden h-8 w-8" onClick={() => setMenuOpen((p) => !p)} aria-label="Menu">
+          <Button variant="ghost" size="icon" className="lg:hidden h-8 w-8" onClick={() => setMenuOpen((p) => !p)} aria-label="Menu">
             {menuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </Button>
         </div>
       </div>
 
       {menuOpen && (
-        <div className="xl:hidden border-t border-border bg-background px-4 py-3 flex flex-col gap-1">
-          <button type="button" className="text-left py-2 text-sm" onClick={() => { setMenuOpen(false); openCommandPalette(); }}>
-            Search & commands
+        <div className="lg:hidden border-t border-border bg-background px-4 py-3 flex flex-col gap-1 shadow-lg animate-in slide-in-from-top-2 duration-150">
+          <button type="button" className="text-left py-2.5 text-sm font-medium text-foreground flex items-center gap-2 border-b border-border/40" onClick={() => { setMenuOpen(false); openCommandPalette(); }}>
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <span>Search & commands</span>
+            <kbd className="ml-auto text-[10px] font-mono text-muted-foreground">⌘K</kbd>
           </button>
           {PUBLIC_NAV.map((item) => (
-            <Link key={item.to} to={item.to} className="py-2 text-sm text-muted-foreground hover:text-foreground" onClick={() => setMenuOpen(false)}>
+            <Link key={item.to} to={item.to} className="py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground border-b border-border/40 last:border-0" onClick={() => setMenuOpen(false)}>
               {item.label}
             </Link>
           ))}
-          {!isAuthenticated && (
+          {isAuthenticated ? (
+            <div className="pt-2">
+              <Link to="/dashboard" className="w-full text-center h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center justify-center shadow-sm" onClick={() => setMenuOpen(false)}>
+                Go to Dashboard
+              </Link>
+            </div>
+          ) : (
             <div className="flex gap-2 pt-2">
-              <Link to="/login" className="flex-1 text-center h-8 rounded-md border border-border text-sm font-medium flex items-center justify-center">Sign in</Link>
-              <Link to="/register" className="flex-1 text-center h-8 rounded-md bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center">Sign up</Link>
+              <Link to="/login" className="flex-1 text-center h-9 rounded-lg border border-border text-sm font-medium flex items-center justify-center hover:bg-muted" onClick={() => setMenuOpen(false)}>Sign in</Link>
+              <Link to="/register" className="flex-1 text-center h-9 rounded-lg bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center hover:bg-primary/90" onClick={() => setMenuOpen(false)}>Sign up</Link>
             </div>
           )}
         </div>

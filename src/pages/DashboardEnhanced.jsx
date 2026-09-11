@@ -296,24 +296,32 @@ function DashboardEnhanced() {
           ) : (
             <ul className="divide-y divide-border">
               {filteredServices.map((service) => (
-                <li key={service.id} className="flex items-center justify-between gap-4 py-3">
-                  <div className="min-w-0">
-                    <p className="font-medium text-foreground">{service.title || service.serviceName || service.name || 'Untitled Service'}</p>
+                <li key={service.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold text-foreground text-sm sm:text-base">{service.title || service.serviceName || service.name || 'Untitled Service'}</p>
                     {service.description && (
-                      <p className="text-sm text-muted-foreground mt-0.5">{service.description}</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground mt-0.5 line-clamp-2">{service.description}</p>
                     )}
-                    <div className="flex flex-wrap gap-2 mt-1 text-sm">
-                      <span className="text-primary">₹{Number(service.rate ?? service.machinePrice ?? service.price ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}/{String(service.priceUnit || 'HOUR').toLowerCase().replace('per_', '')}</span>
-                      <span className="text-muted-foreground">{service.isActive === false ? 'Status: Inactive' : 'Status: Active'}</span>
-                      {service.quantityTotal > 1 && <span className="text-muted-foreground">{service.quantityTotal} units</span>}
+                    <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs sm:text-sm">
+                      <span className="font-medium text-primary">₹{Number(service.rate ?? service.machinePrice ?? service.price ?? 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}/{String(service.priceUnit || 'HOUR').toLowerCase().replace('per_', '')}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className={service.isActive === false ? 'text-amber-600 dark:text-amber-400 font-medium' : 'text-emerald-600 dark:text-emerald-400 font-medium'}>
+                        {service.isActive === false ? 'Inactive' : 'Active'}
+                      </span>
+                      {service.quantityTotal > 1 && (
+                        <>
+                          <span className="text-muted-foreground">•</span>
+                          <span className="text-muted-foreground">{service.quantityTotal} units</span>
+                        </>
+                      )}
                     </div>
                   </div>
-                  <div className="flex shrink-0 gap-2">
-                    <Button variant="outline" size="sm" onClick={() => editService(service.id)}>
+                  <div className="flex items-center gap-2 self-start sm:self-center shrink-0 pt-1 sm:pt-0">
+                    <Button variant="outline" size="sm" onClick={() => editService(service.id)} className="h-8 px-3 text-xs">
                       <Pencil className="h-3.5 w-3.5" />
                       Edit
                     </Button>
-                    <Button variant="destructive" size="sm" onClick={() => setDeleteConfirmId(service.id)}>
+                    <Button variant="destructive" size="sm" onClick={() => setDeleteConfirmId(service.id)} className="h-8 px-3 text-xs">
                       <Trash2 className="h-3.5 w-3.5" />
                       Delete
                     </Button>

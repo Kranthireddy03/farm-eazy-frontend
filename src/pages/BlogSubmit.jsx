@@ -253,20 +253,20 @@ export default function BlogSubmit() {
       title="Write for FarmEazy Community"
       description="Share your practical farming knowledge, agritech innovations, and crop management insights with thousands of farmers."
       actions={
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <Link
             to="/blog/my-submissions"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 sm:px-3 py-1.5 rounded-lg border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 transition-colors"
           >
             <Layers className="w-3.5 h-3.5" />
             My Submissions
           </Link>
           <Link
             to="/blog"
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
-            Back to Blog
+            Blog
           </Link>
         </div>
       }
@@ -279,15 +279,15 @@ export default function BlogSubmit() {
 
       {/* Editor Top Bar & Readiness Header */}
       <div className={cn(
-        'p-5 rounded-2xl border mb-6 transition-all',
-        isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-sm'
+        'p-3.5 sm:p-5 rounded-2xl border mb-5 sm:mb-6 transition-all',
+        isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-white border-slate-200 shadow-xs'
       )}>
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-foreground">Submission Readiness</span>
+              <span className="text-xs sm:text-sm font-semibold text-foreground">Submission Readiness</span>
               <span className={cn(
-                'text-xs font-bold px-2 py-0.5 rounded-full',
+                'text-[10px] sm:text-xs font-bold px-2 py-0.5 rounded-full',
                 readinessScore >= 80 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
                 readinessScore >= 50 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
                 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
@@ -295,21 +295,21 @@ export default function BlogSubmit() {
                 {readinessScore}% Ready
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-[11px] sm:text-xs text-muted-foreground">
               {wordCount} words • ~{estimatedReadMinutes} min read estimated
             </p>
           </div>
 
           {/* Mode Switcher Buttons */}
-          <div className="flex items-center gap-2">
-            <div className="inline-flex p-1 rounded-xl bg-muted border border-border">
+          <div className="flex items-center gap-2 justify-between sm:justify-end">
+            <div className="inline-flex p-1 rounded-xl bg-muted border border-border flex-1 sm:flex-initial">
               <button
                 type="button"
                 onClick={() => setActiveTab('write')}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                  'flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                   activeTab === 'write'
-                    ? 'bg-background text-foreground shadow-sm'
+                    ? 'bg-background text-foreground shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -320,9 +320,9 @@ export default function BlogSubmit() {
                 type="button"
                 onClick={() => setActiveTab('preview')}
                 className={cn(
-                  'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
+                  'flex-1 sm:flex-initial flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all',
                   activeTab === 'preview'
-                    ? 'bg-emerald-600 text-white shadow-sm'
+                    ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-muted-foreground hover:text-foreground'
                 )}
               >
@@ -335,7 +335,7 @@ export default function BlogSubmit() {
               type="button"
               onClick={handleClearDraft}
               title="Reset Draft"
-              className="p-2 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20"
+              className="p-2 rounded-xl text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10 transition-colors border border-transparent hover:border-rose-500/20 active:scale-90"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -343,7 +343,7 @@ export default function BlogSubmit() {
         </div>
 
         {/* Readiness progress line */}
-        <div className="mt-3 h-2 rounded-full overflow-hidden bg-muted">
+        <div className="mt-2.5 sm:mt-3 h-1.5 sm:h-2 rounded-full overflow-hidden bg-muted">
           <div
             className={cn(
               'h-full transition-all duration-500',
@@ -358,20 +358,20 @@ export default function BlogSubmit() {
 
       {activeTab === 'preview' ? (
         /* LIVE ARTICLE PREVIEW MODE */
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <div className={cn(
-            'p-4 rounded-xl border flex items-center justify-between',
+            'p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5',
             isDark ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-300' : 'bg-emerald-50 border-emerald-200 text-emerald-800'
           )}>
-            <div className="flex items-center gap-2 text-sm">
-              <Sparkles className="w-4 h-4 text-emerald-500 animate-pulse" />
+            <div className="flex items-center gap-2 text-xs sm:text-sm">
+              <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 animate-pulse" />
               <span>You are viewing a <strong>live rendered simulation</strong> of how readers will experience your article.</span>
             </div>
             <Button
               size="sm"
               variant="outline"
               onClick={() => setActiveTab('write')}
-              className="text-xs"
+              className="text-xs w-full sm:w-auto"
             >
               <PenLine className="w-3.5 h-3.5 mr-1" />
               Back to Editing
@@ -379,35 +379,35 @@ export default function BlogSubmit() {
           </div>
 
           <div className={cn(
-            'p-6 sm:p-10 rounded-3xl border shadow-xl',
+            'p-4 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl border shadow-xl',
             isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
           )}>
             {/* Header tags & meta */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              <Badge variant="success" className="px-3 py-1 text-xs">
+            <div className="flex flex-wrap items-center gap-2 mb-3 sm:mb-4">
+              <Badge variant="success" className="px-2.5 sm:px-3 py-0.5 sm:py-1 text-[10px] sm:text-xs">
                 {form.category || 'General Agriculture'}
               </Badge>
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
                 <BookOpen className="w-3.5 h-3.5" />
                 {estimatedReadMinutes} min read
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-foreground tracking-tight leading-snug mb-4">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-extrabold text-foreground tracking-tight leading-snug mb-3 sm:mb-4">
               {form.title || 'Untitled Blog Article'}
             </h1>
 
             {/* Author */}
-            <div className="flex items-center gap-3 pb-6 border-b border-border mb-6">
-              <div className="w-10 h-10 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center text-base">
+            <div className="flex items-center gap-3 pb-4 sm:pb-6 border-b border-border mb-4 sm:mb-6">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center text-sm sm:text-base shrink-0">
                 {(form.authorName || 'U').charAt(0).toUpperCase()}
               </div>
               <div>
-                <p className="text-sm font-semibold text-foreground">
+                <p className="text-xs sm:text-sm font-semibold text-foreground">
                   {form.authorName || 'FarmEazy Community Member'}
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
                   Draft Submission • Preview Mode
                 </p>
               </div>
@@ -415,11 +415,11 @@ export default function BlogSubmit() {
 
             {/* Cover Image */}
             {form.coverImageUrl && (
-              <div className="mb-8 rounded-2xl overflow-hidden border border-border/60 shadow-md">
+              <div className="mb-6 sm:mb-8 rounded-xl sm:rounded-2xl overflow-hidden border border-border/60 shadow-md max-h-[260px] sm:max-h-[380px] bg-muted">
                 <img
                   src={form.coverImageUrl}
                   alt={form.title}
-                  className="w-full h-72 sm:h-96 object-cover"
+                  className="w-full h-full object-cover max-h-[260px] sm:max-h-[380px]"
                   onError={(e) => {
                     e.target.src = SAMPLE_COVERS[0].url
                   }}
@@ -430,7 +430,7 @@ export default function BlogSubmit() {
             {/* Excerpt Lead */}
             {form.excerpt && (
               <div className={cn(
-                'p-4 rounded-xl border-l-4 border-emerald-500 mb-8 italic text-base leading-relaxed',
+                'p-3.5 sm:p-4 rounded-xl border-l-4 border-emerald-500 mb-6 sm:mb-8 italic text-xs sm:text-base leading-relaxed',
                 isDark ? 'bg-slate-800/40 text-slate-300' : 'bg-emerald-50/50 text-slate-700'
               )}>
                 {form.excerpt}
@@ -444,12 +444,12 @@ export default function BlogSubmit() {
 
             {/* Tags */}
             {form.tags && form.tags.length > 0 && (
-              <div className="mt-10 pt-6 border-t border-border flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold text-muted-foreground mr-1">Tags:</span>
+              <div className="mt-8 sm:mt-10 pt-4 sm:pt-6 border-t border-border flex flex-wrap items-center gap-1.5 sm:gap-2">
+                <span className="text-[11px] sm:text-xs font-semibold text-muted-foreground mr-1">Tags:</span>
                 {form.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-lg bg-muted text-muted-foreground"
+                    className="inline-flex items-center text-[10px] sm:text-xs font-medium px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-muted text-muted-foreground"
                   >
                     #{tag}
                   </span>
@@ -458,14 +458,14 @@ export default function BlogSubmit() {
             )}
           </div>
 
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={() => setActiveTab('write')}>
+          <div className="flex flex-col sm:flex-row justify-end gap-2.5 sm:gap-3">
+            <Button variant="outline" onClick={() => setActiveTab('write')} className="w-full sm:w-auto">
               Edit Content
             </Button>
             <Button
               onClick={onSubmit}
               disabled={saving || readinessScore < 40}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold w-full sm:w-auto"
             >
               {saving ? 'Submitting Article...' : 'Submit for Editorial Review'}
             </Button>
@@ -475,19 +475,19 @@ export default function BlogSubmit() {
         /* WRITE / EDIT MODE */
         <PageScaffold
           aside={
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Submission Quality Checklist */}
               <InfoPanel
                 title="Publishing Checklist"
                 description="Meet these standards for swift admin review."
               >
-                <div className="mt-3 space-y-2.5">
+                <div className="mt-2.5 sm:mt-3 space-y-2 sm:space-y-2.5">
                   {qualityChecks.map((check, idx) => (
-                    <div key={idx} className="flex items-start gap-2.5 text-xs">
+                    <div key={idx} className="flex items-start gap-2 text-[11px] sm:text-xs">
                       {check.valid ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                        <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500 shrink-0 mt-0.5" />
                       ) : (
-                        <div className="w-4 h-4 rounded-full border border-muted-foreground/40 shrink-0 mt-0.5" />
+                        <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full border border-muted-foreground/40 shrink-0 mt-0.5" />
                       )}
                       <span className={cn(
                         check.valid ? 'text-foreground font-medium' : 'text-muted-foreground'
@@ -504,16 +504,16 @@ export default function BlogSubmit() {
                 title="Writing Tips"
                 description="How to write articles that farmers love."
               >
-                <ul className="mt-3 space-y-2 text-xs text-muted-foreground leading-relaxed">
-                  <li className="p-2.5 rounded-lg border border-border/70 bg-muted/20">
+                <ul className="mt-2.5 sm:mt-3 space-y-2 text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
+                  <li className="p-2 sm:p-2.5 rounded-lg border border-border/70 bg-muted/20">
                     <strong className="text-foreground block mb-0.5">🌾 Real-World Experience</strong>
                     Share practical numbers (crop yield % increase, water saved, fertilizer dosage).
                   </li>
-                  <li className="p-2.5 rounded-lg border border-border/70 bg-muted/20">
+                  <li className="p-2 sm:p-2.5 rounded-lg border border-border/70 bg-muted/20">
                     <strong className="text-foreground block mb-0.5">📑 Clear Subheadings</strong>
                     Use <code className="text-emerald-500 font-mono">## Heading</code> to break complex topics into readable chunks.
                   </li>
-                  <li className="p-2.5 rounded-lg border border-border/70 bg-muted/20">
+                  <li className="p-2 sm:p-2.5 rounded-lg border border-border/70 bg-muted/20">
                     <strong className="text-foreground block mb-0.5">💡 Highlights & Tips</strong>
                     Use callout boxes like <code className="text-emerald-500 font-mono">&gt; [!TIP]</code> for golden takeaways.
                   </li>
@@ -522,7 +522,7 @@ export default function BlogSubmit() {
 
               {/* Safety & Editorial Notice */}
               <div className={cn(
-                'p-4 rounded-2xl border text-xs space-y-2',
+                'p-3.5 sm:p-4 rounded-xl sm:rounded-2xl border text-[11px] sm:text-xs space-y-1.5 sm:space-y-2',
                 isDark ? 'bg-slate-900/60 border-slate-800 text-slate-400' : 'bg-slate-50 border-slate-200 text-slate-600'
               )}>
                 <div className="flex items-center gap-1.5 font-semibold text-foreground">
@@ -536,13 +536,13 @@ export default function BlogSubmit() {
             </div>
           }
         >
-          <form onSubmit={onSubmit} className="space-y-6">
+          <form onSubmit={onSubmit} className="space-y-4 sm:space-y-6">
             {/* 1. Basic Metadata */}
             <DetailPanel
               title="Article Overview"
               description="Craft a headline, select category, and introduce your topic."
             >
-              <div className="space-y-5">
+              <div className="space-y-4 sm:space-y-5">
                 {/* Title */}
                 <div>
                   <label className="block text-xs font-semibold text-foreground mb-1.5">
@@ -552,10 +552,10 @@ export default function BlogSubmit() {
                     value={form.title}
                     onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
                     placeholder="e.g., Step-by-Step Guide to Drip Irrigation for High-Yield Tomato Farming"
-                    className="text-base font-medium"
+                    className="text-sm sm:text-base font-medium"
                     maxLength={140}
                   />
-                  <div className="flex justify-between text-[11px] text-muted-foreground mt-1 px-1">
+                  <div className="flex justify-between text-[10px] sm:text-[11px] text-muted-foreground mt-1 px-1">
                     <span>Be clear and specific about the crop, practice, or tool.</span>
                     <span>{form.title.length}/140</span>
                   </div>
@@ -578,16 +578,16 @@ export default function BlogSubmit() {
                   <label className="block text-xs font-semibold text-foreground mb-1.5">
                     Category <span className="text-rose-500">*</span>
                   </label>
-                  <div className="flex flex-wrap gap-2 mb-2">
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5 sm:gap-2 mb-2">
                     {CATEGORY_PRESETS.map((cat) => (
                       <button
                         key={cat}
                         type="button"
                         onClick={() => setForm((prev) => ({ ...prev, category: cat }))}
                         className={cn(
-                          'text-xs px-3 py-1.5 rounded-xl border transition-all font-medium',
+                          'text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 rounded-xl border transition-all font-medium truncate text-left sm:text-center active:scale-95',
                           form.category === cat
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                             : 'bg-muted/50 border-border text-muted-foreground hover:text-foreground hover:bg-muted'
                         )}
                       >
@@ -614,9 +614,9 @@ export default function BlogSubmit() {
                     onChange={(e) => setForm((prev) => ({ ...prev, excerpt: e.target.value }))}
                     placeholder="Brief 2-3 sentence overview highlighting what the reader will learn..."
                     maxLength={350}
-                    className="flex w-full rounded-xl border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex w-full rounded-xl border border-input bg-background px-3 py-2 text-xs sm:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   />
-                  <div className="flex justify-between text-[11px] text-muted-foreground mt-1 px-1">
+                  <div className="flex justify-between text-[10px] sm:text-[11px] text-muted-foreground mt-1 px-1">
                     <span>This appears on search cards and article previews.</span>
                     <span>{form.excerpt.length}/350</span>
                   </div>
@@ -629,15 +629,15 @@ export default function BlogSubmit() {
               title="Article Content"
               description="Write your full guide. Markdown formatting is fully supported."
             >
-              <div className="space-y-3">
-                {/* Quick Markdown Toolbar */}
-                <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-xl bg-muted/60 border border-border text-xs">
-                  <span className="text-[11px] font-semibold text-muted-foreground px-1.5">Format:</span>
+              <div className="space-y-2.5 sm:space-y-3">
+                {/* Swipeable Markdown Toolbar on Mobile */}
+                <div className="flex items-center gap-1.5 p-1.5 sm:p-2 rounded-xl bg-muted/60 border border-border text-xs overflow-x-auto whitespace-nowrap scrollbar-none touch-pan-x -mx-1 px-1">
+                  <span className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground px-1 shrink-0">Format:</span>
                   
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('## ', '')}
-                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors shrink-0 active:scale-90"
                     title="Section Heading"
                   >
                     <Heading2 className="w-3.5 h-3.5" />
@@ -645,7 +645,7 @@ export default function BlogSubmit() {
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('**', '**')}
-                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors shrink-0 active:scale-90"
                     title="Bold Text"
                   >
                     <Bold className="w-3.5 h-3.5" />
@@ -653,7 +653,7 @@ export default function BlogSubmit() {
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('*', '*')}
-                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors shrink-0 active:scale-90"
                     title="Italic Text"
                   >
                     <Italic className="w-3.5 h-3.5" />
@@ -661,7 +661,7 @@ export default function BlogSubmit() {
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('\n- ', '')}
-                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors shrink-0 active:scale-90"
                     title="Bullet List"
                   >
                     <List className="w-3.5 h-3.5" />
@@ -669,19 +669,19 @@ export default function BlogSubmit() {
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('\n> ', '')}
-                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors shrink-0 active:scale-90"
                     title="Quote Block"
                   >
                     <Quote className="w-3.5 h-3.5" />
                   </button>
                   
-                  <div className="h-4 w-[1px] bg-border mx-1" />
+                  <div className="h-4 w-[1px] bg-border mx-1 shrink-0" />
 
                   {/* Callout helpers */}
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('\n> [!TIP]\n> **Pro Tip:** ')}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-medium hover:bg-emerald-500/20 transition-colors shrink-0 active:scale-95 text-[11px]"
                     title="Insert Tip Box"
                   >
                     <Lightbulb className="w-3 h-3" />
@@ -690,7 +690,7 @@ export default function BlogSubmit() {
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('\n> [!WARNING]\n> **Important Note:** ')}
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-500/20 transition-colors"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-500/20 transition-colors shrink-0 active:scale-95 text-[11px]"
                     title="Insert Warning Box"
                   >
                     <AlertCircle className="w-3 h-3" />
@@ -699,13 +699,13 @@ export default function BlogSubmit() {
                   <button
                     type="button"
                     onClick={() => insertMarkdownSnippet('\n```\n', '\n```\n')}
-                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-background text-foreground transition-colors shrink-0 active:scale-90"
                     title="Code or Data snippet"
                   >
                     <Code className="w-3.5 h-3.5" />
                   </button>
 
-                  <div className="ml-auto text-[11px] text-muted-foreground font-mono">
+                  <div className="ml-auto text-[10px] sm:text-[11px] text-muted-foreground font-mono shrink-0 pl-2">
                     {wordCount} words
                   </div>
                 </div>
@@ -713,11 +713,11 @@ export default function BlogSubmit() {
                 {/* Textarea */}
                 <textarea
                   id="blog-content-textarea"
-                  rows={16}
+                  rows={14}
                   value={form.content}
                   onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
                   placeholder="Draft your detailed guide here...&#10;&#10;## 1. Overview & Setup&#10;Describe the background and requirements...&#10;&#10;## 2. Step-by-Step Implementation&#10;- Step 1: Soil preparation&#10;- Step 2: Seed treatment&#10;&#10;> [!TIP]&#10;> Keep moisture levels between 60-70% for optimal seedling germination.&#10;&#10;## 3. Results & Summary&#10;Summarize the yield outcomes and key lessons."
-                  className="flex w-full rounded-2xl border border-input bg-background p-4 text-sm font-sans leading-relaxed ring-offset-background placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y min-h-[350px]"
+                  className="flex w-full rounded-2xl border border-input bg-background p-3.5 sm:p-4 text-sm font-sans leading-relaxed ring-offset-background placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y min-h-[300px]"
                 />
               </div>
             </DetailPanel>
@@ -727,7 +727,7 @@ export default function BlogSubmit() {
               title="Cover & Media"
               description="Add visuals to make your article engaging and informative."
             >
-              <div className="space-y-4">
+              <div className="space-y-3.5 sm:space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-foreground mb-1.5">
                     Cover Image URL <span className="text-rose-500">*</span>
@@ -741,7 +741,7 @@ export default function BlogSubmit() {
 
                 {/* Sample Presets */}
                 <div>
-                  <span className="text-[11px] font-medium text-muted-foreground block mb-2">
+                  <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground block mb-2">
                     Or select a curated agricultural cover photo:
                   </span>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -751,7 +751,7 @@ export default function BlogSubmit() {
                         type="button"
                         onClick={() => setForm((prev) => ({ ...prev, coverImageUrl: sample.url }))}
                         className={cn(
-                          'group relative rounded-xl overflow-hidden border text-left transition-all',
+                          'group relative rounded-xl overflow-hidden border text-left transition-all active:scale-95',
                           form.coverImageUrl === sample.url
                             ? 'ring-2 ring-emerald-500 border-emerald-500'
                             : 'border-border opacity-70 hover:opacity-100'
@@ -760,7 +760,7 @@ export default function BlogSubmit() {
                         <img
                           src={sample.url}
                           alt={sample.label}
-                          className="w-full h-16 object-cover group-hover:scale-105 transition-transform"
+                          className="w-full h-14 sm:h-16 object-cover group-hover:scale-105 transition-transform"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-1.5 flex items-end">
                           <span className="text-[10px] font-semibold text-white truncate">
@@ -774,7 +774,7 @@ export default function BlogSubmit() {
 
                 {/* Image Live Preview */}
                 {form.coverImageUrl && (
-                  <div className="relative rounded-xl overflow-hidden border border-border bg-muted/40 h-44 flex items-center justify-center">
+                  <div className="relative rounded-xl overflow-hidden border border-border bg-muted/40 h-36 sm:h-44 flex items-center justify-center">
                     <img
                       src={form.coverImageUrl}
                       alt="Cover Preview"
@@ -783,7 +783,7 @@ export default function BlogSubmit() {
                         e.target.style.display = 'none'
                       }}
                     />
-                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-sm text-white text-[11px] px-2.5 py-1 rounded-md font-medium">
+                    <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-xs text-white text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md font-medium">
                       Cover Preview
                     </div>
                   </div>
@@ -812,17 +812,17 @@ export default function BlogSubmit() {
             >
               <div className="space-y-3">
                 {/* Active Tag Chips */}
-                <div className="flex flex-wrap items-center gap-2 min-h-[36px] p-2 rounded-xl bg-muted/40 border border-border">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-h-[36px] p-2 rounded-xl bg-muted/40 border border-border">
                   {form.tags && form.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
+                      className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-semibold px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-lg bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
                     >
                       #{tag}
                       <button
                         type="button"
                         onClick={() => handleRemoveTag(tag)}
-                        className="hover:text-rose-500 ml-0.5"
+                        className="hover:text-rose-500 ml-0.5 p-0.5"
                       >
                         ×
                       </button>
@@ -839,13 +839,13 @@ export default function BlogSubmit() {
                       }
                     }}
                     placeholder={form.tags.length === 0 ? 'Type tag and press Enter...' : 'Add tag...'}
-                    className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none flex-1 min-w-[120px] px-1"
+                    className="bg-transparent text-xs text-foreground placeholder:text-muted-foreground outline-none flex-1 min-w-[110px] px-1"
                   />
                 </div>
 
                 {/* Popular suggestions */}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-[11px] text-muted-foreground mr-1">Suggested:</span>
+                <div className="flex flex-wrap items-center gap-1 sm:gap-1.5">
+                  <span className="text-[10px] sm:text-[11px] text-muted-foreground mr-1">Suggested:</span>
                   {POPULAR_TAG_SUGGESTIONS.map((tag) => (
                     <button
                       key={tag}
@@ -853,7 +853,7 @@ export default function BlogSubmit() {
                       onClick={() => handleAddTag(tag)}
                       disabled={form.tags.includes(tag)}
                       className={cn(
-                        'text-[11px] px-2 py-0.5 rounded-md border transition-colors',
+                        'text-[10px] sm:text-[11px] px-2 py-0.5 rounded-md border transition-colors active:scale-95',
                         form.tags.includes(tag)
                           ? 'opacity-40 cursor-not-allowed border-transparent'
                           : 'border-border hover:bg-muted text-muted-foreground hover:text-foreground'
@@ -867,18 +867,18 @@ export default function BlogSubmit() {
             </DetailPanel>
 
             {/* Bottom Actions */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Save className="w-3.5 h-3.5 text-emerald-500" />
-                <span>Draft automatically saved to your browser session.</span>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 pt-4 border-t border-border">
+              <div className="flex items-center gap-2 text-[11px] sm:text-xs text-muted-foreground">
+                <Save className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                <span>Draft automatically saved in your browser.</span>
               </div>
 
-              <div className="flex items-center gap-3 w-full sm:w-auto">
+              <div className="flex flex-col sm:flex-row items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setActiveTab('preview')}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto text-xs"
                 >
                   <Eye className="w-4 h-4 mr-1.5" />
                   Live Preview
@@ -886,7 +886,7 @@ export default function BlogSubmit() {
                 <Button
                   type="submit"
                   disabled={saving || readinessScore < 30}
-                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md"
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-md text-xs sm:text-sm active:scale-98"
                 >
                   {saving ? 'Submitting Article...' : 'Submit for Review'}
                 </Button>

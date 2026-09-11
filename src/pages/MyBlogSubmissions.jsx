@@ -139,19 +139,19 @@ export default function MyBlogSubmissions() {
       title="My Blog Submissions"
       description="Track the status of your articles, review editorial notes, and manage your published farming insights."
       actions={
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <Link
             to="/blog"
-            className="text-xs font-medium text-muted-foreground hover:text-foreground px-3 py-1.5 transition-colors"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground px-2 sm:px-3 py-1.5 transition-colors"
           >
-            ← Public Blog Feed
+            ← Blog Feed
           </Link>
           <Link
             to="/blog/submit"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-all"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition-all active:scale-95"
           >
             <PenLine className="w-3.5 h-3.5" />
-            Write New Article
+            Write Article
           </Link>
         </div>
       }
@@ -207,12 +207,12 @@ export default function MyBlogSubmissions() {
 
           <PageScaffold
             aside={
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 <InfoPanel
                   title="Editorial Standards"
                   description="How FarmEazy reviews submissions."
                 >
-                  <div className="mt-3 space-y-2.5 text-xs text-muted-foreground leading-relaxed">
+                  <div className="mt-2.5 sm:mt-3 space-y-2.5 text-[11px] sm:text-xs text-muted-foreground leading-relaxed">
                     <p>
                       <strong>1. Agronomic Validity:</strong> Tips and fertilizer dosages are checked for safety and compliance.
                     </p>
@@ -226,7 +226,7 @@ export default function MyBlogSubmissions() {
                 </InfoPanel>
 
                 <div className={cn(
-                  'p-5 rounded-2xl border text-xs space-y-3',
+                  'p-4 sm:p-5 rounded-2xl border text-[11px] sm:text-xs space-y-2.5',
                   isDark ? 'bg-slate-900/80 border-slate-800' : 'bg-emerald-50/50 border-emerald-100'
                 )}>
                   <div className="flex items-center gap-2 font-bold text-foreground">
@@ -241,8 +241,8 @@ export default function MyBlogSubmissions() {
             }
           >
             {/* Search & Filter Bar */}
-            <div className="space-y-4 mb-6">
-              <div className="flex flex-col sm:flex-row gap-3">
+            <div className="space-y-3 sm:space-y-4 mb-5 sm:mb-6">
+              <div className="flex flex-col sm:flex-row gap-2.5 sm:gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -250,13 +250,22 @@ export default function MyBlogSubmissions() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search your articles by title, category, or keywords..."
-                    className="pl-9 text-xs sm:text-sm"
+                    className="pl-9 text-xs sm:text-sm rounded-xl"
                   />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 
-              {/* Status Filter Chips */}
-              <div className="flex flex-wrap gap-2">
+              {/* Status Filter Chips with Touch Scroll */}
+              <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1.5 pt-0.5 scrollbar-none touch-pan-x -mx-1 px-1">
                 {FILTER_CHIPS.map((chip) => {
                   const count = statusCounts[chip.value] || 0
                   const active = statusFilter === chip.value
@@ -266,9 +275,9 @@ export default function MyBlogSubmissions() {
                       type="button"
                       onClick={() => setStatusFilter(chip.value)}
                       className={cn(
-                        'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border',
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border shrink-0 active:scale-95',
                         active
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm'
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
                           : 'bg-muted/40 border-border text-muted-foreground hover:text-foreground hover:bg-muted'
                       )}
                     >
@@ -308,7 +317,7 @@ export default function MyBlogSubmissions() {
                 }
               />
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-3.5 sm:space-y-4">
                 {filteredPosts.map((post) => {
                   const status = post.status || 'DRAFT'
                   const statusConf = STATUS_CONFIG[status] || STATUS_CONFIG.DRAFT
@@ -322,12 +331,12 @@ export default function MyBlogSubmissions() {
                     <div
                       key={post.id || post.slug}
                       className={cn(
-                        'p-5 rounded-2xl border transition-all hover:shadow-md group flex flex-col sm:flex-row gap-5 items-start',
+                        'p-4 sm:p-5 rounded-2xl border transition-all hover:shadow-md group flex flex-col sm:flex-row gap-4 sm:gap-5 items-start',
                         isDark ? 'bg-slate-900/90 border-slate-800 hover:border-slate-700' : 'bg-white border-slate-200 hover:border-slate-300'
                       )}
                     >
                       {/* Thumbnail */}
-                      <div className="w-full sm:w-44 h-32 rounded-xl overflow-hidden shrink-0 border border-border/60 bg-muted relative">
+                      <div className="w-full sm:w-44 h-36 sm:h-32 rounded-xl overflow-hidden shrink-0 border border-border/60 bg-muted relative">
                         <img
                           src={coverImg}
                           alt={post.title}
@@ -345,12 +354,12 @@ export default function MyBlogSubmissions() {
                       </div>
 
                       {/* Content Info */}
-                      <div className="flex-1 min-w-0 space-y-2">
+                      <div className="flex-1 min-w-0 space-y-2 w-full">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                          <span className="text-[10px] sm:text-[11px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
                             {post.category || 'General'}
                           </span>
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <span className="text-[11px] sm:text-xs text-muted-foreground flex items-center gap-1">
                             <Calendar className="w-3 h-3" />
                             {post.updatedAt || post.createdAt
                               ? new Date(post.updatedAt || post.createdAt).toLocaleDateString(undefined, {
@@ -372,7 +381,7 @@ export default function MyBlogSubmissions() {
 
                         {/* Tags */}
                         {Array.isArray(post.tags) && post.tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5 pt-1">
+                          <div className="flex flex-wrap gap-1.5 pt-0.5">
                             {post.tags.slice(0, 4).map((tag) => (
                               <span
                                 key={tag}
@@ -385,17 +394,17 @@ export default function MyBlogSubmissions() {
                         )}
 
                         {/* Actions */}
-                        <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-border/60">
+                        <div className="flex items-center justify-between gap-3 pt-2.5 sm:pt-3 border-t border-border/60">
                           {status === 'PUBLISHED' && post.slug ? (
                             <Link
                               to={`/blog/${post.slug}`}
-                              className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:underline"
                             >
                               <ExternalLink className="w-3.5 h-3.5" />
-                              View Live on Blog
+                              View Live
                             </Link>
                           ) : (
-                            <span className="text-xs text-muted-foreground italic">
+                            <span className="text-[11px] sm:text-xs text-muted-foreground italic truncate max-w-[180px] sm:max-w-none">
                               {statusConf.description}
                             </span>
                           )}
@@ -403,10 +412,10 @@ export default function MyBlogSubmissions() {
                           <button
                             type="button"
                             onClick={() => setPreviewPost(post)}
-                            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground ml-auto"
+                            className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground ml-auto p-1 cursor-pointer active:scale-95"
                           >
                             <Eye className="w-3.5 h-3.5" />
-                            Quick Preview
+                            Preview
                           </button>
                         </div>
                       </div>
@@ -424,17 +433,17 @@ export default function MyBlogSubmissions() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/70 backdrop-blur-xs animate-in fade-in"
           onClick={() => setPreviewPost(null)}
         >
           <div
             className={cn(
-              'relative w-full max-w-3xl max-h-[85vh] overflow-y-auto rounded-3xl border shadow-2xl p-6 sm:p-8',
+              'relative w-[94vw] sm:max-w-3xl max-h-[88vh] overflow-y-auto rounded-2xl sm:rounded-3xl border shadow-2xl p-4 sm:p-6 md:p-8',
               isDark ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
             )}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-border">
+            <div className="flex items-center justify-between pb-3 sm:pb-4 mb-3 sm:mb-4 border-b border-border">
               <div className="flex items-center gap-2">
                 <Badge variant={STATUS_CONFIG[previewPost.status || 'DRAFT']?.variant || 'muted'}>
                   {STATUS_CONFIG[previewPost.status || 'DRAFT']?.label || 'Draft'}
@@ -444,18 +453,18 @@ export default function MyBlogSubmissions() {
               <button
                 type="button"
                 onClick={() => setPreviewPost(null)}
-                className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground"
+                className="p-1.5 rounded-full hover:bg-muted text-muted-foreground hover:text-foreground active:scale-90"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <h2 className="text-2xl font-extrabold text-foreground mb-3">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-foreground mb-3 leading-tight">
               {previewPost.title}
             </h2>
 
             {previewPost.coverImageUrl && (
-              <div className="mb-6 rounded-2xl overflow-hidden border border-border/60 max-h-72">
+              <div className="mb-4 sm:mb-6 rounded-xl sm:rounded-2xl overflow-hidden border border-border/60 max-h-56 sm:max-h-72">
                 <img
                   src={previewPost.coverImageUrl}
                   alt={previewPost.title}
@@ -465,17 +474,17 @@ export default function MyBlogSubmissions() {
             )}
 
             {previewPost.excerpt && (
-              <div className="p-4 rounded-xl border-l-4 border-emerald-500 mb-6 bg-emerald-50/20 text-sm italic">
+              <div className="p-3 sm:p-4 rounded-xl border-l-4 border-emerald-500 mb-4 sm:mb-6 bg-emerald-50/20 text-xs sm:text-sm italic leading-relaxed">
                 {previewPost.excerpt}
               </div>
             )}
 
-            <div className="prose prose-emerald dark:prose-invert max-w-none text-sm">
+            <div className="prose prose-emerald dark:prose-invert max-w-none text-xs sm:text-sm">
               <RichArticleRenderer content={previewPost.content || '*No content available.*'} />
             </div>
 
-            <div className="mt-8 pt-4 border-t border-border flex justify-end">
-              <Button variant="outline" onClick={() => setPreviewPost(null)}>
+            <div className="mt-6 sm:mt-8 pt-3 sm:pt-4 border-t border-border flex justify-end">
+              <Button variant="outline" size="sm" onClick={() => setPreviewPost(null)}>
                 Close Preview
               </Button>
             </div>

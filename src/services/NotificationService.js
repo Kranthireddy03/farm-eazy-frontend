@@ -23,121 +23,195 @@ const NotificationService = {
    * Get all notifications for current user
    */
   getAll: async () => {
-    const response = await apiClient.get('/notifications', {
-      validateStatus: (status) => status < 500,
-    });
-    if (response.status !== 200) {
+    try {
+      const response = await apiClient.get('/notifications', {
+        validateStatus: (status) => status < 500,
+      });
+      if (response && response.status === 200 && Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    } catch (err) {
+      console.warn('NotificationService.getAll error:', err?.message || err);
       return [];
     }
-    return response.data;
   },
 
   /**
    * Get unread notification count (for bell badge)
    */
   getUnreadCount: async () => {
-    const response = await apiClient.get('/notifications/count', {
-      validateStatus: (status) => status < 500,
-    });
-    if (response.status !== 200) {
+    try {
+      const response = await apiClient.get('/notifications/count', {
+        validateStatus: (status) => status < 500,
+      });
+      if (response && response.status === 200 && response.data) {
+        return response.data;
+      }
+      return { unreadCount: 0, count: 0, savedCount: 0 };
+    } catch (err) {
+      console.warn('NotificationService.getUnreadCount error:', err?.message || err);
       return { unreadCount: 0, count: 0, savedCount: 0 };
     }
-    return response.data;
   },
 
   /**
    * Get recent notifications (for dropdown)
    */
   getRecent: async (limit = 10) => {
-    const response = await apiClient.get(`/notifications/recent?limit=${limit}`, {
-      validateStatus: (status) => status < 500,
-    });
-    if (response.status !== 200) {
+    try {
+      const response = await apiClient.get(`/notifications/recent?limit=${limit}`, {
+        validateStatus: (status) => status < 500,
+      });
+      if (response && response.status === 200 && Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    } catch (err) {
+      console.warn('NotificationService.getRecent error:', err?.message || err);
       return [];
     }
-    return response.data;
   },
 
   /**
    * Get saved notifications from server
    */
   getSaved: async () => {
-    const response = await apiClient.get('/notifications/saved', {
-      validateStatus: (status) => status < 500,
-    });
-    if (response.status !== 200) {
+    try {
+      const response = await apiClient.get('/notifications/saved', {
+        validateStatus: (status) => status < 500,
+      });
+      if (response && response.status === 200 && Array.isArray(response.data)) {
+        return response.data;
+      }
+      return [];
+    } catch (err) {
+      console.warn('NotificationService.getSaved error:', err?.message || err);
       return [];
     }
-    return response.data;
   },
 
   /**
    * Save a notification permanently
    */
   saveNotification: async (notificationId) => {
-    const response = await apiClient.post(`/notifications/${notificationId}/save`);
-    return response.data;
+    try {
+      const response = await apiClient.post(`/notifications/${notificationId}/save`, null, {
+        validateStatus: (status) => status < 500,
+      });
+      return response?.data || null;
+    } catch (err) {
+      console.warn('NotificationService.saveNotification error:', err?.message || err);
+      return null;
+    }
   },
 
   /**
    * Remove a notification from saved
    */
   unsaveNotification: async (notificationId) => {
-    const response = await apiClient.delete(`/notifications/${notificationId}/save`);
-    return response.data;
+    try {
+      const response = await apiClient.delete(`/notifications/${notificationId}/save`, {
+        validateStatus: (status) => status < 500,
+      });
+      return response?.data || null;
+    } catch (err) {
+      console.warn('NotificationService.unsaveNotification error:', err?.message || err);
+      return null;
+    }
   },
 
   /**
    * Mark notification as read
    */
   markAsRead: async (notificationId) => {
-    const response = await apiClient.put(`/notifications/${notificationId}/read`);
-    return response.data;
+    try {
+      const response = await apiClient.put(`/notifications/${notificationId}/read`, null, {
+        validateStatus: (status) => status < 500,
+      });
+      return response?.data || null;
+    } catch (err) {
+      console.warn('NotificationService.markAsRead error:', err?.message || err);
+      return null;
+    }
   },
 
   /**
    * Mark notification as unread
    */
   markAsUnread: async (notificationId) => {
-    const response = await apiClient.put(`/notifications/${notificationId}/unread`);
-    return response.data;
+    try {
+      const response = await apiClient.put(`/notifications/${notificationId}/unread`, null, {
+        validateStatus: (status) => status < 500,
+      });
+      return response?.data || null;
+    } catch (err) {
+      console.warn('NotificationService.markAsUnread error:', err?.message || err);
+      return null;
+    }
   },
 
   /**
    * Mark all notifications as read
    */
   markAllAsRead: async () => {
-    const response = await apiClient.put('/notifications/read-all');
-    return response.data;
+    try {
+      const response = await apiClient.put('/notifications/read-all', null, {
+        validateStatus: (status) => status < 500,
+      });
+      return response?.data || null;
+    } catch (err) {
+      console.warn('NotificationService.markAllAsRead error:', err?.message || err);
+      return null;
+    }
   },
 
   /**
    * Dismiss (delete) a notification
    */
   dismiss: async (notificationId) => {
-    const response = await apiClient.delete(`/notifications/${notificationId}`);
-    return response.data;
+    try {
+      const response = await apiClient.delete(`/notifications/${notificationId}`, {
+        validateStatus: (status) => status < 500,
+      });
+      return response?.data || null;
+    } catch (err) {
+      console.warn('NotificationService.dismiss error:', err?.message || err);
+      return null;
+    }
   },
 
   /**
    * Get user's in-app notification preferences
    */
   getPreferences: async () => {
-    const response = await apiClient.get('/notifications/preferences', {
-      validateStatus: (status) => status < 500,
-    });
-    if (response.status !== 200) {
+    try {
+      const response = await apiClient.get('/notifications/preferences', {
+        validateStatus: (status) => status < 500,
+      });
+      if (response && response.status === 200) {
+        return response.data;
+      }
+      return null;
+    } catch (err) {
+      console.warn('NotificationService.getPreferences error:', err?.message || err);
       return null;
     }
-    return response.data;
   },
 
   /**
    * Update user's in-app notification preferences
    */
   updatePreferences: async (preferencesDto) => {
-    const response = await apiClient.put('/notifications/preferences', preferencesDto);
-    return response.data;
+    try {
+      const response = await apiClient.put('/notifications/preferences', preferencesDto, {
+        validateStatus: (status) => status < 500,
+      });
+      return response?.data || null;
+    } catch (err) {
+      console.warn('NotificationService.updatePreferences error:', err?.message || err);
+      return null;
+    }
   },
 
   /**
