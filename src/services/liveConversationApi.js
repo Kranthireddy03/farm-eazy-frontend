@@ -3,7 +3,12 @@ import apiClient from './apiClient';
 const BASE = '/live/conversations';
 
 export async function startLiveConversation() {
-  const response = await apiClient.post(`${BASE}/start`);
+  const email = localStorage.getItem('farmEazy_email') || localStorage.getItem('user_email');
+  const phone = localStorage.getItem('farmEazy_phone');
+  const response = await apiClient.post(`${BASE}/start`, {
+    email: email || undefined,
+    phone: phone || undefined,
+  });
   return response.data;
 }
 
