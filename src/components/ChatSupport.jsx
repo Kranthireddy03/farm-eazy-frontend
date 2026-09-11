@@ -190,9 +190,17 @@ export default function ChatSupport({ className = '' }) {
   const [showHistoryDrawer, setShowHistoryDrawer] = useState(false);
   
   // Agent Availability & Offline handling
+  const NOTIFY_REQUESTED_SESSION_KEY = 'farmEazy_agent_notify_requested';
+  const NOTIFIED_THIS_SESSION_KEY = 'farmEazy_agent_notified_this_session';
   const [liveStatus, setLiveStatus] = useState('unknown'); // 'unknown' | 'available' | 'offline'
   const [agentAvailability, setAgentAvailability] = useState(null);
-  const [notifyWhenOnline, setNotifyWhenOnline] = useState(false);
+  const [notifyWhenOnline, setNotifyWhenOnline] = useState(() => {
+    try {
+      return sessionStorage.getItem(NOTIFY_REQUESTED_SESSION_KEY) === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [hasOnlineAgentAlert, setHasOnlineAgentAlert] = useState(false);
   const [offlineDismissed, setOfflineDismissed] = useState(false);
 
@@ -290,11 +298,26 @@ export default function ChatSupport({ className = '' }) {
           const isAvail = Boolean(avail.available);
           const nextStatus = isAvail ? 'available' : 'offline';
 
-          // Notify user if they requested to be notified and agent just became online
-          if (isAvail && (notifyWhenOnline || hasOnlineAgentAlert)) {
-            showToast('🎉 Live Support Agent is now online! You can chat now.', 'success');
-            setHasOnlineAgentAlert(true);
-            setNotifyWhenOnline(false);
+          // Notify user if they requested notification and have not been alerted yet in this session
+          if (isAvail) {
+            let requested = false;
+            let alreadyNotified = false;
+            try {
+              requested = notifyWhenOnline || sessionStorage.getItem(NOTIFY_REQUESTED_SESSION_KEY) === 'true';
+              alreadyNotified = sessionStorage.getItem(NOTIFIED_THIS_SESSION_KEY) === 'true';
+            } catch {
+              requested = notifyWhenOnline;
+            }
+
+            if (requested && !alreadyNotified) {
+              try {
+                sessionStorage.setItem(NOTIFIED_THIS_SESSION_KEY, 'true');
+                sessionStorage.removeItem(NOTIFY_REQUESTED_SESSION_KEY);
+              } catch {}
+              setNotifyWhenOnline(false);
+              setHasOnlineAgentAlert(true);
+              showToast('🎉 Live Support Specialist is now online and available to assist you!', 'success');
+            }
           }
 
           setLiveStatus(nextStatus);
@@ -309,10 +332,25 @@ export default function ChatSupport({ className = '' }) {
         if (cancelled) return;
         if (stats?.agentsOnline != null) {
           const isAvail = Boolean(stats.agentsOnline);
-          if (isAvail && notifyWhenOnline) {
-            showToast('🎉 Live Support Agent is now online! You can chat now.', 'success');
-            setHasOnlineAgentAlert(true);
-            setNotifyWhenOnline(false);
+          if (isAvail) {
+            let requested = false;
+            let alreadyNotified = false;
+            try {
+              requested = notifyWhenOnline || sessionStorage.getItem(NOTIFY_REQUESTED_SESSION_KEY) === 'true';
+              alreadyNotified = sessionStorage.getItem(NOTIFIED_THIS_SESSION_KEY) === 'true';
+            } catch {
+              requested = notifyWhenOnline;
+            }
+
+            if (requested && !alreadyNotified) {
+              try {
+                sessionStorage.setItem(NOTIFIED_THIS_SESSION_KEY, 'true');
+                sessionStorage.removeItem(NOTIFY_REQUESTED_SESSION_KEY);
+              } catch {}
+              setNotifyWhenOnline(false);
+              setHasOnlineAgentAlert(true);
+              showToast('🎉 Live Support Specialist is now online and available to assist you!', 'success');
+            }
           }
           setLiveStatus(isAvail ? 'available' : 'offline');
           return;
@@ -333,7 +371,7 @@ export default function ChatSupport({ className = '' }) {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [isAuthenticated, open, isTabVisible, notifyWhenOnline, hasOnlineAgentAlert, showToast]);
+  }, [isAuthenticated, open, isTabVisible, notifyWhenOnline, showToast]);
 
   // Load ticket history and FAQs ONLY when open
   useEffect(() => {
@@ -412,11 +450,19 @@ export default function ChatSupport({ className = '' }) {
   };
 
   const handleNotifyWhenOnline = () => {
+    try {
+      const alreadyRequested = sessionStorage.getItem(NOTIFY_REQUESTED_SESSION_KEY) === 'true';
+      if (alreadyRequested) {
+        showToast('Notification alert is already active for this session.', 'info');
+        return;
+      }
+      sessionStorage.setItem(NOTIFY_REQUESTED_SESSION_KEY, 'true');
+    } catch {}
     setNotifyWhenOnline(true);
-    setOfflineDismissed(true);
-    showToast('Notification set! We will notify you right here when an agent is online.', 'info');
+    setOfflineDismissed(false);
+    showToast('🔔 Notification set: You will be alerted the moment a support specialist comes online in this session.', 'info');
     appendSupportMessage(
-      '🙏 We apologize for the inconvenience! We have set a notification for you. As soon as a support agent comes online, you will be notified immediately right here so you can chat.'
+      '🙏 Thank you for your patience! We have registered your alert. As soon as a support specialist comes online, you will be notified immediately right here so you can connect.'
     );
   };
 
@@ -426,7 +472,7 @@ export default function ChatSupport({ className = '' }) {
     setTicketId(null);
     setViewMode('chat');
     setLiveSessionKey((k) => k + 1);
-    appendSupportMessage('👋 Connected with support! How can we help you today?');
+    appendSupportMessage('👋 Connected with support! How can we assist you today?');
   };
 
   const handleDirectTicketSubmit = async (e) => {
@@ -873,18 +919,29 @@ export default function ChatSupport({ className = '' }) {
               {hasOnlineAgentAlert && (
                 <div className="mx-3 mt-2 p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-2 animate-in slide-in-from-top-1 text-xs">
                   <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-emerald-500 shrink-0" />
+                    <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 animate-bounce" />
                     <span className="font-semibold text-emerald-800 dark:text-emerald-200 text-[11px]">
-                      A support agent is now online!
+                      A live support specialist is now online!
                     </span>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={handleStartOnlineChatFromAlert}
-                    className="h-6 px-2.5 text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-sm"
-                  >
-                    Start Chat
-                  </Button>
+                  <div className="flex items-center gap-1.5">
+                    <Button
+                      size="sm"
+                      onClick={handleStartOnlineChatFromAlert}
+                      className="h-6 px-2.5 text-[10px] bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg shadow-sm"
+                    >
+                      Start Chat
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={() => setHasOnlineAgentAlert(false)}
+                      className="h-6 w-6 text-muted-foreground hover:text-foreground rounded-lg"
+                      aria-label="Dismiss notification"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
                 </div>
               )}
 
@@ -982,6 +1039,14 @@ export default function ChatSupport({ className = '' }) {
                     <p className="text-xs text-muted-foreground">
                       Would you like to raise a support ticket instead so our team can follow up with you?
                     </p>
+
+                    {notifyWhenOnline ? (
+                      <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 dark:text-emerald-300 text-[11px] font-medium">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+                        <span>Session alert active: You will be notified the moment an agent comes online.</span>
+                      </div>
+                    ) : null}
+
                     <div className="flex flex-wrap gap-2 pt-1">
                       <Button
                         size="sm"
@@ -990,14 +1055,16 @@ export default function ChatSupport({ className = '' }) {
                       >
                         <FileText className="w-3.5 h-3.5 mr-1" /> Raise Support Ticket
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={handleNotifyWhenOnline}
-                        className="h-8 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted"
-                      >
-                        <Bell className="w-3.5 h-3.5 mr-1 text-amber-500" /> Notify Me When Online
-                      </Button>
+                      {!notifyWhenOnline && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={handleNotifyWhenOnline}
+                          className="h-8 px-3 text-xs font-semibold rounded-xl border-border hover:bg-muted"
+                        >
+                          <Bell className="w-3.5 h-3.5 mr-1 text-amber-500" /> Notify Me When Online
+                        </Button>
+                      )}
                     </div>
                   </div>
                 )}
