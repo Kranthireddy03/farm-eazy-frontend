@@ -156,7 +156,7 @@ const NotificationService = {
    */
   markAllAsRead: async () => {
     try {
-      const response = await apiClient.put('/notifications/read-all', null, {
+      const response = await apiClient.put('/notifications/read-all', {}, {
         validateStatus: (status) => status < 500,
       });
       return response?.data || null;

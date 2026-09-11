@@ -1053,52 +1053,66 @@ export default function ChatSupport({ className = '' }) {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Chat Input Bar */}
-              <div className="p-3 border-t border-border bg-card/90 flex items-center gap-2 shrink-0">
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => {
-                    setInput(e.target.value);
-                    if (useLiveStream) liveChat.notifyTyping(e.target.value.trim().length > 0);
-                  }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                  placeholder={
-                    viewingLegacyTicket
-                      ? 'Reply to this ticket...'
-                      : liveStatus === 'available'
-                      ? 'Type your message...'
-                      : 'Ask a question or raise a ticket...'
-                  }
-                  className="flex-1 bg-background border border-border text-foreground placeholder-muted-foreground rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"
-                  disabled={chatLoading}
-                />
+              {/* Chat Input Bar (Only enabled when agents are online OR when conversing on an active ticket) */}
+              {liveStatus === 'offline' && !viewingLegacyTicket ? (
+                <div className="p-3 border-t border-border bg-muted/60 flex items-center justify-between gap-2 shrink-0 animate-in fade-in">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground min-w-0">
+                    <Clock className="w-4 h-4 text-amber-500 shrink-0" />
+                    <span className="truncate">Live chat is offline. Please submit a support ticket.</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setViewMode('ticket_form')}
+                    className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl shrink-0 shadow-sm"
+                  >
+                    <FileText className="w-3.5 h-3.5 mr-1" /> Raise Ticket
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-3 border-t border-border bg-card/90 flex items-center gap-2 shrink-0">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      if (useLiveStream) liveChat.notifyTyping(e.target.value.trim().length > 0);
+                    }}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder={
+                      viewingLegacyTicket
+                        ? 'Reply to this ticket...'
+                        : 'Type your message...'
+                    }
+                    className="flex-1 bg-background border border-border text-foreground placeholder-muted-foreground rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"
+                    disabled={chatLoading}
+                  />
 
-                <input
-                  type="file"
-                  accept="image/*,.pdf,.doc,.docx"
-                  className="hidden"
-                  id="chat-file-upload-unified"
-                  onChange={handleFileUpload}
-                />
-                <label
-                  htmlFor="chat-file-upload-unified"
-                  className="p-2.5 rounded-2xl bg-muted hover:bg-accent border border-border text-muted-foreground hover:text-foreground cursor-pointer transition active:scale-95 shrink-0"
-                  title="Attach file"
-                >
-                  <Paperclip className="w-4 h-4" />
-                </label>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf,.doc,.docx"
+                    className="hidden"
+                    id="chat-file-upload-unified"
+                    onChange={handleFileUpload}
+                  />
+                  <label
+                    htmlFor="chat-file-upload-unified"
+                    className="p-2.5 rounded-2xl bg-muted hover:bg-accent border border-border text-muted-foreground hover:text-foreground cursor-pointer transition active:scale-95 shrink-0"
+                    title="Attach file"
+                  >
+                    <Paperclip className="w-4 h-4" />
+                  </label>
 
-                <Button
-                  size="icon"
-                  onClick={handleSend}
-                  disabled={chatLoading || !input.trim()}
-                  className="h-9 w-9 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md hover:opacity-90 disabled:opacity-50 shrink-0"
-                  aria-label="Send message"
-                >
-                  {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                </Button>
-              </div>
+                  <Button
+                    size="icon"
+                    onClick={handleSend}
+                    disabled={chatLoading || !input.trim()}
+                    className="h-9 w-9 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md hover:opacity-90 disabled:opacity-50 shrink-0"
+                    aria-label="Send message"
+                  >
+                    {chatLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  </Button>
+                </div>
+              )}
             </div>
           )}
         </div>

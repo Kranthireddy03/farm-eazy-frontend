@@ -90,7 +90,6 @@ import { buildSupportPortalUrl, prepareSupportPortalHandoff } from './utils/supp
 import './i18n';
 import Layout from './components/layout/AppShell';
 import PublicLayout from './components/layout/ProductPublicLayout';
-import GlobalFloatingThemeToggle from './components/GlobalFloatingThemeToggle';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from 'sonner';
 const UserPreferences = lazy(() => import('./pages/UserPreferences'));
@@ -571,7 +570,6 @@ function App() {
                         <LocationWizard />
                         <RateLimitOverlay />
                         <ServiceDegradedNotifier />
-                        <GlobalFloatingThemeToggle />
                         <Toaster richColors closeButton position="top-right" theme="system" />
                       </ShellProvider>
                     </ToastProvider>

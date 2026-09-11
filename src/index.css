@@ -59,6 +59,28 @@
     --ring: 142 70% 42%;
   }
 
+  .theme-dim {
+    --background: 220 20% 12%;
+    --foreground: 210 30% 92%;
+    --card: 220 20% 15%;
+    --card-foreground: 210 30% 92%;
+    --popover: 220 20% 15%;
+    --popover-foreground: 210 30% 92%;
+    --primary: 142 65% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 18% 18%;
+    --secondary-foreground: 210 30% 92%;
+    --muted: 220 18% 18%;
+    --muted-foreground: 215 15% 65%;
+    --accent: 220 18% 20%;
+    --accent-foreground: 210 30% 92%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 220 18% 22%;
+    --input: 220 18% 22%;
+    --ring: 142 65% 42%;
+  }
+
   * {
     border-color: hsl(var(--border));
   }

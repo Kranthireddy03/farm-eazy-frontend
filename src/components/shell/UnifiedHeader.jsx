@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { PUBLIC_NAV } from './navConfig';
 import { useShell } from './ShellContext';
 import NotificationBell from '../NotificationBell';
+import DarkModeToggle from '../DarkModeToggle';
 import { Button } from '../ui/button';
 import { cn } from '../../lib/utils';
 
@@ -52,6 +53,7 @@ export default function UnifiedHeader() {
             <span className="text-muted-foreground hidden md:inline">Search</span>
             <kbd className="text-[10px] font-mono text-muted-foreground">⌘K</kbd>
           </Button>
+          <DarkModeToggle variant="dropdown" />
           {isAuthenticated && <NotificationBell />}
           {isAuthenticated ? (
             <Link to="/dashboard" className="hidden md:inline-flex h-8 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90">

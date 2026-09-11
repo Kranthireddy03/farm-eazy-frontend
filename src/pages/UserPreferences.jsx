@@ -12,41 +12,28 @@ const defaultPrefs = {
 };
 
 const UserPreferences = () => {
-  const { setTheme, isDark } = useTheme();
+  const { themeMode, setThemeMode, isDark } = useTheme();
 
   const startGuidedTour = () => {
     window.dispatchEvent(new Event('start-onboarding-tour'));
   };
 
-  const applyThemePreference = (themePreference) => {
-    if (themePreference === 'dark') {
-      setTheme('dark');
-      return;
-    }
-    if (themePreference === 'light') {
-      setTheme('light');
-      return;
-    }
-
-    const systemDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    setTheme(systemDark ? 'dark' : 'light');
-  };
-
   const [prefs, setPrefs] = useState(() => {
     try {
       const savedPrefs = JSON.parse(localStorage.getItem('userPrefs')) || defaultPrefs;
-      return { ...defaultPrefs, ...savedPrefs };
+      return { ...defaultPrefs, ...savedPrefs, theme: localStorage.getItem('farmEazy_theme_mode') || savedPrefs.theme || 'system' };
     } catch {
-      return defaultPrefs;
+      return { ...defaultPrefs, theme: localStorage.getItem('farmEazy_theme_mode') || 'system' };
     }
   });
   const [saved, setSaved] = useState(false);
 
+  // Keep local prefs in sync if themeMode changes elsewhere (e.g. from header switcher)
   useEffect(() => {
-    applyThemePreference(prefs.theme || 'system');
-    // Run once on mount with stored preference.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (themeMode && prefs.theme !== themeMode) {
+      setPrefs((prev) => ({ ...prev, theme: themeMode }));
+    }
+  }, [themeMode]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -54,7 +41,7 @@ const UserPreferences = () => {
       const updated = { ...prev, [name]: type === 'checkbox' ? checked : value };
       localStorage.setItem('userPrefs', JSON.stringify(updated));
       if (name === 'theme') {
-        applyThemePreference(updated.theme);
+        setThemeMode(updated.theme);
       }
       return updated;
     });

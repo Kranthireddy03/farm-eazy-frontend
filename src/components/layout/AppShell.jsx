@@ -13,6 +13,7 @@ import { cn } from '../../lib/utils';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
 import NotificationBell from '../NotificationBell';
+import DarkModeToggle from '../DarkModeToggle';
 import ChatSupport from '../ChatSupport';
 import LocationBar from '../LocationBar';
 import InactivityWarning from '../InactivityWarning';
@@ -403,9 +404,12 @@ export default function AppShell({ children, onShowTour }) {
                 <kbd className="text-[10px] font-mono text-muted-foreground">⌘K</kbd>
               </Button>
 
-              <Button variant="ghost" size="icon" onClick={() => navigate('/settings')} aria-label="Settings">
+              <Button variant="ghost" size="icon" onClick={() => navigate('/settings')} aria-label="Settings" title="Settings">
                 <Settings className="h-4 w-4" />
               </Button>
+
+              <DarkModeToggle variant="segmented" className="hidden xl:inline-flex" />
+              <DarkModeToggle variant="dropdown" className="xl:hidden inline-flex" />
 
               <NotificationBell />
 
