@@ -83,7 +83,8 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
     returnWindowDays: 7,
     exchangeAllowed: false,
     refundPolicy: 'FULL_REFUND',
-    cancellationPolicy: 'Free cancellation before dispatch'
+    cancellationPolicy: 'Free cancellation before dispatch',
+    allowBuyerChat: initialProduct?.allowBuyerChat !== undefined ? initialProduct.allowBuyerChat : true
   });
 
   useEffect(() => {
@@ -978,6 +979,31 @@ export function SellingProductForm({ editingProduct: initialProduct, onClose, on
                           placeholder="e.g. Free cancellation before dispatch"
                         />
                       </FormField>
+                    </div>
+
+                    {/* Direct Buyer Live Chat Consent */}
+                    <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 space-y-3">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="allowBuyerChat"
+                          name="allowBuyerChat"
+                          checked={formData.allowBuyerChat ?? true}
+                          onChange={(e) => setFormData(prev => ({ ...prev, allowBuyerChat: e.target.checked }))}
+                          className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                        <div className="space-y-1">
+                          <label htmlFor="allowBuyerChat" className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5">
+                            <span>💬</span> Allow interested buyers in my location to connect with me directly via Live Chat
+                          </label>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            When enabled, verified customers in your coverage zone can initiate direct live messages with you about this product. You can answer questions, confirm stock, and discuss pickup details.
+                          </p>
+                          <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                            ⚠️ Security Policy: Never request or share passwords, OTPs, UPI PINs, or off-platform payment links. FarmEazy is not responsible for off-platform financial transactions.
+                          </p>
+                        </div>
+                      </div>
                     </div>
                   </div>
 

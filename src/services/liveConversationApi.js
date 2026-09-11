@@ -17,9 +17,15 @@ export async function closeLiveConversation(displayId) {
   return response.data;
 }
 
+export async function getAgentAvailability() {
+  const response = await apiClient.get(`${BASE}/agent-availability`);
+  return response.data;
+}
+
 export async function submitLiveRating(displayId, rating, feedbackComment) {
   await apiClient.post(`${BASE}/${displayId}/rating`, {
     rating,
     feedbackComment,
   });
 }
+

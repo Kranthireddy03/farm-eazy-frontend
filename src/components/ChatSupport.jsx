@@ -1,6 +1,6 @@
 // FarmEazy In-App Chat Support Component
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets, getUserChatStats } from '../services/SupportTicketService';
+import { addResponse, addResponseWithAttachment, createTicket, createTicketWithAttachment, getTicket, getTicketMessages, getTickets, getUserChatStats, TICKET_CATEGORIES, TICKET_PRIORITIES } from '../services/SupportTicketService';
 import apiClient from '../services/apiClient';
 import { unwrapApiList } from '../utils/apiResponse';
 import { getUserFacingErrorMessage } from '../utils/userFacingError';
@@ -8,6 +8,9 @@ import { useGlobalToast } from '../context/ToastContext';
 import { STORAGE_KEYS } from '../config/api';
 import { releaseSupportStomp } from '../services/supportStompClient';
 import { useLiveSupportChat } from '../hooks/useLiveSupportChat';
+import { getAgentAvailability } from '../services/liveConversationApi';
+import { Loader2, Send, AlertCircle, Clock, CheckCircle2, FileText, PlusCircle } from 'lucide-react';
+
 
 const DEFAULT_GREETING = 'Welcome to FarmEazy chat support. Choose a quick topic or describe your issue to open a support ticket.';
 const CHAT_POLL_MS = 5000;
@@ -181,6 +184,16 @@ export default function ChatSupport({ className = '' }) {
   const [liveSessionKey, setLiveSessionKey] = useState(0);
   const [ratingStars, setRatingStars] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
+  const [viewMode, setViewMode] = useState('chat'); // 'chat' | 'ticket_form'
+  const [agentAvailability, setAgentAvailability] = useState(null);
+  const [ticketSubject, setTicketSubject] = useState('');
+  const [ticketCategory, setTicketCategory] = useState('GENERAL');
+  const [ticketPriority, setTicketPriority] = useState('MEDIUM');
+  const [ticketDescription, setTicketDescription] = useState('');
+  const [ticketEmail, setTicketEmail] = useState(() => localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || localStorage.getItem('farmEazy_email') || '');
+  const [ticketPhone, setTicketPhone] = useState(() => localStorage.getItem('farmEazy_phone') || '');
+  const [ticketFile, setTicketFile] = useState(null);
+  const [ticketSubmitting, setTicketSubmitting] = useState(false);
   const { showToast } = useGlobalToast();
 
   const viewingLegacyTicket = Boolean(ticketId);
@@ -397,6 +410,16 @@ export default function ChatSupport({ className = '' }) {
 
     const loadLiveStatus = async () => {
       try {
+        const avail = await getAgentAvailability();
+        if (avail != null) {
+          setAgentAvailability(avail);
+          setLiveStatus(avail.available ? 'available' : 'offline');
+          return;
+        }
+      } catch {
+        // fall back to getUserChatStats
+      }
+      try {
         const stats = await getUserChatStats();
         if (stats?.agentsOnline != null) {
           setLiveStatus(stats.agentsOnline ? 'available' : 'offline');
@@ -410,7 +433,7 @@ export default function ChatSupport({ className = '' }) {
     };
 
     loadLiveStatus();
-    const interval = setInterval(loadLiveStatus, 60000);
+    const interval = setInterval(loadLiveStatus, 45000);
     return () => clearInterval(interval);
   }, [isAuthenticated]);
 
@@ -512,6 +535,47 @@ export default function ChatSupport({ className = '' }) {
       try { localStorage.setItem('farmEazy_email', ticket.contactEmail); } catch(_) {}
     }
     return ticket;
+  };
+
+  const handleDirectTicketSubmit = async (e) => {
+    if (e) e.preventDefault();
+    if (!ticketSubject.trim() || !ticketDescription.trim() || !ticketEmail.trim()) {
+      showToast('Please fill in Subject, Description, and Contact Email.', 'error');
+      return;
+    }
+    setTicketSubmitting(true);
+    try {
+      const payload = {
+        subject: ticketSubject.trim(),
+        description: ticketDescription.trim(),
+        category: ticketCategory,
+        priority: ticketPriority,
+        contactEmail: ticketEmail.trim(),
+        contactPhone: ticketPhone.trim() || undefined,
+        source: 'CHAT_SUPPORT',
+      };
+      const ticket = ticketFile
+        ? await createTicketWithAttachment(payload, ticketFile)
+        : await createTicket(payload);
+
+      showToast(`Support Ticket ${ticket.displayId} created successfully!`, 'success');
+      setTicketSubject('');
+      setTicketDescription('');
+      setTicketFile(null);
+      setTicketId(ticket.displayId);
+      setViewMode('chat');
+      
+      try {
+        const tickets = await getTickets();
+        setTicketHistory(Array.isArray(tickets) ? tickets : []);
+      } catch (_) {}
+
+      appendSupportMessage(`Support ticket ${ticket.displayId} opened. Our team will review your case.`);
+    } catch (err) {
+      showToast(getUserFacingErrorMessage(err, 'Failed to submit support ticket.'), 'error');
+    } finally {
+      setTicketSubmitting(false);
+    }
   };
 
   const routeMessage = async (text) => {
@@ -686,190 +750,378 @@ export default function ChatSupport({ className = '' }) {
         <div className="w-full sm:w-[24rem] max-w-[calc(100vw-1rem)] h-[35rem] max-h-[calc(100dvh-8rem)] overflow-hidden rounded-3xl border border-border bg-card/95 shadow-2xl shadow-slate-950/30 backdrop-blur-xl flex flex-col animate-[slideInRight_180ms_ease-out]">
           <div className="flex items-center justify-between bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-3">
             <div>
-              <span className="font-bold block">FarmEazy Support Chat</span>
-              <span className="text-xs text-white/80">
-                {viewingLegacyTicket ? `Case ${ticketId}` : (liveChat.conversationId ? `Live ${liveChat.conversationId}` : 'Support ticket messaging')}
+              <span className="font-bold block text-sm">FarmEazy Support</span>
+              <span className="text-[11px] text-white/80">
+                {viewingLegacyTicket ? `Case ${ticketId}` : (liveChat.conversationId ? `Live Chat (${liveChat.conversationId})` : 'Live Chat & Support Tickets')}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="text-xs font-semibold bg-white/15 hover:bg-white/25 rounded-full px-3 py-1" onClick={resetConversation} aria-label="Reset chat">New</button>
-              <button className="text-2xl leading-none" onClick={() => setOpen(false)} aria-label="Close chat">×</button>
+            <div className="flex items-center gap-1.5">
+              <button className="text-[11px] font-semibold bg-white/15 hover:bg-white/25 rounded-full px-2.5 py-0.5" onClick={resetConversation} aria-label="Reset chat">New</button>
+              <button className="text-xl leading-none px-1 text-white/80 hover:text-white" onClick={() => setOpen(false)} aria-label="Close chat">×</button>
             </div>
           </div>
 
-          <div className="px-4 pt-3 text-xs text-muted-foreground flex items-center justify-between gap-2">
-            <span>
-              {useLiveStream
-                ? (liveChat.conversation?.status === 'ASSIGNED'
-                    ? `Connected to support executive${liveChat.conversation?.assignedAgentEmail ? ` (${liveChat.conversation.assignedAgentEmail})` : ''}.`
-                    : 'Waiting for a support executive...')
-                : (liveStatus === 'available' ? 'Support executives are available now.' : 'Support executives are offline right now.')}
+          {/* Mode Switcher Tabs */}
+          <div className="flex items-center justify-around border-b border-border bg-muted/40 p-1">
+            <button
+              type="button"
+              onClick={() => setViewMode('chat')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 ${
+                viewMode === 'chat'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>💬</span> Chat {useLiveStream ? '(Live)' : ''}
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('ticket_form')}
+              className={`flex-1 py-1.5 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 ${
+                viewMode === 'ticket_form'
+                  ? 'bg-card text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>📝</span> Raise Ticket
+            </button>
+          </div>
+
+          {/* Status Indicator */}
+          <div className="px-3 py-1.5 text-[11px] text-muted-foreground flex items-center justify-between gap-2 border-b border-border/50 bg-background">
+            <span className="flex items-center gap-1.5 truncate">
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  liveStatus === 'available' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'
+                }`}
+              />
+              <span className="truncate">
+                {useLiveStream
+                  ? (liveChat.conversation?.status === 'ASSIGNED'
+                      ? `Connected to agent (${liveChat.conversation?.assignedAgentEmail || 'Support'})`
+                      : 'Waiting for available agent...')
+                  : (liveStatus === 'available' ? 'Live support agents online.' : 'Live support offline (Mon-Sat 9AM-7PM IST)')}
+              </span>
             </span>
-            {useLiveStream && <span className="text-cyan-300">Live</span>}
-            {viewingLegacyTicket && ticketId && <span className="text-amber-300">Ticket view</span>}
+            {useLiveStream && <span className="text-[10px] font-bold text-cyan-400 bg-cyan-950/60 px-1.5 py-0.5 rounded">LIVE</span>}
+            {viewingLegacyTicket && ticketId && <span className="text-[10px] font-bold text-amber-400 bg-amber-950/60 px-1.5 py-0.5 rounded">TICKET</span>}
           </div>
 
-          <div className="px-3 pt-2">
-            <div className="rounded-xl border border-border bg-slate-950/60 p-2">
-              <div className="text-[11px] font-semibold text-muted-foreground mb-2">Recent Tickets</div>
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {historyLoading && (
-                  <span className="text-[11px] text-muted-foreground">Loading...</span>
-                )}
-                {!historyLoading && ticketHistory.length === 0 && (
-                  <span className="text-[11px] text-muted-foreground">No previous tickets</span>
-                )}
-                {!historyLoading && ticketHistory.map((ticket) => {
-                  const id = ticket?.displayId;
-                  if (!id) return null;
-                  const isActive = id === ticketId;
-                  return (
-                    <button
-                      key={id}
-                      type="button"
-                      onClick={() => handleSelectTicket(id)}
-                      className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] border ${isActive ? 'bg-cyan-600/25 text-cyan-200 border-cyan-500/50' : 'bg-muted text-muted-foreground border-border hover:bg-muted'}`}
-                      disabled={chatLoading}
-                    >
-                      {id}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="px-3 pt-2 flex flex-wrap gap-2">
-            {quickSuggestions.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                disabled={loading}
-                onClick={() => handleFAQ(item.text)}
-                className="rounded-full border border-border bg-muted/60 px-3 py-1 text-[11px] font-medium hover:bg-muted text-muted-foreground"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex-1 p-3 overflow-y-auto space-y-2">
-            {displayMessages.map((msg, idx) => {
-                const attachmentsSource = []
-                  .concat(msg?.attachments || [])
-                  .concat(parseAttachmentsFromMessage(msg) || [])
-
-                const seen = new Set()
-                const attachments = (attachmentsSource || []).map((a) => {
-                  if (!a) return null
-                  const url = typeof a === 'string' ? (a.startsWith('/') ? window.location.origin + a : a) : (a.url || a.attachmentUrl || a.url)
-                  const fileName = a.fileName || a.name || (url ? decodeURIComponent(url.split('/').pop()) : 'attachment')
-                  const key = url || fileName
-                  if (!key || seen.has(key)) return null
-                  seen.add(key)
-                  return { url, fileName }
-                }).filter(Boolean)
-
-                const displayText = msg.text || '';
-                const stripped = stripAttachmentLines(displayText)
-                const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '')
-              return (
-                <div key={idx} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
-                  <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-sm leading-5 ${msg.sender === 'user' ? 'bg-primary/50/15 text-primary/80 border border-primary/20' : 'bg-muted text-muted-foreground border border-border'}`}>
-                    {bubbleText}
-                  </span>
-                  {attachments.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2 justify-start">
-                      {attachments.map((attachment) => (
-                        <div key={`${idx}-${attachment.url}`} className="flex flex-wrap gap-2 items-center">
-                          <button
-                            type="button"
-                            onClick={() => openAttachment(attachment.url)}
-                            className="rounded-full bg-muted text-slate-100 px-2 py-1 text-[11px] hover:bg-slate-600"
-                          >
-                            Open {attachment.fileName}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => downloadAttachment(attachment)}
-                            className="rounded-full bg-cyan-600 text-white px-2 py-1 text-[11px] hover:bg-cyan-500"
-                          >
-                            Download
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+          {/* VIEW 1: DEDICATED RAISE TICKET FORM */}
+          {viewMode === 'ticket_form' ? (
+            <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-card">
+              {liveStatus !== 'available' && (
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-2.5 flex items-start gap-2 text-xs text-amber-800 dark:text-amber-300">
+                  <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                  <div>
+                    <p className="font-semibold">Support Agents Currently Offline</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Business hours: Mon–Sat, 9:00 AM – 7:00 PM IST. Submit your ticket below and our team will respond promptly.
+                    </p>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+              )}
 
-          {liveChat.typingUser && useLiveStream && (
-            <div className="text-[10px] text-cyan-300 px-3 py-1 font-semibold">Support agent is typing...</div>
-          )}
+              <form onSubmit={handleDirectTicketSubmit} className="space-y-3 text-xs">
+                <div>
+                  <label className="font-semibold text-foreground block mb-1">Issue Subject *</label>
+                  <input
+                    type="text"
+                    required
+                    value={ticketSubject}
+                    onChange={(e) => setTicketSubject(e.target.value)}
+                    placeholder="e.g. Payment deduction issue, listing error"
+                    className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                  />
+                </div>
 
-          {liveChat.showRating && useLiveStream && (
-            <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/40 p-3 space-y-2 m-3">
-              <p className="text-sm font-semibold text-cyan-100">Rate this conversation</p>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Category</label>
+                    <select
+                      value={ticketCategory}
+                      onChange={(e) => setTicketCategory(e.target.value)}
+                      className="w-full rounded-xl border border-input bg-background px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    >
+                      {TICKET_CATEGORIES.map((c) => (
+                        <option key={c.value} value={c.value}>
+                          {c.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Priority</label>
+                    <select
+                      value={ticketPriority}
+                      onChange={(e) => setTicketPriority(e.target.value)}
+                      className="w-full rounded-xl border border-input bg-background px-2.5 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    >
+                      {TICKET_PRIORITIES.map((p) => (
+                        <option key={p.value} value={p.value}>
+                          {p.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-semibold text-foreground block mb-1">Description *</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={ticketDescription}
+                    onChange={(e) => setTicketDescription(e.target.value)}
+                    placeholder="Describe the problem, order ID, error message, or steps to reproduce..."
+                    className="w-full rounded-xl border border-input bg-background p-2.5 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Your Email *</label>
+                    <input
+                      type="email"
+                      required
+                      value={ticketEmail}
+                      onChange={(e) => setTicketEmail(e.target.value)}
+                      placeholder="name@example.com"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="font-semibold text-foreground block mb-1">Phone (Optional)</label>
+                    <input
+                      type="tel"
+                      value={ticketPhone}
+                      onChange={(e) => setTicketPhone(e.target.value)}
+                      placeholder="10-digit mobile"
+                      className="w-full rounded-xl border border-input bg-background px-3 py-2 text-xs focus:ring-2 focus:ring-cyan-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-semibold text-foreground block mb-1">Attachment (Optional)</label>
+                  <input
+                    type="file"
+                    accept="image/*,.pdf,.doc,.docx"
+                    onChange={(e) => setTicketFile(e.target.files?.[0] || null)}
+                    className="w-full text-[11px] text-muted-foreground file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-muted file:text-foreground cursor-pointer"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={ticketSubmitting}
+                  className="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl py-2 text-xs font-semibold hover:from-cyan-500 hover:to-blue-500 flex items-center justify-center gap-1.5"
+                >
+                  {ticketSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting Ticket...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" /> Submit Support Ticket
+                    </>
+                  )}
+                </Button>
+              </form>
+            </div>
+          ) : (
+            /* VIEW 2: CHAT & TICKETS CONVERSATION */
+            <>
+              <div className="px-3 pt-2">
+                <div className="rounded-xl border border-border bg-slate-950/60 p-2">
+                  <div className="text-[11px] font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
+                    <span>Recent Tickets</span>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('ticket_form')}
+                      className="text-[10px] text-cyan-400 hover:underline flex items-center gap-1"
+                    >
+                      <PlusCircle className="w-3 h-3" /> New Ticket
+                    </button>
+                  </div>
+                  <div className="flex gap-2 overflow-x-auto pb-1">
+                    {historyLoading && (
+                      <span className="text-[11px] text-muted-foreground">Loading tickets...</span>
+                    )}
+                    {!historyLoading && ticketHistory.length === 0 && (
+                      <span className="text-[11px] text-muted-foreground">No previous tickets</span>
+                    )}
+                    {!historyLoading && ticketHistory.map((ticket) => {
+                      const id = ticket?.displayId;
+                      if (!id) return null;
+                      const isActive = id === ticketId;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          onClick={() => handleSelectTicket(id)}
+                          className={`whitespace-nowrap rounded-full px-3 py-1 text-[11px] border transition ${isActive ? 'bg-cyan-600/25 text-cyan-200 border-cyan-500/50' : 'bg-muted text-muted-foreground border-border hover:bg-muted'}`}
+                          disabled={chatLoading}
+                        >
+                          {id}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Offline fallback prompt if not in active ticket */}
+              {liveStatus !== 'available' && !ticketId && !useLiveStream && (
+                <div className="mx-3 mt-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs flex items-center justify-between gap-2">
+                  <span className="text-amber-800 dark:text-amber-300 text-[11px]">
+                    🕒 Live agents offline.
+                  </span>
                   <button
-                    key={star}
                     type="button"
-                    className={`text-lg ${ratingStars >= star ? 'text-amber-400' : 'text-muted-foreground'}`}
-                    onClick={() => setRatingStars(star)}
-                    aria-label={`${star} stars`}
+                    onClick={() => setViewMode('ticket_form')}
+                    className="text-[11px] font-bold text-cyan-500 hover:text-cyan-400 underline shrink-0"
                   >
-                    ★
+                    Raise a Ticket →
+                  </button>
+                </div>
+              )}
+
+              <div className="px-3 pt-2 flex flex-wrap gap-1.5">
+                {quickSuggestions.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    disabled={loading}
+                    onClick={() => handleFAQ(item.text)}
+                    className="rounded-full border border-border bg-muted/60 px-2.5 py-0.5 text-[10px] font-medium hover:bg-muted text-muted-foreground"
+                  >
+                    {item.label}
                   </button>
                 ))}
               </div>
-              <textarea
-                className="w-full rounded-lg bg-muted border border-border text-sm p-2 text-foreground"
-                rows={2}
-                placeholder="Optional feedback"
-                value={ratingComment}
-                onChange={(e) => setRatingComment(e.target.value)}
-              />
-              <button
-                type="button"
-                className="rounded-lg bg-cyan-600 text-white text-xs px-3 py-1.5"
-                onClick={submitRating}
-              >
-                Submit rating
-              </button>
-            </div>
-          )}
 
-          <div className="flex gap-2 p-3 border-t border-border bg-slate-950/80">
-            <input
-              className="flex-1 bg-muted border border-border text-foreground dark:text-white placeholder-slate-400 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
-              type="text"
-              value={input}
-              onChange={(event) => {
-                setInput(event.target.value);
-                if (useLiveStream) {
-                  liveChat.notifyTyping(event.target.value.trim().length > 0);
-                }
-              }}
-              placeholder="Ask about orders, payment, vendor help..."
-              aria-label="Chat input"
-              onKeyDown={(event) => event.key === 'Enter' && handleSend()}
-              disabled={chatLoading}
-            />
-            <input
-              type="file"
-              accept="image/*,.pdf,.doc,.docx"
-              className="hidden"
-              id="chat-file-upload"
-              onChange={handleFileUpload}
-            />
-            <label htmlFor="chat-file-upload" className="bg-muted text-muted-foreground px-3 py-2 rounded-xl cursor-pointer hover:bg-muted border border-border">📎</label>
-            <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-2 rounded-xl hover:from-primary/50 hover:to-blue-500 disabled:opacity-60" onClick={handleSend} aria-label="Send message" disabled={chatLoading}>
-              Send
-            </button>
-          </div>
+              <div className="flex-1 p-3 overflow-y-auto space-y-2">
+                {displayMessages.map((msg, idx) => {
+                  const attachmentsSource = []
+                    .concat(msg?.attachments || [])
+                    .concat(parseAttachmentsFromMessage(msg) || [])
+
+                  const seen = new Set()
+                  const attachments = (attachmentsSource || []).map((a) => {
+                    if (!a) return null
+                    const url = typeof a === 'string' ? (a.startsWith('/') ? window.location.origin + a : a) : (a.url || a.attachmentUrl || a.url)
+                    const fileName = a.fileName || a.name || (url ? decodeURIComponent(url.split('/').pop()) : 'attachment')
+                    const key = url || fileName
+                    if (!key || seen.has(key)) return null
+                    seen.add(key)
+                    return { url, fileName }
+                  }).filter(Boolean)
+
+                  const displayText = msg.text || '';
+                  const stripped = stripAttachmentLines(displayText)
+                  const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '')
+                  return (
+                    <div key={idx} className={msg.sender === 'user' ? 'text-right' : 'text-left'}>
+                      <span className={`inline-block max-w-[90%] px-3 py-2 rounded-2xl text-xs leading-relaxed ${msg.sender === 'user' ? 'bg-primary/50/15 text-primary/80 border border-primary/20' : 'bg-muted text-muted-foreground border border-border'}`}>
+                        {bubbleText}
+                      </span>
+                      {attachments.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-2 justify-start">
+                          {attachments.map((attachment) => (
+                            <div key={`${idx}-${attachment.url}`} className="flex flex-wrap gap-2 items-center">
+                              <button
+                                type="button"
+                                onClick={() => openAttachment(attachment.url)}
+                                className="rounded-full bg-muted text-slate-100 px-2 py-1 text-[11px] hover:bg-slate-600"
+                              >
+                                Open {attachment.fileName}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => downloadAttachment(attachment)}
+                                className="rounded-full bg-cyan-600 text-white px-2 py-1 text-[11px] hover:bg-cyan-500"
+                              >
+                                Download
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {liveChat.typingUser && useLiveStream && (
+                <div className="text-[10px] text-cyan-300 px-3 py-1 font-semibold">Support agent is typing...</div>
+              )}
+
+              {liveChat.showRating && useLiveStream && (
+                <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/40 p-3 space-y-2 m-3">
+                  <p className="text-sm font-semibold text-cyan-100">Rate this conversation</p>
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        className={`text-lg ${ratingStars >= star ? 'text-amber-400' : 'text-muted-foreground'}`}
+                        onClick={() => setRatingStars(star)}
+                        aria-label={`${star} stars`}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    className="w-full rounded-lg bg-muted border border-border text-sm p-2 text-foreground"
+                    rows={2}
+                    placeholder="Optional feedback"
+                    value={ratingComment}
+                    onChange={(e) => setRatingComment(e.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="rounded-lg bg-cyan-600 text-white text-xs px-3 py-1.5"
+                    onClick={submitRating}
+                  >
+                    Submit rating
+                  </button>
+                </div>
+              )}
+
+              <div className="flex gap-2 p-3 border-t border-border bg-slate-950/80">
+                <input
+                  className="flex-1 bg-muted border border-border text-foreground dark:text-white placeholder-slate-400 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/40"
+                  type="text"
+                  value={input}
+                  onChange={(event) => {
+                    setInput(event.target.value);
+                    if (useLiveStream) {
+                      liveChat.notifyTyping(event.target.value.trim().length > 0);
+                    }
+                  }}
+                  placeholder="Ask about orders, payment, vendor help..."
+                  aria-label="Chat input"
+                  onKeyDown={(event) => event.key === 'Enter' && handleSend()}
+                  disabled={chatLoading}
+                />
+                <input
+                  type="file"
+                  accept="image/*,.pdf,.doc,.docx"
+                  className="hidden"
+                  id="chat-file-upload"
+                  onChange={handleFileUpload}
+                />
+                <label htmlFor="chat-file-upload" className="bg-muted text-muted-foreground px-3 py-2 rounded-xl cursor-pointer hover:bg-muted border border-border text-xs">📎</label>
+                <button className="bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-3.5 py-2 rounded-xl hover:from-primary/50 hover:to-blue-500 disabled:opacity-60 text-xs font-semibold" onClick={handleSend} aria-label="Send message" disabled={chatLoading}>
+                  Send
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

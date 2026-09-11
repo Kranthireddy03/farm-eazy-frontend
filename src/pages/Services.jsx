@@ -4,7 +4,8 @@ import {
   CalendarDays, CheckCircle2, Clock3, Coins, Filter, MapPin, 
   PackagePlus, Tractor, Users, Wrench, XCircle, ChevronRight, 
   Plus, RefreshCw, AlertCircle, AlertTriangle, ArrowLeft, Trash2, Sparkles, 
-  Store, Check, Info, ShieldCheck, HelpCircle, Pencil, Lock, Volume2, VolumeX
+  Store, Check, Info, ShieldCheck, HelpCircle, Pencil, Lock, Volume2, VolumeX,
+  MessageSquare
 } from 'lucide-react';
 import AppPage from '../components/layout/AppPage';
 import { Button } from '../components/ui/button';
@@ -12,6 +13,8 @@ import { GlassPanel, StrongPanel, SectionTitle } from '../components/ui/PremiumS
 import apiClient from '../services/apiClient';
 import LocationService from '../services/LocationService';
 import { toast } from 'sonner';
+import MarketplaceDirectChatModal from '../components/marketplace/MarketplaceDirectChatModal';
+
 
 const TYPES = [
   ['TRACTOR', 'Tractor', Tractor, 'Ploughing, tilling, rotavation, transport support'],
@@ -39,7 +42,8 @@ const emptyForm = {
   sameUnitConfig: true,
   cancellationPolicy: 'Free cancellation up to 24 hours prior to service start',
   refundPolicy: 'FULL_REFUND',
-  rescheduleAllowed: true
+  rescheduleAllowed: true,
+  allowBuyerChat: true
 };
 
 function testVideoPlayable(file) {
@@ -311,6 +315,7 @@ export default function Services() {
   const [serviceMediaError, setServiceMediaError] = useState(false);
   const [serviceMediaMuted, setServiceMediaMuted] = useState(true);
   const [postedUnitIdx, setPostedUnitIdx] = useState({});
+  const [chatService, setChatService] = useState(null);
 
   const [booking, setBooking] = useState({
     latitude: null, longitude: null, serviceDate: '', startTime: '08:00', endTime: '12:00',
@@ -1198,13 +1203,29 @@ export default function Services() {
                     <span className="px-2 py-1 rounded-lg bg-muted text-muted-foreground">Units: {l.quantityTotal || 1} available</span>
                     <span className="px-2 py-1 rounded-lg bg-muted text-muted-foreground">Radius: {l.serviceRadiusKm || 50} km</span>
                   </div>
-                  <Button 
-                    className="w-full rounded-2xl bg-gradient-to-r from-teal-500 to-primary hover:from-teal-600 hover:to-primary/95 text-white font-semibold transition" 
-                    onClick={() => openBooking(l)} 
-                    disabled={l.isActive === false}
-                  >
-                    View details & book <ChevronRight className="ml-1 h-4 w-4" />
-                  </Button>
+                  <div className="flex gap-2 w-full">
+                    {l.allowBuyerChat !== false && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-2xl border-primary/40 text-primary hover:bg-primary/10 gap-1.5 px-3 shrink-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setChatService(l);
+                        }}
+                        title="Chat directly with service provider"
+                      >
+                        <MessageSquare className="h-4 w-4" /> Chat
+                      </Button>
+                    )}
+                    <Button 
+                      className="flex-1 rounded-2xl bg-gradient-to-r from-teal-500 to-primary hover:from-teal-600 hover:to-primary/95 text-white font-semibold transition" 
+                      onClick={() => openBooking(l)} 
+                      disabled={l.isActive === false}
+                    >
+                      View details & book <ChevronRight className="ml-1 h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1973,6 +1994,30 @@ export default function Services() {
                         </div>
                       </dl>
                     </StrongPanel>
+
+                    {/* Direct Customer Live Chat Consent */}
+                    <StrongPanel className="p-6 space-y-3 rounded-3xl border border-primary/30 bg-primary/5">
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="serviceAllowBuyerChat"
+                          checked={form.allowBuyerChat ?? true}
+                          onChange={(e) => setField('allowBuyerChat', e.target.checked)}
+                          className="mt-1 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                        <div className="space-y-1">
+                          <label htmlFor="serviceAllowBuyerChat" className="text-sm font-semibold text-foreground cursor-pointer flex items-center gap-1.5">
+                            <span>💬</span> Allow farmers and customers in my coverage zone to connect with me directly via Live Chat
+                          </label>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            When enabled, verified customers looking for agricultural machinery or labor services in your coverage radius can initiate direct live messages with you on FarmEazy.
+                          </p>
+                          <p className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                            ⚠️ Security Policy: Never request or share passwords, OTPs, UPI PINs, or off-platform payment links. FarmEazy is not responsible for off-platform financial transactions.
+                          </p>
+                        </div>
+                      </div>
+                    </StrongPanel>
                   </div>
                 )}
 
@@ -2327,6 +2372,18 @@ export default function Services() {
                                 </div>
                               )}
                             </dl>
+                            {l.allowBuyerChat !== false && (
+                              <div className="mt-3">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => setChatService(l)}
+                                  className="gap-2 border-primary/50 text-primary hover:bg-primary/10 rounded-xl"
+                                >
+                                  <MessageSquare className="h-4 w-4" /> Chat with Provider
+                                </Button>
+                              </div>
+                            )}
                           </div>
 
                           {/* Attachment Media Gallery */}
@@ -2944,6 +3001,13 @@ export default function Services() {
             </div>
           </div>
         )}
+
+        {/* Marketplace Direct Chat Modal for Service Provider messaging */}
+        <MarketplaceDirectChatModal
+          open={Boolean(chatService)}
+          onClose={() => setChatService(null)}
+          service={chatService}
+        />
 
       </div>
     </AppPage>

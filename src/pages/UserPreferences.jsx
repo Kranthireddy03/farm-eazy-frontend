@@ -132,6 +132,40 @@ const UserPreferences = () => {
 
         {/* Preference Groups */}
         <div className="space-y-6">
+          {/* In-App Notification Preferences Spotlight */}
+          <div className={`ops-panel interactive-card overflow-hidden ${isDark ? 'border border-border' : 'border border-primary/20'}`}>
+            <div className="bg-gradient-to-r from-primary to-emerald-600 px-6 py-4 text-white">
+              <h2 className="text-lg font-bold flex items-center gap-2">
+                <span>🔔</span> In-App Notifications & Alerts
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className={`text-sm ${isDark ? 'text-muted-foreground' : 'text-muted-foreground'}`}>
+                Fine-tune the exact in-app notifications you receive across marketplace listings, local product & service alerts, orders, coin credits, coupon drops, irrigation thresholds, and live support updates.
+              </p>
+              <div className="flex flex-wrap gap-3 pt-2">
+                <Link
+                  to="/notifications?prefs=true"
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center gap-2 shadow-sm"
+                >
+                  <span>⚙️</span> Manage In-App Event Triggers
+                </Link>
+                <Link
+                  to="/notifications?tab=saved"
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center gap-2 ${isDark ? 'bg-muted text-foreground hover:bg-muted/80' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  <span>⭐</span> View Saved Notifications
+                </Link>
+                <Link
+                  to="/notifications"
+                  className={`px-4 py-2 rounded-lg font-medium transition-colors inline-flex items-center gap-2 ${isDark ? 'bg-muted text-foreground hover:bg-muted/80' : 'bg-muted text-foreground hover:bg-muted/80'}`}
+                >
+                  <span>📬</span> Notification Center
+                </Link>
+              </div>
+            </div>
+          </div>
+
           {preferenceGroups.map((group) => (
             <div key={group.title} className={`ops-panel interactive-card overflow-hidden ${isDark ? 'border border-border' : 'border border-indigo-100'}`}>
               <div className="bg-gradient-to-r from-indigo-500 to-purple-500 px-6 py-4 text-white">
