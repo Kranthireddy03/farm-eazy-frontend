@@ -1,4 +1,4 @@
-// FarmEazy In-App Unified Chat Support Component
+// FarmEazy In-App Unified Chat Support Component with Option-Guided Automation, Sticky Reconnection, Agent Transfers & CSAT Rating
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   addResponse,
@@ -40,10 +40,54 @@ import {
   User,
   ShieldCheck,
   RefreshCw,
+  Star,
+  Lock,
+  Unlock,
+  Check,
+  HelpCircle,
+  ArrowRight,
+  Sliders,
 } from 'lucide-react';
 
-const DEFAULT_GREETING = '👋 Welcome to FarmEazy Support! Ask a question or chat with our support team.';
+const DEFAULT_GREETING = '👋 Welcome to FarmEazy Support! Please select a topic below to quickly find answers or connect with our support team.';
 const CHAT_POLL_MS = 5000;
+
+// Web Audio API Synth Alert Chimes (Zero external asset dependencies)
+function playCustomerChime(type = 'message') {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (type === 'assigned') {
+      // Cheerful ascending chime (C5 -> E5 -> G5)
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, now);
+      osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.12);
+      osc.frequency.exponentialRampToValueAtTime(783.99, now + 0.25);
+      gain.gain.setValueAtTime(0.18, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+      osc.start(now);
+      osc.stop(now + 0.5);
+    } else {
+      // Gentle notification chime (A5 -> E6)
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(880, now);
+      osc.frequency.exponentialRampToValueAtTime(1318.51, now + 0.1);
+      gain.gain.setValueAtTime(0.12, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      osc.start(now);
+      osc.stop(now + 0.35);
+    }
+  } catch {
+    // Audio might be constrained by autoplay policy before user gesture
+  }
+}
 
 function extractUploadPath(url) {
   if (!url) return null;
@@ -58,13 +102,6 @@ function normalizeAttachmentKey(url) {
   return extractUploadPath(raw) || raw;
 }
 
-function toAbsoluteAttachmentUrl(url) {
-  if (!url) return '';
-  if (/^https?:\/\//i.test(url)) return url;
-  if (url.startsWith('/')) return `${window.location.origin}${url}`;
-  return `${window.location.origin}/${url}`;
-}
-
 function normalizeText(value) {
   return String(value || '').trim().toLowerCase();
 }
@@ -75,49 +112,6 @@ function isGreeting(text) {
 
 function isHumanRequest(text) {
   return /(human|agent|executive|person|support team|real[- ]?time|live chat|talk to support|call me)/i.test(text);
-}
-
-function inferCategory(text) {
-  const value = normalizeText(text);
-  if (/(payment|razorpay|checkout|order failed|place order|refund|coin)/.test(value)) return 'PAYMENT_ISSUE';
-  if (/(vendor|selling|listing|product|service)/.test(value)) return 'SERVICE_ISSUE';
-  if (/(farm|crop|irrigat|water|schedule)/.test(value)) return 'TECHNICAL_ISSUE';
-  if (/(account|login|otp|password|email|phone)/.test(value)) return 'ACCOUNT_ISSUE';
-  return 'GENERAL';
-}
-
-function inferPriority(text) {
-  const value = normalizeText(text);
-  if (/(failed|error|urgent|blocked|cannot|can't|not working)/.test(value)) return 'HIGH';
-  return 'MEDIUM';
-}
-
-function buildQuickReply(text, faqs) {
-  const value = normalizeText(text);
-  const matches = [
-    { keywords: ['add a farm', 'create a farm', 'farm'], answer: 'Go to Farms, open Add Farm, and complete the farm details. If you need help with a specific error, you can raise a ticket.' },
-    { keywords: ['schedule irrigation', 'irrigation'], answer: 'Open Irrigation, choose a farm and crop, then save the schedule. If the page is failing, our support team can assist.' },
-    { keywords: ['order', 'checkout', 'payment', 'place order', 'razorpay'], answer: 'For orders, select an address first and then choose a payment method. If payment is failing, you can create a payment support ticket.' },
-    { keywords: ['vendor', 'selling', 'listing', 'product', 'service'], answer: 'Vendor access is separate from listing approval. If verification is done but publishing still fails, our team can help.' },
-    { keywords: ['support', 'ticket', 'contact'], answer: 'You can chat with our team here or raise a dedicated ticket for follow-up.' },
-  ];
-
-  for (const item of matches) {
-    if (item.keywords.some((keyword) => value.includes(keyword))) {
-      return item.answer;
-    }
-  }
-
-  const faqMatch = (faqs || []).find((faq) => {
-    const question = normalizeText(faq.question || faq.q);
-    return question && (value.includes(question) || question.split(' ').some((word) => word.length > 4 && value.includes(word)));
-  });
-
-  if (faqMatch) {
-    return faqMatch.answer || faqMatch.a || 'I found a related answer in the help center.';
-  }
-
-  return null;
 }
 
 function normalizeIncomingMessage(message) {
@@ -180,6 +174,154 @@ const parseAttachmentsFromMessage = (message) => {
   return collected;
 };
 
+// Hierarchical Option Decision Tree for Automated Guidance
+const SUPPORT_OPTION_TREE = {
+  root: [
+    {
+      id: 'payment',
+      icon: '💳',
+      title: 'Payment & Billing',
+      subtitle: 'Failed payments, refund status, wallet balance',
+    },
+    {
+      id: 'machinery',
+      icon: '🚜',
+      title: 'Machinery & Equipment Rental',
+      subtitle: 'Tractor booking, vendor dispatch, machine listing',
+    },
+    {
+      id: 'irrigation',
+      icon: '💧',
+      title: 'Smart Irrigation & Crops',
+      subtitle: 'IoT schedules, valve controls, crop advisory AI',
+    },
+    {
+      id: 'account',
+      icon: '🔐',
+      title: 'Account & Security',
+      subtitle: 'Login OTP, mobile update, vendor KYC verification',
+    },
+    {
+      id: 'live_agent',
+      icon: '👨‍💼',
+      title: 'Connect with Support Agent',
+      subtitle: 'Live conversation with an online specialist',
+    },
+  ],
+  payment: [
+    {
+      id: 'pay_deducted',
+      title: 'Money deducted but order/booking failed',
+      resolution: 'If money was deducted from your bank or card but the order failed, our payment gateway (Razorpay) will auto-reconcile within 15–30 minutes, or refund within 3–5 business days.',
+      canEscalate: true,
+    },
+    {
+      id: 'pay_refund_status',
+      title: 'Check refund status for cancelled order',
+      resolution: 'Refunds are credited back to your original payment source within 3–5 business days from approval. You can also view details in your Wallet tab.',
+      canEscalate: true,
+    },
+    {
+      id: 'pay_wallet_coins',
+      title: 'Coins or wallet cashback not credited',
+      resolution: 'Bonus coins and cashback are credited instantly upon successful order completion or campaign criteria fulfillment. Check your Coins activity tab.',
+      canEscalate: true,
+    },
+  ],
+  machinery: [
+    {
+      id: 'mach_schedule',
+      title: 'Machinery booking delay or vendor unassigned',
+      resolution: 'Equipment rental bookings are matched with nearby verified operators within 1 hour. If your slot is near, we can escalate operator assignment.',
+      canEscalate: true,
+    },
+    {
+      id: 'mach_cancel',
+      title: 'Cancel or reschedule machinery booking',
+      resolution: 'You can reschedule or cancel equipment rentals up to 2 hours before the start time from your Bookings tab without any cancellation fees.',
+      canEscalate: true,
+    },
+    {
+      id: 'mach_list_vendor',
+      title: 'How to list my tractor/machinery on FarmEazy',
+      resolution: 'Go to Vendor Portal -> Add Equipment, submit registration RC and photos. Our team verifies equipment listings within 24 hours.',
+      canEscalate: true,
+    },
+  ],
+  irrigation: [
+    {
+      id: 'irrig_schedule_fail',
+      title: 'Smart irrigation schedule not starting automatically',
+      resolution: 'Ensure your IoT gateway device has an active internet connection and the solenoid valve controller is set in "Auto" mode.',
+      canEscalate: true,
+    },
+    {
+      id: 'irrig_sensor_reading',
+      title: 'Soil moisture or temperature sensor reading anomaly',
+      resolution: 'Check physical probe depth (recommended 15–20cm in root zone) and clean probe terminals with distilled water if salt buildup occurred.',
+      canEscalate: true,
+    },
+    {
+      id: 'irrig_crop_advisory',
+      title: 'Need help with Crop Disease AI Advisory',
+      resolution: 'Upload a clear, well-lit photo of the affected crop leaf or stem under the "Crop Advisory" section for instant AI diagnosis and remedy recommendations.',
+      canEscalate: true,
+    },
+  ],
+  account: [
+    {
+      id: 'acc_otp_issue',
+      title: 'Not receiving SMS OTP for login / verification',
+      resolution: 'Please check network reception or wait 30 seconds to request OTP via WhatsApp. Ensure DND is not blocking transactional SMS from FarmEazy.',
+      canEscalate: true,
+    },
+    {
+      id: 'acc_profile_update',
+      title: 'Change registered mobile number or email',
+      resolution: 'Navigate to Settings -> Profile Security to request a mobile or email change with OTP dual-verification.',
+      canEscalate: true,
+    },
+    {
+      id: 'acc_vendor_kyc',
+      title: 'Vendor KYC verification status inquiry',
+      resolution: 'KYC documents are reviewed within 1 business day. You can view real-time document status under Vendor Dashboard -> Verification.',
+      canEscalate: true,
+    },
+  ],
+};
+
+// Preset chips for Ticket Form
+const TICKET_PRESETS = [
+  {
+    label: '💳 Payment Deduction Failed',
+    subject: 'Payment deducted but order/booking failed',
+    category: 'PAYMENT_ISSUE',
+    priority: 'HIGH',
+    description: 'Money was deducted from my bank/UPI, but the order status remains pending or failed. Order/Txn ID: ',
+  },
+  {
+    label: '🚜 Machinery Dispatch Delay',
+    subject: 'Equipment rental operator not assigned or delayed',
+    category: 'SERVICE_ISSUE',
+    priority: 'MEDIUM',
+    description: 'Need update regarding equipment operator and delivery schedule for booking reference: ',
+  },
+  {
+    label: '💧 Smart Irrigation Issue',
+    subject: 'IoT automated irrigation schedule not triggering',
+    category: 'TECHNICAL_ISSUE',
+    priority: 'MEDIUM',
+    description: 'IoT irrigation schedule failed to start automatically. Field plot / Controller ID: ',
+  },
+  {
+    label: '🔐 Login / OTP Verification',
+    subject: 'Unable to receive login or verification OTP',
+    category: 'ACCOUNT_ISSUE',
+    priority: 'HIGH',
+    description: 'SMS OTP is not being received for mobile number: ',
+  },
+];
+
 export default function ChatSupport({ className = '' }) {
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem(STORAGE_KEYS.USER_TOKEN)));
   const [open, setOpen] = useState(false);
@@ -204,6 +346,11 @@ export default function ChatSupport({ className = '' }) {
   const [hasOnlineAgentAlert, setHasOnlineAgentAlert] = useState(false);
   const [offlineDismissed, setOfflineDismissed] = useState(false);
 
+  // Option-Driven Guided Flow State
+  const [activeCategory, setActiveCategory] = useState(null); // null = root options, 'payment', 'machinery', etc.
+  const [activeResolution, setActiveResolution] = useState(null);
+  const [customInputUnlocked, setCustomInputUnlocked] = useState(false);
+
   // Chat conversation state
   const [messages, setMessages] = useState([{ sender: 'support', text: DEFAULT_GREETING }]);
   const [input, setInput] = useState('');
@@ -214,8 +361,12 @@ export default function ChatSupport({ className = '' }) {
   const [ticketHistory, setTicketHistory] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [liveSessionKey, setLiveSessionKey] = useState(0);
+
+  // CSAT Rating State
   const [ratingStars, setRatingStars] = useState(0);
   const [ratingComment, setRatingComment] = useState('');
+  const [ratingSubmitted, setRatingSubmitted] = useState(false);
+  const [selectedRatingTags, setSelectedRatingTags] = useState([]);
 
   // Ticket form state
   const [ticketSubject, setTicketSubject] = useState('');
@@ -229,6 +380,9 @@ export default function ChatSupport({ className = '' }) {
 
   const { showToast } = useGlobalToast();
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const prevAgentRef = useRef(null);
+  const prevMsgCountRef = useRef(0);
 
   const viewingLegacyTicket = Boolean(ticketId);
 
@@ -242,8 +396,32 @@ export default function ChatSupport({ className = '' }) {
   const displayMessages = useLiveStream ? liveChat.messages : messages;
   const chatLoading = useLiveStream ? liveChat.loading || liveChat.connecting : loading;
 
-  const currentUserId = localStorage.getItem(STORAGE_KEYS.USER_ID) || 'anonymous';
-  const storageKey = `farmEazy_chat_history_${currentUserId}`;
+  // Agent Assignment Gate
+  const isAgentAssigned = Boolean(liveChat.conversation?.assignedAgentEmail);
+  const isInputAllowed = viewingLegacyTicket || isAgentAssigned || customInputUnlocked;
+
+  // Monitor Agent Assignment changes -> Play Chime & Toast
+  useEffect(() => {
+    const currentAgent = liveChat.conversation?.assignedAgentEmail;
+    if (currentAgent && currentAgent !== prevAgentRef.current) {
+      playCustomerChime('assigned');
+      showToast(`🎉 Connected with Support Specialist: ${currentAgent}`, 'success');
+      appendSupportMessage(`👨‍💼 Support Specialist ${currentAgent} has joined the conversation! You can now freely type your queries.`);
+    }
+    prevAgentRef.current = currentAgent;
+  }, [liveChat.conversation?.assignedAgentEmail, showToast]);
+
+  // Monitor incoming support messages -> Play gentle chime
+  useEffect(() => {
+    const msgs = useLiveStream ? liveChat.messages : messages;
+    if (msgs.length > prevMsgCountRef.current) {
+      const latest = msgs[msgs.length - 1];
+      if (latest && latest.sender === 'support' && prevMsgCountRef.current > 0) {
+        playCustomerChime('message');
+      }
+    }
+    prevMsgCountRef.current = msgs.length;
+  }, [messages, liveChat.messages, useLiveStream]);
 
   // Auth sync
   useEffect(() => {
@@ -279,10 +457,9 @@ export default function ChatSupport({ className = '' }) {
     if (open && viewMode === 'chat') {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
-  }, [displayMessages, open, viewMode, liveChat.typingUser]);
+  }, [displayMessages, open, viewMode, liveChat.typingUser, activeCategory, activeResolution]);
 
-  // CRITICAL: Agent Availability Check - ONLY runs when open & authenticated & tab visible!
-  // Zero background API calls when widget is closed!
+  // CRITICAL: Agent Availability Check - ONLY runs when open & authenticated & tab visible
   useEffect(() => {
     if (!isAuthenticated || !open) return;
 
@@ -298,7 +475,6 @@ export default function ChatSupport({ className = '' }) {
           const isAvail = Boolean(avail.available);
           const nextStatus = isAvail ? 'available' : 'offline';
 
-          // Notify user if they requested notification and have not been alerted yet in this session
           if (isAvail) {
             let requested = false;
             let alreadyNotified = false;
@@ -316,6 +492,7 @@ export default function ChatSupport({ className = '' }) {
               } catch {}
               setNotifyWhenOnline(false);
               setHasOnlineAgentAlert(true);
+              playCustomerChime('assigned');
               showToast('🎉 Live Support Specialist is now online and available to assist you!', 'success');
             }
           }
@@ -324,7 +501,7 @@ export default function ChatSupport({ className = '' }) {
           return;
         }
       } catch {
-        // fall back to chat stats or business hours if live API fails
+        // Fall back to stats
       }
 
       try {
@@ -349,6 +526,7 @@ export default function ChatSupport({ className = '' }) {
               } catch {}
               setNotifyWhenOnline(false);
               setHasOnlineAgentAlert(true);
+              playCustomerChime('assigned');
               showToast('🎉 Live Support Specialist is now online and available to assist you!', 'success');
             }
           }
@@ -356,7 +534,7 @@ export default function ChatSupport({ className = '' }) {
           return;
         }
       } catch {
-        // fall back to hours
+        // Fall back to business hours
       }
 
       const hour = new Date().getHours();
@@ -472,7 +650,56 @@ export default function ChatSupport({ className = '' }) {
     setTicketId(null);
     setViewMode('chat');
     setLiveSessionKey((k) => k + 1);
-    appendSupportMessage('👋 Connected with support! How can we assist you today?');
+    appendSupportMessage('👋 Connected with FarmEazy Live Support! Routing you to our available support specialist...');
+  };
+
+  // Option Click Handlers
+  const handleSelectRootCategory = (cat) => {
+    if (cat.id === 'live_agent') {
+      appendUserMessage('👨‍💼 I would like to connect directly with a live support executive.');
+      if (liveStatus === 'available') {
+        if (liveChat?.sendMessage) {
+          liveChat.sendMessage('Customer requested direct support specialist assistance.');
+        }
+        appendSupportMessage('Connecting you with our next available support agent via least-busy load balancer... Please hold on!');
+      } else {
+        appendSupportMessage('Our support executives are currently offline (Support Hours: Mon–Sat 9AM–7PM IST). Would you like to raise a support ticket instead?');
+      }
+      setActiveCategory(null);
+      setActiveResolution(null);
+      return;
+    }
+
+    appendUserMessage(`${cat.icon} ${cat.title}`);
+    setActiveCategory(cat.id);
+    setActiveResolution(null);
+    appendSupportMessage(`Please select what best describes your ${cat.title.toLowerCase()} query, or select "Other" to describe it yourself:`);
+  };
+
+  const handleSelectSubOption = (opt) => {
+    appendUserMessage(opt.title);
+    setActiveResolution(opt);
+    appendSupportMessage(opt.resolution);
+  };
+
+  const handleUnlockCustomInput = () => {
+    setCustomInputUnlocked(true);
+    appendSupportMessage('✍️ Custom message field is now unlocked! Please type your question or issue below and press send.');
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+  };
+
+  const handleConnectLiveFromOption = () => {
+    appendUserMessage('👨‍💼 Connect with human specialist for this topic');
+    if (liveStatus === 'available') {
+      if (liveChat?.sendMessage) {
+        liveChat.sendMessage(`Customer query regarding: ${activeResolution?.title || activeCategory || 'General Support'}`);
+      }
+      appendSupportMessage('Routing your request with priority context to our active support specialist team...');
+    } else {
+      appendSupportMessage('Our live agents are currently offline. Please use "Raise Support Ticket" so our team can follow up directly!');
+    }
   };
 
   const handleDirectTicketSubmit = async (e) => {
@@ -496,7 +723,7 @@ export default function ChatSupport({ className = '' }) {
         ? await createTicketWithAttachment(payload, ticketFile)
         : await createTicket(payload);
 
-      showToast(`Support Ticket ${ticket.displayId} created successfully!`, 'success');
+      showToast(`Support Ticket #${ticket.displayId} created successfully!`, 'success');
       setTicketSubject('');
       setTicketDescription('');
       setTicketFile(null);
@@ -544,6 +771,9 @@ export default function ChatSupport({ className = '' }) {
     setAttachment(null);
     setShowHistoryDrawer(false);
     setViewMode('chat');
+    setActiveCategory(null);
+    setActiveResolution(null);
+    setCustomInputUnlocked(false);
     setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
     releaseSupportStomp();
     setLiveSessionKey((k) => k + 1);
@@ -554,9 +784,12 @@ export default function ChatSupport({ className = '' }) {
     const text = input.trim();
     setInput('');
 
-    if (useLiveStream) {
-      await liveChat.sendMessage(text);
-      return;
+    // If in live mode (or liveStatus === 'available' and not viewing a legacy ticket), send via liveChat
+    if ((useLiveStream || liveStatus === 'available') && !viewingLegacyTicket) {
+      if (liveChat?.sendMessage) {
+        await liveChat.sendMessage(text);
+        return;
+      }
     }
 
     appendUserMessage(text);
@@ -582,39 +815,16 @@ export default function ChatSupport({ className = '' }) {
       return;
     }
 
-    // Quick FAQ check
-    const faqAns = buildQuickReply(text, faqs);
-    if (isGreeting(text)) {
-      appendSupportMessage('Hello! How can we assist you with FarmEazy today?');
-      return;
-    }
-
-    if (faqAns && !isHumanRequest(text)) {
-      appendSupportMessage(faqAns);
-      appendSupportMessage('If you need more help, you can chat with our team or raise a support ticket.');
-      return;
-    }
-
-    // If agents are offline and user asks for human/ticket
-    if (liveStatus !== 'available' || isHumanRequest(text)) {
+    // If agents are offline
+    if (liveStatus !== 'available') {
       appendSupportMessage(
         'Our live agents are currently offline (Support Hours: Mon–Sat 9AM–7PM IST). Would you like to raise a support ticket?'
       );
       return;
     }
 
-    appendSupportMessage('I have recorded your request. Connecting you with our support team...');
-  };
-
-  const handleFAQ = (question) => {
-    if (chatLoading) return;
-    setInput('');
-    if (useLiveStream) {
-      liveChat.sendMessage(question);
-    } else {
-      appendUserMessage(question);
-      const ans = buildQuickReply(question, faqs);
-      if (ans) appendSupportMessage(ans);
+    if (liveChat?.sendMessage) {
+      await liveChat.sendMessage(text);
     }
   };
 
@@ -625,17 +835,35 @@ export default function ChatSupport({ className = '' }) {
     appendSupportMessage(`📎 Attachment ready: "${file.name}". Send your message to submit it.`);
   };
 
-  const quickSuggestions = useMemo(
-    () => [
-      { label: '💳 Payment Help', text: 'My payment or checkout is having an issue.' },
-      { label: '🚜 Machinery/Service Help', text: 'How do I book or list farm machinery services?' },
-      { label: '💧 Irrigation Setup', text: 'How do I schedule irrigation on my farm?' },
-      { label: '👨‍💼 Talk to Agent', text: 'I want to speak with a customer support executive.' },
-    ],
-    []
-  );
+  const handleRatingSubmit = async () => {
+    if (!ratingStars) {
+      showToast('Please select a star rating between 1 and 5.', 'error');
+      return;
+    }
+    const fullComment = [
+      selectedRatingTags.join(', '),
+      ratingComment.trim(),
+    ].filter(Boolean).join(' - ');
+
+    try {
+      await liveChat.submitRating(ratingStars, fullComment);
+      setRatingSubmitted(true);
+      showToast('⭐ Thank you! Your rating and feedback have been recorded.', 'success');
+    } catch {
+      showToast('Could not submit rating. Thank you for your feedback!', 'info');
+      setRatingSubmitted(true);
+    }
+  };
+
+  const toggleRatingTag = (tag) => {
+    setSelectedRatingTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
+    );
+  };
 
   if (!isAuthenticated) return null;
+
+  const currentCategoryOptions = activeCategory ? SUPPORT_OPTION_TREE[activeCategory] || [] : [];
 
   return (
     <div className={`fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-50 flex justify-end ${className}`}>
@@ -660,7 +888,7 @@ export default function ChatSupport({ className = '' }) {
 
       {/* Main Support Window */}
       {open && (
-        <div className="w-[94vw] sm:w-[24.5rem] max-w-[420px] h-[36rem] max-h-[calc(100dvh-5.5rem)] rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-2xl shadow-slate-950/40 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="w-[94vw] sm:w-[26rem] max-w-[440px] h-[37rem] max-h-[calc(100dvh-5.5rem)] rounded-3xl border border-border/80 bg-card/95 backdrop-blur-2xl shadow-2xl shadow-slate-950/40 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-200">
           
           {/* Header Bar */}
           <div className="bg-gradient-to-r from-emerald-700 via-teal-700 to-cyan-800 text-white px-4 py-3.5 flex items-center justify-between shrink-0 shadow-md">
@@ -684,10 +912,12 @@ export default function ChatSupport({ className = '' }) {
                     'Create Support Ticket'
                   ) : viewingLegacyTicket ? (
                     `Ticket #${ticketId}`
-                  ) : useLiveStream && liveChat.conversation?.assignedAgentEmail ? (
+                  ) : isAgentAssigned ? (
                     `Connected with ${liveChat.conversation.assignedAgentEmail}`
+                  ) : useLiveStream && (liveChat.conversation?.status === 'WAITING_FOR_AGENT' || liveChat.conversation?.status === 'WAITING') && (liveChat.conversation?.queuePosition > 0) ? (
+                    `In Queue (#${liveChat.conversation.queuePosition}) • Connecting shortly...`
                   ) : liveStatus === 'available' ? (
-                    '🟢 Support Agent Online'
+                    '🟢 Support Specialist Online'
                   ) : (
                     '🕒 Offline (Mon–Sat 9AM–7PM IST)'
                   )}
@@ -778,7 +1008,7 @@ export default function ChatSupport({ className = '' }) {
               <div className="flex items-center justify-between border-b border-border pb-2.5">
                 <div>
                   <h3 className="font-bold text-sm text-foreground">Raise a Support Ticket</h3>
-                  <p className="text-[11px] text-muted-foreground">We typically resolve tickets within 2–4 business hours.</p>
+                  <p className="text-[11px] text-muted-foreground">Choose a quick preset or fill your details for fast resolution.</p>
                 </div>
                 <Button
                   type="button"
@@ -791,16 +1021,40 @@ export default function ChatSupport({ className = '' }) {
                 </Button>
               </div>
 
+              {/* Quick Preset Buttons for Ticket Raising */}
+              <div className="space-y-1.5">
+                <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-emerald-500" /> Quick Issue Presets:
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {TICKET_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => {
+                        setTicketSubject(preset.subject);
+                        setTicketCategory(preset.category);
+                        setTicketPriority(preset.priority);
+                        setTicketDescription(preset.description);
+                      }}
+                      className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-medium text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition active:scale-95"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {liveStatus !== 'available' && (
                 <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 flex items-start gap-2.5 text-amber-800 dark:text-amber-300">
                   <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
                   <div className="text-[11px] leading-relaxed">
-                    <span className="font-bold">Live Agents Currently Offline:</span> Mon–Sat, 9:00 AM – 7:00 PM IST. Submit your ticket and our team will get back to you promptly.
+                    <span className="font-bold">Live Agents Offline:</span> Mon–Sat, 9:00 AM – 7:00 PM IST. Submit your ticket and our team will get back to you promptly.
                   </div>
                 </div>
               )}
 
-              <form onSubmit={handleDirectTicketSubmit} className="space-y-3">
+              <form onSubmit={handleDirectTicketSubmit} className="space-y-3 pt-1">
                 <div>
                   <label className="font-semibold text-foreground block mb-1">Issue Subject *</label>
                   <input
@@ -917,7 +1171,7 @@ export default function ChatSupport({ className = '' }) {
               
               {/* Alert: Agent came online notification banner */}
               {hasOnlineAgentAlert && (
-                <div className="mx-3 mt-2 p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-2 animate-in slide-in-from-top-1 text-xs">
+                <div className="mx-3 mt-2 p-2.5 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-between gap-2 animate-in slide-in-from-top-1 text-xs shrink-0">
                   <div className="flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-emerald-500 shrink-0 animate-bounce" />
                     <span className="font-semibold text-emerald-800 dark:text-emerald-200 text-[11px]">
@@ -945,25 +1199,8 @@ export default function ChatSupport({ className = '' }) {
                 </div>
               )}
 
-              {/* Quick Topic Suggestions (Only if in live chat and not viewing a closed/legacy ticket) */}
-              {!viewingLegacyTicket && liveStatus === 'available' && (
-                <div className="px-3 pt-2.5 pb-1 flex flex-wrap gap-1.5 shrink-0">
-                  {quickSuggestions.map((item) => (
-                    <button
-                      key={item.label}
-                      type="button"
-                      disabled={chatLoading}
-                      onClick={() => handleFAQ(item.text)}
-                      className="rounded-full border border-border bg-muted/60 px-2.5 py-1 text-[10px] font-medium hover:bg-muted text-muted-foreground hover:text-foreground transition active:scale-95"
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-
               {/* Chat Message Stream */}
-              <div className="flex-1 p-3.5 overflow-y-auto space-y-2.5 text-xs">
+              <div className="flex-1 p-3.5 overflow-y-auto space-y-3 text-xs">
                 {displayMessages.map((msg, idx) => {
                   const attachmentsSource = []
                     .concat(msg?.attachments || [])
@@ -988,9 +1225,21 @@ export default function ChatSupport({ className = '' }) {
                     .filter(Boolean);
 
                   const displayText = msg.text || '';
+                  const isSystemReassign = displayText.includes('[SYSTEM EVENT]');
                   const stripped = stripAttachmentLines(displayText);
                   const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '');
                   const isUser = msg.sender === 'user';
+
+                  if (isSystemReassign) {
+                    return (
+                      <div key={idx} className="my-2 flex justify-center">
+                        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 px-3 py-1.5 rounded-full text-[10px] font-semibold flex items-center gap-1.5 shadow-sm">
+                          <RefreshCw className="w-3 h-3 text-amber-500 shrink-0" />
+                          <span>{displayText.replace('[SYSTEM EVENT]', '').trim()}</span>
+                        </div>
+                      </div>
+                    );
+                  }
 
                   return (
                     <div key={idx} className={isUser ? 'text-right' : 'text-left'}>
@@ -1023,6 +1272,149 @@ export default function ChatSupport({ className = '' }) {
                     </div>
                   );
                 })}
+
+                {/* GUIDED AUTOMATION OPTION CARDS (Rendered when agent is NOT yet assigned and not viewing legacy ticket) */}
+                {!isAgentAssigned && !viewingLegacyTicket && (
+                  <div className="space-y-2 pt-1 animate-in fade-in duration-200">
+                    {/* Root Topics Menu */}
+                    {!activeCategory && (
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider px-1">
+                          Select a Topic:
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {SUPPORT_OPTION_TREE.root.map((cat) => (
+                            <button
+                              key={cat.id}
+                              type="button"
+                              onClick={() => handleSelectRootCategory(cat)}
+                              className="group w-full text-left p-2.5 rounded-2xl border border-border bg-card/80 hover:bg-emerald-500/10 hover:border-emerald-500/40 transition-all flex items-center justify-between shadow-sm cursor-pointer active:scale-[0.99]"
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="text-base group-hover:scale-110 transition-transform">{cat.icon}</span>
+                                <div className="min-w-0">
+                                  <div className="font-bold text-xs text-foreground group-hover:text-emerald-500 transition-colors">
+                                    {cat.title}
+                                  </div>
+                                  <div className="text-[10px] text-muted-foreground truncate">{cat.subtitle}</div>
+                                </div>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-emerald-500 transition-transform group-hover:translate-x-0.5 shrink-0" />
+                            </button>
+                          ))}
+                          
+                          {/* Unlock Custom Query Option */}
+                          <button
+                            type="button"
+                            onClick={handleUnlockCustomInput}
+                            className="w-full text-left p-2.5 rounded-2xl border border-dashed border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 transition-all flex items-center justify-between cursor-pointer font-semibold text-xs"
+                          >
+                            <span className="flex items-center gap-2">
+                              ✍️ Other / Type Custom Message
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sub-Category Options */}
+                    {activeCategory && !activeResolution && (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                            Choose Specific Issue:
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveCategory(null)}
+                            className="text-[11px] text-emerald-500 hover:text-emerald-400 font-semibold flex items-center gap-0.5"
+                          >
+                            <ArrowLeft className="w-3 h-3" /> Back
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {currentCategoryOptions.map((opt) => (
+                            <button
+                              key={opt.id}
+                              type="button"
+                              onClick={() => handleSelectSubOption(opt)}
+                              className="group w-full text-left p-2.5 rounded-2xl border border-border bg-card/80 hover:bg-emerald-500/10 hover:border-emerald-500/40 transition-all flex items-center justify-between shadow-sm cursor-pointer"
+                            >
+                              <div className="font-semibold text-xs text-foreground group-hover:text-emerald-500 pr-2">
+                                {opt.title}
+                              </div>
+                              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-emerald-500 shrink-0" />
+                            </button>
+                          ))}
+
+                          {/* Branch "Other" Option */}
+                          <button
+                            type="button"
+                            onClick={handleUnlockCustomInput}
+                            className="w-full text-left p-2.5 rounded-2xl border border-dashed border-emerald-500/50 bg-emerald-500/5 hover:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 transition-all flex items-center justify-between cursor-pointer font-semibold text-xs"
+                          >
+                            <span className="flex items-center gap-2">
+                              ✍️ Other / Describe my issue
+                            </span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Resolution Follow-Up Card */}
+                    {activeResolution && (
+                      <div className="p-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 space-y-2.5 text-xs">
+                        <div className="font-semibold text-foreground flex items-center gap-1.5">
+                          <HelpCircle className="w-4 h-4 text-emerald-500" />
+                          <span>Did this resolve your query?</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              showToast('Glad we could help! Let us know if you need anything else.', 'success');
+                              setActiveCategory(null);
+                              setActiveResolution(null);
+                            }}
+                            className="h-7 px-2.5 text-[11px] bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl"
+                          >
+                            <Check className="w-3 h-3 mr-1" /> Yes, resolved
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleConnectLiveFromOption}
+                            className="h-7 px-2.5 text-[11px] rounded-xl border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20"
+                          >
+                            <Headphones className="w-3 h-3 mr-1" /> Talk to Specialist
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={handleUnlockCustomInput}
+                            className="h-7 px-2 text-[11px] rounded-xl text-muted-foreground hover:text-foreground"
+                          >
+                            ✍️ Type More Details
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              setActiveCategory(null);
+                              setActiveResolution(null);
+                            }}
+                            className="h-7 px-2 text-[11px] rounded-xl text-muted-foreground hover:text-foreground"
+                          >
+                            🔄 Other Topics
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Offline Prompt Card inside Chat Flow */}
                 {liveStatus === 'offline' && !viewingLegacyTicket && !offlineDismissed && (
@@ -1073,54 +1465,93 @@ export default function ChatSupport({ className = '' }) {
                 {liveChat.typingUser && useLiveStream && (
                   <div className="text-[11px] text-emerald-500 px-2 py-1 font-semibold flex items-center gap-1.5 animate-pulse">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    Support agent is typing...
+                    Support specialist is typing...
                   </div>
                 )}
 
-                {/* Rating Card when conversation is closed */}
-                {liveChat.showRating && useLiveStream && (
-                  <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-3.5 space-y-2.5 shadow-sm">
-                    <p className="text-xs font-bold text-foreground">Rate your support experience</p>
-                    <div className="flex gap-1.5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          className={`text-xl transition ${ratingStars >= star ? 'text-amber-400 scale-110' : 'text-muted-foreground/40 hover:text-amber-300'}`}
-                          onClick={() => setRatingStars(star)}
-                        >
-                          ★
-                        </button>
-                      ))}
+                {/* END-OF-SESSION CSAT STAR RATING CARD */}
+                {(liveChat.showRating || liveChat.conversation?.status === 'CLOSED') && useLiveStream && (
+                  <div className="rounded-3xl border border-emerald-500/40 bg-card p-4 space-y-3 shadow-lg animate-in zoom-in-95 duration-200">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className="p-1.5 rounded-xl bg-amber-500/10 text-amber-500">
+                          <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-xs text-foreground">Rate your support experience</h4>
+                          <p className="text-[10px] text-muted-foreground">Your feedback helps our team improve support quality.</p>
+                        </div>
+                      </div>
                     </div>
-                    <textarea
-                      className="w-full rounded-xl bg-background border border-border text-xs p-2 text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
-                      rows={2}
-                      placeholder="Optional feedback..."
-                      value={ratingComment}
-                      onChange={(e) => setRatingComment(e.target.value)}
-                    />
-                    <Button
-                      size="sm"
-                      onClick={async () => {
-                        if (!ratingStars) {
-                          showToast('Please choose a star rating.', 'error');
-                          return;
-                        }
-                        await liveChat.submitRating(ratingStars, ratingComment);
-                        showToast('Thank you for your rating!', 'success');
-                      }}
-                      className="h-7 text-xs bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl"
-                    >
-                      Submit Rating
-                    </Button>
+
+                    {!ratingSubmitted ? (
+                      <div className="space-y-2.5">
+                        {/* 5-Star Selector */}
+                        <div className="flex items-center justify-center gap-2 py-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <button
+                              key={star}
+                              type="button"
+                              onClick={() => setRatingStars(star)}
+                              className={`text-2xl transition-all p-1 hover:scale-125 focus:outline-none ${
+                                ratingStars >= star ? 'text-amber-400 fill-amber-400 scale-110' : 'text-muted-foreground/30 hover:text-amber-300'
+                              }`}
+                              title={`${star} Star${star > 1 ? 's' : ''}`}
+                            >
+                              ★
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Quick Feedback Pills */}
+                        <div className="flex flex-wrap gap-1.5 justify-center">
+                          {['⚡ Fast Response', '💡 Solved my issue', '🤝 Very polite', '🌟 5-Star Service'].map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => toggleRatingTag(tag)}
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition ${
+                                selectedRatingTags.includes(tag)
+                                  ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400'
+                                  : 'bg-muted border-border text-muted-foreground hover:text-foreground'
+                              }`}
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+
+                        <textarea
+                          className="w-full rounded-xl bg-background border border-border text-xs p-2.5 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500 resize-none"
+                          rows={2}
+                          placeholder="Optional feedback comment for the support team..."
+                          value={ratingComment}
+                          onChange={(e) => setRatingComment(e.target.value)}
+                        />
+
+                        <Button
+                          size="sm"
+                          onClick={handleRatingSubmit}
+                          disabled={!ratingStars}
+                          className="w-full h-8 text-xs bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-95 text-white font-bold rounded-xl shadow-md disabled:opacity-50"
+                        >
+                          Submit Rating & CSAT Review
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-center space-y-1">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500 mx-auto" />
+                        <div className="font-bold text-xs text-emerald-400">Thank you for your rating!</div>
+                        <p className="text-[10px] text-muted-foreground">Your feedback has been recorded and attributed to your support agent.</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* Chat Input Bar (Only enabled when agents are online OR when conversing on an active ticket) */}
+              {/* Chat Input Bar with Guided Protection Gate */}
               {liveStatus === 'offline' && !viewingLegacyTicket ? (
                 <div className="p-3 border-t border-border bg-muted/60 flex items-center justify-between gap-2 shrink-0 animate-in fade-in">
                   <div className="flex items-center gap-2 text-[11px] text-muted-foreground min-w-0">
@@ -1135,9 +1566,27 @@ export default function ChatSupport({ className = '' }) {
                     <FileText className="w-3.5 h-3.5 mr-1" /> Raise Ticket
                   </Button>
                 </div>
+              ) : !isInputAllowed ? (
+                /* Locked State: Prompts user to select options or click "Other" to unlock */
+                <div className="p-3 border-t border-border bg-muted/50 flex items-center justify-between gap-2 shrink-0 animate-in fade-in">
+                  <div className="flex items-center gap-2 text-[11px] text-muted-foreground min-w-0">
+                    <Lock className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="truncate">Choose an option above, or unlock custom message</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleUnlockCustomInput}
+                    className="h-7 px-2.5 text-[11px] font-semibold border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10 rounded-xl shrink-0"
+                  >
+                    <Unlock className="w-3 h-3 mr-1" /> ✍️ Other
+                  </Button>
+                </div>
               ) : (
+                /* Unlocked State: Free text entry allowed once agent is assigned, or "Other" clicked, or viewing ticket */
                 <div className="p-3 border-t border-border bg-card/90 flex items-center gap-2 shrink-0">
                   <input
+                    ref={inputRef}
                     type="text"
                     value={input}
                     onChange={(e) => {
@@ -1148,6 +1597,8 @@ export default function ChatSupport({ className = '' }) {
                     placeholder={
                       viewingLegacyTicket
                         ? 'Reply to this ticket...'
+                        : isAgentAssigned
+                        ? `Message with ${liveChat.conversation.assignedAgentEmail}...`
                         : 'Type your message...'
                     }
                     className="flex-1 bg-background border border-border text-foreground placeholder-muted-foreground rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"

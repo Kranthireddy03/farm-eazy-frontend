@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import apiClient from '../services/apiClient';
 import {
   startLiveConversation,
   getLiveMessages,
@@ -41,7 +42,7 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
 
       const history = await getLiveMessages(conv.displayId);
       
-      const historyMessages = history.map(m => ({
+      const historyMessages = (history || []).map(m => ({
         id: m.id || m.clientMessageId,
         sender: m.senderType === 'CUSTOMER' ? 'user' : 'support',
         text: m.content,
@@ -63,68 +64,69 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
       });
 
       setMessages(combined);
-      if (String(conv.mode || '').toUpperCase() === 'AI_BOT') {
-        setLiveMode(false);
-        return;
-      }
       setLiveMode(true);
       
-      await connectSupportStomp();
-      
-      if (subscriptionRef.current) {
-        subscriptionRef.current.unsubscribe();
-      }
+      try {
+        await connectSupportStomp();
+        
+        if (subscriptionRef.current) {
+          subscriptionRef.current.unsubscribe();
+        }
 
-      subscriptionRef.current = await subscribeConversation(conv.displayId, (event) => {
-        if (event.type === 'MESSAGE' && event.message) {
-          const m = event.message;
-          setMessages(prev => {
-            // Remove from in-memory pending queue
-            pendingQueueRef.current = pendingQueueRef.current.filter(item => item.id !== m.clientMessageId);
+        subscriptionRef.current = await subscribeConversation(conv.displayId, (event) => {
+          if (event.type === 'MESSAGE' && event.message) {
+            const m = event.message;
+            setMessages(prev => {
+              // Remove from in-memory pending queue
+              pendingQueueRef.current = pendingQueueRef.current.filter(item => item.id !== m.clientMessageId);
 
-            const existingIndex = prev.findIndex(x => x.id === m.clientMessageId || (m.id && x.id === m.id));
-            if (existingIndex > -1) {
-              const updated = [...prev];
-              updated[existingIndex] = {
+              const existingIndex = prev.findIndex(x => x.id === m.clientMessageId || (m.id && x.id === m.id));
+              if (existingIndex > -1) {
+                const updated = [...prev];
+                updated[existingIndex] = {
+                  id: m.id || m.clientMessageId,
+                  sender: m.senderType === 'CUSTOMER' ? 'user' : 'support',
+                  text: m.content,
+                  senderName: m.senderName,
+                  createdAt: m.createdAt,
+                  sending: false,
+                };
+                return updated;
+              }
+              return [...prev, {
                 id: m.id || m.clientMessageId,
                 sender: m.senderType === 'CUSTOMER' ? 'user' : 'support',
                 text: m.content,
                 senderName: m.senderName,
                 createdAt: m.createdAt,
-                sending: false,
-              };
-              return updated;
+              }];
+            });
+          } else if (event.type === 'TYPING') {
+            if (event.typing && event.senderEmail !== localStorage.getItem('farmEazy_email')) {
+              setTypingUser(event.senderEmail);
+            } else {
+              setTypingUser(null);
             }
-            return [...prev, {
-              id: m.id || m.clientMessageId,
-              sender: m.senderType === 'CUSTOMER' ? 'user' : 'support',
-              text: m.content,
-              senderName: m.senderName,
-              createdAt: m.createdAt,
-            }];
-          });
-        } else if (event.type === 'TYPING') {
-          if (event.typing && event.senderEmail !== localStorage.getItem('farmEazy_email')) {
-            setTypingUser(event.senderEmail);
-          } else {
-            setTypingUser(null);
+          } else if (event.type === 'STATUS' && event.conversation) {
+            setConversation(event.conversation);
+            if (event.conversation.status === 'CLOSED') {
+              setShowRating(true);
+            }
           }
-        } else if (event.type === 'STATUS' && event.conversation) {
-          setConversation(event.conversation);
-          if (event.conversation.status === 'CLOSED') {
-            setShowRating(true);
-          }
-        }
-      });
-
-      // Flush any in-memory pending messages
-      for (const msg of pendingQueueRef.current) {
-        await stompSendMessage(conv.displayId, {
-          content: msg.text,
-          clientMessageId: msg.id,
         });
+
+        // Flush any in-memory pending messages
+        for (const msg of pendingQueueRef.current) {
+          await stompSendMessage(conv.displayId, {
+            content: msg.text,
+            clientMessageId: msg.id,
+          });
+        }
+      } catch (stompErr) {
+        console.warn('STOMP connection deferred / using HTTP', stompErr);
       }
     } catch (e) {
+      console.warn('Init live chat failed', e);
       setLiveMode(false);
     } finally {
       setLoading(false);
@@ -163,7 +165,7 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
       id: clientMessageId,
       sender: 'user',
       text,
-      sending: true,
+      sending: false,
     };
     setMessages(prev => [...prev, newMsg]);
 
@@ -176,7 +178,14 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
         clientMessageId,
       });
     } catch {
-      // Retried automatically upon reconnection sync loop in initChat.
+      try {
+        await apiClient.post(`/live/conversations/${displayId}/messages`, {
+          content: text,
+          clientMessageId,
+        });
+      } catch (err) {
+        console.warn('Failed to send live message', err);
+      }
     }
   };
 
