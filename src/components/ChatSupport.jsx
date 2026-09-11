@@ -350,6 +350,7 @@ export default function ChatSupport({ className = '' }) {
   const [activeCategory, setActiveCategory] = useState(null); // null = root options, 'payment', 'machinery', etc.
   const [activeResolution, setActiveResolution] = useState(null);
   const [customInputUnlocked, setCustomInputUnlocked] = useState(false);
+  const [liveChatRequested, setLiveChatRequested] = useState(false);
 
   // Chat conversation state
   const [messages, setMessages] = useState([{ sender: 'support', text: DEFAULT_GREETING }]);
@@ -386,13 +387,13 @@ export default function ChatSupport({ className = '' }) {
 
   const viewingLegacyTicket = Boolean(ticketId);
 
-  // Live STOMP chat connection (only activated when open, authenticated, and not reviewing a specific ticket)
+  // Live STOMP chat connection (only activated when user requests live agent or sends message, authenticated, and not reviewing a specific ticket)
   const liveChat = useLiveSupportChat({
-    enabled: open && isAuthenticated && !viewingLegacyTicket && liveStatus === 'available',
+    enabled: open && isAuthenticated && !viewingLegacyTicket && liveStatus === 'available' && liveChatRequested,
     sessionKey: liveSessionKey,
   });
 
-  const useLiveStream = liveChat.liveMode && !viewingLegacyTicket && open && liveStatus === 'available';
+  const useLiveStream = liveChat.liveMode && !viewingLegacyTicket && open && liveStatus === 'available' && liveChatRequested;
   const displayMessages = useLiveStream ? liveChat.messages : messages;
   const chatLoading = useLiveStream ? liveChat.loading || liveChat.connecting : loading;
 
@@ -649,6 +650,7 @@ export default function ChatSupport({ className = '' }) {
     setOfflineDismissed(false);
     setTicketId(null);
     setViewMode('chat');
+    setLiveChatRequested(true);
     setLiveSessionKey((k) => k + 1);
     appendSupportMessage('👋 Connected with FarmEazy Live Support! Routing you to our available support specialist...');
   };
@@ -658,8 +660,9 @@ export default function ChatSupport({ className = '' }) {
     if (cat.id === 'live_agent') {
       appendUserMessage('👨‍💼 I would like to connect directly with a live support executive.');
       if (liveStatus === 'available') {
+        setLiveChatRequested(true);
         if (liveChat?.sendMessage) {
-          liveChat.sendMessage('Customer requested direct support specialist assistance.');
+          liveChat.sendMessage('Customer requested live support specialist assistance.');
         }
         appendSupportMessage('Connecting you with our next available support agent via least-busy load balancer... Please hold on!');
       } else {
@@ -693,6 +696,7 @@ export default function ChatSupport({ className = '' }) {
   const handleConnectLiveFromOption = () => {
     appendUserMessage('👨‍💼 Connect with human specialist for this topic');
     if (liveStatus === 'available') {
+      setLiveChatRequested(true);
       if (liveChat?.sendMessage) {
         liveChat.sendMessage(`Customer query regarding: ${activeResolution?.title || activeCategory || 'General Support'}`);
       }
@@ -774,6 +778,7 @@ export default function ChatSupport({ className = '' }) {
     setActiveCategory(null);
     setActiveResolution(null);
     setCustomInputUnlocked(false);
+    setLiveChatRequested(false);
     setMessages([{ sender: 'support', text: DEFAULT_GREETING }]);
     releaseSupportStomp();
     setLiveSessionKey((k) => k + 1);
@@ -784,8 +789,12 @@ export default function ChatSupport({ className = '' }) {
     const text = input.trim();
     setInput('');
 
+    if (!viewingLegacyTicket && liveStatus === 'available' && !liveChatRequested) {
+      setLiveChatRequested(true);
+    }
+
     // If in live mode (or liveStatus === 'available' and not viewing a legacy ticket), send via liveChat
-    if ((useLiveStream || liveStatus === 'available') && !viewingLegacyTicket) {
+    if ((useLiveStream || (liveStatus === 'available' && (liveChatRequested || isAgentAssigned))) && !viewingLegacyTicket) {
       if (liveChat?.sendMessage) {
         await liveChat.sendMessage(text);
         return;

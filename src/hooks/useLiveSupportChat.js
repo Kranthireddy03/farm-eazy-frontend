@@ -116,14 +116,38 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
         });
 
         // Flush any in-memory pending messages
-        for (const msg of pendingQueueRef.current) {
-          await stompSendMessage(conv.displayId, {
-            content: msg.text,
-            clientMessageId: msg.id,
-          });
+        const queueToFlush = [...pendingQueueRef.current];
+        for (const msg of queueToFlush) {
+          try {
+            await stompSendMessage(conv.displayId, {
+              content: msg.text,
+              clientMessageId: msg.id,
+            });
+          } catch {
+            try {
+              await apiClient.post(`/live/conversations/${conv.displayId}/messages`, {
+                content: msg.text,
+                clientMessageId: msg.id,
+              });
+            } catch (err) {
+              console.warn('Failed to flush message to conversation', err);
+            }
+          }
         }
       } catch (stompErr) {
         console.warn('STOMP connection deferred / using HTTP', stompErr);
+        // Dispatch pending messages via HTTP if STOMP deferred
+        const queueToFlush = [...pendingQueueRef.current];
+        for (const msg of queueToFlush) {
+          try {
+            await apiClient.post(`/live/conversations/${conv.displayId}/messages`, {
+              content: msg.text,
+              clientMessageId: msg.id,
+            });
+          } catch (err) {
+            console.warn('Failed to flush message to conversation via HTTP', err);
+          }
+        }
       }
     } catch (e) {
       console.warn('Init live chat failed', e);
@@ -157,30 +181,35 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
   }, [enabled, sessionKey, initChat]);
 
   const sendMessage = async (text) => {
-    if (!text.trim() || !displayId) return;
+    if (!text || !text.trim()) return;
     const clientMessageId = 'c-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     
-    // Add locally immediately with sending indicator
+    // Add locally immediately
     const newMsg = {
       id: clientMessageId,
       sender: 'user',
-      text,
-      sending: false,
+      text: text.trim(),
+      sending: !displayId,
     };
     setMessages(prev => [...prev, newMsg]);
 
     // Store in in-memory queue
-    pendingQueueRef.current.push({ id: clientMessageId, text });
+    pendingQueueRef.current.push({ id: clientMessageId, text: text.trim() });
+
+    if (!displayId) {
+      // Message is queued and will be dispatched as soon as initChat finishes
+      return;
+    }
 
     try {
       await stompSendMessage(displayId, {
-        content: text,
+        content: text.trim(),
         clientMessageId,
       });
     } catch {
       try {
         await apiClient.post(`/live/conversations/${displayId}/messages`, {
-          content: text,
+          content: text.trim(),
           clientMessageId,
         });
       } catch (err) {

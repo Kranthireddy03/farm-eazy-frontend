@@ -220,9 +220,7 @@ export default function LocationWizard() {
     navigate('/dashboard')
     setConfirming(null)
     setConfirmingCheck(null)
-    try {
-      apiClient.get('/dashboard/summary').catch(() => {})
-    } catch (_e) {}
+
     setSelectedLocation(payload, { forceClose: true }).catch((err) => {
       console.warn('Location selection background persist error:', err)
     })
