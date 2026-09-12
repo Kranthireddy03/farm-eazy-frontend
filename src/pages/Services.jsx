@@ -1119,7 +1119,10 @@ export default function Services() {
       <div className="max-w-7xl mx-auto space-y-6">
         
         {/* Floating Actions Panel */}
-        <div className="flex justify-end -mt-4 mb-2">
+        <div className="flex justify-between items-center -mt-4 mb-2">
+          <Button variant="outline" onClick={() => navigate(-1)} title="Go back" className="rounded-xl flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" /> Go Back
+          </Button>
           <Button variant="outline" onClick={load} title="Refresh marketplace and booking database lists" className="rounded-xl flex items-center gap-2">
             <RefreshCw className="h-4 w-4" /> Refresh Data
           </Button>

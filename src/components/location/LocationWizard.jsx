@@ -191,14 +191,16 @@ export default function LocationWizard() {
       setMapLabelLoading(true)
       try {
         const reverse = await reverseGeocode(latitude, longitude)
-        resolvedLabel = reverse?.label || `Lat ${latitude.toFixed(4)}, Lon ${longitude.toFixed(4)}`
+        const cityState = [reverse?.city, reverse?.state].filter(Boolean).join(', ')
+        resolvedLabel = reverse?.label || cityState || 'Selected Location'
         resolvedMeta = {
           city: reverse?.city || '',
           state: reverse?.state || '',
           postalCode: reverse?.postalCode || '',
         }
       } catch {
-        resolvedLabel = `Lat ${latitude.toFixed(4)}, Lon ${longitude.toFixed(4)}`
+        const cityState = [meta.city, meta.state].filter(Boolean).join(', ')
+        resolvedLabel = cityState || 'Selected Location'
       } finally {
         setMapLabelLoading(false)
       }

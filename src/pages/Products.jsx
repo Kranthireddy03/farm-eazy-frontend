@@ -1702,7 +1702,10 @@ function Products() {
   return (
     <AppPage noMotion title={headerInfo.title} description={headerInfo.description}>
       <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center gap-3">
+          <Button variant="outline" onClick={() => navigate(-1)} title="Go back" className="rounded-xl flex items-center gap-2">
+            ← Go Back
+          </Button>
           <Button variant="outline" onClick={loadAll} title="Refresh marketplace and order data" className="rounded-xl flex items-center gap-2">
             <RefreshCw className="h-4 w-4" /> Refresh Data
           </Button>

@@ -27,10 +27,16 @@ function DraggableMarker({ position, onPositionChange }) {
 
   const eventHandlers = useMemo(() => ({
     dragend() {
-      const marker = markerRef.current
-      if (!marker) return
-      const { lat, lng } = marker.getLatLng()
-      onPositionChange(lat, lng)
+      try {
+        const marker = markerRef.current
+        if (!marker) return
+        const latLng = marker.getLatLng()
+        if (latLng && Number.isFinite(latLng.lat) && Number.isFinite(latLng.lng)) {
+          onPositionChange(latLng.lat, latLng.lng)
+        }
+      } catch (err) {
+        console.warn('Marker drag error:', err)
+      }
     },
   }), [onPositionChange])
 
@@ -48,7 +54,9 @@ function DraggableMarker({ position, onPositionChange }) {
 function MapClickHandler({ onPositionChange }) {
   useMapEvents({
     click(event) {
-      onPositionChange(event.latlng.lat, event.latlng.lng)
+      if (event?.latlng && Number.isFinite(event.latlng.lat) && Number.isFinite(event.latlng.lng)) {
+        onPositionChange(event.latlng.lat, event.latlng.lng)
+      }
     },
   })
   return null
@@ -57,8 +65,13 @@ function MapClickHandler({ onPositionChange }) {
 function RecenterMap({ position }) {
   const map = useMap()
   useEffect(() => {
-    if (position) {
-      map.setView(position, map.getZoom())
+    if (position && map && typeof map.setView === 'function') {
+      try {
+        const container = map.getContainer()
+        if (container) {
+          map.setView(position, map.getZoom(), { animate: false })
+        }
+      } catch (e) {}
     }
   }, [position, map])
   return null

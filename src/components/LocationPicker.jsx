@@ -38,11 +38,17 @@ function DraggableMarker({ position, setPosition, onDragEnd }) {
   
   const eventHandlers = useMemo(() => ({
     dragend() {
-      const marker = markerRef.current
-      if (marker != null) {
-        const newPos = marker.getLatLng()
-        setPosition([newPos.lat, newPos.lng])
-        if (onDragEnd) onDragEnd(newPos.lat, newPos.lng)
+      try {
+        const marker = markerRef.current
+        if (marker != null) {
+          const newPos = marker.getLatLng()
+          if (newPos && Number.isFinite(newPos.lat) && Number.isFinite(newPos.lng)) {
+            setPosition([newPos.lat, newPos.lng])
+            if (onDragEnd) onDragEnd(newPos.lat, newPos.lng)
+          }
+        }
+      } catch (err) {
+        console.warn('LocationPicker drag error:', err)
       }
     },
   }), [setPosition, onDragEnd])
@@ -62,8 +68,10 @@ function DraggableMarker({ position, setPosition, onDragEnd }) {
 function MapClickHandler({ setPosition, onLocationSelect }) {
   useMapEvents({
     click(e) {
-      setPosition([e.latlng.lat, e.latlng.lng])
-      if (onLocationSelect) onLocationSelect(e.latlng.lat, e.latlng.lng)
+      if (e?.latlng && Number.isFinite(e.latlng.lat) && Number.isFinite(e.latlng.lng)) {
+        setPosition([e.latlng.lat, e.latlng.lng])
+        if (onLocationSelect) onLocationSelect(e.latlng.lat, e.latlng.lng)
+      }
     },
   })
   return null
@@ -73,8 +81,13 @@ function MapClickHandler({ setPosition, onLocationSelect }) {
 function RecenterMap({ position }) {
   const map = useMap()
   useEffect(() => {
-    if (position) {
-      map.setView(position, map.getZoom())
+    if (position && map && typeof map.setView === 'function') {
+      try {
+        const container = map.getContainer()
+        if (container) {
+          map.setView(position, map.getZoom(), { animate: false })
+        }
+      } catch (e) {}
     }
   }, [position, map])
   return null

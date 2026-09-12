@@ -16,7 +16,7 @@ import { ErrorState } from '../components/ui/error-state'
 import { EmptyState } from '../components/ui/empty-state'
 import { PageSkeleton } from '../components/ui/Skeleton'
 import { FilterBar } from '../components/ui/filter-bar'
-import { Package, ShoppingBag, Truck, IndianRupee, Heart, LifeBuoy } from 'lucide-react'
+import { Package, ShoppingBag, Truck, IndianRupee, Heart, LifeBuoy, ArrowLeft } from 'lucide-react'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { KpiSection } from '../components/app/KpiSection'
 import { PageScaffold } from '../components/app/PageScaffold'
@@ -204,10 +204,16 @@ function Orders() {
       title="Orders"
       description="View order history, track delivery, and manage returns."
       actions={
-        <Button onClick={() => navigate('/products')} className="gap-2">
-          <ShoppingBag className="h-4 w-4" />
-          Browse marketplace
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Go Back
+          </Button>
+          <Button onClick={() => navigate('/products')} className="gap-2">
+            <ShoppingBag className="h-4 w-4" />
+            Browse marketplace
+          </Button>
+        </div>
       }
     >
       <KpiSection>

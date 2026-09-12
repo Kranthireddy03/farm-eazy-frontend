@@ -9,7 +9,7 @@ import { PageScaffold } from '../components/app/PageScaffold'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button'
 import { Badge } from '../components/ui/badge'
-import { Tag, Sparkles, HelpCircle, X, CheckCircle2 } from 'lucide-react'
+import { Tag, Sparkles, HelpCircle, X, CheckCircle2, ArrowLeft } from 'lucide-react'
 import { InfoPanel } from '../components/platform/InfoPanel'
 import { CheckoutStepIndicator } from '../components/marketplace/CheckoutStepIndicator'
 import { CheckoutProcessingOverlay } from '../components/marketplace/CheckoutProcessingOverlay'
@@ -619,6 +619,12 @@ function Checkout() {
     <AppPage
       title="Checkout"
       description="Review items, delivery, and payment before placing your order."
+      actions={
+        <Button variant="outline" onClick={() => navigate(-1)} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          Go Back
+        </Button>
+      }
       meta={
         <>
           <Badge variant="muted">{cartItems.length} items</Badge>

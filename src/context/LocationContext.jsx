@@ -64,14 +64,23 @@ function normalizeLocationPayload(payload) {
 
 function buildLocationLabel(location) {
   if (!location) return ''
-  if (location.label) return location.label
-  if (location.type === 'coords' && location.latitude != null && location.longitude != null) {
-    return `Lat ${Number(location.latitude).toFixed(3)}, Lon ${Number(location.longitude).toFixed(3)}`
+  if (location.label && !location.label.startsWith('Lat ') && !location.label.includes('Lon ')) {
+    return location.label
+  }
+  const placeParts = [location.city, location.state].filter(Boolean)
+  if (placeParts.length > 0) {
+    return placeParts.join(', ')
+  }
+  if (location.matchedZoneName) {
+    return location.matchedZoneName
+  }
+  if (location.label) {
+    return location.label
   }
   if (location.type === 'address' && location.id != null) {
-    return `Address #${location.id}`
+    return `Saved Address #${location.id}`
   }
-  return ''
+  return 'Selected Location'
 }
 
 function mergeRecent(nextLocation, previousRecent) {
@@ -331,22 +340,9 @@ export function LocationProvider({ children }) {
         setWizardDetail(null)
       }
 
-      // 4. Background persistence: asynchronously save address and refresh profile without blocking navigation
+      // 4. Background persistence: sync address and refresh profile without blocking navigation
       const syncBackendAsync = async () => {
         try {
-          let updatedPayload = { ...normalized }
-          if (normalized.type === 'coords') {
-            try {
-              const persisted = await persistCoordsAsCurrentAddress(normalized, profile)
-              if (persisted?.id) {
-                updatedPayload = { ...updatedPayload, id: persisted.id, address: persisted.address }
-                applySelectionState(updatedPayload)
-              }
-            } catch (addrErr) {
-              console.warn('Backend address creation failed, proceeding with coordinates selection:', addrErr)
-            }
-          }
-
           if (normalized.type === 'address' && normalized.id != null && options.syncCurrentAddress !== false) {
             try {
               await apiClient.patch('/addresses/current', { addressId: normalized.id })
