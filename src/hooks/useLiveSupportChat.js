@@ -109,7 +109,7 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
             }
           } else if (event.type === 'STATUS' && event.conversation) {
             setConversation(event.conversation);
-            if (event.conversation.status === 'CLOSED') {
+            if (event.conversation.status === 'CLOSED' || event.conversation.status === 'RESOLVED') {
               setShowRating(true);
             }
           }
@@ -150,7 +150,28 @@ export function useLiveSupportChat({ enabled, sessionKey }) {
         }
       }
     } catch (e) {
-      console.warn('Init live chat failed', e);
+      console.warn('Init live chat first attempt failed, retrying once...', e);
+      try {
+        await new Promise(r => setTimeout(r, 1200));
+        const retryConv = await startLiveConversation();
+        if (retryConv && retryConv.displayId) {
+          setConversation(retryConv);
+          startChatPresenceHeartbeat(30000);
+          const history = await getLiveMessages(retryConv.displayId);
+          const historyMessages = (history || []).map(m => ({
+            id: m.id || m.clientMessageId,
+            sender: m.senderType === 'CUSTOMER' ? 'user' : 'support',
+            text: m.content,
+            senderName: m.senderName,
+            createdAt: m.createdAt,
+          }));
+          setMessages(historyMessages);
+          setLiveMode(true);
+          return;
+        }
+      } catch (retryErr) {
+        console.warn('Init live chat retry also failed', retryErr);
+      }
       setLiveMode(false);
     } finally {
       setLoading(false);

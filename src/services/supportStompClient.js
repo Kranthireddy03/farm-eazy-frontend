@@ -26,7 +26,9 @@ let connectedToken = null;
 
 function createClient() {
   const stomp = new Client({
-    webSocketFactory: () => new SockJS(wsUrl()),
+    webSocketFactory: () => new SockJS(wsUrl(), null, {
+      transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
+    }),
     reconnectDelay: 4000,
     heartbeatIncoming: 10000,
     heartbeatOutgoing: 10000,
@@ -266,3 +268,8 @@ export function subscribeAdminDashboard(handler) {
 export function subscribeUserNotifications(handler) {
   return withSubscription((stomp) => stomp.subscribe('/user/queue/notifications', (message) => handler(parseBody(message))));
 }
+
+export function subscribeAgentPresence(handler) {
+  return withSubscription((stomp) => stomp.subscribe('/topic/support/agent-presence', (message) => handler(parseBody(message))));
+}
+

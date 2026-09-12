@@ -27,33 +27,14 @@ class ErrorBoundary extends React.Component {
   }
   render() {
     if (this.state.hasError) {
-      const errorText = this.state.error?.message || String(this.state.error);
       return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[radial-gradient(circle_at_20%_0%,#1e3a5f_0%,#0f172a_50%,#020617_85%)] text-foreground px-6">
-          <div className="max-w-lg w-full rounded-3xl border border-white/10 bg-black/40 backdrop-blur-xl p-8 shadow-2xl text-center">
-            <h1 className="text-2xl font-black text-white">Something went wrong</h1>
-            <p className="text-slate-300 mt-3 text-sm leading-relaxed">
-              Your session is safe. Retry the page or open resilience mode while we recover.
-            </p>
-            <p className="mt-4 text-xs text-red-200/90 bg-red-950/40 border border-red-400/30 rounded-xl px-3 py-2">
-              {errorText}
-            </p>
-            <div className="mt-6 flex flex-wrap justify-center gap-3">
-              <button
-                onClick={() => window.location.reload()}
-                className="rounded-xl px-4 py-2 bg-white text-slate-900 text-sm font-semibold hover:bg-slate-100"
-              >
-                Reload page
-              </button>
-              <button
-                onClick={() => window.location.assign('/fallback')}
-                className="rounded-xl px-4 py-2 bg-emerald-500 text-slate-900 text-sm font-semibold hover:bg-emerald-400"
-              >
-                Resilience mode
-              </button>
-            </div>
-          </div>
-        </div>
+        <NotFound
+          circuitBreak
+          title="Circuit Breaker Activated"
+          message="An unhandled exception was caught. Your session state is preserved. You can reload, return home, or connect with our live support team."
+          error={this.state.error}
+          onRetry={() => window.location.reload()}
+        />
       );
     }
     return this.props.children;
@@ -148,6 +129,7 @@ const VendorDashboard = lazy(() => import('./pages/VendorDashboard'));
 const SessionExpired = lazy(() => import('./pages/SessionExpired'));
 const PremiumFallback = lazy(() => import('./pages/PremiumFallback'));
 const ServiceUnavailableLocation = lazy(() => import('./pages/ServiceUnavailableLocation'));
+const NotFound = lazy(() => import('./pages/NotFound'));
 const Notifications = lazy(() => import('./pages/Notifications'));
 const AdminNotifications = lazy(() => import('./pages/AdminNotifications'));
 // Admin support UI has been moved to a standalone admin-support portal.
@@ -539,8 +521,10 @@ function AppContent() {
         <Route path="/irrigation/sensors" element={<Navigate to="/irrigation-sensors" replace />} />
         <Route path="/irrigation/services" element={<Navigate to="/services" replace />} />
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/fallback" element={<NotFound circuitBreak title="FarmEazy Resilience Mode" message="Resilience mode is active. If a service is currently unavailable or experiencing maintenance, you can explore cached areas or connect with our support team." />} />
+
+        {/* Catch-all dedicated 404 / unavailable page */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {showOnboarding && location.pathname !== '/complete-google-profile' && (
         <OnboardingTour onFinish={handleOnboardingFinish} />

@@ -17,7 +17,7 @@ import { unwrapApiList } from '../utils/apiResponse';
 import { getUserFacingErrorMessage } from '../utils/userFacingError';
 import { useGlobalToast } from '../context/ToastContext';
 import { STORAGE_KEYS } from '../config/api';
-import { releaseSupportStomp } from '../services/supportStompClient';
+import { releaseSupportStomp, subscribeAgentPresence } from '../services/supportStompClient';
 import { useLiveSupportChat } from '../hooks/useLiveSupportChat';
 import { getAgentAvailability } from '../services/liveConversationApi';
 import { Button } from './ui/button';
@@ -405,12 +405,15 @@ export default function ChatSupport({ className = '' }) {
   useEffect(() => {
     const currentAgent = liveChat.conversation?.assignedAgentEmail;
     if (currentAgent && currentAgent !== prevAgentRef.current) {
+      const userEmail = (localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || localStorage.getItem('farmEazy_email') || '').toLowerCase();
+      const isSelf = userEmail && currentAgent.toLowerCase() === userEmail;
+      const displayLabel = isSelf ? 'Support Specialist (Demo Mode)' : (liveChat.conversation?.assignedAgentName || currentAgent);
       playCustomerChime('assigned');
-      showToast(`🎉 Connected with Support Specialist: ${currentAgent}`, 'success');
-      appendSupportMessage(`👨‍💼 Support Specialist ${currentAgent} has joined the conversation! You can now freely type your queries.`);
+      showToast(`🎉 Connected with Support Specialist: ${displayLabel}`, 'success');
+      appendSupportMessage(`👨‍💼 Support Specialist (${displayLabel}) has joined the conversation! You can now freely type your queries.`);
     }
     prevAgentRef.current = currentAgent;
-  }, [liveChat.conversation?.assignedAgentEmail, showToast]);
+  }, [liveChat.conversation?.assignedAgentEmail, liveChat.conversation?.assignedAgentName, showToast]);
 
   // Monitor incoming support messages -> Play gentle chime
   useEffect(() => {
@@ -452,6 +455,57 @@ export default function ChatSupport({ className = '' }) {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
+
+  // Real-time Agent Presence listener over STOMP WebSocket
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    let sub = null;
+    let cancelled = false;
+
+    subscribeAgentPresence((presence) => {
+      if (cancelled || !presence) return;
+      const isAvail = presence.available === true || presence.status === 'ONLINE';
+      setLiveStatus(isAvail ? 'available' : 'offline');
+      setAgentAvailability(prev => ({
+        ...prev,
+        available: isAvail,
+        onlineAgentsCount: presence.onlineAgentsCount ?? (isAvail ? 1 : 0),
+        status: presence.status,
+      }));
+
+      if (isAvail) {
+        let requested = false;
+        let alreadyNotified = false;
+        try {
+          requested = notifyWhenOnline || sessionStorage.getItem(NOTIFY_REQUESTED_SESSION_KEY) === 'true';
+          alreadyNotified = sessionStorage.getItem(NOTIFIED_THIS_SESSION_KEY) === 'true';
+        } catch {
+          requested = notifyWhenOnline;
+        }
+
+        if (requested && !alreadyNotified) {
+          try {
+            sessionStorage.setItem(NOTIFIED_THIS_SESSION_KEY, 'true');
+            sessionStorage.removeItem(NOTIFY_REQUESTED_SESSION_KEY);
+          } catch {}
+          setNotifyWhenOnline(false);
+          setHasOnlineAgentAlert(true);
+          playCustomerChime('assigned');
+          showToast('🎉 Live Support Specialist is now online and available to assist you!', 'success');
+        }
+      }
+    })
+      .then((s) => {
+        if (cancelled) s.unsubscribe();
+        else sub = s;
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      if (sub) sub.unsubscribe();
+    };
+  }, [isAuthenticated, notifyWhenOnline, showToast]);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -535,12 +589,10 @@ export default function ChatSupport({ className = '' }) {
           return;
         }
       } catch {
-        // Fall back to business hours
+        // Fall back to offline if checks fail
       }
 
-      const hour = new Date().getHours();
-      const isHours = hour >= 9 && hour < 19;
-      setLiveStatus(isHours ? 'available' : 'offline');
+      setLiveStatus('offline');
     };
 
     checkAvailability();
@@ -660,9 +712,11 @@ export default function ChatSupport({ className = '' }) {
     if (cat.id === 'live_agent') {
       appendUserMessage('👨‍💼 I would like to connect directly with a live support executive.');
       if (liveStatus === 'available') {
-        setLiveChatRequested(true);
-        if (liveChat?.sendMessage) {
-          liveChat.sendMessage('Customer requested live support specialist assistance.');
+        if (!liveChatRequested) {
+          setLiveChatRequested(true);
+          if (liveChat?.sendMessage) {
+            liveChat.sendMessage('Customer requested live support specialist assistance.');
+          }
         }
         appendSupportMessage('Connecting you with our next available support agent via least-busy load balancer... Please hold on!');
       } else {
@@ -922,13 +976,22 @@ export default function ChatSupport({ className = '' }) {
                   ) : viewingLegacyTicket ? (
                     `Ticket #${ticketId}`
                   ) : isAgentAssigned ? (
-                    `Connected with ${liveChat.conversation.assignedAgentEmail}`
+                    (() => {
+                      const userEmail = (localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || localStorage.getItem('farmEazy_email') || '').toLowerCase();
+                      const agentEmail = (liveChat.conversation.assignedAgentEmail || '').toLowerCase();
+                      const isSelfAssigned = userEmail && agentEmail && userEmail === agentEmail;
+                      if (isSelfAssigned) {
+                        return liveStatus === 'offline' ? '🔴 Support Specialist (Offline)' : '🟢 Support Specialist Connected (Demo Mode)';
+                      }
+                      const agentName = liveChat.conversation.assignedAgentName || liveChat.conversation.assignedAgentEmail;
+                      return liveStatus === 'offline' ? `🔴 ${agentName} (Offline)` : `🟢 Connected with ${agentName}`;
+                    })()
                   ) : useLiveStream && (liveChat.conversation?.status === 'WAITING_FOR_AGENT' || liveChat.conversation?.status === 'WAITING') && (liveChat.conversation?.queuePosition > 0) ? (
                     `In Queue (#${liveChat.conversation.queuePosition}) • Connecting shortly...`
                   ) : liveStatus === 'available' ? (
                     '🟢 Support Specialist Online'
                   ) : (
-                    '🕒 Offline (Mon–Sat 9AM–7PM IST)'
+                    '🔴 Live Agents Offline'
                   )}
                 </div>
               </div>
@@ -1607,7 +1670,7 @@ export default function ChatSupport({ className = '' }) {
                       viewingLegacyTicket
                         ? 'Reply to this ticket...'
                         : isAgentAssigned
-                        ? `Message with ${liveChat.conversation.assignedAgentEmail}...`
+                        ? 'Message support specialist...'
                         : 'Type your message...'
                     }
                     className="flex-1 bg-background border border-border text-foreground placeholder-muted-foreground rounded-2xl px-3.5 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-inner"
