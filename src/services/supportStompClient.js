@@ -27,11 +27,17 @@ let connectedToken = null;
 function createClient() {
   const stomp = new Client({
     webSocketFactory: () => new SockJS(wsUrl(), null, {
+      // Prefer native WebSocket. xhr-streaming is only used when the proxy
+      // does not support the WS Upgrade header (e.g. unpatched ALB/Nginx).
+      // Once the proxy is correctly configured the fallbacks are never used.
       transports: ['websocket', 'xhr-streaming', 'xhr-polling'],
+      timeout: 10000,
     }),
-    reconnectDelay: 4000,
-    heartbeatIncoming: 10000,
-    heartbeatOutgoing: 10000,
+    // 8 s back-off prevents a rapid request storm when the server or proxy
+    // drops the connection and the client retries.
+    reconnectDelay: 8000,
+    heartbeatIncoming: 25000,
+    heartbeatOutgoing: 25000,
     connectHeaders: () => {
       const token = localStorage.getItem(STORAGE_KEYS.USER_TOKEN);
       return token ? { Authorization: `Bearer ${token}` } : {};
