@@ -120,6 +120,7 @@ const FALLBACK_IGNORE_URL_FRAGMENTS = [
   '/support-tickets/stats/',
   '/blog-posts',
   '/public/',
+  '/location-access/',
 ];
 
 function shouldIgnoreFallbackForUrl(url) {
@@ -177,7 +178,7 @@ function isPublicApiPath(path) {
     '/api/faq-questions',
     '/api/faq/question',
     '/api/support-tickets/guest',
-    '/api/location-access/status',
+    '/api/location-access/',
   ];
   return publicPaths.some((publicPath) => path.startsWith(publicPath));
 }
