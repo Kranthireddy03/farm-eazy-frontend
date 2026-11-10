@@ -1297,10 +1297,10 @@ export default function ChatSupport({ className = '' }) {
                     })
                     .filter(Boolean);
 
-                  const displayText = msg.text || '';
+                  const displayText = msg.text || msg.content || '';
                   const isSystemReassign = displayText.includes('[SYSTEM EVENT]');
                   const stripped = stripAttachmentLines(displayText);
-                  const bubbleText = stripped || (attachments.length > 0 ? 'Attachment included' : '');
+                  const bubbleText = stripped || displayText || (attachments.length > 0 ? 'Attachment included' : '');
                   const isUser = msg.sender === 'user';
 
                   if (isSystemReassign) {
