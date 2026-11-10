@@ -429,7 +429,44 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
-  const value = {
+  const clearLogoutReason = useCallback(() => setLogoutReason(null), []);
+  const getUserEmail = useCallback(() => user?.email || localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || '', [user?.email]);
+  const getUserId = useCallback(() => user?.id || localStorage.getItem(STORAGE_KEYS.USER_ID) || '', [user?.id]);
+  const getUserName = useCallback(() => user?.username || localStorage.getItem(STORAGE_KEYS.USER_USERNAME) || '', [user?.username]);
+  const getUserPhone = useCallback(() => user?.phone || localStorage.getItem(STORAGE_KEYS.USER_PHONE) || '', [user?.phone]);
+  const getToken = useCallback(() => user?.token || localStorage.getItem(STORAGE_KEYS.USER_TOKEN) || '', [user?.token]);
+
+  const getUserRoles = useCallback(() => {
+    try {
+      const roles = localStorage.getItem('farmEazy_roles');
+      return roles ? JSON.parse(roles) : ['USER'];
+    } catch {
+      return ['USER'];
+    }
+  }, []);
+
+  const hasRole = useCallback((role) => {
+    try {
+      const roles = localStorage.getItem('farmEazy_roles');
+      return roles ? JSON.parse(roles).includes(role) : false;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const isAdmin = useCallback(() => {
+    try {
+      const roles = localStorage.getItem('farmEazy_roles');
+      if (!roles) return false;
+      const parsedRoles = JSON.parse(roles);
+      if (!Array.isArray(parsedRoles)) return false;
+      return parsedRoles.some((role) => ['ADMIN', 'ROLE_ADMIN', 'SUPERADMIN', 'ROLE_SUPERADMIN'].includes(role));
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const value = useMemo(() => ({
     // State
     user,
     isAuthenticated,
@@ -444,44 +481,41 @@ export function AuthProvider({ children }) {
     logout,
     extendSession,
     updateActivity,
-    clearLogoutReason: () => setLogoutReason(null),
+    clearLogoutReason,
     
     // Helpers
-    getUserEmail: () => user?.email || localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || '',
-    getUserId: () => user?.id || localStorage.getItem(STORAGE_KEYS.USER_ID) || '',
-    getUserName: () => user?.username || localStorage.getItem(STORAGE_KEYS.USER_USERNAME) || '',
-    getUserPhone: () => user?.phone || localStorage.getItem(STORAGE_KEYS.USER_PHONE) || '',
-    getToken: () => user?.token || localStorage.getItem(STORAGE_KEYS.USER_TOKEN) || '',
+    getUserEmail,
+    getUserId,
+    getUserName,
+    getUserPhone,
+    getToken,
     
     // Role helpers for admin features
-    getUserRoles: () => {
-      try {
-        const roles = localStorage.getItem('farmEazy_roles');
-        return roles ? JSON.parse(roles) : ['USER'];
-      } catch {
-        return ['USER'];
-      }
-    },
-    hasRole: (role) => {
-      try {
-        const roles = localStorage.getItem('farmEazy_roles');
-        return roles ? JSON.parse(roles).includes(role) : false;
-      } catch {
-        return false;
-      }
-    },
-    isAdmin: () => {
-      try {
-        const roles = localStorage.getItem('farmEazy_roles');
-        if (!roles) return false;
-        const parsedRoles = JSON.parse(roles);
-        if (!Array.isArray(parsedRoles)) return false;
-        return parsedRoles.some((role) => ['ADMIN', 'ROLE_ADMIN', 'SUPERADMIN', 'ROLE_SUPERADMIN'].includes(role));
-      } catch {
-        return false;
-      }
-    },
-  };
+    getUserRoles,
+    hasRole,
+    isAdmin,
+  }), [
+    user,
+    isAuthenticated,
+    isLoading,
+    sessionWarning,
+    sessionTimeRemaining,
+    warningCountdown,
+    logoutReason,
+    login,
+    logout,
+    extendSession,
+    updateActivity,
+    clearLogoutReason,
+    getUserEmail,
+    getUserId,
+    getUserName,
+    getUserPhone,
+    getToken,
+    getUserRoles,
+    hasRole,
+    isAdmin,
+  ]);
 
   return (
     <AuthContext.Provider value={value}>

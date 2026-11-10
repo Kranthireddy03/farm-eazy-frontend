@@ -25,6 +25,7 @@ import { useWishlist } from '../../hooks/useWishlist';
 import useSessionTimeout from '../../hooks/useSessionTimeout';
 import AuthService from '../../services/AuthService';
 import apiClient from '../../services/apiClient';
+import FarmEazyLogo from '../common/FarmEazyLogo';
 
 
 const NAV = [
@@ -181,9 +182,8 @@ export default function AppShell({ children, onShowTour }) {
           <div className="relative w-[85%] max-w-xs bg-card border-r border-border h-full shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-200 overflow-hidden">
             {/* Drawer Header */}
             <div className="h-14 flex items-center justify-between px-4 border-b border-border bg-muted/30 shrink-0">
-              <Link to="/" className="flex items-center gap-2.5" onClick={() => setMobileNavOpen(false)}>
-                <div className="fe-logo-mark">FE</div>
-                <span className="font-bold text-sm tracking-tight text-foreground">FarmEazy</span>
+              <Link to="/" className="flex items-center gap-2.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg" onClick={() => setMobileNavOpen(false)}>
+                <FarmEazyLogo size="sm" />
               </Link>
               <Button
                 variant="ghost"
@@ -315,8 +315,9 @@ export default function AppShell({ children, onShowTour }) {
         )}
       >
         <div className="h-14 flex items-center gap-2.5 px-3 border-b border-border/70">
-          <div className="fe-logo-mark">FE</div>
-          {!collapsed && <span className="font-semibold text-sm truncate tracking-tight">FarmEazy</span>}
+          <Link to="/" className="focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 rounded-lg">
+            <FarmEazyLogo size="sm" showText={!collapsed} />
+          </Link>
         </div>
         <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
           {NAV.map(({ name, path, icon: Icon, title, subItems }) => {

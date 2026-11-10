@@ -103,19 +103,16 @@ export default function LocationWizard() {
     }
   }, [profile])
 
-  const hasExistingLocation = Boolean(
-    (selectedLocation?.latitude != null && selectedLocation?.longitude != null) ||
-    selectedLocation?.id ||
-    hasEffectiveLocation ||
-    localStorage.getItem('farmeazy_selected_location')
+  const hasActiveExistingLocation = Boolean(
+    selectedLocation?.isServiceable === true &&
+    ((selectedLocation?.latitude != null && selectedLocation?.longitude != null) || selectedLocation?.id != null)
   )
 
   const mustStayOpen = isAuthenticated
     && !isAuthLoading
     && !isBootstrapping
-    && !isSessionVerified
-    && !hasExistingLocation
-    && (wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP')
+    && (!isSessionVerified || !hasActiveExistingLocation)
+    && (wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || wizardDetail?.reason === 'MISSING_ON_BOOTSTRAP' || wizardDetail?.blocking === true)
   const show = isAuthenticated && (isSelectorOpen || mustStayOpen)
   const isLocationRequired = wizardDetail?.reason === 'LOCATION_REQUIRED' || wizardDetail?.reason === 'SESSION_START' || wizardDetail?.reason === 'POST_LOGIN' || mustStayOpen
 
@@ -620,16 +617,29 @@ export default function LocationWizard() {
 
                     {/* Request Coverage Form */}
                     {requestSubmitted ? (
-                      <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-4 text-center space-y-2 animate-fadeIn">
-                        <div className="h-10 w-10 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
-                          <CheckCircle2 className="h-6 w-6" />
+                      <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/15 p-5 text-center space-y-3 animate-fadeIn">
+                        <div className="h-12 w-12 bg-emerald-600 text-white rounded-full flex items-center justify-center mx-auto shadow-md">
+                          <CheckCircle2 className="h-7 w-7" />
                         </div>
-                        <p className="text-sm font-bold text-emerald-800 dark:text-emerald-200">
-                          🎉 Your Coverage Request Has Been Recorded!
+                        <h4 className="text-base font-bold text-emerald-800 dark:text-emerald-200">
+                          🎉 Your Coverage Request Has Been Received!
+                        </h4>
+                        <p className="text-xs text-emerald-700 dark:text-emerald-300 max-w-md mx-auto leading-relaxed">
+                          Your demand for service in <strong>{confirming?.label || 'this area'}</strong> has reached our operations center (Demand Request #{demandCount}). Our agronomy and equipment teams will update you via Email &amp; SMS as soon as FarmEazy goes live here.
                         </p>
-                        <p className="text-xs text-emerald-700 dark:text-emerald-300 max-w-md mx-auto">
-                          You are request #{demandCount}. Our operations team reviews weekly rollouts and will notify you via Email and SMS as soon as FarmEazy goes live in this area.
-                        </p>
+                        <div className="pt-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRequestSubmitted(false);
+                              setConfirming(null);
+                              setConfirmingCheck(null);
+                            }}
+                            className="px-4 py-2 text-xs font-bold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800 shadow transition"
+                          >
+                            Choose Another Active Location
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <form onSubmit={handleRequestSubmit} className="space-y-3 pt-2">

@@ -233,6 +233,7 @@ function AppContent() {
   const { isAuthenticated, isLoading, getUserId, getUserEmail, isAdmin, getUserRoles } = useAuth();
   const { locationVersion } = useLocationContext();
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const lastLocationCheckRef = useRef({ version: null, timestamp: 0 });
 
   const getOnboardingStorageKey = () => {
     const userId = getUserId?.();
@@ -302,14 +303,22 @@ function AppContent() {
       if (!isAuthenticated) return;
 
       // If user is admin/support, bypass location check
-      const isExcludedRole = isAdmin?.() || (getUserRoles?.() || []).some(r => ['SUPPORT', 'ROLE_SUPPORT'].includes(r));
+      const isExcludedRole = (typeof isAdmin === 'function' && isAdmin()) ||
+        ((typeof getUserRoles === 'function' && getUserRoles()) || []).some(r => ['SUPPORT', 'ROLE_SUPPORT', 'ADMIN', 'ROLE_ADMIN', 'SUPERADMIN', 'ROLE_SUPERADMIN'].includes(r));
       if (isExcludedRole) return;
 
       // If they are already on /service-unavailable, don't check
       if (location.pathname === '/service-unavailable') return;
 
-      // If they are on fallback, complete-google-profile or logout reasons, bypass
+      // If they are on fallback, complete-google-profile or bypass routes, bypass
       if (['/fallback', '/complete-google-profile', '/coverage', '/active-locations', '/locations'].includes(location.pathname)) return;
+
+      // Strict Throttle & Cache: do NOT re-check if already checked for this locationVersion within the last 10 minutes
+      const now = Date.now();
+      if (lastLocationCheckRef.current.version === locationVersion && (now - lastLocationCheckRef.current.timestamp < 600000)) {
+        return;
+      }
+      lastLocationCheckRef.current = { version: locationVersion, timestamp: now };
 
       try {
         const res = await apiClient.get('/location-access/status');
@@ -325,7 +334,7 @@ function AppContent() {
     };
 
     checkLocationAccess();
-  }, [location.pathname, locationVersion, isAuthenticated, navigate, isAdmin, getUserRoles]);
+  }, [locationVersion, isAuthenticated]);
 
   const handleOnboardingFinish = () => {
     localStorage.setItem(getOnboardingStorageKey(), 'true');

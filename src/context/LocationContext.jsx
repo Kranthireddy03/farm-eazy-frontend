@@ -158,11 +158,11 @@ export function LocationProvider({ children }) {
   const [loadingActiveZones, setLoadingActiveZones] = useState(false)
   const [isSessionVerified, setIsSessionVerified] = useState(() => {
     try {
-      return (
-        localStorage.getItem(LOCATION_CONFIGURED_KEY) === 'true' ||
-        sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true' ||
-        Boolean(localStorage.getItem(LOCATION_STORAGE_KEY))
-      )
+      const stored = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
+      const isAllowed = stored && stored.isServiceable === true
+      const configured = localStorage.getItem(LOCATION_CONFIGURED_KEY) === 'true'
+      const sessionVerified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
+      return Boolean(isAllowed && (configured || sessionVerified))
     } catch {
       return false
     }
@@ -175,6 +175,16 @@ export function LocationProvider({ children }) {
       setIsSessionVerified(true)
     } catch (_e) {
       setIsSessionVerified(true)
+    }
+  }, [])
+
+  const clearSessionVerified = useCallback(() => {
+    try {
+      localStorage.removeItem(LOCATION_CONFIGURED_KEY)
+      sessionStorage.removeItem(SESSION_LOCATION_KEY)
+      setIsSessionVerified(false)
+    } catch (_e) {
+      setIsSessionVerified(false)
     }
   }, [])
 
@@ -198,41 +208,49 @@ export function LocationProvider({ children }) {
     fetchActiveZones()
   }, [fetchActiveZones])
 
-  // Prompt location selection for authenticated user sessions only once if no location exists
+  // Enforce location selection for authenticated user sessions:
+  // Session is ONLY established if location exists AND is active/serviceable (isServiceable === true).
   useEffect(() => {
-    const hasAuthToken = Boolean(localStorage.getItem('token') || localStorage.getItem('farmEazy_token'))
+    const hasAuthToken = Boolean(
+      localStorage.getItem('token') ||
+      localStorage.getItem('farmEazy_token') ||
+      localStorage.getItem('farmEazy_user_token')
+    )
     if (!hasAuthToken && !profile) {
       return
     }
-    const hasStoredLocation = Boolean(localStorage.getItem(LOCATION_STORAGE_KEY))
-    const isConfigured = localStorage.getItem(LOCATION_CONFIGURED_KEY) === 'true'
-    const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
+    const stored = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
+    const hasActiveStoredLocation = stored && stored.isServiceable === true
 
-    if (hasStoredLocation || isConfigured || verified || hasEffectiveLocation) {
+    if (hasActiveStoredLocation) {
       markSessionVerified()
       return
     }
 
+    // Missing or inactive location: do not establish session, force selection
+    clearSessionVerified()
     setIsSelectorOpen(true)
     setWizardDetail({ reason: 'SESSION_START', blocking: true })
-  }, [profile, hasEffectiveLocation, markSessionVerified])
+  }, [profile, markSessionVerified, clearSessionVerified])
 
-  // Listen for login event: prompt location selection once per session
+  // Listen for login event: enforce active location before starting session
   useEffect(() => {
     const onLogin = () => {
       try {
-        const verified = sessionStorage.getItem(SESSION_LOCATION_KEY) === 'true'
-        if (verified) {
+        const stored = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
+        const hasActiveStoredLocation = stored && stored.isServiceable === true
+        if (hasActiveStoredLocation) {
           markSessionVerified()
           return
         }
+        clearSessionVerified()
         setIsSelectorOpen(true)
         setWizardDetail({ reason: 'POST_LOGIN', blocking: true })
       } catch (_e) {}
     }
     window.addEventListener('farmeazy:auth-login', onLogin)
     return () => window.removeEventListener('farmeazy:auth-login', onLogin)
-  }, [markSessionVerified])
+  }, [markSessionVerified, clearSessionVerified])
 
   useEffect(() => {
     const fromStorage = safeParse(localStorage.getItem(LOCATION_STORAGE_KEY))
@@ -492,6 +510,7 @@ export function LocationProvider({ children }) {
     submitLocationRequest,
     getLocationDemand,
     markSessionVerified,
+    clearSessionVerified,
     openSelector,
     closeSelector,
     setSelectedLocation: persistSelection,
@@ -514,6 +533,7 @@ export function LocationProvider({ children }) {
     submitLocationRequest,
     getLocationDemand,
     markSessionVerified,
+    clearSessionVerified,
     openSelector,
     closeSelector,
     persistSelection,
