@@ -29,12 +29,26 @@ export default function NotFound({
   const location = useLocation();
 
   const handleOpenLiveSupport = () => {
-    // Check if customer live support widget trigger exists
+    // If running inside Circuit Breaker mode or Layout unmounted, redirect directly to Live Support
+    if (circuitBreak) {
+      window.location.assign('https://support.farm-eazy.com/live-support');
+      return;
+    }
+    // Normal mode: dispatch custom event which ChatSupport widget listens to
+    window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
     const chatBtn = document.querySelector('[data-chat-trigger="support"]');
     if (chatBtn) {
       chatBtn.click();
     } else {
-      navigate('/support');
+      window.location.assign('https://support.farm-eazy.com/live-support');
+    }
+  };
+
+  const handleRaiseTicket = () => {
+    if (circuitBreak) {
+      window.location.assign('/support/ticket');
+    } else {
+      navigate('/support/ticket');
     }
   };
 
@@ -89,7 +103,17 @@ export default function NotFound({
             <div className="pt-3 w-full flex flex-wrap items-center justify-center gap-3">
               <Button 
                 variant="outline" 
-                onClick={() => navigate(-1)} 
+                onClick={() => {
+                  if (circuitBreak) {
+                    if (window.history.length > 1) {
+                      window.history.back();
+                    } else {
+                      window.location.assign('/');
+                    }
+                  } else {
+                    navigate(-1);
+                  }
+                }} 
                 className="rounded-xl flex items-center gap-2 font-semibold shadow-sm hover:bg-muted"
               >
                 <ArrowLeft className="h-4 w-4" /> Go Back
@@ -97,7 +121,13 @@ export default function NotFound({
 
               {onRetry && (
                 <Button 
-                  onClick={onRetry} 
+                  onClick={() => {
+                    if (typeof onRetry === 'function') {
+                      onRetry();
+                    } else {
+                      window.location.reload();
+                    }
+                  }} 
                   className="rounded-xl flex items-center gap-2 font-semibold bg-gradient-to-r from-teal-500 to-primary text-white shadow-lg"
                 >
                   <RefreshCw className="h-4 w-4" /> Retry Request
@@ -105,7 +135,13 @@ export default function NotFound({
               )}
 
               <Button 
-                onClick={() => navigate('/')} 
+                onClick={() => {
+                  if (circuitBreak) {
+                    window.location.assign('/');
+                  } else {
+                    navigate('/');
+                  }
+                }} 
                 className="rounded-xl flex items-center gap-2 font-semibold bg-primary text-primary-foreground shadow-md hover:bg-primary/90"
               >
                 <Home className="h-4 w-4" /> Return to Home
@@ -113,7 +149,13 @@ export default function NotFound({
 
               <Button 
                 variant="outline"
-                onClick={() => navigate('/products')} 
+                onClick={() => {
+                  if (circuitBreak) {
+                    window.location.assign('/products');
+                  } else {
+                    navigate('/products');
+                  }
+                }} 
                 className="rounded-xl flex items-center gap-2 font-semibold border-emerald-500/40 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-500/10"
               >
                 <ShoppingBag className="h-4 w-4" /> Marketplace
@@ -141,14 +183,17 @@ export default function NotFound({
               </div>
 
               <div 
-                onClick={() => navigate('/support')}
+                onClick={handleRaiseTicket}
                 className="p-4 rounded-2xl border border-border bg-card/60 hover:bg-muted/40 transition cursor-pointer flex items-start gap-3 group"
               >
                 <div className="h-10 w-10 rounded-xl bg-muted text-foreground flex items-center justify-center shrink-0 group-hover:scale-105 transition">
                   <Ticket className="h-5 w-5" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-foreground">Raise Support Ticket</h4>
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                    Raise Support Ticket
+                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-foreground transition" />
+                  </h4>
                   <p className="text-xs text-muted-foreground mt-0.5 leading-normal">
                     Log an inquiry or service request tracked with official SLA guarantees.
                   </p>

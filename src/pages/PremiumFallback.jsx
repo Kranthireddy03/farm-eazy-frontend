@@ -131,12 +131,17 @@ export default function PremiumFallback() {
   }, [isRetrying]);
 
   const handleOpenLiveSupport = () => {
+    window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
     const chatBtn = document.querySelector('[data-chat-trigger="support"]');
     if (chatBtn) {
       chatBtn.click();
     } else {
-      navigate('/support');
+      window.location.assign('https://support.farm-eazy.com/live-support');
     }
+  };
+
+  const handleRaiseTicket = () => {
+    window.location.assign('/support/ticket');
   };
 
   return (
@@ -255,7 +260,7 @@ export default function PremiumFallback() {
               </div>
 
               <div 
-                onClick={() => navigate('/support')}
+                onClick={handleRaiseTicket}
                 className="p-4 rounded-2xl border border-border/80 bg-card/60 hover:bg-muted/40 transition cursor-pointer flex items-start gap-3.5 group"
               >
                 <div className="h-10 w-10 rounded-xl bg-muted text-foreground flex items-center justify-center shrink-0 group-hover:scale-105 transition">

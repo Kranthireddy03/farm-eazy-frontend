@@ -107,6 +107,7 @@ export default function LocationWizard() {
     selectedLocation?.isServiceable === true &&
     ((selectedLocation?.latitude != null && selectedLocation?.longitude != null) || selectedLocation?.id != null)
   )
+  const hasExistingLocation = hasActiveExistingLocation
 
   const mustStayOpen = isAuthenticated
     && !isAuthLoading
@@ -477,7 +478,7 @@ export default function LocationWizard() {
     )
   }
 
-  const canClose = isSessionVerified && hasExistingLocation && !mustStayOpen && !confirming
+  const canClose = isSessionVerified && (hasActiveExistingLocation || hasExistingLocation) && !mustStayOpen && !confirming
   const recents = useMemo(() => (Array.isArray(recentLocations) ? recentLocations : []), [recentLocations])
 
   if (!show) return null

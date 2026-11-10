@@ -934,6 +934,7 @@ export default function ChatSupport({ className = '' }) {
       {!open && (
         <button
           type="button"
+          data-chat-trigger="support"
           onClick={() => setOpen(true)}
           className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 text-white px-4 py-3.5 shadow-2xl shadow-emerald-950/40 hover:shadow-emerald-500/25 hover:scale-105 active:scale-95 transition-all duration-300 ring-2 ring-white/20 cursor-pointer"
           aria-label="Open support chat"
