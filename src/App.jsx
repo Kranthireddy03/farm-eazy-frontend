@@ -231,7 +231,7 @@ function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, isLoading, getUserId, getUserEmail, isAdmin, getUserRoles } = useAuth();
-  const { locationVersion } = useLocationContext();
+  const { locationVersion, selectedLocation } = useLocationContext();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const lastLocationCheckRef = useRef({ version: null, timestamp: 0 });
 
@@ -313,6 +313,11 @@ function AppContent() {
       // If they are on fallback, complete-google-profile or bypass routes, bypass
       if (['/fallback', '/complete-google-profile', '/coverage', '/active-locations', '/locations'].includes(location.pathname)) return;
 
+      // If user already has an active, serviceable location selected, no need to poll status API
+      if (selectedLocation && selectedLocation.isServiceable === true) {
+        return;
+      }
+
       // Strict Throttle & Cache: do NOT re-check if already checked for this locationVersion within the last 10 minutes
       const now = Date.now();
       if (lastLocationCheckRef.current.version === locationVersion && (now - lastLocationCheckRef.current.timestamp < 600000)) {
@@ -334,7 +339,7 @@ function AppContent() {
     };
 
     checkLocationAccess();
-  }, [locationVersion, isAuthenticated]);
+  }, [locationVersion, isAuthenticated, selectedLocation]);
 
   const handleOnboardingFinish = () => {
     localStorage.setItem(getOnboardingStorageKey(), 'true');
@@ -349,7 +354,7 @@ function AppContent() {
     <Suspense fallback={<PageLoader />}>
       <>
       <CommandPalette />
-      <Routes key={isAuthenticated ? `loc-${locationVersion}` : 'public'}>
+      <Routes>
         {/* Public landing page for unauthenticated users. Authenticated users get Home inside the main Layout */}
         <Route
           path="/"

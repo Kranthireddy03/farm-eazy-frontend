@@ -37,8 +37,10 @@ export const api = axios.create({
 // Add a request interceptor to include the token in headers
 api.interceptors.request.use(
     async (config) => {
+        const url = String(config.url || '');
+        const isPublicAuth = url.includes('/auth/login') || url.includes('/auth/google') || url.includes('/auth/register') || url.includes('/otp/') || url.includes('/auth/forgot-password') || url.includes('/auth/reset-password') || url.includes('/auth/suggest-username');
         const token = localStorage.getItem('farmEazy_token');
-        if (token) {
+        if (token && !isPublicAuth) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         // Add public gateway headers for backend nonce-based validation.

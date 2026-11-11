@@ -172,13 +172,32 @@ async function resolveUserLocationHeaders() {
 
 function isPublicApiPath(path) {
   const publicPaths = [
+    '/api/auth/login',
+    '/api/v1/auth/login',
+    '/api/auth/google',
+    '/api/v1/auth/google',
+    '/api/auth/register',
+    '/api/v1/auth/register',
+    '/api/auth/forgot-password',
+    '/api/v1/auth/forgot-password',
+    '/api/auth/reset-password',
+    '/api/v1/auth/reset-password',
+    '/api/auth/request-otp',
+    '/api/v1/auth/request-otp',
+    '/api/auth/verify-otp',
+    '/api/v1/auth/verify-otp',
+    '/api/auth/suggest-username',
+    '/api/v1/auth/suggest-username',
     '/api/otp/',
+    '/api/v1/otp/',
     '/api/public/',
+    '/api/v1/public/',
     '/api/faq-question',
     '/api/faq-questions',
     '/api/faq/question',
     '/api/support-tickets/guest',
     '/api/location-access/',
+    '/api/locations/',
   ];
   return publicPaths.some((publicPath) => path.startsWith(publicPath));
 }

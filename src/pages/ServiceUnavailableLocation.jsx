@@ -113,15 +113,8 @@ export default function ServiceUnavailableLocation() {
         households: '',
         notes: '',
       }));
-      // Refresh request count after successful submission
-      try {
-        const res = await apiClient.get('/location-access/status');
-        if (res.data && res.data.requestCount !== undefined) {
-          setRequestCount(res.data.requestCount);
-        }
-      } catch (e) {
-        // ignore
-      }
+      // Optimistically increment local request count after successful submission
+      setRequestCount(prev => (prev || 0) + 1);
     } catch (err) {
       setError(getUserFacingErrorMessage(err, 'Unable to submit your launch request right now.'));
     } finally {
