@@ -23,6 +23,7 @@ import {
 import { API_BASE_URL } from '../config/api';
 import apiClient from '../services/apiClient';
 import { Button } from '../components/ui/button';
+import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal';
 import { UnifiedLoader } from '../components/ui/UnifiedLoader';
 
 const FALLBACK_STATE_KEY = 'farmEazy_fallback_state';
@@ -131,17 +132,35 @@ export default function PremiumFallback() {
   }, [isRetrying]);
 
   const handleOpenLiveSupport = () => {
-    window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
     const chatBtn = document.querySelector('[data-chat-trigger="support"]');
     if (chatBtn) {
+      window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
       chatBtn.click();
-    } else {
-      window.location.assign('https://support.farm-eazy.com/live-support');
+      return;
     }
+    const token = localStorage.getItem('farmEazy_token');
+    if (token) {
+      prepareSupportPortalHandoff({ mode: 'user', redirect: '/support' });
+      const targetUrl = buildSupportPortalUrl({ portalPath: '/support', mode: 'user', redirect: '/support' });
+      if (targetUrl) {
+        window.location.assign(targetUrl);
+        return;
+      }
+    }
+    window.location.assign('https://support.farm-eazy.com/support');
   };
 
   const handleRaiseTicket = () => {
-    window.location.assign('/support/ticket');
+    const token = localStorage.getItem('farmEazy_token');
+    if (token) {
+      prepareSupportPortalHandoff({ mode: 'user', redirect: '/user/create' });
+      const targetUrl = buildSupportPortalUrl({ portalPath: '/user/create', mode: 'user', redirect: '/user/create' });
+      if (targetUrl) {
+        window.location.assign(targetUrl);
+        return;
+      }
+    }
+    window.location.assign('https://support.farm-eazy.com/ask-question');
   };
 
   return (

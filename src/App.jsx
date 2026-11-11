@@ -151,7 +151,7 @@ function ProtectedRoute({ children, skipSessionBootstrap = false }) {
   const location = useLocation();
   const { isAuthenticated, isLoading } = useAuth();
   const profileCompletionRequired = localStorage.getItem(STORAGE_KEYS.USER_PROFILE_COMPLETION_REQUIRED) === 'true';
-  
+
   if (isLoading) {
     return <PageLoader />;
   }
@@ -159,7 +159,7 @@ function ProtectedRoute({ children, skipSessionBootstrap = false }) {
   if (isAuthenticated && profileCompletionRequired && location.pathname !== '/complete-google-profile') {
     return <Navigate to="/complete-google-profile" replace />;
   }
-  
+
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location.pathname + location.search }} replace />;
   }
@@ -353,196 +353,196 @@ function AppContent() {
   return (
     <Suspense fallback={<PageLoader />}>
       <>
-      <CommandPalette />
-      <Routes>
-        {/* Public landing page for unauthenticated users. Authenticated users get Home inside the main Layout */}
-        <Route
-          path="/"
-          element={
-            isAuthenticated ? (
-              <ProtectedRoute>
-                <Layout onShowTour={() => setShowOnboarding(true)}>
-                  <Home />
-                </Layout>
-              </ProtectedRoute>
-            ) : (
-              <PublicLayout>
-                <PublicHome />
-              </PublicLayout>
-            )
-          }
-        />
-        <Route
-          path="/landing"
-          element={
-            <PublicLayout>
-              <LandingHome />
-            </PublicLayout>
-          }
-        />
-        <Route element={<PublicLayout />}>
-          <Route path="/login" element={<Login />} />
-          <Route path="/logout" element={<LogoutRoute />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/complete-google-profile" element={<ProtectedRoute><CompleteGoogleProfile /></ProtectedRoute>} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/r/:shortCode" element={<RedirectReset />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-          <Route path="/email-error" element={<EmailError />} />
-          <Route path="/session-expired" element={<SessionExpired />} />
-          <Route path="/fallback" element={<PremiumFallback />} />
-        </Route>
-
-        <Route
-          path="/service-unavailable"
-          element={
-            isAuthenticated ? (
-              <ProtectedRoute>
-                <Layout>
-                  <ServiceUnavailableLocation />
-                </Layout>
-              </ProtectedRoute>
-            ) : (
-              <PublicLayout>
-                <ServiceUnavailableLocation />
-              </PublicLayout>
-            )
-          }
-        />
-
-        <Route path="/coverage" element={renderContextAwarePage(ActiveLocationsPage)} />
-        <Route path="/active-locations" element={renderContextAwarePage(ActiveLocationsPage)} />
-        <Route path="/locations" element={renderContextAwarePage(ActiveLocationsPage)} />
-        <Route path="/privacy-policy" element={renderContextAwarePage(PrivacyPolicy)} />
-        <Route path="/terms" element={renderContextAwarePage(Terms)} />
-        <Route path="/refund-policy" element={renderContextAwarePage(RefundPolicy)} />
-        <Route path="/shipping-policy" element={renderContextAwarePage(ShippingPolicy)} />
-        <Route path="/marketplace-disclosure" element={renderContextAwarePage(MarketplaceDisclosure)} />
-        <Route path="/about" element={renderContextAwarePage(About)} />
-        <Route path="/contact" element={renderContextAwarePage(Contact)} />
-        <Route path="/public-services" element={renderContextAwarePage(PublicServices)} />
-
-        <Route
-          path="/support"
-          element={
-            isAuthenticated
-              ? (
+        <CommandPalette />
+        <Routes>
+          {/* Public landing page for unauthenticated users. Authenticated users get Home inside the main Layout */}
+          <Route
+            path="/"
+            element={
+              isAuthenticated ? (
                 <ProtectedRoute>
-                  <Layout>
-                    <Support />
+                  <Layout onShowTour={() => setShowOnboarding(true)}>
+                    <Home />
                   </Layout>
                 </ProtectedRoute>
+              ) : (
+                <PublicLayout>
+                  <PublicHome />
+                </PublicLayout>
               )
-              : renderContextAwarePage(Support)
-          }
-        />
-        <Route
-          path="/faq"
-          element={
-            isAuthenticated
-              ? <SupportPortalRedirect portalPath="/user/faq" adminPortalPath="/faq-review" />
-              : renderContextAwarePage(Support)
-          }
-        />
-        <Route
-          path="/ask-question"
-          element={
-            isAuthenticated
-              ? <SupportPortalRedirect portalPath="/user/faq" adminPortalPath="/faq-review" />
-              : renderContextAwarePage(AskQuestion)
-          }
-        />
-        <Route
-          path="/support/ticket"
-          element={
-            isAuthenticated
-              ? <SupportPortalRedirect portalPath="/user/create" adminPortalPath="/tickets/create" />
-              : renderContextAwarePage(RaiseTicket)
-          }
-        />
-        <Route path="/blog" element={renderContextAwarePage(Blog)} />
-        <Route path="/blog/:slug" element={renderContextAwarePage(BlogDetail)} />
+            }
+          />
+          <Route
+            path="/landing"
+            element={
+              <PublicLayout>
+                <LandingHome />
+              </PublicLayout>
+            }
+          />
+          <Route element={<PublicLayout />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/logout" element={<LogoutRoute />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/complete-google-profile" element={<ProtectedRoute><CompleteGoogleProfile /></ProtectedRoute>} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/r/:shortCode" element={<RedirectReset />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/email-error" element={<EmailError />} />
+            <Route path="/session-expired" element={<SessionExpired />} />
+            <Route path="/fallback" element={<PremiumFallback />} />
+          </Route>
 
-        {/* Protected Routes: Only after login */}
-        <Route
-          element={
-            <ProtectedRoute>
-              <Layout onShowTour={() => setShowOnboarding(true)} />
-            </ProtectedRoute>
-          }
-        >
-          <Route path="/dashboard" element={<DashboardEnhanced />} />
-          <Route path="/settings" element={<ProtectedRoute><UserPreferences /></ProtectedRoute>} />
-          <Route path="/profile" element={<Navigate to="/settings" replace />} />
-          <Route path="/communication-preferences" element={<CommunicationPreferences />} />
-          <Route path="/farms" element={<Farms />} />
-          <Route path="/farms/:farmId" element={<FarmDetail />} />
-          <Route path="/crops" element={<Crops />} />
-          <Route path="/irrigation" element={<IrrigationSchedules />} />
-          <Route path="/irrigation-services" element={<Navigate to="/services" replace />} />
-          <Route path="/selling" element={<Selling />} />
-          <Route path="/selling/bids/:listingType/:listingId" element={<VendorBidsPage />} />
-          <Route path="/messages/:displayId" element={<MessagesPage />} />
-          <Route path="/my-bids" element={<MyBids />} />
-          <Route path="/buying" element={<Buying />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/wishlist" element={<Wishlist />} />
-          <Route path="/checkout" element={<Checkout />} />
-          <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/products/:id" element={<ProductDetail />} />
-          <Route path="/product/:id/analytics" element={<ProductAnalyticsPage />} />
-          <Route path="/products/:id/analytics" element={<ProductAnalyticsPage />} />
-          <Route path="/selling/product/:id/analytics" element={<ProductAnalyticsPage />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/products/post" element={<Products />} />
-          <Route path="/products/listings" element={<Products />} />
-          <Route path="/products/orders" element={<Products />} />
-          <Route path="/products/saved" element={<Products />} />
-          <Route path="/products/sales" element={<Products />} />
-          <Route path="/products/history" element={<Products />} />
-          <Route path="/change-password" element={<ChangePassword />} />
-          <Route path="/user/address" element={<AddressBook />} />
-          <Route path="/user/contact" element={<ContactSettings />} />
-          <Route path="/orders" element={<Orders />} />
-          <Route path="/refund-details" element={<RefundDetails />} />
-          <Route path="/address-book" element={<AddressBook />} />
-          <Route path="/activities" element={<Activities />} />
-          <Route path="/services" element={<Services />} />
-          <Route path="/services/post" element={<Services />} />
-          <Route path="/services/posted" element={<Services />} />
-          <Route path="/services/bookings" element={<Services />} />
-          <Route path="/services/requests" element={<Services />} />
-          <Route path="/services/history" element={<Services />} />
-          <Route path="/services/provider-history" element={<Services />} />
-          <Route path="/services/:id/analytics" element={<ServiceAnalyticsPage />} />
-          <Route path="/blog/submit" element={<BlogSubmit />} />
-          <Route path="/blog/my-submissions" element={<MyBlogSubmissions />} />
-          <Route path="/service-requests" element={<ServiceRequests />} />
-          <Route path="/service-requests/:requestNumber" element={<ServiceRequestDetail />} />
-          <Route path="/bank-verification" element={<BankVerification />} />
-          <Route path="/vendor-verification" element={<BankVerification />} />
-          <Route path="/vendor-onboarding" element={<VendorOnboarding />} />
-          <Route path="/irrigation-sensors" element={<IrrigationSensorDashboard />} />
-          <Route path="/vendor-dashboard" element={<VendorDashboard />} />
-          <Route path="/notifications" element={<Notifications />} />
-          <Route path="/admin/notifications" element={<AdminNotifications />} />
-          <Route path="/admin/roles" element={<SupportPortalRedirect adminPortalPath="/access-control" requireAdmin />} />
-          <Route path="/admin/blog-posts" element={<AdminBlogManagement />} />
-        </Route>
+          <Route
+            path="/service-unavailable"
+            element={
+              isAuthenticated ? (
+                <ProtectedRoute>
+                  <Layout>
+                    <ServiceUnavailableLocation />
+                  </Layout>
+                </ProtectedRoute>
+              ) : (
+                <PublicLayout>
+                  <ServiceUnavailableLocation />
+                </PublicLayout>
+              )
+            }
+          />
 
-        <Route path="/irrigation/schedules" element={<Navigate to="/irrigation" replace />} />
-        <Route path="/irrigation/sensors" element={<Navigate to="/irrigation-sensors" replace />} />
-        <Route path="/irrigation/services" element={<Navigate to="/services" replace />} />
+          <Route path="/coverage" element={renderContextAwarePage(ActiveLocationsPage)} />
+          <Route path="/active-locations" element={renderContextAwarePage(ActiveLocationsPage)} />
+          <Route path="/locations" element={renderContextAwarePage(ActiveLocationsPage)} />
+          <Route path="/privacy-policy" element={renderContextAwarePage(PrivacyPolicy)} />
+          <Route path="/terms" element={renderContextAwarePage(Terms)} />
+          <Route path="/refund-policy" element={renderContextAwarePage(RefundPolicy)} />
+          <Route path="/shipping-policy" element={renderContextAwarePage(ShippingPolicy)} />
+          <Route path="/marketplace-disclosure" element={renderContextAwarePage(MarketplaceDisclosure)} />
+          <Route path="/about" element={renderContextAwarePage(About)} />
+          <Route path="/contact" element={renderContextAwarePage(Contact)} />
+          <Route path="/public-services" element={renderContextAwarePage(PublicServices)} />
 
-        <Route path="/fallback" element={<NotFound circuitBreak title="FarmEazy Resilience Mode" message="Resilience mode is active. If a service is currently unavailable or experiencing maintenance, you can explore cached areas or connect with our support team." />} />
+          <Route
+            path="/support"
+            element={
+              isAuthenticated
+                ? (
+                  <ProtectedRoute>
+                    <Layout>
+                      <Support />
+                    </Layout>
+                  </ProtectedRoute>
+                )
+                : renderContextAwarePage(Support)
+            }
+          />
+          <Route
+            path="/faq"
+            element={
+              isAuthenticated
+                ? <SupportPortalRedirect portalPath="/user/faq" adminPortalPath="/faq-review" />
+                : renderContextAwarePage(Support)
+            }
+          />
+          <Route
+            path="/ask-question"
+            element={
+              isAuthenticated
+                ? <SupportPortalRedirect portalPath="/user/faq" adminPortalPath="/faq-review" />
+                : renderContextAwarePage(AskQuestion)
+            }
+          />
+          <Route
+            path="/support/ticket"
+            element={
+              isAuthenticated
+                ? <SupportPortalRedirect portalPath="/user/create" adminPortalPath="/tickets/create" />
+                : renderContextAwarePage(RaiseTicket)
+            }
+          />
+          <Route path="/blog" element={renderContextAwarePage(Blog)} />
+          <Route path="/blog/:slug" element={renderContextAwarePage(BlogDetail)} />
 
-        {/* Catch-all dedicated 404 / unavailable page */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-      {showOnboarding && location.pathname !== '/complete-google-profile' && (
-        <OnboardingTour onFinish={handleOnboardingFinish} />
-      )}
+          {/* Protected Routes: Only after login */}
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout onShowTour={() => setShowOnboarding(true)} />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/dashboard" element={<DashboardEnhanced />} />
+            <Route path="/settings" element={<ProtectedRoute><UserPreferences /></ProtectedRoute>} />
+            <Route path="/profile" element={<Navigate to="/settings" replace />} />
+            <Route path="/communication-preferences" element={<CommunicationPreferences />} />
+            <Route path="/farms" element={<Farms />} />
+            <Route path="/farms/:farmId" element={<FarmDetail />} />
+            <Route path="/crops" element={<Crops />} />
+            <Route path="/irrigation" element={<IrrigationSchedules />} />
+            <Route path="/irrigation-services" element={<Navigate to="/services" replace />} />
+            <Route path="/selling" element={<Selling />} />
+            <Route path="/selling/bids/:listingType/:listingId" element={<VendorBidsPage />} />
+            <Route path="/messages/:displayId" element={<MessagesPage />} />
+            <Route path="/my-bids" element={<MyBids />} />
+            <Route path="/buying" element={<Buying />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/product/:id/analytics" element={<ProductAnalyticsPage />} />
+            <Route path="/products/:id/analytics" element={<ProductAnalyticsPage />} />
+            <Route path="/selling/product/:id/analytics" element={<ProductAnalyticsPage />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/products/post" element={<Products />} />
+            <Route path="/products/listings" element={<Products />} />
+            <Route path="/products/orders" element={<Products />} />
+            <Route path="/products/saved" element={<Products />} />
+            <Route path="/products/sales" element={<Products />} />
+            <Route path="/products/history" element={<Products />} />
+            <Route path="/change-password" element={<ChangePassword />} />
+            <Route path="/user/address" element={<AddressBook />} />
+            <Route path="/user/contact" element={<ContactSettings />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/refund-details" element={<RefundDetails />} />
+            <Route path="/address-book" element={<AddressBook />} />
+            <Route path="/activities" element={<Activities />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/services/post" element={<Services />} />
+            <Route path="/services/posted" element={<Services />} />
+            <Route path="/services/bookings" element={<Services />} />
+            <Route path="/services/requests" element={<Services />} />
+            <Route path="/services/history" element={<Services />} />
+            <Route path="/services/provider-history" element={<Services />} />
+            <Route path="/services/:id/analytics" element={<ServiceAnalyticsPage />} />
+            <Route path="/blog/submit" element={<BlogSubmit />} />
+            <Route path="/blog/my-submissions" element={<MyBlogSubmissions />} />
+            <Route path="/service-requests" element={<ServiceRequests />} />
+            <Route path="/service-requests/:requestNumber" element={<ServiceRequestDetail />} />
+            <Route path="/bank-verification" element={<BankVerification />} />
+            <Route path="/vendor-verification" element={<BankVerification />} />
+            <Route path="/vendor-onboarding" element={<VendorOnboarding />} />
+            <Route path="/irrigation-sensors" element={<IrrigationSensorDashboard />} />
+            <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+            <Route path="/notifications" element={<Notifications />} />
+            <Route path="/admin/notifications" element={<AdminNotifications />} />
+            <Route path="/admin/roles" element={<SupportPortalRedirect adminPortalPath="/access-control" requireAdmin />} />
+            <Route path="/admin/blog-posts" element={<AdminBlogManagement />} />
+          </Route>
+
+          <Route path="/irrigation/schedules" element={<Navigate to="/irrigation" replace />} />
+          <Route path="/irrigation/sensors" element={<Navigate to="/irrigation-sensors" replace />} />
+          <Route path="/irrigation/services" element={<Navigate to="/services" replace />} />
+
+          <Route path="/fallback" element={<NotFound circuitBreak title="FarmEazy Resilience Mode" message="Resilience mode is active. If a service is currently unavailable or experiencing maintenance, you can explore cached areas or connect with our support team." />} />
+
+          {/* Catch-all dedicated 404 / unavailable page */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        {showOnboarding && location.pathname !== '/complete-google-profile' && (
+          <OnboardingTour onFinish={handleOnboardingFinish} />
+        )}
       </>
     </Suspense>
   );

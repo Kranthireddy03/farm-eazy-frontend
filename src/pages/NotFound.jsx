@@ -17,6 +17,7 @@ import {
 import { Button } from '../components/ui/button';
 import { GlassPanel } from '../components/ui/PremiumSurface';
 import UnifiedLoader from '../components/ui/UnifiedLoader';
+import { buildSupportPortalUrl, prepareSupportPortalHandoff } from '../utils/supportPortal';
 
 export default function NotFound({ 
   title = "Page Not Available or Relocated", 
@@ -29,27 +30,38 @@ export default function NotFound({
   const location = useLocation();
 
   const handleOpenLiveSupport = () => {
-    // If running inside Circuit Breaker mode or Layout unmounted, redirect directly to Live Support
-    if (circuitBreak) {
-      window.location.assign('https://support.farm-eazy.com/live-support');
+    // If inside circuit break or if chat widget is unmounted, route to support portal
+    const chatBtn = document.querySelector('[data-chat-trigger="support"]');
+    if (!circuitBreak && chatBtn) {
+      window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
+      chatBtn.click();
       return;
     }
-    // Normal mode: dispatch custom event which ChatSupport widget listens to
-    window.dispatchEvent(new CustomEvent('farmeazy:open-live-chat'));
-    const chatBtn = document.querySelector('[data-chat-trigger="support"]');
-    if (chatBtn) {
-      chatBtn.click();
-    } else {
-      window.location.assign('https://support.farm-eazy.com/live-support');
+
+    // Direct handoff to customer support
+    const token = localStorage.getItem('farmEazy_token');
+    if (token) {
+      prepareSupportPortalHandoff({ mode: 'user', redirect: '/support' });
+      const targetUrl = buildSupportPortalUrl({ portalPath: '/support', mode: 'user', redirect: '/support' });
+      if (targetUrl) {
+        window.location.assign(targetUrl);
+        return;
+      }
     }
+    window.location.assign('https://support.farm-eazy.com/support');
   };
 
   const handleRaiseTicket = () => {
-    if (circuitBreak) {
-      window.location.assign('/support/ticket');
-    } else {
-      navigate('/support/ticket');
+    const token = localStorage.getItem('farmEazy_token');
+    if (token) {
+      prepareSupportPortalHandoff({ mode: 'user', redirect: '/user/create' });
+      const targetUrl = buildSupportPortalUrl({ portalPath: '/user/create', mode: 'user', redirect: '/user/create' });
+      if (targetUrl) {
+        window.location.assign(targetUrl);
+        return;
+      }
     }
+    window.location.assign('https://support.farm-eazy.com/ask-question');
   };
 
   return (

@@ -389,31 +389,39 @@ export default function ChatSupport({ className = '' }) {
 
   // Live STOMP chat connection (only activated when user requests live agent or sends message, authenticated, and not reviewing a specific ticket)
   const liveChat = useLiveSupportChat({
-    enabled: open && isAuthenticated && !viewingLegacyTicket && liveStatus === 'available' && liveChatRequested,
+    enabled: open && isAuthenticated && !viewingLegacyTicket && liveStatus !== 'offline' && liveChatRequested,
     sessionKey: liveSessionKey,
   });
 
-  const useLiveStream = liveChat.liveMode && !viewingLegacyTicket && open && liveStatus === 'available' && liveChatRequested;
+  const useLiveStream = liveChat.liveMode && !viewingLegacyTicket && open && liveStatus !== 'offline' && liveChatRequested;
   const displayMessages = useLiveStream ? liveChat.messages : messages;
   const chatLoading = useLiveStream ? liveChat.loading || liveChat.connecting : loading;
 
   // Agent Assignment Gate
-  const isAgentAssigned = Boolean(liveChat.conversation?.assignedAgentEmail);
+  const isAgentAssigned = Boolean(
+    liveChat.conversation?.assignedAgentEmail ||
+    liveChat.conversation?.assignedAgentUserId ||
+    liveChat.conversation?.assignedAgentName ||
+    liveChat.conversation?.status === 'ASSIGNED' ||
+    liveChat.conversation?.status === 'ACTIVE' ||
+    liveChat.conversation?.mode === 'AGENT' ||
+    liveChat.conversation?.mode === 'LIVE_AGENT'
+  );
   const isInputAllowed = viewingLegacyTicket || isAgentAssigned || customInputUnlocked;
 
   // Monitor Agent Assignment changes -> Play Chime & Toast
   useEffect(() => {
-    const currentAgent = liveChat.conversation?.assignedAgentEmail;
+    const currentAgent = liveChat.conversation?.assignedAgentEmail || liveChat.conversation?.assignedAgentName || (liveChat.conversation?.assignedAgentUserId ? `Agent #${liveChat.conversation.assignedAgentUserId}` : null);
     if (currentAgent && currentAgent !== prevAgentRef.current) {
       const userEmail = (localStorage.getItem(STORAGE_KEYS.USER_EMAIL) || localStorage.getItem('farmEazy_email') || '').toLowerCase();
-      const isSelf = userEmail && currentAgent.toLowerCase() === userEmail;
-      const displayLabel = isSelf ? 'Support Specialist (Demo Mode)' : (liveChat.conversation?.assignedAgentName || currentAgent);
+      const isSelf = userEmail && String(currentAgent).toLowerCase() === userEmail;
+      const displayLabel = isSelf ? 'Support Specialist (Demo Mode)' : (liveChat.conversation?.assignedAgentName || liveChat.conversation?.assignedAgentEmail || currentAgent);
       playCustomerChime('assigned');
       showToast(`🎉 Connected with Support Specialist: ${displayLabel}`, 'success');
       appendSupportMessage(`👨‍💼 Support Specialist (${displayLabel}) has joined the conversation! You can now freely type your queries.`);
     }
     prevAgentRef.current = currentAgent;
-  }, [liveChat.conversation?.assignedAgentEmail, liveChat.conversation?.assignedAgentName, showToast]);
+  }, [liveChat.conversation?.assignedAgentEmail, liveChat.conversation?.assignedAgentName, liveChat.conversation?.assignedAgentUserId, showToast]);
 
   // Monitor incoming support messages -> Play gentle chime
   useEffect(() => {
@@ -711,12 +719,11 @@ export default function ChatSupport({ className = '' }) {
   const handleSelectRootCategory = (cat) => {
     if (cat.id === 'live_agent') {
       appendUserMessage('👨‍💼 I would like to connect directly with a live support executive.');
-      if (liveStatus === 'available') {
-        if (!liveChatRequested) {
-          setLiveChatRequested(true);
-          if (liveChat?.sendMessage) {
-            liveChat.sendMessage('Customer requested live support specialist assistance.');
-          }
+      if (liveStatus !== 'offline') {
+        setLiveChatRequested(true);
+        if (liveStatus === 'unknown') setLiveStatus('available');
+        if (liveChat?.sendMessage) {
+          liveChat.sendMessage('Customer requested live support specialist assistance.');
         }
         appendSupportMessage('Connecting you with our next available support agent via least-busy load balancer... Please hold on!');
       } else {
@@ -749,8 +756,9 @@ export default function ChatSupport({ className = '' }) {
 
   const handleConnectLiveFromOption = () => {
     appendUserMessage('👨‍💼 Connect with human specialist for this topic');
-    if (liveStatus === 'available') {
+    if (liveStatus !== 'offline') {
       setLiveChatRequested(true);
+      if (liveStatus === 'unknown') setLiveStatus('available');
       if (liveChat?.sendMessage) {
         liveChat.sendMessage(`Customer query regarding: ${activeResolution?.title || activeCategory || 'General Support'}`);
       }
@@ -984,7 +992,7 @@ export default function ChatSupport({ className = '' }) {
                       if (isSelfAssigned) {
                         return liveStatus === 'offline' ? '🔴 Support Specialist (Offline)' : '🟢 Support Specialist Connected (Demo Mode)';
                       }
-                      const agentName = liveChat.conversation.assignedAgentName || liveChat.conversation.assignedAgentEmail;
+                      const agentName = liveChat.conversation.assignedAgentName || liveChat.conversation.assignedAgentEmail || (liveChat.conversation.assignedAgentUserId ? `Support Specialist #${liveChat.conversation.assignedAgentUserId}` : 'Support Specialist');
                       return liveStatus === 'offline' ? `🔴 ${agentName} (Offline)` : `🟢 Connected with ${agentName}`;
                     })()
                   ) : useLiveStream && (liveChat.conversation?.status === 'WAITING_FOR_AGENT' || liveChat.conversation?.status === 'WAITING') && (liveChat.conversation?.queuePosition > 0) ? (
